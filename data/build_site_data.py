@@ -13,6 +13,11 @@ import os
 import glob
 import sys
 
+# Constants
+BATCH_DIR = "/tmp/tw_stock_data"
+OUTPUT_DIR = "public/data/stocks"
+MAX_OUTPUT_DAYS = 1000  # 3.5yr樂活五線譜 needs 875+ trading days
+
 
 # ═══════════════════════════════════════════════════════════════
 # Technical indicator functions
@@ -346,13 +351,13 @@ def load_batch_files(batch_dir: str) -> dict[str, dict]:
 
 
 def main():
-    batch_dir = "/tmp/tw_stock_data"
-    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public", "data", "stocks")
+    batch_dir = BATCH_DIR
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", OUTPUT_DIR)
     output_dir = os.path.abspath(output_dir)
 
     # Also support being run from project root
     if not os.path.isdir(batch_dir):
-        batch_dir = "/tmp/tw_stock_data"
+        batch_dir = BATCH_DIR
 
     os.makedirs(output_dir, exist_ok=True)
 
