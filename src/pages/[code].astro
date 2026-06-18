@@ -1,0 +1,298 @@
+---
+// src/pages/[code].astro — Stock detail page with interactive charts
+import Layout from "../components/Layout.astro";
+import PriceChart from "../components/PriceChart.astro";
+import VolumeChart from "../components/VolumeChart.astro";
+
+export function getStaticPaths() {
+  const stockModules = import.meta.glob("/public/data/stocks/*.json", { eager: true });
+  return Object.entries(stockModules).map(([path, mod]) => {
+    const code = path.split("/").pop()?.replace(".json", "") || "";
+    const data = (mod as { default: any }).default;
+    return {
+      params: { code },
+      props: { stock: data },
+    };
+  });
+}
+
+interface StockData {
+  code: string; name: string; start: string; end: string; days: number;
+  price: {
+    dates: string[]; close: (number | null)[]; volume: (number | null)[];
+    ma5: (number | null)[]; ma20: (number | null)[]; ma60: (number | null)[];
+    rsi14: (number | null)[]; kd_k: (number | null)[]; kd_d: (number | null)[];
+    macd: (number | null)[]; macd_signal: (number | null)[]; macd_hist: (number | null)[];
+  };
+  latest: { price: number; change_pct: number; volume: number };
+  change: { "1d": number; "1w": number; "1m": number; "3m": number; "1y": number; };
+  ma_status: string;
+}
+
+const { stock } = Astro.props as { stock: StockData };
+
+const isUp = stock.latest.change_pct >= 0;
+const changeColor = isUp ? "var(--color-up)" : "var(--color-down)";
+const changeSign = isUp ? "+" : "";
+
+function formatVolume(v: number): string {
+  if (v >= 1e8) return (v / 1e8).toFixed(1) + " 億";
+  if (v >= 1e4) return (v / 1e4).toFixed(0) + " 萬";
+  return v.toLocaleString();
+}
+
+function fmtChange(name: string, pct: number): string {
+  const s = pct >= 0 ? "+" : "";
+  return `${name}: ${s}${pct.toFixed(2)}%`;
+}
+
+const title = `${stock.code} ${stock.name} · 台股圖卡`;
+---
+
+<Layout title={title} description={`${stock.name} 股票走勢、技術指標`}>
+  <!-- JSON data block for ECharts -->
+  <script id="stock-data" type="application/json" is:inline>
+    {JSON.stringify(stock)}
+  </script>
+
+  <main class="detail-page container">
+    <!-- Header -->
+    <header class="detail-header">
+      <a href={`${import.meta.env.BASE_URL}`} class="back-link">← 回到列表</a>
+      <div class="header-main">
+        <div class="stock-title">
+          <span class="stock-code">{stock.code}</span>
+          <span class="stock-name">{stock.name}</span>
+        </div>
+        <div class="stock-price">
+          <span class="price-value">{stock.latest.price.toLocaleString()}</span>
+          <span class="price-change" style={`color:${changeColor}`}>
+            {changeSign}{stock.latest.change_pct.toFixed(2)}%
+          </span>
+        </div>
+        <div class="stock-meta">
+          <span class="meta-item">📊 {stock.ma_status}</span>
+          <span class="meta-item">📅 {stock.price.dates[0]} ~ {stock.price.dates[stock.price.dates.length - 1]}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Time range buttons -->
+    <div class="range-bar">
+      <button class="range-btn" data-range="22">1月</button>
+      <button class="range-btn" data-range="66">3月</button>
+      <button class="range-btn" data-range="132">6月</button>
+      <button class="range-btn" data-range="264">1年</button>
+      <button class="range-btn active" data-range="0">全部</button>
+    </div>
+
+    <!-- Price chart -->
+    <section class="chart-section">
+      <h2>📈 價格走勢</h2>
+      <PriceChart />
+    </section>
+
+    <!-- Volume chart -->
+    <section class="chart-section">
+      <h2>📊 成交量</h2>
+      <VolumeChart />
+    </section>
+
+    <!-- Technical indicators -->
+    <section class="chart-section">
+      <h2>🔬 技術指標</h2>
+      <div id="indicator-chart" style="width:100%;height:320px"></div>
+      <div class="indicator-tabs">
+        <button class="ind-tab active" data-ind="rsi">RSI(14)</button>
+        <button class="ind-tab" data-ind="macd">MACD</button>
+        <button class="ind-tab" data-ind="kd">KD(9,3)</button>
+      </div>
+    </section>
+
+    <!-- Returns table -->
+    <section class="chart-section">
+      <h2>📋 漲跌幅</h2>
+      <div class="returns-grid">
+        {Object.entries(stock.change).map(([key, val]) => (
+          <div class="return-item">
+            <span class="return-label">{key}</span>
+            <span class="return-value" style={`color:${val >= 0 ? 'var(--color-up)' : 'var(--color-down)'}`}>
+              {val >= 0 ? "+" : ""}{val.toFixed(2)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<script>
+import * as echarts from "echarts";
+
+// --- Indicator chart with tab switching ---
+function initIndicatorChart() {
+  const el = document.getElementById("indicator-chart");
+  if (!el) return;
+  
+  const raw = document.getElementById("stock-data");
+  if (!raw) return;
+  const stock = JSON.parse(raw.textContent || "{}");
+  const { dates, rsi14, kd_k, kd_d, macd, macd_signal, macd_hist } = stock.price || {};
+  if (!dates) return;
+
+  const chart = echarts.init(el);
+  let currentInd = "rsi";
+
+  function showRSI() {
+    currentInd = "rsi";
+    chart.setOption({
+      tooltip: { trigger: "axis" },
+      grid: { left: "3%", right: "3%", top: 16, bottom: 24 },
+      xAxis: { type: "category", data: dates, axisLabel: { fontSize: 10, formatter: (v: string) => v.slice(5) } },
+      yAxis: { type: "value", min: 0, max: 100, axisLabel: { fontSize: 11 } },
+      series: [
+        { name: "RSI(14)", type: "line", data: rsi14, lineStyle: { color: "#8b5cf6", width: 1.5 }, symbol: "none",
+          markLine: { silent: true, data: [{ yAxis: 70, lineStyle: { color: "#ef4444", type: "dashed" } }, { yAxis: 30, lineStyle: { color: "#10b981", type: "dashed" } }] } }
+      ],
+    }, true);
+  }
+
+  function showMACD() {
+    currentInd = "macd";
+    chart.setOption({
+      tooltip: { trigger: "axis" },
+      grid: { left: "3%", right: "3%", top: 16, bottom: 24 },
+      xAxis: { type: "category", data: dates, axisLabel: { fontSize: 10, formatter: (v: string) => v.slice(5) } },
+      yAxis: { type: "value", axisLabel: { fontSize: 11 } },
+      series: [
+        { name: "MACD", type: "line", data: macd, lineStyle: { color: "#1a73e8", width: 1.5 }, symbol: "none" },
+        { name: "Signal", type: "line", data: macd_signal, lineStyle: { color: "#f59e0b", width: 1 }, symbol: "none" },
+        { name: "Histogram", type: "bar", data: macd_hist, 
+          itemStyle: { color: (params: any) => params.value >= 0 ? "#ea4335" : "#1db954" } },
+      ],
+    }, true);
+  }
+
+  function showKD() {
+    currentInd = "kd";
+    chart.setOption({
+      tooltip: { trigger: "axis" },
+      grid: { left: "3%", right: "3%", top: 16, bottom: 24 },
+      xAxis: { type: "category", data: dates, axisLabel: { fontSize: 10, formatter: (v: string) => v.slice(5) } },
+      yAxis: { type: "value", min: 0, max: 100, axisLabel: { fontSize: 11 } },
+      series: [
+        { name: "K", type: "line", data: kd_k, lineStyle: { color: "#1a73e8", width: 1.5 }, symbol: "none" },
+        { name: "D", type: "line", data: kd_d, lineStyle: { color: "#f59e0b", width: 1 }, symbol: "none" },
+      ],
+    }, true);
+  }
+
+  showRSI();
+
+  // Tab switching
+  document.querySelectorAll(".ind-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".ind-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      const ind = (tab as HTMLElement).dataset.ind;
+      if (ind === "rsi") showRSI();
+      else if (ind === "macd") showMACD();
+      else if (ind === "kd") showKD();
+    });
+  });
+
+  window.addEventListener("resize", () => chart.resize());
+}
+
+initIndicatorChart();
+</script>
+
+<style>
+.detail-page { padding: 24px 16px 48px; }
+.back-link { 
+  display: inline-block; 
+  color: var(--color-primary); 
+  text-decoration: none; 
+  font-size: 0.9rem; 
+  margin-bottom: 16px;
+}
+.back-link:hover { text-decoration: underline; }
+.header-main { 
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 20px;
+}
+.stock-title { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.stock-code { font-size: 1.6rem; font-weight: 800; }
+.stock-name { font-size: 1.1rem; color: var(--color-muted); }
+.stock-price { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+.price-value { font-size: 2rem; font-weight: 800; }
+.price-change { font-size: 1.1rem; font-weight: 700; }
+.stock-meta { display: flex; gap: 20px; font-size: 0.85rem; color: var(--color-muted); }
+
+.range-bar { 
+  display: flex; gap: 8px; margin-bottom: 20px; 
+}
+.range-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--color-muted);
+  border-radius: var(--radius-btn);
+  background: var(--color-card);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+}
+.range-btn:hover, .range-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.chart-section {
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-card);
+}
+.chart-section h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.indicator-tabs { display: flex; gap: 8px; margin-top: 12px; }
+.ind-tab {
+  padding: 4px 12px;
+  border: 1px solid var(--color-muted);
+  border-radius: var(--radius-btn);
+  background: var(--color-card);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s;
+}
+.ind-tab:hover, .ind-tab.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.returns-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.return-item { 
+  display: flex; flex-direction: column; align-items: center; 
+  padding: 12px 8px; 
+  border-radius: 8px;
+  background: var(--color-bg);
+}
+.return-label { font-size: 0.8rem; color: var(--color-muted); margin-bottom: 4px; }
+.return-value { font-size: 1rem; font-weight: 700; }
+
+@media (max-width: 640px) {
+  .returns-grid { grid-template-columns: repeat(3, 1fr); }
+  .range-bar { flex-wrap: wrap; }
+}
+</style>

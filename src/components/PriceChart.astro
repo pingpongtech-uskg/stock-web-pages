@@ -1,0 +1,134 @@
+---
+// src/components/PriceChart.astro — ECharts price line chart with MA overlay
+---
+
+<div id="price-chart" style="width:100%;height:420px"></div>
+
+<script>
+import * as echarts from "echarts";
+
+function initPriceChart() {
+  const el = document.getElementById("price-chart");
+  if (!el) return;
+  
+  const raw = document.getElementById("stock-data");
+  if (!raw) return;
+  
+  const stock = JSON.parse(raw.textContent || "{}");
+  const { dates, close, ma5, ma20, ma60 } = stock.price || {};
+
+  if (!dates || !close) return;
+
+  const chart = echarts.init(el);
+  
+  chart.setOption({
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "cross" },
+    },
+    legend: {
+      data: ["收盤價", "MA5", "MA20", "MA60"],
+      top: 0,
+      textStyle: { fontSize: 12 },
+    },
+    grid: {
+      left: "3%",
+      right: "3%",
+      top: 40,
+      bottom: 80,
+    },
+    xAxis: {
+      type: "category",
+      data: dates,
+      axisLabel: { 
+        formatter: (v: string) => v.slice(5),
+        fontSize: 10,
+      },
+    },
+    yAxis: {
+      type: "value",
+      scale: true,
+      axisLabel: { fontSize: 11 },
+    },
+    dataZoom: [
+      { type: "inside", start: 70, end: 100 },
+      { 
+        type: "slider", 
+        start: 70, 
+        end: 100,
+        height: 24,
+        bottom: 10,
+      },
+      {
+        type: "slider",
+        start: 0,
+        end: 100,
+        height: 16,
+        bottom: 40,
+        brushSelect: false,
+      },
+    ],
+    series: [
+      {
+        name: "收盤價",
+        type: "line",
+        data: close,
+        smooth: false,
+        lineStyle: { width: 1.5, color: "#1a73e8" },
+        itemStyle: { color: "#1a73e8" },
+        symbol: "none",
+      },
+      {
+        name: "MA5",
+        type: "line",
+        data: ma5,
+        smooth: false,
+        lineStyle: { width: 1, color: "#f59e0b", type: "dashed" },
+        symbol: "none",
+      },
+      {
+        name: "MA20",
+        type: "line",
+        data: ma20,
+        smooth: false,
+        lineStyle: { width: 1, color: "#8b5cf6", type: "dashed" },
+        symbol: "none",
+      },
+      {
+        name: "MA60",
+        type: "line",
+        data: ma60,
+        smooth: false,
+        lineStyle: { width: 1, color: "#10b981", type: "dashed" },
+        symbol: "none",
+      },
+    ],
+  });
+
+  // Handle time range buttons
+  window.addEventListener("load", () => {
+    const btns = document.querySelectorAll<HTMLButtonElement>(".range-btn");
+    btns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const range = parseInt(btn.dataset.range || "0");
+        if (range > 0) {
+          const total = dates.length;
+          const start = Math.max(0, Math.floor(((total - range) / total) * 100));
+          chart.dispatchAction({
+            type: "dataZoom",
+            startValue: dates[Math.max(0, total - range)],
+            endValue: dates[total - 1],
+          });
+        }
+        btns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+  });
+
+  // Responsive
+  window.addEventListener("resize", () => chart.resize());
+}
+
+initPriceChart();
+</script>

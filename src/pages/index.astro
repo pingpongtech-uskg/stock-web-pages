@@ -1,14 +1,101 @@
 ---
-// src/pages/index.astro — Placeholder (T3 will replace this)
+// src/pages/index.astro — Stock list page with grid of cards
+import Layout from "../components/Layout.astro";
+import StockCard from "../components/StockCard.astro";
+
+// Load all stock data at build time
+const stockModules = import.meta.glob("/public/data/stocks/*.json", { eager: true });
+
+interface StockData {
+  code: string;
+  name: string;
+  latest: { price: number; change_pct: number; volume: number };
+  ma_status: string;
+  price: { close: (number | null)[] };
+}
+
+const stocks: StockData[] = Object.entries(stockModules)
+  .map(([, mod]) => (mod as { default: StockData }).default)
+  .filter(s => s && s.code && s.latest)
+  .sort((a, b) => a.code.localeCompare(b.code));
+
+const title = "📊 台股圖卡";
+const description = `${stocks.length} 檔上市櫃股票走勢與技術指標`;
 ---
-<html lang="zh-TW">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stock Web Pages</title>
-  </head>
-  <body>
-    <h1>Stock Web Pages</h1>
-    <p>Coming soon...</p>
-  </body>
-</html>
+
+<Layout title={title} description={description}>
+  <header class="page-header">
+    <h1>{title}</h1>
+    <p class="subtitle">{description}</p>
+    <div class="stats">
+      <span class="stat">{stocks.length} 檔股票</span>
+    </div>
+  </header>
+
+  <main class="stock-grid">
+    {stocks.map(stock => (
+      <StockCard
+        code={stock.code}
+        name={stock.name}
+        price={stock.latest.price}
+        changePct={stock.latest.change_pct}
+        volume={stock.latest.volume}
+        maStatus={stock.ma_status}
+        closes={stock.price.close}
+      />
+    ))}
+  </main>
+
+  <footer class="page-footer">
+    <p>資料來源: TWSE · 技術指標僅供參考</p>
+  </footer>
+</Layout>
+
+<style>
+.page-header {
+  text-align: center;
+  padding: 48px 16px 32px;
+}
+.page-header h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+.subtitle {
+  color: var(--color-muted, #6b7280);
+  margin: 0 0 16px;
+}
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+.stat {
+  background: var(--color-card, #ffffff);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-card);
+}
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 0 16px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+@media (max-width: 1024px) {
+  .stock-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .stock-grid { grid-template-columns: 1fr; }
+}
+.page-footer {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--color-muted, #6b7280);
+  font-size: 0.8rem;
+}
+</style>

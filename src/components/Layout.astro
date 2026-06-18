@@ -1,0 +1,72 @@
+---
+// Layout.astro — Common page wrapper
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <style is:global>
+      :root {
+        --color-bg: #f5f5f5;
+        --color-card: #ffffff;
+        --color-text: #1a1a1a;
+        --color-muted: #6b7280;
+        --color-up: #ea4335;
+        --color-down: #1db954;
+        --color-primary: #1a73e8;
+        --radius-card: 12px;
+        --radius-btn: 8px;
+        --shadow-card: 0 1px 3px rgba(0,0,0,0.08);
+        --shadow-hover: 0 4px 12px rgba(0,0,0,0.12);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --color-bg: #1a1a2e;
+          --color-card: #16213e;
+          --color-text: #e4e4e7;
+          --color-muted: #9ca3af;
+          --color-primary: #60a5fa;
+          --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+          --shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
+        }
+      }
+
+      *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans TC", sans-serif;
+        background: var(--color-bg);
+        color: var(--color-text);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: inherit; }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

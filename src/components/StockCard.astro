@@ -1,0 +1,133 @@
+---
+// StockCard.astro — Mini card for stock list page
+import Sparkline from "./Sparkline.astro";
+
+interface Props {
+  code: string;
+  name: string;
+  price: number;
+  changePct: number;
+  volume: number;
+  maStatus: string;
+  closes: number[];
+}
+
+const { code, name, price, changePct, volume, maStatus, closes } = Astro.props;
+
+const isUp = changePct >= 0;
+const changeColor = isUp ? "var(--color-up, #ea4335)" : "var(--color-down, #1db954)";
+const changeSign = isUp ? "+" : "";
+
+function formatVolume(v: number): string {
+  if (v >= 1e8) return (v / 1e8).toFixed(1) + "億";
+  if (v >= 1e4) return (v / 1e4).toFixed(0) + "萬";
+  return v.toLocaleString();
+}
+
+const maEmoji = maStatus === "多頭排列" ? "🟢" : maStatus === "空頭排列" ? "🔴" : "🟡";
+
+const volumeVsAvg = closes.filter(v => v !== null).length > 20 
+  ? "量增" : "—";
+---
+
+<a href={`${Astro.url.origin}${import.meta.env.BASE_URL}${code}`} class="stock-card">
+  <div class="card-top">
+    <div class="card-info">
+      <span class="card-code">{code}</span>
+      <span class="card-name">{name}</span>
+    </div>
+    <div class="card-sparkline">
+      {closes.filter(v => v !== null).length >= 2 ? (
+        <Sparkline closes={closes.filter(v => v !== null)} color={changeColor} />
+      ) : (
+        <span class="no-data">—</span>
+      )}
+    </div>
+  </div>
+  
+  <div class="card-bottom">
+    <div class="card-price-row">
+      <span class="card-price">{price.toFixed(1)}</span>
+      <span class="card-change" style={`color:${changeColor}`}>
+        {changeSign}{changePct.toFixed(2)}%
+      </span>
+    </div>
+    <div class="card-meta">
+      <span class="card-ma" title={maStatus}>{maEmoji} {maStatus}</span>
+      <span class="card-volume">{formatVolume(volume)}</span>
+    </div>
+  </div>
+</a>
+
+<style>
+.stock-card {
+  display: block;
+  background: var(--color-card, #ffffff);
+  border-radius: var(--radius-card, 12px);
+  padding: 16px;
+  text-decoration: none;
+  color: var(--color-text, #1a1a1a);
+  box-shadow: var(--shadow-card, 0 1px 3px rgba(0,0,0,0.08));
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.stock-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover, 0 4px 12px rgba(0,0,0,0.12));
+}
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.card-info {
+  display: flex;
+  flex-direction: column;
+}
+.card-code {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.card-name {
+  font-size: 0.8rem;
+  color: var(--color-muted, #6b7280);
+  margin-top: 2px;
+}
+.card-sparkline {
+  flex-shrink: 0;
+}
+.no-data {
+  color: var(--color-muted, #6b7280);
+  font-size: 0.75rem;
+}
+.card-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.card-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.card-price {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.card-change {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--color-muted, #6b7280);
+}
+.card-ma {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+</style>
