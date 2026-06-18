@@ -3,7 +3,7 @@
 build_site_data.py — Transform batch_*.json into per-stock JSON with technical indicators.
 
 Input:  /tmp/tw_stock_data/batch_*.json
-Output: public/data/stocks/{code}.json (latest 500 trading days)
+Output: public/data/stocks/{code}.json (latest 1000 trading days, enough for 樂活五線譜 3.5yr)
 
 Key rule: MA uses data[T-N:T] excluding T (user's hard rule).
 """
@@ -233,7 +233,7 @@ def compute_ma_status(ma5: float | None, ma20: float | None, ma60: float | None)
 # Stock processing
 # ═══════════════════════════════════════════════════════════════
 
-def process_stock(code: str, stock_data: dict, max_days: int = 500) -> dict:
+def process_stock(code: str, stock_data: dict, max_days: int = 1000) -> dict:
     """
     Process a single stock's data into the output JSON format.
 
@@ -363,7 +363,7 @@ def main():
 
     for code, stock_data in sorted(all_stocks.items()):
         try:
-            result = process_stock(code, stock_data, max_days=500)
+            result = process_stock(code, stock_data, max_days=1000)
             out_path = os.path.join(output_dir, f"{code}.json")
             with open(out_path, "w", encoding="utf-8") as f:
                 json.dump(result, f, ensure_ascii=False, separators=(",", ":"))
