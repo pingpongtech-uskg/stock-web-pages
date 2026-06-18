@@ -2,24 +2,9 @@
 // src/pages/index.astro — Stock list page with grid of cards
 import Layout from "../components/Layout.astro";
 import StockCard from "../components/StockCard.astro";
+import stocks from "../data/stocks_summary.json";
 
-// Load all stock data at build time
-const stockModules = import.meta.glob("/public/data/stocks/*.json", { eager: true });
-
-interface StockData {
-  code: string;
-  name: string;
-  latest: { price: number; change_pct: number; volume: number };
-  ma_status: string;
-  price: { close: (number | null)[] };
-}
-
-const stocks: StockData[] = Object.entries(stockModules)
-  .map(([, mod]) => (mod as { default: StockData }).default)
-  .filter(s => s && s.code && s.latest)
-  .sort((a, b) => a.code.localeCompare(b.code));
-
-const title = "📊 台股圖卡";
+const title = "台股圖卡";
 const description = `${stocks.length} 檔上市櫃股票走勢與技術指標`;
 ---
 
@@ -33,7 +18,7 @@ const description = `${stocks.length} 檔上市櫃股票走勢與技術指標`;
   </header>
 
   <main class="stock-grid">
-    {stocks.map(stock => (
+    {stocks.map((stock) => (
       <StockCard
         code={stock.code}
         name={stock.name}
@@ -41,7 +26,7 @@ const description = `${stocks.length} 檔上市櫃股票走勢與技術指標`;
         changePct={stock.latest.change_pct}
         volume={stock.latest.volume}
         maStatus={stock.ma_status}
-        closes={stock.price.close}
+        closes={stock.sparkline}
       />
     ))}
   </main>
