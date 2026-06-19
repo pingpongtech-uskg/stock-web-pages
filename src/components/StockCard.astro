@@ -10,13 +10,28 @@ interface Props {
   volume: number;
   maStatus: string;
   closes: number[];
+  status?: "active" | "archive";
+  lastScreenedAt?: string;
+  daysSinceScreened?: number;
 }
 
-const { code, name, price, changePct, volume, maStatus, closes } = Astro.props;
+const {
+  code,
+  name,
+  price,
+  changePct,
+  volume,
+  maStatus,
+  closes,
+  status = "active",
+  lastScreenedAt,
+  daysSinceScreened,
+} = Astro.props;
 
 const isUp = changePct >= 0;
-const changeColor = isUp ? "var(--color-up, #ea4335)" : "var(--color-down, #1db954)";
+const changeColor = isUp ? "var(--color-up, #d94b42)" : "var(--color-down, #138f6a)";
 const changeSign = isUp ? "+" : "";
+const isArchive = status === "archive";
 
 function formatVolume(v: number): string {
   if (v >= 1e8) return (v / 1e8).toFixed(1) + "億";
@@ -24,27 +39,28 @@ function formatVolume(v: number): string {
   return v.toLocaleString();
 }
 
-const maEmoji = maStatus === "多頭排列" ? "🟢" : maStatus === "空頭排列" ? "🔴" : "🟡";
-
-const volumeVsAvg = closes.filter(v => v !== null).length > 20 
-  ? "量增" : "—";
+const maTone = maStatus === "多頭排列" ? "bull" : maStatus === "空頭排列" ? "bear" : "flat";
+const statusLabel = isArchive ? "Archive" : "Active";
+const href = `${Astro.url.origin}${import.meta.env.BASE_URL}${code}`;
 ---
 
-<a href={`${Astro.url.origin}${import.meta.env.BASE_URL}${code}`} class="stock-card">
+<a href={href} class:list={["stock-card", "glass-surface", { "is-archive": isArchive }]}>
   <div class="card-top">
     <div class="card-info">
       <span class="card-code">{code}</span>
-      <span class="card-name">{name}</span>
+      <span class="card-name">{name || "未命名"}</span>
     </div>
-    <div class="card-sparkline">
-      {closes.filter(v => v !== null).length >= 2 ? (
-        <Sparkline closes={closes.filter(v => v !== null)} color={changeColor} />
-      ) : (
-        <span class="no-data">—</span>
-      )}
-    </div>
+    <span class:list={["status-pill", status]}>{statusLabel}</span>
   </div>
-  
+
+  <div class="card-sparkline">
+    {closes.filter(v => v !== null).length >= 2 ? (
+      <Sparkline closes={closes.filter(v => v !== null)} color={changeColor} />
+    ) : (
+      <span class="no-data">No data</span>
+    )}
+  </div>
+
   <div class="card-bottom">
     <div class="card-price-row">
       <span class="card-price">{price.toFixed(1)}</span>
@@ -53,57 +69,114 @@ const volumeVsAvg = closes.filter(v => v !== null).length > 20
       </span>
     </div>
     <div class="card-meta">
-      <span class="card-ma" title={maStatus}>{maEmoji} {maStatus}</span>
+      <span class:list={["card-ma", maTone]}>{maStatus}</span>
       <span class="card-volume">{formatVolume(volume)}</span>
+    </div>
+    <div class="screening-meta">
+      <span>{lastScreenedAt ? `Last screen ${lastScreenedAt}` : "Screening result"}</span>
+      {isArchive ? (
+        <span>{typeof daysSinceScreened === "number" ? `${daysSinceScreened} days idle` : "Price frozen"}</span>
+      ) : (
+        <span>Live close</span>
+      )}
     </div>
   </div>
 </a>
 
 <style>
 .stock-card {
-  display: block;
-  background: var(--color-card, #ffffff);
-  border-radius: var(--radius-card, 12px);
+  display: flex;
+  min-height: 214px;
+  flex-direction: column;
+  gap: 14px;
   padding: 16px;
+  border-radius: var(--radius-card, 8px);
+  color: var(--color-text, #17202a);
+  overflow: hidden;
+  position: relative;
   text-decoration: none;
-  color: var(--color-text, #1a1a1a);
-  box-shadow: var(--shadow-card, 0 1px 3px rgba(0,0,0,0.08));
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.stock-card::after {
+  position: absolute;
+  inset: 1px 1px auto 1px;
+  height: 52%;
+  content: "";
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.34), transparent);
+  pointer-events: none;
 }
 .stock-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover, 0 4px 12px rgba(0,0,0,0.12));
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover, 0 24px 70px rgba(36,55,72,0.2));
+  border-color: rgba(23, 107, 135, 0.34);
+}
+.stock-card.is-archive {
+  opacity: 0.78;
+}
+.card-top,
+.card-bottom {
+  position: relative;
+  z-index: 1;
 }
 .card-top {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  justify-content: space-between;
+  gap: 12px;
 }
 .card-info {
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 3px;
 }
 .card-code {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
 }
 .card-name {
-  font-size: 0.8rem;
-  color: var(--color-muted, #6b7280);
-  margin-top: 2px;
+  max-width: 170px;
+  color: var(--color-muted, #667085);
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-pill {
+  flex: 0 0 auto;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: var(--color-ink-soft);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+.status-pill.active {
+  border-color: rgba(19, 143, 106, 0.28);
+  color: var(--color-down);
+  background: rgba(19, 143, 106, 0.08);
+}
+.status-pill.archive {
+  border-color: rgba(102, 112, 133, 0.26);
+  background: rgba(102, 112, 133, 0.08);
 }
 .card-sparkline {
-  flex-shrink: 0;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 .no-data {
-  color: var(--color-muted, #6b7280);
+  color: var(--color-muted, #667085);
   font-size: 0.75rem;
 }
 .card-bottom {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  margin-top: auto;
 }
 .card-price-row {
   display: flex;
@@ -111,23 +184,49 @@ const volumeVsAvg = closes.filter(v => v !== null).length > 20
   gap: 8px;
 }
 .card-price {
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-size: 1.34rem;
+  font-weight: 850;
 }
 .card-change {
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 780;
 }
-.card-meta {
+.card-meta,
+.screening-meta {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.75rem;
-  color: var(--color-muted, #6b7280);
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--color-muted, #667085);
+  font-size: 0.74rem;
 }
 .card-ma {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-weight: 750;
+}
+.card-ma.bull {
+  color: var(--color-down);
+  background: rgba(19, 143, 106, 0.09);
+}
+.card-ma.bear {
+  color: var(--color-up);
+  background: rgba(217, 75, 66, 0.09);
+}
+.card-ma.flat {
+  color: #9a640c;
+  background: rgba(240, 163, 91, 0.13);
+}
+.screening-meta {
+  padding-top: 7px;
+  border-top: 1px solid var(--color-line);
+}
+@media (max-width: 520px) {
+  .stock-card {
+    min-height: 200px;
+  }
+  .card-name {
+    max-width: 150px;
+  }
 }
 </style>

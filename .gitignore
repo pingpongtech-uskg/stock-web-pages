@@ -1,6 +1,9 @@
 node_modules/
+.venv/
+.astro/
 dist/
 .DS_Store
 *.log
-public/data/stocks/
+__pycache__/
+*.pyc
 public/data/stocks/

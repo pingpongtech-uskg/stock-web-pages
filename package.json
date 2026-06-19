@@ -9,8 +9,12 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^5.0.0",
-    "echarts": "^5.5.0"
+    "astro": "^6.4.8",
+    "echarts": "^5.5.0",
+    "esbuild": "^0.28.1"
+  },
+  "overrides": {
+    "esbuild": "^0.28.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
