@@ -191,38 +191,69 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
                 first_price_map[code] = entry.get("cur_price", 0)
                 break
 
-    # Precompute Z for active stocks using yfinance (live data, log prices)
-    print("Recomputing Z with yfinance (raw prices, auto_adjust=False) for active stocks...")
+    # Precompute Z + live prices for active stocks using yfinance
+    print("Fetching live prices + Z from yfinance (raw prices, auto_adjust=False)...")
     z_cache: dict[str, float | None] = {}
+    live_price_cache: dict[str, float] = {}  # code -> latest close price
     try:
         import yfinance as yf
         for code in latest_by_code:
             try:
+                tk = None
                 for ext in [".TW", ".TWO"]:
                     tk = yf.Ticker(f"{code}{ext}")
                     hist = tk.history(period="5y", auto_adjust=False)
                     if hist is not None and len(hist) >= 200:
                         break
                 if hist is None or len(hist) < 200:
+                    # Try shorter period for live price only
+                    for ext in [".TW", ".TWO"]:
+                        tk = yf.Ticker(f"{code}{ext}")
+                        hist = tk.history(period="5d", auto_adjust=False)
+                        if hist is not None and len(hist) >= 1:
+                            break
+                    if hist is None or len(hist) < 1:
+                        continue
+                    # Have price but not enough for Z
+                    p = hist['Close'].values
+                    if hasattr(p[0], 'item'):
+                        p = np.array([float(x) for x in p])
+                    live_price_cache[code] = float(p[-1])
                     continue
+
                 p = hist['Close'].values
                 if hasattr(p[0], 'item'):
                     p = np.array([float(x) for x in p])
+                # Live price = latest close
+                live_price_cache[code] = float(p[-1])
+                # Z from full 5y
                 z = compute_z(p)
                 if z is not None:
                     z_cache[code] = z
-            except Exception:
+            except Exception as e:
                 continue
     except ImportError:
-        print("  WARNING: yfinance not available, Z values from reports used as-is")
+        print("  WARNING: yfinance not available, using report prices as-is")
 
-    # Precompute cheap/dividend scores for active stocks
-    print("Computing cheap/dividend value scores...")
+    # Update cur_price for active stocks from live data
+    updated_count = 0
+    for code, entry in latest_by_code.items():
+        if code in live_price_cache:
+            old_p = entry.get("cur_price", 0)
+            new_p = live_price_cache[code]
+            if abs(new_p - old_p) > 0.01:
+                entry["cur_price"] = round(new_p, 2)
+                updated_count += 1
+    if updated_count:
+        print(f"  Updated cur_price for {updated_count} stocks from yfinance live data")
+
+    # Precompute cheap/dividend scores for ALL stocks (active + archive)
+    all_codes = sorted(set(list(latest_by_code.keys()) + list(code_to_dates.keys())))
+    print(f"Computing cheap/dividend value scores for {len(all_codes)} stocks...")
     value_cache: dict[str, dict] = {}
     try:
         from compute_value_scores import get_scores as get_value_scores
-        active_codes = list(latest_by_code.keys())
-        value_cache = get_value_scores(active_codes)
+        value_cache = get_value_scores(all_codes)
     except ImportError:
         print("  WARNING: compute_value_scores not available, showing —")
     except Exception as e:
@@ -285,8 +316,14 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         archive_entry = dict(entry)  # Shallow copy
         archive_entry["first_date"] = first_date
         archive_entry["consecutive_buy_days"] = consecutive_buy
-        archive_entry["cheap_score"] = None  # Archive: value scores frozen at screener time
-        archive_entry["dividend_score"] = None
+        # Backfill value scores from cache (current snapshot for archive)
+        if code in value_cache:
+            vs = value_cache[code]
+            archive_entry["cheap_score"] = vs.get("cheap_score")
+            archive_entry["dividend_score"] = vs.get("dividend_score")
+        else:
+            archive_entry["cheap_score"] = None
+            archive_entry["dividend_score"] = None
         archive_date_to_stocks[archive_entry["screening_date"]].append(archive_entry)
 
     archive = {}
