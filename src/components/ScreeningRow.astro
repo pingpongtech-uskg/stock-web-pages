@@ -14,6 +14,8 @@ export interface ScreeningEntry {
   last_date: string;
   consecutive_buy_days: number;
   cur_price: number;
+  first_price?: number | null;
+  change_pct?: number | null;
   g_score: number;
   l_score: number;
   cheap_score?: number | null;
@@ -103,9 +105,19 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
       </div>
     </div>
 
-    <div class="col col-price">
-      <span class="col-label">股價</span>
-      <span class="col-value col-value-price">{entry.cur_price.toFixed(1)}</span>
+    <div class="col col-price-block">
+      <span class="col-label">股價追蹤</span>
+      <div class="price-track">
+        <span class="price-first">{hasValue(entry.first_price) ? entry.first_price!.toFixed(1) : '—'}</span>
+        <span class="price-arrow">→</span>
+        <span class="price-now">{entry.cur_price.toFixed(1)}</span>
+      </div>
+      {hasValue(entry.change_pct) && (
+        <span class:list={["price-change", { 'change-up': entry.change_pct! > 0, 'change-down': entry.change_pct! < 0 }]}>
+          {entry.change_pct! > 0 ? '+' : ''}{entry.change_pct!.toFixed(1)}%
+        </span>
+      )}
+      {!hasValue(entry.change_pct) && <span class="price-change price-na">—</span>}
     </div>
 
     <div class="col col-z">
@@ -207,10 +219,6 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
   font-weight: 800;
   color: var(--color-text);
 }
-.col-value-price {
-  font-size: 1.02rem;
-  font-weight: 850;
-}
 .col-sub {
   font-size: 0.68rem;
   color: var(--color-muted, #667085);
@@ -224,8 +232,46 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
 .col-consecutive { min-width: 58px; }
 .col-dates { min-width: 95px; }
 .col-date { min-width: 85px; }
-.col-price { min-width: 55px; }
+.col-price-block { min-width: 118px; }
 .col-z { min-width: 44px; }
+
+/* ── Price tracking block ── */
+.price-track {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+.price-first {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-muted, #667085);
+}
+.price-arrow {
+  font-size: 0.65rem;
+  color: var(--color-muted, #667085);
+  font-weight: 400;
+}
+.price-now {
+  font-size: 1.02rem;
+  font-weight: 850;
+  color: var(--color-text);
+}
+.price-change {
+  font-size: 0.84rem;
+  font-weight: 800;
+  margin-top: 2px;
+}
+.price-change.change-up {
+  color: #089981;
+}
+.price-change.change-down {
+  color: #F23645;
+}
+.price-change.price-na {
+  font-size: 0.7rem;
+  color: var(--color-muted, #667085);
+  font-weight: 400;
+}
 
 /* ── Score block (4 fundamental pills) ── */
 .score-block {
