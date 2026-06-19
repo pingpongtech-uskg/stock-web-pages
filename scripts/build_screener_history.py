@@ -207,6 +207,18 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
     except ImportError:
         print("  WARNING: yfinance not available, Z values from reports used as-is")
 
+    # Precompute cheap/dividend scores for active stocks
+    print("Computing cheap/dividend value scores...")
+    value_cache: dict[str, dict] = {}
+    try:
+        from compute_value_scores import get_scores as get_value_scores
+        active_codes = list(latest_by_code.keys())
+        value_cache = get_value_scores(active_codes)
+    except ImportError:
+        print("  WARNING: compute_value_scores not available, showing —")
+    except Exception as e:
+        print(f"  WARNING: value scores failed: {e}")
+
     # Build active list
     active = []
     for code, entry in latest_by_code.items():
@@ -228,6 +240,16 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
 
         entry["first_date"] = first_date
         entry["consecutive_buy_days"] = consecutive_buy
+
+        # Add value scores if available
+        if code in value_cache:
+            vs = value_cache[code]
+            entry["cheap_score"] = vs.get("cheap_score")
+            entry["dividend_score"] = vs.get("dividend_score")
+        else:
+            entry["cheap_score"] = None
+            entry["dividend_score"] = None
+
         active.append(entry)
 
     # Sort active: by last_date DESC (newest first)
@@ -235,15 +257,19 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
 
     # Build archive: ALL entries from ALL reports, grouped by date
     # No demotion from active — archive is purely historical record
+    # IMPORTANT: make shallow copies so archive mutations don't affect active entries
     archive_date_to_stocks: dict[str, list[dict]] = defaultdict(list)
     for entry in all_entries:
         code = entry["code"]
         dates = code_to_dates.get(code, [])
         first_date = min(dates) if dates else entry["last_date"]
         consecutive_buy = calc_consecutive_buy(trust_cache, code, entry["screening_date"])
-        entry["first_date"] = first_date
-        entry["consecutive_buy_days"] = consecutive_buy
-        archive_date_to_stocks[entry["screening_date"]].append(entry)
+        archive_entry = dict(entry)  # Shallow copy
+        archive_entry["first_date"] = first_date
+        archive_entry["consecutive_buy_days"] = consecutive_buy
+        archive_entry["cheap_score"] = None  # Archive: value scores frozen at screener time
+        archive_entry["dividend_score"] = None
+        archive_date_to_stocks[archive_entry["screening_date"]].append(archive_entry)
 
     archive = {}
     for d in sorted(archive_date_to_stocks.keys(), reverse=True):
@@ -277,6 +303,12 @@ def main():
 
     out_dir = os.path.dirname(OUTPUT_FILE)
     os.makedirs(out_dir, exist_ok=True)
+    
+    # Debug: check first active entry
+    if result["active"]:
+        s0 = result["active"][0]
+        print(f"  DEBUG before write: {s0['code']} cheap={s0.get('cheap_score')} div={s0.get('dividend_score')}")
+    
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 

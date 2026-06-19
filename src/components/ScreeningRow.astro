@@ -16,6 +16,8 @@ export interface ScreeningEntry {
   cur_price: number;
   g_score: number;
   l_score: number;
+  cheap_score?: number | null;
+  dividend_score?: number | null;
   regression_z: number;
   rank: number;
   screening_date: string;
@@ -39,6 +41,10 @@ function fmtShares(zhang: number): string {
   if (zhang >= 10000) return (zhang / 10000).toFixed(1) + " 萬張";
   if (zhang >= 1000) return (zhang / 1000).toFixed(1) + " 千張";
   return zhang + " 張";
+}
+
+function hasValue(v: number | null | undefined): boolean {
+  return v != null && !isNaN(v);
 }
 
 const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
@@ -77,28 +83,24 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
       </div>
     )}
 
-    <div class="col col-score">
-      <span class="col-label">成長</span>
-      <span class:list={["score-num", { pass: entry.g_score >= 80 }]}>
-        {entry.g_score.toFixed(0)}
-      </span>
-    </div>
-
-    <div class="col col-score">
-      <span class="col-label">地雷</span>
-      <span class:list={["score-num", { pass: entry.l_score >= 80 }]}>
-        {entry.l_score.toFixed(0)}
-      </span>
-    </div>
-
-    <div class="col col-score col-placeholder">
-      <span class="col-label">便宜</span>
-      <span class="col-value col-muted">—</span>
-    </div>
-
-    <div class="col col-score col-placeholder">
-      <span class="col-label">定存</span>
-      <span class="col-value col-muted">—</span>
+    <!-- 4 fundamental scores in one compact block -->
+    <div class="score-block">
+      <div class:list={["score-pill", { pass: entry.g_score >= 80 }]}>
+        <span class="pill-label">成長</span>
+        <span class="pill-value">{entry.g_score.toFixed(0)}</span>
+      </div>
+      <div class:list={["score-pill", { pass: entry.l_score >= 80 }]}>
+        <span class="pill-label">地雷</span>
+        <span class="pill-value">{entry.l_score.toFixed(0)}</span>
+      </div>
+      <div class:list={["score-pill", { pass: hasValue(entry.cheap_score) && entry.cheap_score! >= 80 }]}>
+        <span class="pill-label">便宜</span>
+        <span class="pill-value">{hasValue(entry.cheap_score) ? entry.cheap_score!.toFixed(0) : "—"}</span>
+      </div>
+      <div class:list={["score-pill", { pass: hasValue(entry.dividend_score) && entry.dividend_score! >= 80 }]}>
+        <span class="pill-label">定存</span>
+        <span class="pill-value">{hasValue(entry.dividend_score) ? entry.dividend_score!.toFixed(0) : "—"}</span>
+      </div>
     </div>
 
     <div class="col col-price">
@@ -118,7 +120,7 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 14px 18px;
+  padding: 12px 18px;
   border-radius: var(--radius-card, 8px);
   color: var(--color-text, #17202a);
   text-decoration: none;
@@ -148,7 +150,7 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
 }
 
 .row-left {
-  flex: 0 0 110px;
+  flex: 0 0 105px;
   min-width: 0;
   position: relative;
   z-index: 1;
@@ -156,7 +158,7 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
 .row-center {
   flex: 1 1 auto;
   display: flex;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
   position: relative;
   z-index: 1;
@@ -169,14 +171,14 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
   gap: 2px;
 }
 .stock-code {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
 .stock-name {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--color-muted, #667085);
-  max-width: 100px;
+  max-width: 95px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -185,31 +187,32 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
 .col {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
+  flex: 0 0 auto;
 }
 .col-label {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 750;
   color: var(--color-muted, #667085);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 .col-value {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 700;
 }
 .col-value-primary {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 800;
   color: var(--color-text);
 }
 .col-value-price {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 850;
 }
 .col-sub {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--color-muted, #667085);
 }
 .col-muted {
@@ -217,35 +220,70 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
   font-weight: 500;
 }
 
-.col-amount { min-width: 120px; }
-.col-consecutive { min-width: 64px; }
-.col-dates { min-width: 100px; }
-.col-date { min-width: 90px; }
-.col-score { min-width: 52px; align-items: flex-start; }
-.col-price { min-width: 60px; }
-.col-z { min-width: 48px; }
-.col-placeholder { opacity: 0.5; }
+.col-amount { min-width: 115px; }
+.col-consecutive { min-width: 58px; }
+.col-dates { min-width: 95px; }
+.col-date { min-width: 85px; }
+.col-price { min-width: 55px; }
+.col-z { min-width: 44px; }
 
-.score-num {
-  font-size: 0.92rem;
+/* ── Score block (4 fundamental pills) ── */
+.score-block {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 2px 4px;
+  border-radius: 8px;
+  background: rgba(128, 128, 128, 0.04);
+}
+.score-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  min-width: 48px;
+  background: rgba(128, 128, 128, 0.06);
+}
+.pill-label {
+  font-size: 0.58rem;
+  font-weight: 750;
+  color: var(--color-muted, #667085);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.pill-value {
+  font-size: 0.88rem;
   font-weight: 850;
-  padding: 2px 6px;
-  border-radius: 5px;
+  color: var(--color-text);
 }
-.score-num.pass {
-  color: #138f6a;
-  background: rgba(19, 143, 106, 0.1);
+.score-pill.pass {
+  background: rgba(23, 107, 135, 0.1);
+}
+.score-pill.pass .pill-value {
+  color: #176b87;
+}
+.score-pill.pass .pill-label {
+  color: rgba(23, 107, 135, 0.7);
 }
 
-@media (max-width: 900px) {
-  .screening-row { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }
-  .row-left { flex: 0 0 100%; flex-direction: row; }
-  .stock-identity { flex-direction: row; gap: 8px; align-items: baseline; }
-  .row-center { flex-wrap: wrap; gap: 10px; }
+@media (max-width: 960px) {
+  .row-center { flex-wrap: wrap; gap: 8px; }
+  .score-block { order: 10; }
 }
-@media (max-width: 520px) {
-  .col { min-width: auto; }
-  .col-score { align-items: center; }
-  .row-center { gap: 8px; }
+@media (max-width: 700px) {
+  .screening-row { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+  .row-left { flex: 0 0 100%; }
+  .stock-identity { flex-direction: row; gap: 8px; align-items: baseline; }
+  .score-block {
+    width: 100%;
+    justify-content: space-around;
+  }
+}
+@media (max-width: 420px) {
+  .score-pill { min-width: 40px; padding: 3px 5px; }
+  .pill-value { font-size: 0.8rem; }
 }
 </style>

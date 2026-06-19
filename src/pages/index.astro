@@ -20,6 +20,8 @@ interface ScreeningEntry {
   cur_price: number;
   g_score: number;
   l_score: number;
+  cheap_score?: number | null;
+  dividend_score?: number | null;
   regression_z: number;
   rank: number;
   screening_date: string;

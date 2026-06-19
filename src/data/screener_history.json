@@ -14,9 +14,11 @@
       "l_score": 100.0,
       "regression_z": -1.39,
       "rank": 36,
-      "screening_date": "2026-06-18",
+      "screening_date": "2026-06-19",
       "first_date": "2026-06-02",
-      "consecutive_buy_days": 0
+      "consecutive_buy_days": 0,
+      "cheap_score": 83.3,
+      "dividend_score": 80.0
     },
     {
       "code": "1216",
@@ -32,9 +34,11 @@
       "l_score": 100.0,
       "regression_z": -1.1,
       "rank": 60,
-      "screening_date": "2026-06-18",
+      "screening_date": "2026-06-19",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 1
+      "consecutive_buy_days": 1,
+      "cheap_score": 66.7,
+      "dividend_score": 80.0
     },
     {
       "code": "1513",
@@ -50,9 +54,11 @@
       "l_score": 83.3,
       "regression_z": -0.18,
       "rank": 63,
-      "screening_date": "2026-06-18",
+      "screening_date": "2026-06-19",
       "first_date": "2026-06-18",
-      "consecutive_buy_days": 2
+      "consecutive_buy_days": 2,
+      "cheap_score": 0.0,
+      "dividend_score": 40.0
     },
     {
       "code": "2633",
@@ -68,9 +74,11 @@
       "l_score": 83.3,
       "regression_z": -0.64,
       "rank": 80,
-      "screening_date": "2026-06-18",
+      "screening_date": "2026-06-19",
       "first_date": "2026-05-27",
-      "consecutive_buy_days": 5
+      "consecutive_buy_days": 5,
+      "cheap_score": 66.7,
+      "dividend_score": 80.0
     },
     {
       "code": "2006",
@@ -86,9 +94,11 @@
       "l_score": 83.3,
       "regression_z": -0.41,
       "rank": 87,
-      "screening_date": "2026-06-18",
+      "screening_date": "2026-06-19",
       "first_date": "2026-06-12",
-      "consecutive_buy_days": 0
+      "consecutive_buy_days": 0,
+      "cheap_score": 66.7,
+      "dividend_score": 100.0
     },
     {
       "code": "6191",
@@ -106,7 +116,9 @@
       "rank": 87,
       "screening_date": "2026-06-17",
       "first_date": "2026-06-15",
-      "consecutive_buy_days": 1
+      "consecutive_buy_days": 1,
+      "cheap_score": 33.3,
+      "dividend_score": 40.0
     },
     {
       "code": "2618",
@@ -124,7 +136,9 @@
       "rank": 24,
       "screening_date": "2026-06-16",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 0
+      "consecutive_buy_days": 0,
+      "cheap_score": 33.3,
+      "dividend_score": 60.0
     },
     {
       "code": "2610",
@@ -142,7 +156,9 @@
       "rank": 87,
       "screening_date": "2026-06-16",
       "first_date": "2026-05-27",
-      "consecutive_buy_days": 0
+      "consecutive_buy_days": 0,
+      "cheap_score": 33.3,
+      "dividend_score": 20.0
     },
     {
       "code": "3014",
@@ -160,7 +176,9 @@
       "rank": 87,
       "screening_date": "2026-06-11",
       "first_date": "2026-06-08",
-      "consecutive_buy_days": 1
+      "consecutive_buy_days": 1,
+      "cheap_score": 33.3,
+      "dividend_score": 80.0
     },
     {
       "code": "3045",
@@ -178,7 +196,9 @@
       "rank": 30,
       "screening_date": "2026-06-08",
       "first_date": "2026-05-29",
-      "consecutive_buy_days": 2
+      "consecutive_buy_days": 2,
+      "cheap_score": 16.7,
+      "dividend_score": 60.0
     },
     {
       "code": "4904",
@@ -196,7 +216,9 @@
       "rank": 40,
       "screening_date": "2026-05-31",
       "first_date": "2026-05-29",
-      "consecutive_buy_days": 5
+      "consecutive_buy_days": 5,
+      "cheap_score": 16.7,
+      "dividend_score": 60.0
     },
     {
       "code": "3015",
@@ -214,7 +236,9 @@
       "rank": 93,
       "screening_date": "2026-05-31",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 1
+      "consecutive_buy_days": 1,
+      "cheap_score": 33.3,
+      "dividend_score": 60.0
     },
     {
       "code": "2377",
@@ -232,7 +256,9 @@
       "rank": 38,
       "screening_date": "2026-05-27",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 0
+      "consecutive_buy_days": 0,
+      "cheap_score": 16.7,
+      "dividend_score": 60.0
     },
     {
       "code": "1229",
@@ -250,7 +276,9 @@
       "rank": 100,
       "screening_date": "2026-05-26",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 1
+      "consecutive_buy_days": 1,
+      "cheap_score": 66.7,
+      "dividend_score": 60.0
     },
     {
       "code": "2548",
@@ -268,11 +296,13 @@
       "rank": 91,
       "screening_date": "2026-05-27",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 0
+      "consecutive_buy_days": 0,
+      "cheap_score": 83.3,
+      "dividend_score": 80.0
     }
   ],
   "archive": {
-    "2026-06-18": [
+    "2026-06-19": [
       {
         "code": "2105",
         "name_zh": "正新",
@@ -287,9 +317,11 @@
         "l_score": 100.0,
         "regression_z": -1.39,
         "rank": 36,
-        "screening_date": "2026-06-18",
+        "screening_date": "2026-06-19",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -305,9 +337,11 @@
         "l_score": 100.0,
         "regression_z": -1.1,
         "rank": 60,
-        "screening_date": "2026-06-18",
+        "screening_date": "2026-06-19",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1513",
@@ -323,9 +357,11 @@
         "l_score": 83.3,
         "regression_z": -0.18,
         "rank": 63,
-        "screening_date": "2026-06-18",
+        "screening_date": "2026-06-19",
         "first_date": "2026-06-18",
-        "consecutive_buy_days": 2
+        "consecutive_buy_days": 2,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -341,9 +377,11 @@
         "l_score": 83.3,
         "regression_z": -0.64,
         "rank": 80,
-        "screening_date": "2026-06-18",
+        "screening_date": "2026-06-19",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 5
+        "consecutive_buy_days": 5,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2006",
@@ -359,9 +397,113 @@
         "l_score": 83.3,
         "regression_z": -0.41,
         "rank": 87,
+        "screening_date": "2026-06-19",
+        "first_date": "2026-06-12",
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
+      }
+    ],
+    "2026-06-18": [
+      {
+        "code": "2105",
+        "name_zh": "正新",
+        "name_en": "Cheng Shin Rubber Ind. Co., Ltd.",
+        "net_amount_10d": 2556344928,
+        "net_amount_10d_k": 2556345,
+        "net_shares_10d": 86217368,
+        "net_shares_10d_zhang": 86217,
+        "last_date": "2026-06-18",
+        "cur_price": 29.65,
+        "g_score": 100.0,
+        "l_score": 100.0,
+        "regression_z": -1.27,
+        "rank": 36,
+        "screening_date": "2026-06-18",
+        "first_date": "2026-06-02",
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
+      },
+      {
+        "code": "1216",
+        "name_zh": "統一",
+        "name_en": "Uni-President Enterprises Corp.",
+        "net_amount_10d": 827505546,
+        "net_amount_10d_k": 827506,
+        "net_shares_10d": 11107457,
+        "net_shares_10d_zhang": 11107,
+        "last_date": "2026-06-18",
+        "cur_price": 74.5,
+        "g_score": 100.0,
+        "l_score": 100.0,
+        "regression_z": -1.28,
+        "rank": 60,
+        "screening_date": "2026-06-18",
+        "first_date": "2026-05-26",
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
+      },
+      {
+        "code": "1513",
+        "name_zh": "中興電",
+        "name_en": "Chung-Hsin Electric and Machinery Manufacturing Corp.",
+        "net_amount_10d": 730911916,
+        "net_amount_10d_k": 730912,
+        "net_shares_10d": 4141144,
+        "net_shares_10d_zhang": 4141,
+        "last_date": "2026-06-18",
+        "cur_price": 176.5,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -0.15,
+        "rank": 63,
+        "screening_date": "2026-06-18",
+        "first_date": "2026-06-18",
+        "consecutive_buy_days": 2,
+        "cheap_score": null,
+        "dividend_score": null
+      },
+      {
+        "code": "2633",
+        "name_zh": "台灣高鐵",
+        "name_en": "Taiwan High Speed Rail Corporation",
+        "net_amount_10d": 340183698,
+        "net_amount_10d_k": 340184,
+        "net_shares_10d": 13008937,
+        "net_shares_10d_zhang": 13009,
+        "last_date": "2026-06-18",
+        "cur_price": 26.15,
+        "g_score": 100.0,
+        "l_score": 83.3,
+        "regression_z": -0.96,
+        "rank": 80,
+        "screening_date": "2026-06-18",
+        "first_date": "2026-05-27",
+        "consecutive_buy_days": 5,
+        "cheap_score": null,
+        "dividend_score": null
+      },
+      {
+        "code": "2006",
+        "name_zh": "東和鋼鐵",
+        "name_en": "Tung Ho Steel Enterprise Corporation",
+        "net_amount_10d": 168691860,
+        "net_amount_10d_k": 168692,
+        "net_shares_10d": 2427221,
+        "net_shares_10d_zhang": 2427,
+        "last_date": "2026-06-18",
+        "cur_price": 69.5,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -0.13,
+        "rank": 87,
         "screening_date": "2026-06-18",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-17": [
@@ -381,7 +523,9 @@
         "rank": 31,
         "screening_date": "2026-06-17",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -399,7 +543,9 @@
         "rank": 66,
         "screening_date": "2026-06-17",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -417,7 +563,9 @@
         "rank": 82,
         "screening_date": "2026-06-17",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 4
+        "consecutive_buy_days": 4,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2006",
@@ -435,7 +583,9 @@
         "rank": 84,
         "screening_date": "2026-06-17",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 4
+        "consecutive_buy_days": 4,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "6191",
@@ -453,7 +603,9 @@
         "rank": 87,
         "screening_date": "2026-06-17",
         "first_date": "2026-06-15",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-16": [
@@ -473,7 +625,9 @@
         "rank": 24,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -491,7 +645,9 @@
         "rank": 25,
         "screening_date": "2026-06-16",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -509,7 +665,9 @@
         "rank": 54,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2006",
@@ -527,7 +685,9 @@
         "rank": 86,
         "screening_date": "2026-06-16",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 3
+        "consecutive_buy_days": 3,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -545,7 +705,9 @@
         "rank": 87,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "6191",
@@ -563,7 +725,9 @@
         "rank": 88,
         "screening_date": "2026-06-16",
         "first_date": "2026-06-15",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -581,7 +745,9 @@
         "rank": 99,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 3
+        "consecutive_buy_days": 3,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-15": [
@@ -601,7 +767,9 @@
         "rank": 24,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -619,7 +787,9 @@
         "rank": 25,
         "screening_date": "2026-06-15",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -637,7 +807,9 @@
         "rank": 54,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2006",
@@ -655,7 +827,9 @@
         "rank": 86,
         "screening_date": "2026-06-15",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 3
+        "consecutive_buy_days": 3,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "6191",
@@ -673,7 +847,9 @@
         "rank": 87,
         "screening_date": "2026-06-15",
         "first_date": "2026-06-15",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -691,7 +867,9 @@
         "rank": 88,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -709,7 +887,9 @@
         "rank": 100,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 3
+        "consecutive_buy_days": 3,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-12": [
@@ -729,7 +909,9 @@
         "rank": 18,
         "screening_date": "2026-06-12",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -747,7 +929,9 @@
         "rank": 25,
         "screening_date": "2026-06-12",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -765,7 +949,9 @@
         "rank": 50,
         "screening_date": "2026-06-12",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -783,7 +969,9 @@
         "rank": 87,
         "screening_date": "2026-06-12",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2006",
@@ -801,7 +989,9 @@
         "rank": 88,
         "screening_date": "2026-06-12",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 2
+        "consecutive_buy_days": 2,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-11": [
@@ -821,7 +1011,9 @@
         "rank": 16,
         "screening_date": "2026-06-11",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -839,7 +1031,9 @@
         "rank": 27,
         "screening_date": "2026-06-11",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 9
+        "consecutive_buy_days": 9,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -857,7 +1051,9 @@
         "rank": 45,
         "screening_date": "2026-06-11",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3014",
@@ -875,7 +1071,9 @@
         "rank": 87,
         "screening_date": "2026-06-11",
         "first_date": "2026-06-08",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -893,7 +1091,9 @@
         "rank": 94,
         "screening_date": "2026-06-11",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-10": [
@@ -913,7 +1113,9 @@
         "rank": 16,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -931,7 +1133,9 @@
         "rank": 30,
         "screening_date": "2026-06-10",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 8
+        "consecutive_buy_days": 8,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -949,7 +1153,9 @@
         "rank": 39,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3014",
@@ -967,7 +1173,9 @@
         "rank": 87,
         "screening_date": "2026-06-10",
         "first_date": "2026-06-08",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -985,7 +1193,9 @@
         "rank": 90,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -1003,7 +1213,9 @@
         "rank": 91,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-09": [
@@ -1023,7 +1235,9 @@
         "rank": 12,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -1041,7 +1255,9 @@
         "rank": 35,
         "screening_date": "2026-06-09",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 7
+        "consecutive_buy_days": 7,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -1059,7 +1275,9 @@
         "rank": 37,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3014",
@@ -1077,7 +1295,9 @@
         "rank": 86,
         "screening_date": "2026-06-09",
         "first_date": "2026-06-08",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -1095,7 +1315,9 @@
         "rank": 89,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -1113,7 +1335,9 @@
         "rank": 91,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-08": [
@@ -1133,7 +1357,9 @@
         "rank": 10,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3045",
@@ -1151,7 +1377,9 @@
         "rank": 30,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 2
+        "consecutive_buy_days": 2,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -1169,7 +1397,9 @@
         "rank": 33,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 14
+        "consecutive_buy_days": 14,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -1187,7 +1417,9 @@
         "rank": 39,
         "screening_date": "2026-06-08",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 6
+        "consecutive_buy_days": 6,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3014",
@@ -1205,7 +1437,9 @@
         "rank": 87,
         "screening_date": "2026-06-08",
         "first_date": "2026-06-08",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -1223,7 +1457,9 @@
         "rank": 89,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -1241,7 +1477,9 @@
         "rank": 90,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-05": [
@@ -1261,7 +1499,9 @@
         "rank": 10,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -1279,7 +1519,9 @@
         "rank": 30,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 13
+        "consecutive_buy_days": 13,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -1297,7 +1539,9 @@
         "rank": 41,
         "screening_date": "2026-06-05",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 5
+        "consecutive_buy_days": 5,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -1315,7 +1559,9 @@
         "rank": 90,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 4
+        "consecutive_buy_days": 4,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -1333,7 +1579,9 @@
         "rank": 91,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-04": [
@@ -1353,7 +1601,9 @@
         "rank": 8,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 12
+        "consecutive_buy_days": 12,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -1371,7 +1621,9 @@
         "rank": 25,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 12
+        "consecutive_buy_days": 12,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -1389,7 +1641,9 @@
         "rank": 41,
         "screening_date": "2026-06-04",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 4
+        "consecutive_buy_days": 4,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -1407,7 +1661,9 @@
         "rank": 91,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 3
+        "consecutive_buy_days": 3,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -1425,7 +1681,9 @@
         "rank": 92,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-03": [
@@ -1445,7 +1703,9 @@
         "rank": 9,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 11
+        "consecutive_buy_days": 11,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -1463,7 +1723,9 @@
         "rank": 25,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 11
+        "consecutive_buy_days": 11,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -1481,7 +1743,9 @@
         "rank": 50,
         "screening_date": "2026-06-03",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 3
+        "consecutive_buy_days": 3,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -1499,7 +1763,9 @@
         "rank": 90,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 2
+        "consecutive_buy_days": 2,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -1517,7 +1783,9 @@
         "rank": 91,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 2
+        "consecutive_buy_days": 2,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-02": [
@@ -1537,7 +1805,9 @@
         "rank": 11,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 10
+        "consecutive_buy_days": 10,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -1555,7 +1825,9 @@
         "rank": 25,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 10
+        "consecutive_buy_days": 10,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3045",
@@ -1573,7 +1845,9 @@
         "rank": 26,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 7
+        "consecutive_buy_days": 7,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2105",
@@ -1591,7 +1865,9 @@
         "rank": 68,
         "screening_date": "2026-06-02",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 2
+        "consecutive_buy_days": 2,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -1609,7 +1885,9 @@
         "rank": 91,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -1627,7 +1905,9 @@
         "rank": 94,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-06-01": [
@@ -1647,7 +1927,9 @@
         "rank": 11,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 9
+        "consecutive_buy_days": 9,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3045",
@@ -1665,7 +1947,9 @@
         "rank": 25,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 6
+        "consecutive_buy_days": 6,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -1683,7 +1967,9 @@
         "rank": 26,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 9
+        "consecutive_buy_days": 9,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -1701,7 +1987,9 @@
         "rank": 88,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -1719,7 +2007,9 @@
         "rank": 98,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-05-31": [
@@ -1739,7 +2029,9 @@
         "rank": 13,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 8
+        "consecutive_buy_days": 8,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3045",
@@ -1757,7 +2049,9 @@
         "rank": 21,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 5
+        "consecutive_buy_days": 5,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -1775,7 +2069,9 @@
         "rank": 23,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 8
+        "consecutive_buy_days": 8,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "4904",
@@ -1793,7 +2089,9 @@
         "rank": 40,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 5
+        "consecutive_buy_days": 5,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -1811,7 +2109,9 @@
         "rank": 78,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3015",
@@ -1829,7 +2129,9 @@
         "rank": 93,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -1847,7 +2149,9 @@
         "rank": 95,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-05-29": [
@@ -1867,7 +2171,9 @@
         "rank": 13,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 8
+        "consecutive_buy_days": 8,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3045",
@@ -1885,7 +2191,9 @@
         "rank": 21,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 5
+        "consecutive_buy_days": 5,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -1903,7 +2211,9 @@
         "rank": 23,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 8
+        "consecutive_buy_days": 8,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "4904",
@@ -1921,7 +2231,9 @@
         "rank": 40,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 5
+        "consecutive_buy_days": 5,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -1939,7 +2251,9 @@
         "rank": 78,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3015",
@@ -1957,7 +2271,9 @@
         "rank": 93,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -1975,7 +2291,9 @@
         "rank": 95,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-05-27": [
@@ -1995,7 +2313,9 @@
         "rank": 16,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 7
+        "consecutive_buy_days": 7,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -2013,7 +2333,9 @@
         "rank": 21,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 7
+        "consecutive_buy_days": 7,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2377",
@@ -2031,7 +2353,9 @@
         "rank": 38,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2633",
@@ -2049,7 +2373,9 @@
         "rank": 59,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3015",
@@ -2067,7 +2393,9 @@
         "rank": 80,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2610",
@@ -2085,7 +2413,9 @@
         "rank": 85,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2548",
@@ -2103,7 +2433,9 @@
         "rank": 91,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ],
     "2026-05-26": [
@@ -2123,7 +2455,9 @@
         "rank": 19,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 6
+        "consecutive_buy_days": 6,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1216",
@@ -2141,7 +2475,9 @@
         "rank": 25,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 6
+        "consecutive_buy_days": 6,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2377",
@@ -2159,7 +2495,9 @@
         "rank": 38,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "3015",
@@ -2177,7 +2515,9 @@
         "rank": 79,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "2548",
@@ -2195,7 +2535,9 @@
         "rank": 90,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0
+        "consecutive_buy_days": 0,
+        "cheap_score": null,
+        "dividend_score": null
       },
       {
         "code": "1229",
@@ -2213,7 +2555,9 @@
         "rank": 100,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1
+        "consecutive_buy_days": 1,
+        "cheap_score": null,
+        "dividend_score": null
       }
     ]
   }
