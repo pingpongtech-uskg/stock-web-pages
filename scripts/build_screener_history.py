@@ -175,12 +175,21 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             all_entries.append(entry)
             code_to_dates[code].append(report_date)
 
-    # Build per-code lookup: latest entry, earliest date
+    # Build per-code lookup: latest entry, earliest date, and first_price
     latest_by_code: dict[str, dict] = {}
+    first_price_map: dict[str, float] = {}  # code -> price at first appearance
     for entry in all_entries:
         code = entry["code"]
         if code not in latest_by_code or entry["screening_date"] > latest_by_code[code]["screening_date"]:
             latest_by_code[code] = entry
+
+    # Build first_price_map: for each code, find price on first_date
+    for code, dates in code_to_dates.items():
+        first_date = min(dates)
+        for entry in all_entries:
+            if entry["code"] == code and entry["screening_date"] == first_date:
+                first_price_map[code] = entry.get("cur_price", 0)
+                break
 
     # Precompute Z for active stocks using yfinance (live data, log prices)
     print("Recomputing Z with yfinance (raw prices, auto_adjust=False) for active stocks...")
@@ -241,6 +250,15 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         entry["first_date"] = first_date
         entry["consecutive_buy_days"] = consecutive_buy
 
+        # 最初上榜股價 & 漲跌幅
+        first_p = first_price_map.get(code, entry.get("cur_price", 0))
+        cur_p = entry.get("cur_price", 0)
+        entry["first_price"] = first_p
+        if first_p and first_p > 0 and cur_p:
+            entry["change_pct"] = round((cur_p - first_p) / first_p * 100, 2)
+        else:
+            entry["change_pct"] = None
+
         # Add value scores if available
         if code in value_cache:
             vs = value_cache[code]
@@ -297,7 +315,11 @@ def main():
 
     print(f"\nActive: {active_count} unique stocks")
     for s in result["active"][:8]:
-        print(f"  {s['code']} {s['name_zh']} | 首次:{s['first_date']} 最新:{s['last_date']} | 連續買超:{s['consecutive_buy_days']}日 | Z={s['regression_z']}")
+        fp = s.get('first_price', '-')
+        cp = s.get('cur_price', '-')
+        ch = s.get('change_pct', '-')
+        ch_str = f"{ch:+.1f}%" if isinstance(ch, (int, float)) else "-"
+        print(f"  {s['code']} {s['name_zh']} | 首次:{s['first_date']} 最新:{s['last_date']} | 連續買超:{s['consecutive_buy_days']}日 | Z={s['regression_z']} | 股價:{fp}>{cp} ({ch_str})")
 
     print(f"\nArchive: {archive_entries} entries across {archive_dates} dates")
 
