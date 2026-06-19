@@ -8,7 +8,8 @@
 scripts/
 ├── README.md                        ← 這份文件
 ├── build_site_data.py               ← 將 batch_*.json 轉換為 per-stock JSON（含技術指標）
-├── build_summary.py                 ← 生成列表頁用的 stocks_summary.json
+├── ../data/build_screening_history.py ← 生成首頁用的 screening_history.json
+├── build_summary.py                 ← 生成個股資料索引用的 stocks_summary.json
 └── test_build_site_data.py          ← build_site_data.py 的 pytest 測試
 ```
 
@@ -18,6 +19,7 @@ scripts/
 ┌─────────────────────────────────────────────────────────┐
 │  1. screener/daily_trust_monitor.py                     │
 │     (cronjob 每交易日 20:30 執行於 /root/tw-stock-monitor)  │
+│     → 產出 output/reports/daily_trust10_*.json           │
 │     → 產出 /tmp/tw_stock_data/batch_*.json               │
 ├─────────────────────────────────────────────────────────┤
 │  2. scripts/build_site_data.py                          │
@@ -25,12 +27,13 @@ scripts/
 │     → 計算 MA / RSI / KD / MACD 技術指標                  │
 │     → 產出 public/data/stocks/{code}.json (每個股票一個檔)  │
 ├─────────────────────────────────────────────────────────┤
-│  3. scripts/build_summary.py                            │
-│     → 讀取 public/data/stocks/*.json                     │
-│     → 產出 public/data/stocks_summary.json               │
+│  3. npm run build:screening                             │
+│     → 讀取 daily_trust10_*.json                          │
+│     → 產出 public/data/screening_history.json            │
+│     → 產出 src/data/screening_history.json               │
 ├─────────────────────────────────────────────────────────┤
 │  4. npm run build (Astro)                               │
-│     → 讀取 stocks_summary.json                          │
+│     → 讀取 screening_history.json                       │
 │     → 建置靜態網站到 dist/                                │
 ├─────────────────────────────────────────────────────────┤
 │  5. GitHub Actions (.github/workflows/deploy.yml)       │
@@ -48,4 +51,6 @@ scripts/
 
 - MA 計算規則：`data[T-N:T]` **不含 T**（使用者的 hard rule）
 - `build_site_data.py` 輸入路徑：`/tmp/tw_stock_data/batch_*.json`
-- 輸出目錄：`public/data/stocks/` 和 `public/data/stocks_summary.json`
+- `build_screening_history.py` 可用 `SCREENER_REPORTS_DIR` 指定 reports 目錄
+- 首頁只讀 `screening_history.json`，不再列出全部股票
+- 個股頁資料仍輸出到：`public/data/stocks/`

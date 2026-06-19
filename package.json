@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "build:screening": "python3 data/build_screening_history.py",
     "build": "astro build",
     "preview": "astro preview"
   },
