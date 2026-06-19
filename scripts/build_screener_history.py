@@ -72,12 +72,13 @@ def load_batch_prices(data_dir: str, code: str) -> np.ndarray | None:
     return None
 
 
-def compute_z_log(prices: np.ndarray) -> float | None:
+def compute_z(prices: np.ndarray) -> float | None:
     """
-    樂活五線譜 3.5年 Z-score using log prices.
+    樂活五線譜 3.5年 Z-score (raw prices, auto_adjust=False).
+    參數與籌碼K線 APP 一致。
     
     p: array of daily close prices (most recent last).
-    Returns Z = (ln(P_now) - ln(trend_now)) / sigma_residuals.
+    Returns Z = (P_now - trend_now) / sigma_residuals.
     """
     if len(prices) < 100:
         return None
@@ -85,15 +86,14 @@ def compute_z_log(prices: np.ndarray) -> float | None:
     p = prices[-882:] if len(prices) >= 882 else prices
     if len(p) < 100:
         return None
-    log_p = np.log(p)
-    x = np.arange(len(log_p))
-    slope, intercept = np.polyfit(x, log_p, 1)
+    x = np.arange(len(p))
+    slope, intercept = np.polyfit(x, p, 1)
     trend = slope * x + intercept
-    residuals = log_p - trend
+    residuals = p - trend
     sigma = np.std(residuals, ddof=0)
     if sigma <= 0:
         return None
-    z = (log_p[-1] - trend[-1]) / sigma
+    z = (p[-1] - trend[-1]) / sigma
     return round(float(z), 2)
 
 
@@ -183,7 +183,7 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             latest_by_code[code] = entry
 
     # Precompute Z for active stocks using yfinance (live data, log prices)
-    print("Recomputing Z with yfinance (log-price regression) for active stocks...")
+    print("Recomputing Z with yfinance (raw prices, auto_adjust=False) for active stocks...")
     z_cache: dict[str, float | None] = {}
     try:
         import yfinance as yf
@@ -191,7 +191,7 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             try:
                 for ext in [".TW", ".TWO"]:
                     tk = yf.Ticker(f"{code}{ext}")
-                    hist = tk.history(period="5y", auto_adjust=True)
+                    hist = tk.history(period="5y", auto_adjust=False)
                     if hist is not None and len(hist) >= 200:
                         break
                 if hist is None or len(hist) < 200:
@@ -199,7 +199,7 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
                 p = hist['Close'].values
                 if hasattr(p[0], 'item'):
                     p = np.array([float(x) for x in p])
-                z = compute_z_log(p)
+                z = compute_z(p)
                 if z is not None:
                     z_cache[code] = z
             except Exception:
