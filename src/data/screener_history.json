@@ -14,7 +14,9 @@
       "l_score": 100.0,
       "regression_z": -1.27,
       "rank": 36,
-      "screening_date": "2026-06-18"
+      "screening_date": "2026-06-18",
+      "first_date": "2026-06-02",
+      "consecutive_days": 13
     },
     {
       "code": "1216",
@@ -30,7 +32,9 @@
       "l_score": 100.0,
       "regression_z": -1.28,
       "rank": 60,
-      "screening_date": "2026-06-18"
+      "screening_date": "2026-06-18",
+      "first_date": "2026-05-26",
+      "consecutive_days": 18
     },
     {
       "code": "1513",
@@ -46,7 +50,9 @@
       "l_score": 83.3,
       "regression_z": -0.15,
       "rank": 63,
-      "screening_date": "2026-06-18"
+      "screening_date": "2026-06-18",
+      "first_date": "2026-06-18",
+      "consecutive_days": 1
     },
     {
       "code": "2633",
@@ -62,7 +68,9 @@
       "l_score": 83.3,
       "regression_z": -0.96,
       "rank": 80,
-      "screening_date": "2026-06-18"
+      "screening_date": "2026-06-18",
+      "first_date": "2026-05-27",
+      "consecutive_days": 4
     },
     {
       "code": "2006",
@@ -78,7 +86,9 @@
       "l_score": 83.3,
       "regression_z": -0.13,
       "rank": 87,
-      "screening_date": "2026-06-18"
+      "screening_date": "2026-06-18",
+      "first_date": "2026-06-12",
+      "consecutive_days": 5
     },
     {
       "code": "6191",
@@ -94,7 +104,9 @@
       "l_score": 83.3,
       "regression_z": -0.91,
       "rank": 87,
-      "screening_date": "2026-06-17"
+      "screening_date": "2026-06-17",
+      "first_date": "2026-06-15",
+      "consecutive_days": 3
     },
     {
       "code": "2618",
@@ -110,7 +122,9 @@
       "l_score": 100.0,
       "regression_z": -0.26,
       "rank": 24,
-      "screening_date": "2026-06-16"
+      "screening_date": "2026-06-16",
+      "first_date": "2026-05-26",
+      "consecutive_days": 16
     },
     {
       "code": "2610",
@@ -126,7 +140,9 @@
       "l_score": 83.3,
       "regression_z": -0.11,
       "rank": 87,
-      "screening_date": "2026-06-16"
+      "screening_date": "2026-06-16",
+      "first_date": "2026-05-27",
+      "consecutive_days": 15
     },
     {
       "code": "3014",
@@ -142,7 +158,9 @@
       "l_score": 83.3,
       "regression_z": -0.27,
       "rank": 87,
-      "screening_date": "2026-06-11"
+      "screening_date": "2026-06-11",
+      "first_date": "2026-06-08",
+      "consecutive_days": 4
     },
     {
       "code": "3045",
@@ -158,7 +176,9 @@
       "l_score": 83.3,
       "regression_z": -0.15,
       "rank": 30,
-      "screening_date": "2026-06-08"
+      "screening_date": "2026-06-08",
+      "first_date": "2026-05-29",
+      "consecutive_days": 1
     },
     {
       "code": "4904",
@@ -174,7 +194,9 @@
       "l_score": 83.3,
       "regression_z": -0.46,
       "rank": 40,
-      "screening_date": "2026-05-31"
+      "screening_date": "2026-05-31",
+      "first_date": "2026-05-29",
+      "consecutive_days": 2
     },
     {
       "code": "3015",
@@ -190,7 +212,9 @@
       "l_score": 83.3,
       "regression_z": -1.82,
       "rank": 93,
-      "screening_date": "2026-05-31"
+      "screening_date": "2026-05-31",
+      "first_date": "2026-05-26",
+      "consecutive_days": 4
     },
     {
       "code": "2377",
@@ -206,7 +230,9 @@
       "l_score": 83.3,
       "regression_z": -0.13,
       "rank": 38,
-      "screening_date": "2026-05-27"
+      "screening_date": "2026-05-27",
+      "first_date": "2026-05-26",
+      "consecutive_days": 2
     },
     {
       "code": "1229",
@@ -222,7 +248,9 @@
       "l_score": 83.3,
       "regression_z": -1.39,
       "rank": 100,
-      "screening_date": "2026-05-26"
+      "screening_date": "2026-05-26",
+      "first_date": "2026-05-26",
+      "consecutive_days": 1
     },
     {
       "code": "2548",
@@ -238,10 +266,104 @@
       "l_score": 83.3,
       "regression_z": -0.1,
       "rank": 91,
-      "screening_date": "2026-05-27"
+      "screening_date": "2026-05-27",
+      "first_date": "2026-05-26",
+      "consecutive_days": 2
     }
   ],
   "archive": {
+    "2026-06-18": [
+      {
+        "code": "2105",
+        "name_zh": "正新",
+        "name_en": "Cheng Shin Rubber Ind. Co., Ltd.",
+        "net_amount_10d": 2556344928,
+        "net_amount_10d_k": 2556345,
+        "net_shares_10d": 86217368,
+        "net_shares_10d_zhang": 86217,
+        "last_date": "2026-06-18",
+        "cur_price": 29.65,
+        "g_score": 100.0,
+        "l_score": 100.0,
+        "regression_z": -1.27,
+        "rank": 36,
+        "screening_date": "2026-06-18",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
+      },
+      {
+        "code": "1216",
+        "name_zh": "統一",
+        "name_en": "Uni-President Enterprises Corp.",
+        "net_amount_10d": 827505546,
+        "net_amount_10d_k": 827506,
+        "net_shares_10d": 11107457,
+        "net_shares_10d_zhang": 11107,
+        "last_date": "2026-06-18",
+        "cur_price": 74.5,
+        "g_score": 100.0,
+        "l_score": 100.0,
+        "regression_z": -1.28,
+        "rank": 60,
+        "screening_date": "2026-06-18",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
+      },
+      {
+        "code": "1513",
+        "name_zh": "中興電",
+        "name_en": "Chung-Hsin Electric and Machinery Manufacturing Corp.",
+        "net_amount_10d": 730911916,
+        "net_amount_10d_k": 730912,
+        "net_shares_10d": 4141144,
+        "net_shares_10d_zhang": 4141,
+        "last_date": "2026-06-18",
+        "cur_price": 176.5,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -0.15,
+        "rank": 63,
+        "screening_date": "2026-06-18",
+        "first_date": "2026-06-18",
+        "consecutive_days": 1
+      },
+      {
+        "code": "2633",
+        "name_zh": "台灣高鐵",
+        "name_en": "Taiwan High Speed Rail Corporation",
+        "net_amount_10d": 340183698,
+        "net_amount_10d_k": 340184,
+        "net_shares_10d": 13008937,
+        "net_shares_10d_zhang": 13009,
+        "last_date": "2026-06-18",
+        "cur_price": 26.15,
+        "g_score": 100.0,
+        "l_score": 83.3,
+        "regression_z": -0.96,
+        "rank": 80,
+        "screening_date": "2026-06-18",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
+      },
+      {
+        "code": "2006",
+        "name_zh": "東和鋼鐵",
+        "name_en": "Tung Ho Steel Enterprise Corporation",
+        "net_amount_10d": 168691860,
+        "net_amount_10d_k": 168692,
+        "net_shares_10d": 2427221,
+        "net_shares_10d_zhang": 2427,
+        "last_date": "2026-06-18",
+        "cur_price": 69.5,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -0.13,
+        "rank": 87,
+        "screening_date": "2026-06-18",
+        "first_date": "2026-06-12",
+        "consecutive_days": 5
+      }
+    ],
     "2026-06-17": [
       {
         "code": "2105",
@@ -257,7 +379,9 @@
         "l_score": 100.0,
         "regression_z": -1.27,
         "rank": 31,
-        "screening_date": "2026-06-17"
+        "screening_date": "2026-06-17",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "1216",
@@ -273,7 +397,9 @@
         "l_score": 100.0,
         "regression_z": -0.99,
         "rank": 66,
-        "screening_date": "2026-06-17"
+        "screening_date": "2026-06-17",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "2633",
@@ -289,7 +415,9 @@
         "l_score": 83.3,
         "regression_z": -0.97,
         "rank": 82,
-        "screening_date": "2026-06-17"
+        "screening_date": "2026-06-17",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "2006",
@@ -305,10 +433,48 @@
         "l_score": 83.3,
         "regression_z": -0.11,
         "rank": 84,
-        "screening_date": "2026-06-17"
+        "screening_date": "2026-06-17",
+        "first_date": "2026-06-12",
+        "consecutive_days": 5
+      },
+      {
+        "code": "6191",
+        "name_zh": "精成科",
+        "name_en": "Global Brands Manufacture Ltd.",
+        "net_amount_10d": 118200000,
+        "net_amount_10d_k": 118200,
+        "net_shares_10d": 1182000,
+        "net_shares_10d_zhang": 1182,
+        "last_date": "2026-06-15",
+        "cur_price": 100.0,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -0.91,
+        "rank": 87,
+        "screening_date": "2026-06-17",
+        "first_date": "2026-06-15",
+        "consecutive_days": 3
       }
     ],
     "2026-06-16": [
+      {
+        "code": "2618",
+        "name_zh": "長榮航",
+        "name_en": "EVA Airways Corp.",
+        "net_amount_10d": 4076927228,
+        "net_amount_10d_k": 4076927,
+        "net_shares_10d": 102564207,
+        "net_shares_10d_zhang": 102564,
+        "last_date": "2026-06-15",
+        "cur_price": 39.75,
+        "g_score": 100.0,
+        "l_score": 100.0,
+        "regression_z": -0.26,
+        "rank": 24,
+        "screening_date": "2026-06-16",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
+      },
       {
         "code": "2105",
         "name_zh": "正新",
@@ -323,7 +489,9 @@
         "l_score": 100.0,
         "regression_z": -0.9,
         "rank": 25,
-        "screening_date": "2026-06-16"
+        "screening_date": "2026-06-16",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "1216",
@@ -339,7 +507,9 @@
         "l_score": 100.0,
         "regression_z": -1.07,
         "rank": 54,
-        "screening_date": "2026-06-16"
+        "screening_date": "2026-06-16",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "2006",
@@ -355,7 +525,27 @@
         "l_score": 83.3,
         "regression_z": -0.28,
         "rank": 86,
-        "screening_date": "2026-06-16"
+        "screening_date": "2026-06-16",
+        "first_date": "2026-06-12",
+        "consecutive_days": 5
+      },
+      {
+        "code": "2610",
+        "name_zh": "華航",
+        "name_en": "China Airlines, Ltd.",
+        "net_amount_10d": 120031479,
+        "net_amount_10d_k": 120031,
+        "net_shares_10d": 5661862,
+        "net_shares_10d_zhang": 5662,
+        "last_date": "2026-06-15",
+        "cur_price": 21.2,
+        "g_score": 100.0,
+        "l_score": 83.3,
+        "regression_z": -0.11,
+        "rank": 87,
+        "screening_date": "2026-06-16",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       },
       {
         "code": "6191",
@@ -371,7 +561,9 @@
         "l_score": 83.3,
         "regression_z": -0.87,
         "rank": 88,
-        "screening_date": "2026-06-16"
+        "screening_date": "2026-06-16",
+        "first_date": "2026-06-15",
+        "consecutive_days": 3
       },
       {
         "code": "2633",
@@ -387,7 +579,9 @@
         "l_score": 83.3,
         "regression_z": -0.97,
         "rank": 99,
-        "screening_date": "2026-06-16"
+        "screening_date": "2026-06-16",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       }
     ],
     "2026-06-15": [
@@ -405,7 +599,9 @@
         "l_score": 100.0,
         "regression_z": -0.2,
         "rank": 24,
-        "screening_date": "2026-06-15"
+        "screening_date": "2026-06-15",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "2105",
@@ -421,7 +617,9 @@
         "l_score": 100.0,
         "regression_z": -0.91,
         "rank": 25,
-        "screening_date": "2026-06-15"
+        "screening_date": "2026-06-15",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "1216",
@@ -437,7 +635,9 @@
         "l_score": 100.0,
         "regression_z": -0.94,
         "rank": 54,
-        "screening_date": "2026-06-15"
+        "screening_date": "2026-06-15",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "2006",
@@ -453,7 +653,9 @@
         "l_score": 83.3,
         "regression_z": -0.22,
         "rank": 86,
-        "screening_date": "2026-06-15"
+        "screening_date": "2026-06-15",
+        "first_date": "2026-06-12",
+        "consecutive_days": 5
       },
       {
         "code": "6191",
@@ -469,7 +671,9 @@
         "l_score": 83.3,
         "regression_z": -0.67,
         "rank": 87,
-        "screening_date": "2026-06-15"
+        "screening_date": "2026-06-15",
+        "first_date": "2026-06-15",
+        "consecutive_days": 3
       },
       {
         "code": "2610",
@@ -485,7 +689,9 @@
         "l_score": 83.3,
         "regression_z": -0.01,
         "rank": 88,
-        "screening_date": "2026-06-15"
+        "screening_date": "2026-06-15",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       },
       {
         "code": "2633",
@@ -501,7 +707,9 @@
         "l_score": 83.3,
         "regression_z": -1.59,
         "rank": 100,
-        "screening_date": "2026-06-15"
+        "screening_date": "2026-06-15",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       }
     ],
     "2026-06-12": [
@@ -519,7 +727,9 @@
         "l_score": 100.0,
         "regression_z": -0.54,
         "rank": 18,
-        "screening_date": "2026-06-12"
+        "screening_date": "2026-06-12",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "2105",
@@ -535,7 +745,9 @@
         "l_score": 100.0,
         "regression_z": -0.87,
         "rank": 25,
-        "screening_date": "2026-06-12"
+        "screening_date": "2026-06-12",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "1216",
@@ -551,7 +763,9 @@
         "l_score": 100.0,
         "regression_z": -0.9,
         "rank": 50,
-        "screening_date": "2026-06-12"
+        "screening_date": "2026-06-12",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "2610",
@@ -567,7 +781,9 @@
         "l_score": 83.3,
         "regression_z": -0.49,
         "rank": 87,
-        "screening_date": "2026-06-12"
+        "screening_date": "2026-06-12",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       },
       {
         "code": "2006",
@@ -583,7 +799,9 @@
         "l_score": 83.3,
         "regression_z": -0.31,
         "rank": 88,
-        "screening_date": "2026-06-12"
+        "screening_date": "2026-06-12",
+        "first_date": "2026-06-12",
+        "consecutive_days": 5
       }
     ],
     "2026-06-11": [
@@ -601,7 +819,9 @@
         "l_score": 100.0,
         "regression_z": -0.82,
         "rank": 16,
-        "screening_date": "2026-06-11"
+        "screening_date": "2026-06-11",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "2105",
@@ -617,7 +837,9 @@
         "l_score": 100.0,
         "regression_z": -0.76,
         "rank": 27,
-        "screening_date": "2026-06-11"
+        "screening_date": "2026-06-11",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "1216",
@@ -633,7 +855,27 @@
         "l_score": 100.0,
         "regression_z": -1.08,
         "rank": 45,
-        "screening_date": "2026-06-11"
+        "screening_date": "2026-06-11",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
+      },
+      {
+        "code": "3014",
+        "name_zh": "聯陽",
+        "name_en": "ITE Tech. Inc",
+        "net_amount_10d": 174667113,
+        "net_amount_10d_k": 174667,
+        "net_shares_10d": 1252094,
+        "net_shares_10d_zhang": 1252,
+        "last_date": "2026-06-11",
+        "cur_price": 139.5,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -0.27,
+        "rank": 87,
+        "screening_date": "2026-06-11",
+        "first_date": "2026-06-08",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -649,7 +891,9 @@
         "l_score": 83.3,
         "regression_z": -0.94,
         "rank": 94,
-        "screening_date": "2026-06-11"
+        "screening_date": "2026-06-11",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-06-10": [
@@ -667,7 +911,9 @@
         "l_score": 100.0,
         "regression_z": -0.94,
         "rank": 16,
-        "screening_date": "2026-06-10"
+        "screening_date": "2026-06-10",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "2105",
@@ -683,7 +929,9 @@
         "l_score": 100.0,
         "regression_z": -0.83,
         "rank": 30,
-        "screening_date": "2026-06-10"
+        "screening_date": "2026-06-10",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "1216",
@@ -699,7 +947,9 @@
         "l_score": 100.0,
         "regression_z": -1.32,
         "rank": 39,
-        "screening_date": "2026-06-10"
+        "screening_date": "2026-06-10",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "3014",
@@ -715,7 +965,9 @@
         "l_score": 83.3,
         "regression_z": -0.4,
         "rank": 87,
-        "screening_date": "2026-06-10"
+        "screening_date": "2026-06-10",
+        "first_date": "2026-06-08",
+        "consecutive_days": 4
       },
       {
         "code": "2633",
@@ -731,7 +983,9 @@
         "l_score": 83.3,
         "regression_z": -1.37,
         "rank": 90,
-        "screening_date": "2026-06-10"
+        "screening_date": "2026-06-10",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -747,7 +1001,9 @@
         "l_score": 83.3,
         "regression_z": -0.89,
         "rank": 91,
-        "screening_date": "2026-06-10"
+        "screening_date": "2026-06-10",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-06-09": [
@@ -765,7 +1021,9 @@
         "l_score": 100.0,
         "regression_z": -1.01,
         "rank": 12,
-        "screening_date": "2026-06-09"
+        "screening_date": "2026-06-09",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "2105",
@@ -781,7 +1039,9 @@
         "l_score": 100.0,
         "regression_z": -0.89,
         "rank": 35,
-        "screening_date": "2026-06-09"
+        "screening_date": "2026-06-09",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "1216",
@@ -797,7 +1057,9 @@
         "l_score": 100.0,
         "regression_z": -1.39,
         "rank": 37,
-        "screening_date": "2026-06-09"
+        "screening_date": "2026-06-09",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "3014",
@@ -813,7 +1075,9 @@
         "l_score": 83.3,
         "regression_z": -0.23,
         "rank": 86,
-        "screening_date": "2026-06-09"
+        "screening_date": "2026-06-09",
+        "first_date": "2026-06-08",
+        "consecutive_days": 4
       },
       {
         "code": "2633",
@@ -829,7 +1093,9 @@
         "l_score": 83.3,
         "regression_z": -1.79,
         "rank": 89,
-        "screening_date": "2026-06-09"
+        "screening_date": "2026-06-09",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -845,7 +1111,9 @@
         "l_score": 83.3,
         "regression_z": -0.92,
         "rank": 91,
-        "screening_date": "2026-06-09"
+        "screening_date": "2026-06-09",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-06-08": [
@@ -863,7 +1131,27 @@
         "l_score": 100.0,
         "regression_z": -1.18,
         "rank": 10,
-        "screening_date": "2026-06-08"
+        "screening_date": "2026-06-08",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
+      },
+      {
+        "code": "3045",
+        "name_zh": "台灣大",
+        "name_en": "Taiwan Mobile Co., Ltd.",
+        "net_amount_10d": 3535286530,
+        "net_amount_10d_k": 3535287,
+        "net_shares_10d": 30741622,
+        "net_shares_10d_zhang": 30742,
+        "last_date": "2026-06-08",
+        "cur_price": 115.0,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -0.15,
+        "rank": 30,
+        "screening_date": "2026-06-08",
+        "first_date": "2026-05-29",
+        "consecutive_days": 1
       },
       {
         "code": "1216",
@@ -879,7 +1167,9 @@
         "l_score": 100.0,
         "regression_z": -1.63,
         "rank": 33,
-        "screening_date": "2026-06-08"
+        "screening_date": "2026-06-08",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "2105",
@@ -895,7 +1185,9 @@
         "l_score": 100.0,
         "regression_z": -1.0,
         "rank": 39,
-        "screening_date": "2026-06-08"
+        "screening_date": "2026-06-08",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "3014",
@@ -911,7 +1203,9 @@
         "l_score": 83.3,
         "regression_z": -0.15,
         "rank": 87,
-        "screening_date": "2026-06-08"
+        "screening_date": "2026-06-08",
+        "first_date": "2026-06-08",
+        "consecutive_days": 4
       },
       {
         "code": "2633",
@@ -927,7 +1221,9 @@
         "l_score": 83.3,
         "regression_z": -2.1,
         "rank": 89,
-        "screening_date": "2026-06-08"
+        "screening_date": "2026-06-08",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -943,7 +1239,9 @@
         "l_score": 83.3,
         "regression_z": -1.14,
         "rank": 90,
-        "screening_date": "2026-06-08"
+        "screening_date": "2026-06-08",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-06-05": [
@@ -961,7 +1259,9 @@
         "l_score": 100.0,
         "regression_z": -0.82,
         "rank": 10,
-        "screening_date": "2026-06-05"
+        "screening_date": "2026-06-05",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "1216",
@@ -977,7 +1277,9 @@
         "l_score": 100.0,
         "regression_z": -1.46,
         "rank": 30,
-        "screening_date": "2026-06-05"
+        "screening_date": "2026-06-05",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "2105",
@@ -993,7 +1295,9 @@
         "l_score": 100.0,
         "regression_z": -0.92,
         "rank": 41,
-        "screening_date": "2026-06-05"
+        "screening_date": "2026-06-05",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "2633",
@@ -1009,7 +1313,9 @@
         "l_score": 83.3,
         "regression_z": -1.71,
         "rank": 90,
-        "screening_date": "2026-06-05"
+        "screening_date": "2026-06-05",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -1025,7 +1331,9 @@
         "l_score": 83.3,
         "regression_z": -0.72,
         "rank": 91,
-        "screening_date": "2026-06-05"
+        "screening_date": "2026-06-05",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-06-04": [
@@ -1043,7 +1351,9 @@
         "l_score": 100.0,
         "regression_z": -0.76,
         "rank": 8,
-        "screening_date": "2026-06-04"
+        "screening_date": "2026-06-04",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "1216",
@@ -1059,7 +1369,9 @@
         "l_score": 100.0,
         "regression_z": -1.5,
         "rank": 25,
-        "screening_date": "2026-06-04"
+        "screening_date": "2026-06-04",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "2105",
@@ -1075,7 +1387,9 @@
         "l_score": 100.0,
         "regression_z": -0.86,
         "rank": 41,
-        "screening_date": "2026-06-04"
+        "screening_date": "2026-06-04",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "2633",
@@ -1091,7 +1405,9 @@
         "l_score": 83.3,
         "regression_z": -1.68,
         "rank": 91,
-        "screening_date": "2026-06-04"
+        "screening_date": "2026-06-04",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -1107,7 +1423,9 @@
         "l_score": 83.3,
         "regression_z": -0.75,
         "rank": 92,
-        "screening_date": "2026-06-04"
+        "screening_date": "2026-06-04",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-06-03": [
@@ -1125,7 +1443,9 @@
         "l_score": 100.0,
         "regression_z": -0.82,
         "rank": 9,
-        "screening_date": "2026-06-03"
+        "screening_date": "2026-06-03",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "1216",
@@ -1141,7 +1461,9 @@
         "l_score": 100.0,
         "regression_z": -1.57,
         "rank": 25,
-        "screening_date": "2026-06-03"
+        "screening_date": "2026-06-03",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "2105",
@@ -1157,7 +1479,9 @@
         "l_score": 100.0,
         "regression_z": -0.86,
         "rank": 50,
-        "screening_date": "2026-06-03"
+        "screening_date": "2026-06-03",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "2633",
@@ -1173,7 +1497,9 @@
         "l_score": 83.3,
         "regression_z": -1.48,
         "rank": 90,
-        "screening_date": "2026-06-03"
+        "screening_date": "2026-06-03",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -1189,7 +1515,9 @@
         "l_score": 83.3,
         "regression_z": -0.73,
         "rank": 91,
-        "screening_date": "2026-06-03"
+        "screening_date": "2026-06-03",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-06-02": [
@@ -1207,7 +1535,9 @@
         "l_score": 100.0,
         "regression_z": -0.94,
         "rank": 11,
-        "screening_date": "2026-06-02"
+        "screening_date": "2026-06-02",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "1216",
@@ -1223,7 +1553,9 @@
         "l_score": 100.0,
         "regression_z": -1.39,
         "rank": 25,
-        "screening_date": "2026-06-02"
+        "screening_date": "2026-06-02",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "3045",
@@ -1239,7 +1571,9 @@
         "l_score": 83.3,
         "regression_z": 0.0,
         "rank": 26,
-        "screening_date": "2026-06-02"
+        "screening_date": "2026-06-02",
+        "first_date": "2026-05-29",
+        "consecutive_days": 1
       },
       {
         "code": "2105",
@@ -1255,7 +1589,9 @@
         "l_score": 100.0,
         "regression_z": -0.95,
         "rank": 68,
-        "screening_date": "2026-06-02"
+        "screening_date": "2026-06-02",
+        "first_date": "2026-06-02",
+        "consecutive_days": 13
       },
       {
         "code": "2633",
@@ -1271,7 +1607,9 @@
         "l_score": 83.3,
         "regression_z": -1.95,
         "rank": 91,
-        "screening_date": "2026-06-02"
+        "screening_date": "2026-06-02",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -1287,7 +1625,9 @@
         "l_score": 83.3,
         "regression_z": -0.94,
         "rank": 94,
-        "screening_date": "2026-06-02"
+        "screening_date": "2026-06-02",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-06-01": [
@@ -1305,7 +1645,9 @@
         "l_score": 100.0,
         "regression_z": -0.82,
         "rank": 11,
-        "screening_date": "2026-06-01"
+        "screening_date": "2026-06-01",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "3045",
@@ -1321,7 +1663,9 @@
         "l_score": 83.3,
         "regression_z": -0.34,
         "rank": 25,
-        "screening_date": "2026-06-01"
+        "screening_date": "2026-06-01",
+        "first_date": "2026-05-29",
+        "consecutive_days": 1
       },
       {
         "code": "1216",
@@ -1337,7 +1681,9 @@
         "l_score": 100.0,
         "regression_z": -1.5,
         "rank": 26,
-        "screening_date": "2026-06-01"
+        "screening_date": "2026-06-01",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "2633",
@@ -1353,7 +1699,9 @@
         "l_score": 83.3,
         "regression_z": -2.17,
         "rank": 88,
-        "screening_date": "2026-06-01"
+        "screening_date": "2026-06-01",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -1369,7 +1717,9 @@
         "l_score": 83.3,
         "regression_z": -0.92,
         "rank": 98,
-        "screening_date": "2026-06-01"
+        "screening_date": "2026-06-01",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-05-31": [
@@ -1387,7 +1737,9 @@
         "l_score": 100.0,
         "regression_z": -1.27,
         "rank": 13,
-        "screening_date": "2026-05-31"
+        "screening_date": "2026-05-31",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "3045",
@@ -1403,7 +1755,9 @@
         "l_score": 83.3,
         "regression_z": -0.92,
         "rank": 21,
-        "screening_date": "2026-05-31"
+        "screening_date": "2026-05-31",
+        "first_date": "2026-05-29",
+        "consecutive_days": 1
       },
       {
         "code": "1216",
@@ -1419,7 +1773,27 @@
         "l_score": 100.0,
         "regression_z": -1.88,
         "rank": 23,
-        "screening_date": "2026-05-31"
+        "screening_date": "2026-05-31",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
+      },
+      {
+        "code": "4904",
+        "name_zh": "遠傳",
+        "name_en": "Far EasTone Telecommunications Co., Ltd.",
+        "net_amount_10d": 1017319680,
+        "net_amount_10d_k": 1017320,
+        "net_shares_10d": 10753908,
+        "net_shares_10d_zhang": 10754,
+        "last_date": "2026-05-29",
+        "cur_price": 94.6,
+        "g_score": 100.0,
+        "l_score": 83.3,
+        "regression_z": -0.46,
+        "rank": 40,
+        "screening_date": "2026-05-31",
+        "first_date": "2026-05-29",
+        "consecutive_days": 2
       },
       {
         "code": "2633",
@@ -1435,7 +1809,27 @@
         "l_score": 83.3,
         "regression_z": -2.44,
         "rank": 78,
-        "screening_date": "2026-05-31"
+        "screening_date": "2026-05-31",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
+      },
+      {
+        "code": "3015",
+        "name_zh": "全漢",
+        "name_en": "FSP Technology Inc.",
+        "net_amount_10d": 30344495,
+        "net_amount_10d_k": 30344,
+        "net_shares_10d": 604472,
+        "net_shares_10d_zhang": 604,
+        "last_date": "2026-05-29",
+        "cur_price": 50.2,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -1.82,
+        "rank": 93,
+        "screening_date": "2026-05-31",
+        "first_date": "2026-05-26",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -1451,7 +1845,9 @@
         "l_score": 83.3,
         "regression_z": -1.14,
         "rank": 95,
-        "screening_date": "2026-05-31"
+        "screening_date": "2026-05-31",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-05-29": [
@@ -1469,7 +1865,9 @@
         "l_score": 100.0,
         "regression_z": -1.27,
         "rank": 13,
-        "screening_date": "2026-05-29"
+        "screening_date": "2026-05-29",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "3045",
@@ -1485,7 +1883,9 @@
         "l_score": 83.3,
         "regression_z": -0.92,
         "rank": 21,
-        "screening_date": "2026-05-29"
+        "screening_date": "2026-05-29",
+        "first_date": "2026-05-29",
+        "consecutive_days": 1
       },
       {
         "code": "1216",
@@ -1501,7 +1901,9 @@
         "l_score": 100.0,
         "regression_z": -1.88,
         "rank": 23,
-        "screening_date": "2026-05-29"
+        "screening_date": "2026-05-29",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "4904",
@@ -1517,7 +1919,9 @@
         "l_score": 83.3,
         "regression_z": -0.46,
         "rank": 40,
-        "screening_date": "2026-05-29"
+        "screening_date": "2026-05-29",
+        "first_date": "2026-05-29",
+        "consecutive_days": 2
       },
       {
         "code": "2633",
@@ -1533,7 +1937,9 @@
         "l_score": 83.3,
         "regression_z": -2.44,
         "rank": 78,
-        "screening_date": "2026-05-29"
+        "screening_date": "2026-05-29",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "3015",
@@ -1549,7 +1955,9 @@
         "l_score": 83.3,
         "regression_z": -1.82,
         "rank": 93,
-        "screening_date": "2026-05-29"
+        "screening_date": "2026-05-29",
+        "first_date": "2026-05-26",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -1565,7 +1973,9 @@
         "l_score": 83.3,
         "regression_z": -1.14,
         "rank": 95,
-        "screening_date": "2026-05-29"
+        "screening_date": "2026-05-29",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
       }
     ],
     "2026-05-27": [
@@ -1583,7 +1993,9 @@
         "l_score": 100.0,
         "regression_z": -1.62,
         "rank": 16,
-        "screening_date": "2026-05-27"
+        "screening_date": "2026-05-27",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "1216",
@@ -1599,7 +2011,27 @@
         "l_score": 100.0,
         "regression_z": -2.22,
         "rank": 21,
-        "screening_date": "2026-05-27"
+        "screening_date": "2026-05-27",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
+      },
+      {
+        "code": "2377",
+        "name_zh": "微星",
+        "name_en": "Micro-Star International Co., Ltd.",
+        "net_amount_10d": 531374888,
+        "net_amount_10d_k": 531375,
+        "net_shares_10d": 4200592,
+        "net_shares_10d_zhang": 4201,
+        "last_date": "2026-05-27",
+        "cur_price": 126.5,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -0.13,
+        "rank": 38,
+        "screening_date": "2026-05-27",
+        "first_date": "2026-05-26",
+        "consecutive_days": 2
       },
       {
         "code": "2633",
@@ -1615,7 +2047,9 @@
         "l_score": 83.3,
         "regression_z": -2.07,
         "rank": 59,
-        "screening_date": "2026-05-27"
+        "screening_date": "2026-05-27",
+        "first_date": "2026-05-27",
+        "consecutive_days": 4
       },
       {
         "code": "3015",
@@ -1631,7 +2065,9 @@
         "l_score": 83.3,
         "regression_z": -1.6,
         "rank": 80,
-        "screening_date": "2026-05-27"
+        "screening_date": "2026-05-27",
+        "first_date": "2026-05-26",
+        "consecutive_days": 4
       },
       {
         "code": "2610",
@@ -1647,7 +2083,27 @@
         "l_score": 83.3,
         "regression_z": -1.46,
         "rank": 85,
-        "screening_date": "2026-05-27"
+        "screening_date": "2026-05-27",
+        "first_date": "2026-05-27",
+        "consecutive_days": 15
+      },
+      {
+        "code": "2548",
+        "name_zh": "華固",
+        "name_en": "Huaku Development Co., Ltd.",
+        "net_amount_10d": 14094000,
+        "net_amount_10d_k": 14094,
+        "net_shares_10d": 116000,
+        "net_shares_10d_zhang": 116,
+        "last_date": "2026-05-25",
+        "cur_price": 121.5,
+        "g_score": 100.0,
+        "l_score": 83.3,
+        "regression_z": -0.1,
+        "rank": 91,
+        "screening_date": "2026-05-27",
+        "first_date": "2026-05-26",
+        "consecutive_days": 2
       }
     ],
     "2026-05-26": [
@@ -1665,7 +2121,9 @@
         "l_score": 100.0,
         "regression_z": -1.51,
         "rank": 19,
-        "screening_date": "2026-05-26"
+        "screening_date": "2026-05-26",
+        "first_date": "2026-05-26",
+        "consecutive_days": 16
       },
       {
         "code": "1216",
@@ -1681,7 +2139,9 @@
         "l_score": 100.0,
         "regression_z": -2.11,
         "rank": 25,
-        "screening_date": "2026-05-26"
+        "screening_date": "2026-05-26",
+        "first_date": "2026-05-26",
+        "consecutive_days": 18
       },
       {
         "code": "2377",
@@ -1697,7 +2157,9 @@
         "l_score": 83.3,
         "regression_z": -0.15,
         "rank": 38,
-        "screening_date": "2026-05-26"
+        "screening_date": "2026-05-26",
+        "first_date": "2026-05-26",
+        "consecutive_days": 2
       },
       {
         "code": "3015",
@@ -1713,7 +2175,9 @@
         "l_score": 83.3,
         "regression_z": -1.51,
         "rank": 79,
-        "screening_date": "2026-05-26"
+        "screening_date": "2026-05-26",
+        "first_date": "2026-05-26",
+        "consecutive_days": 4
       },
       {
         "code": "2548",
@@ -1729,7 +2193,27 @@
         "l_score": 83.3,
         "regression_z": -0.13,
         "rank": 90,
-        "screening_date": "2026-05-26"
+        "screening_date": "2026-05-26",
+        "first_date": "2026-05-26",
+        "consecutive_days": 2
+      },
+      {
+        "code": "1229",
+        "name_zh": "聯華",
+        "name_en": "Lien Hwa Industrial Holdings Corporation",
+        "net_amount_10d": 3351600,
+        "net_amount_10d_k": 3352,
+        "net_shares_10d": 84000,
+        "net_shares_10d_zhang": 84,
+        "last_date": "2026-05-26",
+        "cur_price": 39.9,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -1.39,
+        "rank": 100,
+        "screening_date": "2026-05-26",
+        "first_date": "2026-05-26",
+        "consecutive_days": 1
       }
     ]
   }

@@ -14,7 +14,9 @@ interface ScreeningEntry {
   net_amount_10d_k: number;
   net_shares_10d: number;
   net_shares_10d_zhang: number;
+  first_date: string;
   last_date: string;
+  consecutive_days: number;
   cur_price: number;
   g_score: number;
   l_score: number;
@@ -49,7 +51,7 @@ const base = import.meta.env.BASE_URL;
       <div class="hero-copy">
         <p class="eyebrow">Liquid glass market console</p>
         <h1>Screening Results</h1>
-        <p class="subtitle">Active names stay live. Archive names keep the last screened price snapshot after 30 idle days.</p>
+        <p class="subtitle">Active: 近30日上榜，依最新上榜日排序。超過30日未上榜自動移至Archive。</p>
       </div>
       <div class="hero-metrics glass-surface" aria-label="Screening result summary">
         <div>
@@ -95,7 +97,7 @@ const base = import.meta.env.BASE_URL;
     <section id="section-active" class="results-section" data-section="active">
       <div class="results-head">
         <h2 id="results-title">Active</h2>
-        <p><span id="visible-count-active">{active.length}</span> stocks — sorted by latest screening date</p>
+        <p><span id="visible-count-active">{active.length}</span> stocks — 依最新上榜日排序</p>
       </div>
 
       <div id="active-grid" class="results-list" aria-live="polite">
