@@ -12,11 +12,11 @@
       "cur_price": 29.65,
       "g_score": 100.0,
       "l_score": 100.0,
-      "regression_z": -1.27,
+      "regression_z": -1.22,
       "rank": 36,
       "screening_date": "2026-06-18",
       "first_date": "2026-06-02",
-      "consecutive_days": 13
+      "consecutive_buy_days": 0
     },
     {
       "code": "1216",
@@ -30,11 +30,11 @@
       "cur_price": 74.5,
       "g_score": 100.0,
       "l_score": 100.0,
-      "regression_z": -1.28,
+      "regression_z": -1.83,
       "rank": 60,
       "screening_date": "2026-06-18",
       "first_date": "2026-05-26",
-      "consecutive_days": 18
+      "consecutive_buy_days": 1
     },
     {
       "code": "1513",
@@ -48,11 +48,11 @@
       "cur_price": 176.5,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -0.15,
+      "regression_z": -1.01,
       "rank": 63,
       "screening_date": "2026-06-18",
       "first_date": "2026-06-18",
-      "consecutive_days": 1
+      "consecutive_buy_days": 2
     },
     {
       "code": "2633",
@@ -66,11 +66,11 @@
       "cur_price": 26.15,
       "g_score": 100.0,
       "l_score": 83.3,
-      "regression_z": -0.96,
+      "regression_z": -1.35,
       "rank": 80,
       "screening_date": "2026-06-18",
       "first_date": "2026-05-27",
-      "consecutive_days": 4
+      "consecutive_buy_days": 5
     },
     {
       "code": "2006",
@@ -84,11 +84,11 @@
       "cur_price": 69.5,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -0.13,
+      "regression_z": -1.11,
       "rank": 87,
       "screening_date": "2026-06-18",
       "first_date": "2026-06-12",
-      "consecutive_days": 5
+      "consecutive_buy_days": 0
     },
     {
       "code": "6191",
@@ -102,11 +102,11 @@
       "cur_price": 100.0,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -0.91,
+      "regression_z": -1.27,
       "rank": 87,
       "screening_date": "2026-06-17",
       "first_date": "2026-06-15",
-      "consecutive_days": 3
+      "consecutive_buy_days": 1
     },
     {
       "code": "2618",
@@ -120,11 +120,11 @@
       "cur_price": 39.75,
       "g_score": 100.0,
       "l_score": 100.0,
-      "regression_z": -0.26,
+      "regression_z": -1.33,
       "rank": 24,
       "screening_date": "2026-06-16",
       "first_date": "2026-05-26",
-      "consecutive_days": 16
+      "consecutive_buy_days": 0
     },
     {
       "code": "2610",
@@ -138,11 +138,11 @@
       "cur_price": 21.2,
       "g_score": 100.0,
       "l_score": 83.3,
-      "regression_z": -0.11,
+      "regression_z": -1.41,
       "rank": 87,
       "screening_date": "2026-06-16",
       "first_date": "2026-05-27",
-      "consecutive_days": 15
+      "consecutive_buy_days": 0
     },
     {
       "code": "3014",
@@ -156,11 +156,11 @@
       "cur_price": 139.5,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -0.27,
+      "regression_z": -0.16,
       "rank": 87,
       "screening_date": "2026-06-11",
       "first_date": "2026-06-08",
-      "consecutive_days": 4
+      "consecutive_buy_days": 1
     },
     {
       "code": "3045",
@@ -174,11 +174,11 @@
       "cur_price": 115.0,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -0.15,
+      "regression_z": -0.54,
       "rank": 30,
       "screening_date": "2026-06-08",
       "first_date": "2026-05-29",
-      "consecutive_days": 1
+      "consecutive_buy_days": 2
     },
     {
       "code": "4904",
@@ -192,11 +192,11 @@
       "cur_price": 94.6,
       "g_score": 100.0,
       "l_score": 83.3,
-      "regression_z": -0.46,
+      "regression_z": -0.21,
       "rank": 40,
       "screening_date": "2026-05-31",
       "first_date": "2026-05-29",
-      "consecutive_days": 2
+      "consecutive_buy_days": 5
     },
     {
       "code": "3015",
@@ -210,11 +210,11 @@
       "cur_price": 50.2,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -1.82,
+      "regression_z": -1.45,
       "rank": 93,
       "screening_date": "2026-05-31",
       "first_date": "2026-05-26",
-      "consecutive_days": 4
+      "consecutive_buy_days": 1
     },
     {
       "code": "2377",
@@ -228,11 +228,11 @@
       "cur_price": 126.5,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -0.13,
+      "regression_z": -0.05,
       "rank": 38,
       "screening_date": "2026-05-27",
       "first_date": "2026-05-26",
-      "consecutive_days": 2
+      "consecutive_buy_days": 0
     },
     {
       "code": "1229",
@@ -246,11 +246,11 @@
       "cur_price": 39.9,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -1.39,
+      "regression_z": -1.71,
       "rank": 100,
       "screening_date": "2026-05-26",
       "first_date": "2026-05-26",
-      "consecutive_days": 1
+      "consecutive_buy_days": 1
     },
     {
       "code": "2548",
@@ -264,11 +264,11 @@
       "cur_price": 121.5,
       "g_score": 100.0,
       "l_score": 83.3,
-      "regression_z": -0.1,
+      "regression_z": -0.07,
       "rank": 91,
       "screening_date": "2026-05-27",
       "first_date": "2026-05-26",
-      "consecutive_days": 2
+      "consecutive_buy_days": 0
     }
   ],
   "archive": {
@@ -285,11 +285,11 @@
         "cur_price": 29.65,
         "g_score": 100.0,
         "l_score": 100.0,
-        "regression_z": -1.27,
+        "regression_z": -1.22,
         "rank": 36,
         "screening_date": "2026-06-18",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 0
       },
       {
         "code": "1216",
@@ -303,11 +303,11 @@
         "cur_price": 74.5,
         "g_score": 100.0,
         "l_score": 100.0,
-        "regression_z": -1.28,
+        "regression_z": -1.83,
         "rank": 60,
         "screening_date": "2026-06-18",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 1
       },
       {
         "code": "1513",
@@ -321,11 +321,11 @@
         "cur_price": 176.5,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -0.15,
+        "regression_z": -1.01,
         "rank": 63,
         "screening_date": "2026-06-18",
         "first_date": "2026-06-18",
-        "consecutive_days": 1
+        "consecutive_buy_days": 2
       },
       {
         "code": "2633",
@@ -339,11 +339,11 @@
         "cur_price": 26.15,
         "g_score": 100.0,
         "l_score": 83.3,
-        "regression_z": -0.96,
+        "regression_z": -1.35,
         "rank": 80,
         "screening_date": "2026-06-18",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 5
       },
       {
         "code": "2006",
@@ -357,11 +357,11 @@
         "cur_price": 69.5,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -0.13,
+        "regression_z": -1.11,
         "rank": 87,
         "screening_date": "2026-06-18",
         "first_date": "2026-06-12",
-        "consecutive_days": 5
+        "consecutive_buy_days": 0
       }
     ],
     "2026-06-17": [
@@ -381,7 +381,7 @@
         "rank": 31,
         "screening_date": "2026-06-17",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 0
       },
       {
         "code": "1216",
@@ -399,7 +399,7 @@
         "rank": 66,
         "screening_date": "2026-06-17",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 0
       },
       {
         "code": "2633",
@@ -417,7 +417,7 @@
         "rank": 82,
         "screening_date": "2026-06-17",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 4
       },
       {
         "code": "2006",
@@ -435,7 +435,7 @@
         "rank": 84,
         "screening_date": "2026-06-17",
         "first_date": "2026-06-12",
-        "consecutive_days": 5
+        "consecutive_buy_days": 4
       },
       {
         "code": "6191",
@@ -449,11 +449,11 @@
         "cur_price": 100.0,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -0.91,
+        "regression_z": -1.27,
         "rank": 87,
         "screening_date": "2026-06-17",
         "first_date": "2026-06-15",
-        "consecutive_days": 3
+        "consecutive_buy_days": 1
       }
     ],
     "2026-06-16": [
@@ -469,11 +469,11 @@
         "cur_price": 39.75,
         "g_score": 100.0,
         "l_score": 100.0,
-        "regression_z": -0.26,
+        "regression_z": -1.33,
         "rank": 24,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 0
       },
       {
         "code": "2105",
@@ -491,7 +491,7 @@
         "rank": 25,
         "screening_date": "2026-06-16",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 1
       },
       {
         "code": "1216",
@@ -509,7 +509,7 @@
         "rank": 54,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 1
       },
       {
         "code": "2006",
@@ -527,7 +527,7 @@
         "rank": 86,
         "screening_date": "2026-06-16",
         "first_date": "2026-06-12",
-        "consecutive_days": 5
+        "consecutive_buy_days": 3
       },
       {
         "code": "2610",
@@ -541,11 +541,11 @@
         "cur_price": 21.2,
         "g_score": 100.0,
         "l_score": 83.3,
-        "regression_z": -0.11,
+        "regression_z": -1.41,
         "rank": 87,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       },
       {
         "code": "6191",
@@ -563,7 +563,7 @@
         "rank": 88,
         "screening_date": "2026-06-16",
         "first_date": "2026-06-15",
-        "consecutive_days": 3
+        "consecutive_buy_days": 1
       },
       {
         "code": "2633",
@@ -581,7 +581,7 @@
         "rank": 99,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 3
       }
     ],
     "2026-06-15": [
@@ -601,7 +601,7 @@
         "rank": 24,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 0
       },
       {
         "code": "2105",
@@ -619,7 +619,7 @@
         "rank": 25,
         "screening_date": "2026-06-15",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 1
       },
       {
         "code": "1216",
@@ -637,7 +637,7 @@
         "rank": 54,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 1
       },
       {
         "code": "2006",
@@ -655,7 +655,7 @@
         "rank": 86,
         "screening_date": "2026-06-15",
         "first_date": "2026-06-12",
-        "consecutive_days": 5
+        "consecutive_buy_days": 3
       },
       {
         "code": "6191",
@@ -673,7 +673,7 @@
         "rank": 87,
         "screening_date": "2026-06-15",
         "first_date": "2026-06-15",
-        "consecutive_days": 3
+        "consecutive_buy_days": 1
       },
       {
         "code": "2610",
@@ -691,7 +691,7 @@
         "rank": 88,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       },
       {
         "code": "2633",
@@ -709,7 +709,7 @@
         "rank": 100,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 3
       }
     ],
     "2026-06-12": [
@@ -729,7 +729,7 @@
         "rank": 18,
         "screening_date": "2026-06-12",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 0
       },
       {
         "code": "2105",
@@ -747,7 +747,7 @@
         "rank": 25,
         "screening_date": "2026-06-12",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 0
       },
       {
         "code": "1216",
@@ -765,7 +765,7 @@
         "rank": 50,
         "screening_date": "2026-06-12",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 0
       },
       {
         "code": "2610",
@@ -783,7 +783,7 @@
         "rank": 87,
         "screening_date": "2026-06-12",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 1
       },
       {
         "code": "2006",
@@ -801,7 +801,7 @@
         "rank": 88,
         "screening_date": "2026-06-12",
         "first_date": "2026-06-12",
-        "consecutive_days": 5
+        "consecutive_buy_days": 2
       }
     ],
     "2026-06-11": [
@@ -821,7 +821,7 @@
         "rank": 16,
         "screening_date": "2026-06-11",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 0
       },
       {
         "code": "2105",
@@ -839,7 +839,7 @@
         "rank": 27,
         "screening_date": "2026-06-11",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 9
       },
       {
         "code": "1216",
@@ -857,7 +857,7 @@
         "rank": 45,
         "screening_date": "2026-06-11",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 1
       },
       {
         "code": "3014",
@@ -871,11 +871,11 @@
         "cur_price": 139.5,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -0.27,
+        "regression_z": -0.16,
         "rank": 87,
         "screening_date": "2026-06-11",
         "first_date": "2026-06-08",
-        "consecutive_days": 4
+        "consecutive_buy_days": 1
       },
       {
         "code": "2610",
@@ -893,7 +893,7 @@
         "rank": 94,
         "screening_date": "2026-06-11",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       }
     ],
     "2026-06-10": [
@@ -913,7 +913,7 @@
         "rank": 16,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 0
       },
       {
         "code": "2105",
@@ -931,7 +931,7 @@
         "rank": 30,
         "screening_date": "2026-06-10",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 8
       },
       {
         "code": "1216",
@@ -949,7 +949,7 @@
         "rank": 39,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 0
       },
       {
         "code": "3014",
@@ -967,7 +967,7 @@
         "rank": 87,
         "screening_date": "2026-06-10",
         "first_date": "2026-06-08",
-        "consecutive_days": 4
+        "consecutive_buy_days": 0
       },
       {
         "code": "2633",
@@ -985,7 +985,7 @@
         "rank": 90,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 0
       },
       {
         "code": "2610",
@@ -1003,7 +1003,7 @@
         "rank": 91,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       }
     ],
     "2026-06-09": [
@@ -1023,7 +1023,7 @@
         "rank": 12,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 0
       },
       {
         "code": "2105",
@@ -1041,7 +1041,7 @@
         "rank": 35,
         "screening_date": "2026-06-09",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 7
       },
       {
         "code": "1216",
@@ -1059,7 +1059,7 @@
         "rank": 37,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 0
       },
       {
         "code": "3014",
@@ -1077,7 +1077,7 @@
         "rank": 86,
         "screening_date": "2026-06-09",
         "first_date": "2026-06-08",
-        "consecutive_days": 4
+        "consecutive_buy_days": 0
       },
       {
         "code": "2633",
@@ -1095,7 +1095,7 @@
         "rank": 89,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 1
       },
       {
         "code": "2610",
@@ -1113,7 +1113,7 @@
         "rank": 91,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       }
     ],
     "2026-06-08": [
@@ -1133,7 +1133,7 @@
         "rank": 10,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 0
       },
       {
         "code": "3045",
@@ -1147,11 +1147,11 @@
         "cur_price": 115.0,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -0.15,
+        "regression_z": -0.54,
         "rank": 30,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-29",
-        "consecutive_days": 1
+        "consecutive_buy_days": 2
       },
       {
         "code": "1216",
@@ -1169,7 +1169,7 @@
         "rank": 33,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 14
       },
       {
         "code": "2105",
@@ -1187,7 +1187,7 @@
         "rank": 39,
         "screening_date": "2026-06-08",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 6
       },
       {
         "code": "3014",
@@ -1205,7 +1205,7 @@
         "rank": 87,
         "screening_date": "2026-06-08",
         "first_date": "2026-06-08",
-        "consecutive_days": 4
+        "consecutive_buy_days": 0
       },
       {
         "code": "2633",
@@ -1223,7 +1223,7 @@
         "rank": 89,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 0
       },
       {
         "code": "2610",
@@ -1241,7 +1241,7 @@
         "rank": 90,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       }
     ],
     "2026-06-05": [
@@ -1261,7 +1261,7 @@
         "rank": 10,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 0
       },
       {
         "code": "1216",
@@ -1279,7 +1279,7 @@
         "rank": 30,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 13
       },
       {
         "code": "2105",
@@ -1297,7 +1297,7 @@
         "rank": 41,
         "screening_date": "2026-06-05",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 5
       },
       {
         "code": "2633",
@@ -1315,7 +1315,7 @@
         "rank": 90,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 4
       },
       {
         "code": "2610",
@@ -1333,7 +1333,7 @@
         "rank": 91,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       }
     ],
     "2026-06-04": [
@@ -1353,7 +1353,7 @@
         "rank": 8,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 12
       },
       {
         "code": "1216",
@@ -1371,7 +1371,7 @@
         "rank": 25,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 12
       },
       {
         "code": "2105",
@@ -1389,7 +1389,7 @@
         "rank": 41,
         "screening_date": "2026-06-04",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 4
       },
       {
         "code": "2633",
@@ -1407,7 +1407,7 @@
         "rank": 91,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 3
       },
       {
         "code": "2610",
@@ -1425,7 +1425,7 @@
         "rank": 92,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       }
     ],
     "2026-06-03": [
@@ -1445,7 +1445,7 @@
         "rank": 9,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 11
       },
       {
         "code": "1216",
@@ -1463,7 +1463,7 @@
         "rank": 25,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 11
       },
       {
         "code": "2105",
@@ -1481,7 +1481,7 @@
         "rank": 50,
         "screening_date": "2026-06-03",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 3
       },
       {
         "code": "2633",
@@ -1499,7 +1499,7 @@
         "rank": 90,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 2
       },
       {
         "code": "2610",
@@ -1517,7 +1517,7 @@
         "rank": 91,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 2
       }
     ],
     "2026-06-02": [
@@ -1537,7 +1537,7 @@
         "rank": 11,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 10
       },
       {
         "code": "1216",
@@ -1555,7 +1555,7 @@
         "rank": 25,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 10
       },
       {
         "code": "3045",
@@ -1573,7 +1573,7 @@
         "rank": 26,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-29",
-        "consecutive_days": 1
+        "consecutive_buy_days": 7
       },
       {
         "code": "2105",
@@ -1591,7 +1591,7 @@
         "rank": 68,
         "screening_date": "2026-06-02",
         "first_date": "2026-06-02",
-        "consecutive_days": 13
+        "consecutive_buy_days": 2
       },
       {
         "code": "2633",
@@ -1609,7 +1609,7 @@
         "rank": 91,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 1
       },
       {
         "code": "2610",
@@ -1627,7 +1627,7 @@
         "rank": 94,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 1
       }
     ],
     "2026-06-01": [
@@ -1647,7 +1647,7 @@
         "rank": 11,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 9
       },
       {
         "code": "3045",
@@ -1665,7 +1665,7 @@
         "rank": 25,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-29",
-        "consecutive_days": 1
+        "consecutive_buy_days": 6
       },
       {
         "code": "1216",
@@ -1683,7 +1683,7 @@
         "rank": 26,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 9
       },
       {
         "code": "2633",
@@ -1701,7 +1701,7 @@
         "rank": 88,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 0
       },
       {
         "code": "2610",
@@ -1719,7 +1719,7 @@
         "rank": 98,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       }
     ],
     "2026-05-31": [
@@ -1739,7 +1739,7 @@
         "rank": 13,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 8
       },
       {
         "code": "3045",
@@ -1757,7 +1757,7 @@
         "rank": 21,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-29",
-        "consecutive_days": 1
+        "consecutive_buy_days": 5
       },
       {
         "code": "1216",
@@ -1775,7 +1775,7 @@
         "rank": 23,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 8
       },
       {
         "code": "4904",
@@ -1789,11 +1789,11 @@
         "cur_price": 94.6,
         "g_score": 100.0,
         "l_score": 83.3,
-        "regression_z": -0.46,
+        "regression_z": -0.21,
         "rank": 40,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-29",
-        "consecutive_days": 2
+        "consecutive_buy_days": 5
       },
       {
         "code": "2633",
@@ -1811,7 +1811,7 @@
         "rank": 78,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 0
       },
       {
         "code": "3015",
@@ -1825,11 +1825,11 @@
         "cur_price": 50.2,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -1.82,
+        "regression_z": -1.45,
         "rank": 93,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-26",
-        "consecutive_days": 4
+        "consecutive_buy_days": 1
       },
       {
         "code": "2610",
@@ -1847,7 +1847,7 @@
         "rank": 95,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       }
     ],
     "2026-05-29": [
@@ -1867,7 +1867,7 @@
         "rank": 13,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 8
       },
       {
         "code": "3045",
@@ -1885,7 +1885,7 @@
         "rank": 21,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-29",
-        "consecutive_days": 1
+        "consecutive_buy_days": 5
       },
       {
         "code": "1216",
@@ -1903,7 +1903,7 @@
         "rank": 23,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 8
       },
       {
         "code": "4904",
@@ -1921,7 +1921,7 @@
         "rank": 40,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-29",
-        "consecutive_days": 2
+        "consecutive_buy_days": 5
       },
       {
         "code": "2633",
@@ -1939,7 +1939,7 @@
         "rank": 78,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 0
       },
       {
         "code": "3015",
@@ -1957,7 +1957,7 @@
         "rank": 93,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-26",
-        "consecutive_days": 4
+        "consecutive_buy_days": 1
       },
       {
         "code": "2610",
@@ -1975,7 +1975,7 @@
         "rank": 95,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 0
       }
     ],
     "2026-05-27": [
@@ -1995,7 +1995,7 @@
         "rank": 16,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 7
       },
       {
         "code": "1216",
@@ -2013,7 +2013,7 @@
         "rank": 21,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 7
       },
       {
         "code": "2377",
@@ -2027,11 +2027,11 @@
         "cur_price": 126.5,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -0.13,
+        "regression_z": -0.05,
         "rank": 38,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_days": 2
+        "consecutive_buy_days": 0
       },
       {
         "code": "2633",
@@ -2049,7 +2049,7 @@
         "rank": 59,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-27",
-        "consecutive_days": 4
+        "consecutive_buy_days": 1
       },
       {
         "code": "3015",
@@ -2067,7 +2067,7 @@
         "rank": 80,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_days": 4
+        "consecutive_buy_days": 0
       },
       {
         "code": "2610",
@@ -2085,7 +2085,7 @@
         "rank": 85,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-27",
-        "consecutive_days": 15
+        "consecutive_buy_days": 1
       },
       {
         "code": "2548",
@@ -2099,11 +2099,11 @@
         "cur_price": 121.5,
         "g_score": 100.0,
         "l_score": 83.3,
-        "regression_z": -0.1,
+        "regression_z": -0.07,
         "rank": 91,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_days": 2
+        "consecutive_buy_days": 0
       }
     ],
     "2026-05-26": [
@@ -2123,7 +2123,7 @@
         "rank": 19,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_days": 16
+        "consecutive_buy_days": 6
       },
       {
         "code": "1216",
@@ -2141,7 +2141,7 @@
         "rank": 25,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_days": 18
+        "consecutive_buy_days": 6
       },
       {
         "code": "2377",
@@ -2159,7 +2159,7 @@
         "rank": 38,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_days": 2
+        "consecutive_buy_days": 0
       },
       {
         "code": "3015",
@@ -2177,7 +2177,7 @@
         "rank": 79,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_days": 4
+        "consecutive_buy_days": 0
       },
       {
         "code": "2548",
@@ -2195,7 +2195,7 @@
         "rank": 90,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_days": 2
+        "consecutive_buy_days": 0
       },
       {
         "code": "1229",
@@ -2209,11 +2209,11 @@
         "cur_price": 39.9,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -1.39,
+        "regression_z": -1.71,
         "rank": 100,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_days": 1
+        "consecutive_buy_days": 1
       }
     ]
   }

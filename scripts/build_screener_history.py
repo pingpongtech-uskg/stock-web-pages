@@ -3,29 +3,35 @@
 build_screener_history.py — Consolidate daily_trust10_*.json into screener_history.json.
 
 Input:  /root/tw-stock-monitor/output/reports/daily_trust10_*.json
+        /root/tw-stock-monitor/output/trust_all_cache.json (for consecutive buy days)
+        /root/tw-stock-monitor/data/batch_*.json (for correct Z recomputation)
 Output: src/data/screener_history.json
 
 Structure:
   - active: unique stocks sorted by last_date DESC (newest first)
-  - archive: all screening entries grouped by date (newest first)
+            Stocks that haven't appeared in 30 days are simply removed.
+  - archive: ALL screening entries grouped by date (newest first)
+             Pure historical record, no demotion from active.
 
 Each entry includes:
-  - first_date: earliest screening date (首次上榜日)
-  - last_date: most recent screening date (最新上榜日)
-  - consecutive_days: consecutive screening streak (連續買超日數)
+  - first_date: earliest screening date
+  - last_date: most recent screening date
+  - consecutive_buy_days: actual consecutive days of 投信 net buying (from TWSE cache)
+  - regression_z: 樂活五線譜 3.5yr Z-score (log-price regression, recomputed correctly)
 """
 import json
 import os
 import glob
+import numpy as np
 from datetime import date, datetime, timedelta
 from collections import defaultdict
 
 REPORTS_DIR = "/root/tw-stock-monitor/output/reports"
+TRUST_CACHE_FILE = "/root/tw-stock-monitor/output/trust_all_cache.json"
+DATA_DIR = "/root/tw-stock-monitor/data"
 OUTPUT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "data", "screener_history.json")
 ARCHIVE_AFTER_DAYS = 30
-# Maximum gap (calendar days) between screening dates that still counts as consecutive
-# 3 days covers Fri→Mon and single-day holidays
-MAX_CONSECUTIVE_GAP = 3
+MAX_CONSECUTIVE_GAP = 3  # For screening streak (weekend tolerance)
 
 
 def load_reports(reports_dir: str) -> list[dict]:
@@ -40,39 +46,99 @@ def load_reports(reports_dir: str) -> list[dict]:
     return reports
 
 
-def calc_consecutive_days(screening_dates: list[str]) -> int:
+def load_trust_cache(path: str) -> dict | None:
+    """Load trust_all_cache.json. Returns {code: {dates: [...], net: [...]}} or None."""
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def load_batch_prices(data_dir: str, code: str) -> np.ndarray | None:
+    """Load close prices for a stock from batch_*.json files. Returns numpy array or None."""
+    for i in range(1, 26):
+        p = os.path.join(data_dir, f"batch_{i:03d}.json")
+        if not os.path.exists(p):
+            continue
+        with open(p, encoding="utf-8") as f:
+            batch = json.load(f)
+        # Try TW and TWO suffixes
+        for suffix in [".TW", ".TWO", ""]:
+            key = f"{code}{suffix}"
+            if key in batch:
+                prices = batch[key].get("close", [])
+                if len(prices) >= 200:
+                    return np.array(prices, dtype=float)
+    return None
+
+
+def compute_z_log(prices: np.ndarray) -> float | None:
     """
-    Count consecutive screening dates from the most recent backwards.
-    A gap of MAX_CONSECUTIVE_GAP calendar days or fewer is considered consecutive
-    (handles weekends and single-day holidays).
+    樂活五線譜 3.5年 Z-score using log prices.
+    
+    p: array of daily close prices (most recent last).
+    Returns Z = (ln(P_now) - ln(trend_now)) / sigma_residuals.
     """
-    if not screening_dates:
+    if len(prices) < 100:
+        return None
+    # 3.5yr = 882 trading days
+    p = prices[-882:] if len(prices) >= 882 else prices
+    if len(p) < 100:
+        return None
+    log_p = np.log(p)
+    x = np.arange(len(log_p))
+    slope, intercept = np.polyfit(x, log_p, 1)
+    trend = slope * x + intercept
+    residuals = log_p - trend
+    sigma = np.std(residuals, ddof=0)
+    if sigma <= 0:
+        return None
+    z = (log_p[-1] - trend[-1]) / sigma
+    return round(float(z), 2)
+
+
+def calc_consecutive_buy(trust_cache: dict, code: str, as_of_date: str | None = None) -> int:
+    """
+    Count consecutive days of positive 投信 net buying from trust cache.
+    Counts backwards from as_of_date (or latest date in cache).
+    """
+    if trust_cache is None or code not in trust_cache:
         return 0
-    dates = sorted([datetime.strptime(d, "%Y-%m-%d").date() for d in set(screening_dates)], reverse=True)
-    if not dates:
+    
+    stock_data = trust_cache[code]
+    dates = stock_data.get("dates", [])
+    nets = stock_data.get("net", [])
+    
+    if not dates or not nets:
         return 0
-    consecutive = 1
-    for i in range(1, len(dates)):
-        gap = (dates[i - 1] - dates[i]).days
-        if gap <= MAX_CONSECUTIVE_GAP:
+    
+    # Find the cutoff index (as_of_date or use all data)
+    cutoff_idx = len(dates)
+    if as_of_date:
+        for i in range(len(dates) - 1, -1, -1):
+            if dates[i] <= as_of_date:
+                cutoff_idx = i + 1
+                break
+    
+    # Count consecutive positive net buys backwards from cutoff_idx - 1
+    consecutive = 0
+    for i in range(cutoff_idx - 1, -1, -1):
+        if nets[i] > 0:
             consecutive += 1
         else:
             break
+    
     return consecutive
 
 
-def consolidate(reports: list[dict], reference_date: str | None = None) -> dict:
-    """
-    Build active (unique per stock, latest entry) and archive (grouped by date).
-    """
+def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: str | None = None) -> dict:
+    """Build active (unique, recent) and archive (all, grouped by date)."""
     ref = date.today() if reference_date is None else datetime.strptime(reference_date, "%Y-%m-%d").date()
     cutoff = ref - timedelta(days=ARCHIVE_AFTER_DAYS)
 
-    # Build name_zh lookup (older reports may lack name_zh)
+    # Build name_zh lookup
     name_zh_map: dict[str, str] = {
-        "2377": "微星",
-        "1229": "聯華",
-        "2548": "華固",
+        "2377": "微星", "1229": "聯華", "2548": "華固",
     }
     for report in reports:
         for stock in report.get("top10", []):
@@ -81,7 +147,7 @@ def consolidate(reports: list[dict], reference_date: str | None = None) -> dict:
             if code and zh:
                 name_zh_map[code] = zh
 
-    # Collect all entries
+    # Collect all entries + track earliest/latest per stock
     all_entries: list[dict] = []
     code_to_dates: dict[str, list[str]] = defaultdict(list)
 
@@ -109,52 +175,61 @@ def consolidate(reports: list[dict], reference_date: str | None = None) -> dict:
             all_entries.append(entry)
             code_to_dates[code].append(report_date)
 
-    # Active: deduplicate by code, keep latest entry, add computed fields
+    # Build per-code lookup: latest entry, earliest date
     latest_by_code: dict[str, dict] = {}
     for entry in all_entries:
         code = entry["code"]
         if code not in latest_by_code or entry["screening_date"] > latest_by_code[code]["screening_date"]:
             latest_by_code[code] = entry
 
-    # Compute per-stock aggregates
-    for code, entry in latest_by_code.items():
-        dates = code_to_dates.get(code, [])
-        first_date = min(dates) if dates else entry["last_date"]
-        consecutive = calc_consecutive_days(dates)
-        entry["first_date"] = first_date
-        entry["consecutive_days"] = consecutive
+    # Precompute Z for active stocks (recompute with log prices for accuracy)
+    print("Recomputing Z with log-price regression for active stocks...")
+    z_cache: dict[str, float | None] = {}
+    for code in latest_by_code:
+        prices = load_batch_prices(DATA_DIR, code)
+        if prices is not None:
+            z = compute_z_log(prices)
+            if z is not None:
+                z_cache[code] = z
 
-    # Also add to archive entries
-    for e in all_entries:
-        code = e["code"]
-        dates = code_to_dates.get(code, [])
-        first_date = min(dates) if dates else e["last_date"]
-        consecutive = calc_consecutive_days(dates)
-        e["first_date"] = first_date
-        e["consecutive_days"] = consecutive
-
-    # Separate active vs archive based on last_date
+    # Build active list
     active = []
-    archive_date_to_stocks: dict[str, list[dict]] = defaultdict(list)
-
     for code, entry in latest_by_code.items():
         try:
             last_d = datetime.strptime(entry["last_date"], "%Y-%m-%d").date()
         except (ValueError, KeyError):
             last_d = date(2000, 1, 1)
 
-        if last_d >= cutoff:
-            active.append(entry)
+        if last_d < cutoff:
+            continue  # Skip — expired from active
 
-        # All entries (including active stocks' history) go to archive
-        for e in all_entries:
-            if e["code"] == code:
-                archive_date_to_stocks[e["screening_date"]].append(e)
+        dates = code_to_dates.get(code, [])
+        first_date = min(dates) if dates else entry["last_date"]
+        consecutive_buy = calc_consecutive_buy(trust_cache, code, entry["last_date"])
+
+        # Use recomputed Z if available
+        if code in z_cache and z_cache[code] is not None:
+            entry["regression_z"] = z_cache[code]
+
+        entry["first_date"] = first_date
+        entry["consecutive_buy_days"] = consecutive_buy
+        active.append(entry)
 
     # Sort active: by last_date DESC (newest first)
     active.sort(key=lambda x: x["last_date"], reverse=True)
 
-    # Build archive: sorted by date DESC, within each date sorted by net_amount_10d DESC
+    # Build archive: ALL entries from ALL reports, grouped by date
+    # No demotion from active — archive is purely historical record
+    archive_date_to_stocks: dict[str, list[dict]] = defaultdict(list)
+    for entry in all_entries:
+        code = entry["code"]
+        dates = code_to_dates.get(code, [])
+        first_date = min(dates) if dates else entry["last_date"]
+        consecutive_buy = calc_consecutive_buy(trust_cache, code, entry["screening_date"])
+        entry["first_date"] = first_date
+        entry["consecutive_buy_days"] = consecutive_buy
+        archive_date_to_stocks[entry["screening_date"]].append(entry)
+
     archive = {}
     for d in sorted(archive_date_to_stocks.keys(), reverse=True):
         stocks = sorted(archive_date_to_stocks[d], key=lambda x: x["net_amount_10d"], reverse=True)
@@ -167,16 +242,21 @@ def main():
     reports = load_reports(REPORTS_DIR)
     print(f"Loaded {len(reports)} reports")
 
-    result = consolidate(reports)
+    trust_cache = load_trust_cache(TRUST_CACHE_FILE)
+    if trust_cache:
+        print(f"Loaded trust cache: {len(trust_cache)} stocks")
+    else:
+        print("WARNING: trust cache not found, consecutive_buy_days will be 0")
+
+    result = consolidate(reports, trust_cache)
 
     active_count = len(result["active"])
     archive_dates = len(result["archive"])
     archive_entries = sum(len(v) for v in result["archive"].values())
 
-    # Show a few active stocks with new fields
     print(f"\nActive: {active_count} unique stocks")
-    for s in result["active"][:5]:
-        print(f"  {s['code']} {s['name_zh']} | 首次:{s['first_date']} 最新:{s['last_date']} 連續:{s['consecutive_days']}日 | Z={s['regression_z']}")
+    for s in result["active"][:8]:
+        print(f"  {s['code']} {s['name_zh']} | 首次:{s['first_date']} 最新:{s['last_date']} | 連續買超:{s['consecutive_buy_days']}日 | Z={s['regression_z']}")
 
     print(f"\nArchive: {archive_entries} entries across {archive_dates} dates")
 

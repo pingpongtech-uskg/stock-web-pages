@@ -12,7 +12,7 @@ export interface ScreeningEntry {
   net_shares_10d_zhang: number;
   first_date: string;
   last_date: string;
-  consecutive_days: number;
+  consecutive_buy_days: number;
   cur_price: number;
   g_score: number;
   l_score: number;
@@ -41,15 +41,6 @@ function fmtShares(zhang: number): string {
   return zhang + " 張";
 }
 
-function scoreClass(score: number): string {
-  if (score >= 80) return "pass";
-  if (score >= 60) return "warn";
-  return "fail";
-}
-
-const gClass = scoreClass(entry.g_score);
-const lClass = scoreClass(entry.l_score);
-
 const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
 ---
 
@@ -70,7 +61,7 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
 
     <div class="col col-consecutive">
       <span class="col-label">連續買超</span>
-      <span class="col-value">{entry.consecutive_days} 日</span>
+      <span class="col-value">{entry.consecutive_buy_days} 日</span>
     </div>
 
     <div class="col col-dates">
@@ -88,12 +79,16 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
 
     <div class="col col-score">
       <span class="col-label">成長</span>
-      <span class:list={["score-num", gClass]}>{entry.g_score.toFixed(0)}</span>
+      <span class:list={["score-num", { pass: entry.g_score >= 80 }]}>
+        {entry.g_score.toFixed(0)}
+      </span>
     </div>
 
     <div class="col col-score">
       <span class="col-label">地雷</span>
-      <span class:list={["score-num", lClass]}>{entry.l_score.toFixed(0)}</span>
+      <span class:list={["score-num", { pass: entry.l_score >= 80 }]}>
+        {entry.l_score.toFixed(0)}
+      </span>
     </div>
 
     <div class="col col-score col-placeholder">
@@ -222,31 +217,14 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
   font-weight: 500;
 }
 
-.col-amount {
-  min-width: 120px;
-}
-.col-consecutive {
-  min-width: 64px;
-}
-.col-dates {
-  min-width: 100px;
-}
-.col-date {
-  min-width: 90px;
-}
-.col-score {
-  min-width: 52px;
-  align-items: flex-start;
-}
-.col-price {
-  min-width: 60px;
-}
-.col-z {
-  min-width: 48px;
-}
-.col-placeholder {
-  opacity: 0.5;
-}
+.col-amount { min-width: 120px; }
+.col-consecutive { min-width: 64px; }
+.col-dates { min-width: 100px; }
+.col-date { min-width: 90px; }
+.col-score { min-width: 52px; align-items: flex-start; }
+.col-price { min-width: 60px; }
+.col-z { min-width: 48px; }
+.col-placeholder { opacity: 0.5; }
 
 .score-num {
   font-size: 0.92rem;
@@ -258,45 +236,16 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
   color: #138f6a;
   background: rgba(19, 143, 106, 0.1);
 }
-.score-num.warn {
-  color: #9a640c;
-  background: rgba(240, 163, 91, 0.12);
-}
-.score-num.fail {
-  color: #d94b42;
-  background: rgba(217, 75, 66, 0.09);
-}
 
 @media (max-width: 900px) {
-  .screening-row {
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 12px 14px;
-  }
-  .row-left {
-    flex: 0 0 100%;
-    flex-direction: row;
-  }
-  .stock-identity {
-    flex-direction: row;
-    gap: 8px;
-    align-items: baseline;
-  }
-  .row-center {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+  .screening-row { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }
+  .row-left { flex: 0 0 100%; flex-direction: row; }
+  .stock-identity { flex-direction: row; gap: 8px; align-items: baseline; }
+  .row-center { flex-wrap: wrap; gap: 10px; }
 }
-
 @media (max-width: 520px) {
-  .col {
-    min-width: auto;
-  }
-  .col-score {
-    align-items: center;
-  }
-  .row-center {
-    gap: 8px;
-  }
+  .col { min-width: auto; }
+  .col-score { align-items: center; }
+  .row-center { gap: 8px; }
 }
 </style>
