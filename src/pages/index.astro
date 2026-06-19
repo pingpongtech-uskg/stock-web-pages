@@ -1,307 +1,216 @@
 ---
-// src/pages/index.astro — Screener history console
+// src/pages/index.astro — Screening results display
+// Active: flat list sorted by most recent 上榜日 (newest first)
+// Archive: date-grouped collapsible sections
 import Layout from "../components/Layout.astro";
-import history from "../data/screening_history.json";
+import ScreeningRow from "../components/ScreeningRow.astro";
+import screenerData from "../data/screener_history.json";
 
-interface ScreeningRecord {
-  id: string;
+interface ScreeningEntry {
   code: string;
-  name: string;
-  rank?: number;
-  price?: number;
-  net_amount_10d_k?: number;
-  net_shares_10d_zhang?: number;
-  g_score?: number;
-  l_score?: number;
-  regression_z?: number;
-  last_buy_date?: string;
-  screened_at: string;
-  screening_status: "active" | "archive";
-  days_since_screened?: number;
-  archived_at?: string | null;
+  name_zh: string;
+  name_en: string;
+  net_amount_10d: number;
+  net_amount_10d_k: number;
+  net_shares_10d: number;
+  net_shares_10d_zhang: number;
+  last_date: string;
+  cur_price: number;
+  g_score: number;
+  l_score: number;
+  regression_z: number;
+  rank: number;
+  screening_date: string;
 }
 
-interface ScreeningDay {
-  date: string;
-  count: number;
-  records: ScreeningRecord[];
-}
+const active = (screenerData.active || []) as ScreeningEntry[];
+const archive = (screenerData.archive || {}) as Record<string, ScreeningEntry[]>;
 
-interface ScreeningHistory {
-  reference_date: string;
-  criteria: string[];
-  summary: {
-    active_stocks: number;
-    archive_stocks: number;
-    trading_days: number;
-    total_records: number;
-  };
-  active_days: ScreeningDay[];
-  archive_days: ScreeningDay[];
-}
+// Sorted archive dates (descending)
+const archiveDates = Object.keys(archive).sort((a, b) => b.localeCompare(a));
+const totalArchiveEntries = archiveDates.reduce((sum, d) => sum + (archive[d]?.length || 0), 0);
 
-const data = history as ScreeningHistory;
-const activeDays = data.active_days ?? [];
-const archiveDays = data.archive_days ?? [];
+const title = "Hermes Stock Radar";
+const description = `${active.length} active screening results · ${totalArchiveEntries} archived`;
 const base = import.meta.env.BASE_URL;
-const title = "投信初建倉 · 歷史篩選總表";
-const description = `Active ${data.summary.active_stocks} · Archive ${data.summary.archive_stocks}`;
-
-function formatNumber(value?: number): string {
-  if (value === undefined || value === null) return "—";
-  return Number(value).toLocaleString("zh-TW");
-}
-
-function formatPrice(value?: number): string {
-  if (value === undefined || value === null) return "—";
-  return Number(value).toFixed(2);
-}
-
-function scoreClass(value?: number): string {
-  if (value === undefined || value === null) return "";
-  if (value >= 100) return "score-good";
-  if (value >= 80) return "score-watch";
-  return "score-muted";
-}
-
-function zClass(value?: number): string {
-  if (value === undefined || value === null) return "";
-  return value <= -1 ? "z-low" : "z-mid";
-}
-
-function daySearchText(day: ScreeningDay): string {
-  return day.records.map((record) => `${record.code} ${record.name}`).join(" ").toLowerCase();
-}
 ---
 
 <Layout title={title} description={description}>
-  <main class="console-page container">
-    <header class="console-header">
-      <a href={base} class="brand-mark" aria-label="投信初建倉歷史篩選總表">
-        <img src={`${base}logo.svg`} alt="" width="38" height="38" />
+  <header class="hero container">
+    <nav class="topbar">
+      <a href={base} class="brand" aria-label="Hermes Stock Radar">
+        <img src={`${base}logo.svg`} alt="" width="36" height="36" />
+        <span>Hermes Stock Radar</span>
       </a>
-      <div class="title-block">
-        <h1>{title}</h1>
-        <p>
-          篩選條件：投信十日買超排行前 100 → Z ≤ 0 → G ≥ 80 & L ≥ 80
-          <span>共 {data.summary.trading_days} 個交易日 · {data.summary.total_records} 筆篩選紀錄</span>
-        </p>
-      </div>
-    </header>
+      <span class="data-note">TWSE screening results</span>
+    </nav>
 
-    <section class="toolbar glass-surface" aria-label="篩選結果工具列">
+    <section class="hero-main">
+      <div class="hero-copy">
+        <p class="eyebrow">Liquid glass market console</p>
+        <h1>Screening Results</h1>
+        <p class="subtitle">Active names stay live. Archive names keep the last screened price snapshot after 30 idle days.</p>
+      </div>
+      <div class="hero-metrics glass-surface" aria-label="Screening result summary">
+        <div>
+          <span class="metric-value">{active.length}</span>
+          <span class="metric-label">Active</span>
+        </div>
+        <div>
+          <span class="metric-value">{totalArchiveEntries}</span>
+          <span class="metric-label">Archive</span>
+        </div>
+      </div>
+    </section>
+  </header>
+
+  <main class="container">
+    <section class="controls glass-surface" aria-label="Screening filters">
       <label class="search-wrap">
         <span class="search-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
+          <svg viewBox="0 0 24 24" role="img">
             <path d="M10.75 4.5a6.25 6.25 0 1 0 0 12.5 6.25 6.25 0 0 0 0-12.5Zm-7.75 6.25a7.75 7.75 0 1 1 13.78 4.88l3.3 3.29a.75.75 0 1 1-1.06 1.06l-3.29-3.3A7.75 7.75 0 0 1 3 10.75Z" fill="currentColor"/>
           </svg>
         </span>
-        <input id="screening-search" type="search" placeholder="搜尋代號或名稱" autocomplete="off" aria-label="搜尋股票代號或名稱" />
+        <input
+          id="stock-search"
+          type="search"
+          placeholder="Search code or name"
+          autocomplete="off"
+          aria-label="Search stock code or name"
+        />
       </label>
 
-      <div class="status-tabs" role="tablist" aria-label="Active Archive">
+      <div class="status-tabs" role="tablist" aria-label="Screening status">
         <button class="status-tab active" type="button" data-status="active" role="tab" aria-selected="true">
-          Active <span>{data.summary.active_stocks}</span>
+          Active <span data-count="active">{active.length}</span>
         </button>
         <button class="status-tab" type="button" data-status="archive" role="tab" aria-selected="false">
-          Archive <span>{data.summary.archive_stocks}</span>
+          Archive <span data-count="archive">{totalArchiveEntries}</span>
         </button>
       </div>
-
-      <div class="view-actions" aria-label="日期區塊控制">
-        <button type="button" data-action="expand">全部展開</button>
-        <button type="button" data-action="collapse">全部收合</button>
-      </div>
     </section>
 
-    <section class="summary-strip" aria-label="篩選統計">
-      <div class="metric glass-surface">
-        <span>{data.summary.active_stocks}</span>
-        <p>Active 股票</p>
+    <!-- Active Section -->
+    <section id="section-active" class="results-section" data-section="active">
+      <div class="results-head">
+        <h2 id="results-title">Active</h2>
+        <p><span id="visible-count-active">{active.length}</span> stocks — sorted by latest screening date</p>
       </div>
-      <div class="metric glass-surface">
-        <span>{data.summary.archive_stocks}</span>
-        <p>Archive 股票</p>
-      </div>
-      <div class="metric glass-surface">
-        <span>{data.summary.trading_days}</span>
-        <p>交易日</p>
-      </div>
-      <div class="metric glass-surface">
-        <span>{data.reference_date}</span>
-        <p>判定日期</p>
-      </div>
-    </section>
 
-    <section class="criteria-line" aria-label="完整篩選條件">
-      {data.criteria.map((criterion) => <span>{criterion}</span>)}
-    </section>
-
-    <section class="results-panel" data-panel-status="active">
-      <div class="panel-heading">
-        <h2>Active Screening Results</h2>
-        <p><span data-visible-count>{data.summary.active_stocks}</span> stocks matching current view</p>
-      </div>
-      <div class="day-list">
-        {activeDays.map((day, index) => (
-          <details
-            class="day-group glass-surface"
-            open={index === 0}
-            data-day
-            data-search={daySearchText(day)}
-          >
-            <summary>
-              <span class="chevron" aria-hidden="true"></span>
-              <strong>{day.date}</strong>
-              <span class="count-badge" data-day-count>{day.count}</span>
-              <span class="rule-tag">TOP100 金額 → Z&lt;=0 → G&gt;=80 & L&gt;=80</span>
-            </summary>
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>代號</th>
-                    <th>名稱</th>
-                    <th>現價</th>
-                    <th>投信10日買超金額</th>
-                    <th>投信10日買超張數</th>
-                    <th>成長</th>
-                    <th>地雷</th>
-                    <th>Z-SCORE</th>
-                    <th>上榜日</th>
-                    <th>閒置天數</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {day.records.map((record) => (
-                    <tr data-record data-search={`${record.code} ${record.name}`.toLowerCase()}>
-                      <td><a class="stock-code" href={`${base}${record.code}/`}>{record.code}</a></td>
-                      <td>{record.name}</td>
-                      <td class="num strong">{formatPrice(record.price)}</td>
-                      <td class="num">{formatNumber(record.net_amount_10d_k)} 千</td>
-                      <td class="num">{formatNumber(record.net_shares_10d_zhang)}</td>
-                      <td class={scoreClass(record.g_score)}>{formatNumber(record.g_score)}</td>
-                      <td class={scoreClass(record.l_score)}>{formatNumber(record.l_score)}</td>
-                      <td class={zClass(record.regression_z)}>{record.regression_z ?? "—"}</td>
-                      <td>{record.screened_at}</td>
-                      <td>{record.days_since_screened ?? 0}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <div id="active-grid" class="results-list" aria-live="polite">
+        {active.map((entry) => {
+          const searchText = `${entry.code} ${entry.name_zh ?? ""} ${entry.name_en ?? ""}`.toLowerCase();
+          return (
+            <div
+              class="screening-item"
+              data-status="active"
+              data-search={searchText}
+            >
+              <ScreeningRow entry={entry} variant="active" />
             </div>
-          </details>
-        ))}
+          );
+        })}
+        <p id="empty-active" class="empty-state glass-surface" hidden>No matching active results.</p>
       </div>
     </section>
 
-    <section class="results-panel" data-panel-status="archive" hidden>
-      <div class="panel-heading">
-        <h2>Archived Screening Results</h2>
-        <p><span data-visible-count>{data.summary.archive_stocks}</span> stocks matching current view</p>
+    <!-- Archive Section -->
+    <section id="section-archive" class="results-section" data-section="archive" style="display:none">
+      <div class="results-head">
+        <h2>Archive</h2>
+        <p><span id="visible-count-archive">{totalArchiveEntries}</span> entries across {archiveDates.length} dates</p>
       </div>
-      <div class="day-list">
-        {archiveDays.map((day, index) => (
-          <details
-            class="day-group glass-surface archive-group"
-            open={index === 0}
-            data-day
-            data-search={daySearchText(day)}
-          >
-            <summary>
-              <span class="chevron" aria-hidden="true"></span>
-              <strong>{day.date}</strong>
-              <span class="count-badge" data-day-count>{day.count}</span>
-              <span class="rule-tag">最後一次命中後 30 天未再出現</span>
-            </summary>
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>代號</th>
-                    <th>名稱</th>
-                    <th>封存價</th>
-                    <th>投信10日買超金額</th>
-                    <th>投信10日買超張數</th>
-                    <th>成長</th>
-                    <th>地雷</th>
-                    <th>Z-SCORE</th>
-                    <th>最後上榜</th>
-                    <th>封存日</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {day.records.map((record) => (
-                    <tr data-record data-search={`${record.code} ${record.name}`.toLowerCase()}>
-                      <td><a class="stock-code" href={`${base}${record.code}/`}>{record.code}</a></td>
-                      <td>{record.name}</td>
-                      <td class="num strong">{formatPrice(record.price)}</td>
-                      <td class="num">{formatNumber(record.net_amount_10d_k)} 千</td>
-                      <td class="num">{formatNumber(record.net_shares_10d_zhang)}</td>
-                      <td class={scoreClass(record.g_score)}>{formatNumber(record.g_score)}</td>
-                      <td class={scoreClass(record.l_score)}>{formatNumber(record.l_score)}</td>
-                      <td class={zClass(record.regression_z)}>{record.regression_z ?? "—"}</td>
-                      <td>{record.screened_at}</td>
-                      <td>{record.archived_at ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </details>
-        ))}
+
+      <div id="archive-grid" class="archive-list" aria-live="polite">
+        {archiveDates.map((dateStr) => {
+          const entries = archive[dateStr] || [];
+          return (
+            <details class="archive-group glass-surface" open={archiveDates.indexOf(dateStr) < 3}>
+              <summary class="archive-header">
+                <span class="archive-date">{dateStr}</span>
+                <span class="archive-count">{entries.length} stocks</span>
+              </summary>
+              <div class="archive-body" data-date={dateStr}>
+                {entries.map((entry) => {
+                  const searchText = `${entry.code} ${entry.name_zh ?? ""} ${entry.name_en ?? ""}`.toLowerCase();
+                  return (
+                    <div
+                      class="screening-item"
+                      data-status="archive"
+                      data-search={searchText}
+                      data-date={dateStr}
+                    >
+                      <ScreeningRow entry={entry} variant="archive" />
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          );
+        })}
+        <p id="empty-archive" class="empty-state glass-surface" hidden>No matching archive results.</p>
       </div>
     </section>
-
-    <p id="empty-state" class="empty-state glass-surface" hidden>沒有符合目前條件的篩選紀錄。</p>
   </main>
+
+  <footer class="page-footer">
+    <p>資料來源: TWSE · 篩選條件: 投信10日買超TOP100 → Z≤0 → G≥80 & L≥80 · 技術指標僅供參考</p>
+  </footer>
 </Layout>
 
 <script>
-const search = document.getElementById("screening-search") as HTMLInputElement | null;
+const search = document.getElementById("stock-search") as HTMLInputElement | null;
 const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>(".status-tab"));
-const panels = Array.from(document.querySelectorAll<HTMLElement>("[data-panel-status]"));
-const actionButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-action]"));
-const empty = document.getElementById("empty-state");
+const sectionActive = document.getElementById("section-active");
+const sectionArchive = document.getElementById("section-archive");
+const emptyActive = document.getElementById("empty-active");
+const emptyArchive = document.getElementById("empty-archive");
+const countActive = document.getElementById("visible-count-active");
+const countArchive = document.getElementById("visible-count-archive");
+const titleEl = document.getElementById("results-title");
 let selectedStatus = "active";
-
-function activePanel() {
-  return panels.find((panel) => panel.dataset.panelStatus === selectedStatus) || null;
-}
 
 function applyFilters() {
   const query = (search?.value || "").trim().toLowerCase();
-  let visibleRows = 0;
-  let visibleDays = 0;
 
-  for (const panel of panels) {
-    const isSelected = panel.dataset.panelStatus === selectedStatus;
-    panel.hidden = !isSelected;
-    if (!isSelected) continue;
+  // Show/hide sections
+  if (sectionActive) sectionActive.style.display = selectedStatus === "active" ? "" : "none";
+  if (sectionArchive) sectionArchive.style.display = selectedStatus === "archive" ? "" : "none";
 
-    const days = Array.from(panel.querySelectorAll<HTMLElement>("[data-day]"));
-    for (const day of days) {
-      let dayRows = 0;
-      const rows = Array.from(day.querySelectorAll<HTMLTableRowElement>("[data-record]"));
-      for (const row of rows) {
-        const isMatch = !query || (row.dataset.search || "").includes(query);
-        row.hidden = !isMatch;
-        if (isMatch) {
-          dayRows += 1;
-          visibleRows += 1;
-        }
-      }
-      day.hidden = dayRows === 0;
-      const badge = day.querySelector<HTMLElement>("[data-day-count]");
-      if (badge) badge.textContent = String(dayRows);
-      if (dayRows > 0) visibleDays += 1;
-    }
-
-    const count = panel.querySelector<HTMLElement>("[data-visible-count]");
-    if (count) count.textContent = String(visibleRows);
+  // Filter items in the active section
+  let visibleActive = 0;
+  const activeItems = document.querySelectorAll('#active-grid .screening-item');
+  for (const item of activeItems) {
+    const el = item as HTMLElement;
+    const searchMatches = !query || (el.dataset.search || "").includes(query);
+    el.hidden = !searchMatches;
+    if (searchMatches) visibleActive++;
   }
+  if (emptyActive) emptyActive.hidden = visibleActive !== 0;
+  if (countActive) countActive.textContent = String(visibleActive);
 
-  if (empty) empty.hidden = visibleRows !== 0 || visibleDays !== 0;
+  // Filter items in the archive section
+  let visibleArchive = 0;
+  const archiveItems = document.querySelectorAll('#archive-grid .screening-item');
+  const archiveGroups = document.querySelectorAll('#archive-grid .archive-group');
+  for (const group of archiveGroups) {
+    const details = group as HTMLDetailsElement;
+    let groupVisible = 0;
+    const items = details.querySelectorAll('.screening-item');
+    for (const item of items) {
+      const el = item as HTMLElement;
+      const searchMatches = !query || (el.dataset.search || "").includes(query);
+      el.hidden = !searchMatches;
+      if (searchMatches) groupVisible++;
+    }
+    details.hidden = groupVisible === 0;
+    visibleArchive += groupVisible;
+  }
+  if (emptyArchive) emptyArchive.hidden = visibleArchive !== 0;
+  if (countArchive) countArchive.textContent = String(visibleArchive);
+
+  if (titleEl) titleEl.textContent = selectedStatus === "archive" ? "Archive" : "Active";
 }
 
 for (const tab of tabs) {
@@ -316,75 +225,117 @@ for (const tab of tabs) {
   });
 }
 
-for (const button of actionButtons) {
-  button.addEventListener("click", () => {
-    const panel = activePanel();
-    if (!panel) return;
-    const shouldOpen = button.dataset.action === "expand";
-    for (const day of panel.querySelectorAll<HTMLDetailsElement>("details[data-day]")) {
-      if (!day.hidden) day.open = shouldOpen;
-    }
-  });
-}
-
 search?.addEventListener("input", applyFilters);
 applyFilters();
 </script>
 
 <style>
-.console-page {
-  padding: 34px 0 58px;
+/* ═══ Hero (unchanged from original) ═══ */
+.hero {
+  padding: 26px 0 22px;
 }
-.console-header {
+.topbar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin: 20px 0 26px;
-  text-align: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 38px;
 }
-.brand-mark {
+.brand {
   display: inline-flex;
-  flex: 0 0 auto;
-  filter: drop-shadow(0 12px 18px rgba(23, 107, 135, 0.24));
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text);
+  font-size: 0.98rem;
+  font-weight: 820;
+  text-decoration: none;
 }
-.brand-mark img {
+.brand img {
   display: block;
+  filter: drop-shadow(0 10px 18px rgba(23, 107, 135, 0.22));
 }
-.title-block h1 {
+.data-note {
+  color: var(--color-muted);
+  font-size: 0.82rem;
+}
+.hero-main {
+  min-height: 248px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  align-items: end;
+  gap: 26px;
+}
+.hero-copy {
+  max-width: 760px;
+}
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+h1 {
   margin: 0;
-  font-size: clamp(1.5rem, 3vw, 2.2rem);
-  line-height: 1.1;
+  max-width: 780px;
+  font-size: clamp(3rem, 8vw, 6.6rem);
+  line-height: 0.92;
   letter-spacing: 0;
 }
-.title-block p {
-  margin: 9px 0 0;
-  color: var(--color-muted);
-  font-size: 0.95rem;
-  line-height: 1.6;
+.subtitle {
+  max-width: 640px;
+  margin: 18px 0 0;
+  color: var(--color-ink-soft);
+  font-size: 1rem;
+  line-height: 1.7;
 }
-.title-block p span {
-  display: inline-block;
-  margin-left: 10px;
-}
-.toolbar {
-  position: sticky;
-  top: 10px;
-  z-index: 8;
+.hero-metrics {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto auto;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.hero-metrics div {
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(255,255,255,0.18);
+}
+.metric-value {
+  font-size: 2rem;
+  font-weight: 860;
+}
+.metric-label {
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 740;
+}
+
+/* ═══ Controls (unchanged) ═══ */
+.controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
   align-items: center;
+  margin: 8px 0 24px;
   padding: 10px;
   border-radius: 8px;
+  position: sticky;
+  top: 10px;
+  z-index: 4;
 }
 .search-wrap {
   min-width: 0;
-  height: 44px;
+  height: 46px;
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 0 13px;
+  padding: 0 14px;
   border: 1px solid var(--color-line);
   border-radius: 8px;
   background: rgba(255,255,255,0.42);
@@ -406,7 +357,7 @@ applyFilters();
   outline: 0;
   background: transparent;
   color: var(--color-text);
-  font-size: 0.93rem;
+  font-size: 0.95rem;
 }
 .search-wrap input::placeholder {
   color: var(--color-muted);
@@ -420,23 +371,20 @@ applyFilters();
   border-radius: 8px;
   background: rgba(255,255,255,0.34);
 }
-.status-tab,
-.view-actions button {
-  height: 36px;
+.status-tab {
+  min-width: 116px;
+  height: 38px;
   border: 0;
   border-radius: 6px;
+  background: transparent;
   color: var(--color-muted);
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 760;
-}
-.status-tab {
-  min-width: 112px;
-  padding: 0 14px;
-  background: transparent;
+  font-size: 0.86rem;
+  font-weight: 780;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 .status-tab span {
-  margin-left: 6px;
+  color: inherit;
   opacity: 0.72;
 }
 .status-tab.active {
@@ -444,265 +392,136 @@ applyFilters();
   color: var(--color-text);
   box-shadow: 0 8px 18px rgba(36,55,72,0.12);
 }
-.view-actions {
-  display: flex;
-  gap: 8px;
-}
-.view-actions button {
-  padding: 0 14px;
-  border: 1px solid var(--color-line);
-  background: rgba(255,255,255,0.32);
-}
-.summary-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin: 18px 0 16px;
-}
-.metric {
-  min-height: 78px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 14px 16px;
-  border-radius: 8px;
-}
-.metric span {
-  color: var(--color-text);
-  font-size: 1.45rem;
-  font-weight: 860;
-}
-.metric p {
-  margin: 4px 0 0;
-  color: var(--color-muted);
-  font-size: 0.8rem;
-  font-weight: 720;
-}
-.criteria-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 18px;
-}
-.criteria-line span {
-  padding: 7px 10px;
-  border: 1px solid var(--color-line);
-  border-radius: 999px;
-  background: rgba(255,255,255,0.32);
-  color: var(--color-muted);
-  font-size: 0.78rem;
-  font-weight: 720;
-}
-.panel-heading {
+
+/* ═══ Results ═══ */
+.results-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 14px;
-  margin: 8px 0 10px;
+  gap: 16px;
+  margin-bottom: 14px;
 }
-.panel-heading h2 {
+.results-head h2 {
   margin: 0;
   font-size: 1rem;
 }
-.panel-heading p {
+.results-head p {
   margin: 0;
   color: var(--color-muted);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
 }
-.results-panel {
-  min-width: 0;
-}
-.day-list {
-  display: grid;
-  gap: 9px;
-  min-width: 0;
-}
-.day-group {
-  overflow: clip;
-  border-radius: 8px;
-  min-width: 0;
-}
-.day-group[hidden] {
-  display: none;
-}
-.day-group summary {
-  min-height: 54px;
+
+.results-list {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  cursor: pointer;
-  list-style: none;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 48px;
 }
-.day-group summary::-webkit-details-marker {
+
+.screening-item[hidden] {
   display: none;
 }
-.chevron {
-  width: 0;
-  height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 7px solid var(--color-muted);
-  transition: transform 0.16s ease;
-}
-.day-group[open] .chevron {
-  transform: rotate(90deg);
-}
-.day-group summary strong {
-  font-size: 1.05rem;
-  font-weight: 820;
-}
-.count-badge {
-  min-width: 30px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 9px;
-  border-radius: 999px;
-  background: #5aa7ff;
-  color: #06111f;
-  font-size: 0.85rem;
-  font-weight: 850;
-}
-.rule-tag {
-  color: var(--color-muted);
-  font-size: 0.86rem;
-}
-.table-scroll {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-  border-top: 1px solid var(--color-line);
-}
-table {
-  width: 100%;
-  min-width: 1060px;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-th,
-td {
-  height: 42px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--color-line);
-  text-align: left;
-  white-space: nowrap;
-}
-th {
-  background: rgba(73, 88, 114, 0.1);
-  color: var(--color-muted);
-  font-size: 0.78rem;
-  font-weight: 820;
-}
-tbody tr {
-  background: rgba(255,255,255,0.12);
-}
-tbody tr:hover {
-  background: rgba(90, 167, 255, 0.12);
-}
-tr[hidden] {
-  display: none;
-}
-.stock-code {
-  color: #2f86e9;
-  font-weight: 850;
-  text-decoration: none;
-}
-.stock-code:hover {
-  text-decoration: underline;
-}
-.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.strong {
-  color: var(--color-text);
-  font-weight: 790;
-}
-.score-good {
-  color: #24b653;
-  font-weight: 840;
-}
-.score-watch {
-  color: #d59b0b;
-  font-weight: 840;
-}
-.score-muted {
-  color: var(--color-muted);
-}
-.z-low {
-  color: #24b653;
-  font-weight: 800;
-}
-.z-mid {
-  color: #d59b0b;
-  font-weight: 800;
+
+/* ═══ Archive groups ═══ */
+.archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 48px;
 }
 .archive-group {
-  opacity: 0.92;
+  border-radius: var(--radius-card, 8px);
+  overflow: hidden;
 }
+.archive-group[hidden] {
+  display: none;
+}
+.archive-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  position: relative;
+  z-index: 1;
+}
+.archive-header::-webkit-details-marker {
+  display: none;
+}
+.archive-date {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+.archive-count {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  font-weight: 750;
+}
+.archive-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 10px 12px 10px;
+}
+
 .empty-state {
-  margin: 18px 0 0;
+  margin: 0 0 48px;
   padding: 28px;
   border-radius: 8px;
   color: var(--color-muted);
   text-align: center;
 }
-.empty-state[hidden] {
-  display: none;
+
+/* ═══ Footer ═══ */
+.page-footer {
+  color: var(--color-muted, #667085);
+  font-size: 0.8rem;
+  padding: 26px 16px 34px;
+  text-align: center;
 }
-@media (max-width: 960px) {
-  .toolbar {
+
+/* ═══ Responsive ═══ */
+@media (max-width: 1024px) {
+  .hero-main {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .hero-metrics {
+    max-width: 440px;
+  }
+}
+@media (max-width: 700px) {
+  .hero {
+    padding-top: 18px;
+  }
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 30px;
+  }
+  h1 {
+    font-size: 3.25rem;
+  }
+  .controls {
     position: static;
     grid-template-columns: 1fr;
   }
-  .status-tabs,
-  .view-actions {
+  .status-tabs {
     width: 100%;
   }
-  .status-tab,
-  .view-actions button {
-    flex: 1;
+  .status-tab {
     min-width: 0;
   }
-  .summary-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
-@media (max-width: 620px) {
-  .console-page {
-    padding-top: 18px;
+@media (max-width: 420px) {
+  .container {
+    width: min(100% - 20px, 1200px);
   }
-  .console-header {
-    align-items: flex-start;
-    justify-content: flex-start;
-    text-align: left;
-  }
-  .title-block p span {
-    display: block;
-    margin-left: 0;
-    margin-top: 3px;
-  }
-  .summary-strip {
-    grid-template-columns: 1fr 1fr;
-  }
-  .metric {
-    min-height: 70px;
-  }
-  .metric span {
-    font-size: 1.05rem;
-  }
-  .panel-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .day-group summary {
-    flex-wrap: wrap;
-  }
-  .rule-tag {
-    width: 100%;
-    padding-left: 17px;
+  h1 {
+    font-size: 2.8rem;
   }
 }
 </style>

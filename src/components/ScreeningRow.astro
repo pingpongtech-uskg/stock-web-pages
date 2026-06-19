@@ -1,0 +1,316 @@
+---
+// ScreeningRow.astro — Table-style card for screening results
+// Replaces StockCard.astro for the screening results view.
+// Preserves glass-morphism design tokens from Layout.astro.
+
+export interface ScreeningEntry {
+  code: string;
+  name_zh: string;
+  name_en: string;
+  net_amount_10d: number;
+  net_amount_10d_k: number;
+  net_shares_10d: number;
+  net_shares_10d_zhang: number;
+  last_date: string;
+  cur_price: number;
+  g_score: number;
+  l_score: number;
+  regression_z: number;
+  rank: number;
+  screening_date: string;
+}
+
+interface Props {
+  entry: ScreeningEntry;
+  variant?: "active" | "archive";
+}
+
+const { entry, variant = "active" } = Astro.props;
+const isArchive = variant === "archive";
+
+function fmtAmount(v: number): string {
+  if (v >= 1e8) return (v / 1e8).toFixed(2) + " 億";
+  if (v >= 1e4) return (v / 1e4).toFixed(1) + " 萬";
+  return v.toLocaleString();
+}
+
+function fmtShares(zhang: number): string {
+  if (zhang >= 10000) return (zhang / 10000).toFixed(1) + " 萬張";
+  if (zhang >= 1000) return (zhang / 1000).toFixed(1) + " 千張";
+  return zhang + " 張";
+}
+
+function scoreTier(score: number): string {
+  if (score >= 80) return "gold";
+  if (score >= 60) return "silver";
+  return "bronze";
+}
+
+function scoreLabel(score: number): string {
+  if (score >= 80) return "金";
+  if (score >= 60) return "銀";
+  return "銅";
+}
+
+const gTier = scoreTier(entry.g_score);
+const lTier = scoreTier(entry.l_score);
+
+const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
+---
+
+<a href={statementUrl} target="_blank" rel="noopener" class:list={["screening-row", "glass-surface", { "is-archive": isArchive }]}>
+  <div class="row-left">
+    <div class="stock-identity">
+      <span class="stock-code">{entry.code}</span>
+      <span class="stock-name">{entry.name_zh || "—"}</span>
+    </div>
+  </div>
+
+  <div class="row-center">
+    <div class="col col-amount">
+      <span class="col-label">投信10日買超</span>
+      <span class="col-value col-value-primary">{fmtAmount(entry.net_amount_10d)}</span>
+      <span class="col-sub">{fmtShares(entry.net_shares_10d_zhang)}</span>
+    </div>
+
+    <div class="col col-date">
+      <span class="col-label">上榜日</span>
+      <span class="col-value">{entry.last_date}</span>
+      {isArchive && (
+        <span class="col-sub">({entry.screening_date})</span>
+      )}
+    </div>
+
+    <div class="col col-score">
+      <span class="col-label">成長</span>
+      <span class:list={["score-badge", gTier]}>
+        {scoreLabel(entry.g_score)}{entry.g_score.toFixed(0)}
+      </span>
+    </div>
+
+    <div class="col col-score">
+      <span class="col-label">地雷</span>
+      <span class:list={["score-badge", lTier]}>
+        {scoreLabel(entry.l_score)}{entry.l_score.toFixed(0)}
+      </span>
+    </div>
+
+    <div class="col col-score col-placeholder">
+      <span class="col-label">便宜</span>
+      <span class="col-value col-muted">—</span>
+    </div>
+
+    <div class="col col-score col-placeholder">
+      <span class="col-label">定存</span>
+      <span class="col-value col-muted">—</span>
+    </div>
+  </div>
+
+  <div class="row-right">
+    <div class="col col-price">
+      <span class="col-label">股價</span>
+      <span class="col-value col-value-price">{entry.cur_price.toFixed(1)}</span>
+    </div>
+    <div class="col col-z">
+      <span class="col-label">Z</span>
+      <span class="col-value col-muted">{entry.regression_z.toFixed(2)}</span>
+    </div>
+  </div>
+</a>
+
+<style>
+.screening-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: var(--radius-card, 8px);
+  color: var(--color-text, #17202a);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.screening-row::after {
+  position: absolute;
+  inset: 1px 1px auto 1px;
+  height: 52%;
+  content: "";
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.34), transparent);
+  pointer-events: none;
+}
+.screening-row:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover, 0 24px 70px rgba(36,55,72,0.2));
+  border-color: rgba(23, 107, 135, 0.34);
+}
+.screening-row.is-archive {
+  opacity: 0.72;
+}
+.screening-row.is-archive:hover {
+  opacity: 0.92;
+}
+
+.row-left {
+  flex: 0 0 120px;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+.row-center {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 14px;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+.row-right {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.stock-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stock-code {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.stock-name {
+  font-size: 0.78rem;
+  color: var(--color-muted, #667085);
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.col-label {
+  font-size: 0.65rem;
+  font-weight: 750;
+  color: var(--color-muted, #667085);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.col-value {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.col-value-primary {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+.col-value-price {
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+.col-sub {
+  font-size: 0.7rem;
+  color: var(--color-muted, #667085);
+}
+.col-muted {
+  color: var(--color-muted, #667085);
+  font-weight: 500;
+}
+
+.col-amount {
+  min-width: 130px;
+}
+.col-date {
+  min-width: 90px;
+}
+.col-score {
+  min-width: 64px;
+  align-items: flex-start;
+}
+.col-price {
+  min-width: 64px;
+  align-items: flex-end;
+  text-align: right;
+}
+.col-z {
+  min-width: 48px;
+  align-items: flex-end;
+  text-align: right;
+}
+.col-placeholder {
+  opacity: 0.5;
+}
+
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+.score-badge.gold {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.14);
+}
+.score-badge.silver {
+  color: #64748b;
+  background: rgba(148, 163, 184, 0.14);
+}
+.score-badge.bronze {
+  color: #92400e;
+  background: rgba(217, 119, 6, 0.12);
+}
+
+@media (max-width: 900px) {
+  .screening-row {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .row-left {
+    flex: 0 0 100%;
+  }
+  .row-center {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .row-right {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+  }
+  .col-amount {
+    min-width: 110px;
+  }
+}
+
+@media (max-width: 520px) {
+  .stock-identity {
+    flex-direction: row;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .col {
+    min-width: auto;
+  }
+  .col-score {
+    align-items: center;
+  }
+  .row-center {
+    gap: 8px;
+  }
+}
+</style>
