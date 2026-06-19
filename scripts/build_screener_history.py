@@ -182,15 +182,30 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         if code not in latest_by_code or entry["screening_date"] > latest_by_code[code]["screening_date"]:
             latest_by_code[code] = entry
 
-    # Precompute Z for active stocks (recompute with log prices for accuracy)
-    print("Recomputing Z with log-price regression for active stocks...")
+    # Precompute Z for active stocks using yfinance (live data, log prices)
+    print("Recomputing Z with yfinance (log-price regression) for active stocks...")
     z_cache: dict[str, float | None] = {}
-    for code in latest_by_code:
-        prices = load_batch_prices(DATA_DIR, code)
-        if prices is not None:
-            z = compute_z_log(prices)
-            if z is not None:
-                z_cache[code] = z
+    try:
+        import yfinance as yf
+        for code in latest_by_code:
+            try:
+                for ext in [".TW", ".TWO"]:
+                    tk = yf.Ticker(f"{code}{ext}")
+                    hist = tk.history(period="5y", auto_adjust=True)
+                    if hist is not None and len(hist) >= 200:
+                        break
+                if hist is None or len(hist) < 200:
+                    continue
+                p = hist['Close'].values
+                if hasattr(p[0], 'item'):
+                    p = np.array([float(x) for x in p])
+                z = compute_z_log(p)
+                if z is not None:
+                    z_cache[code] = z
+            except Exception:
+                continue
+    except ImportError:
+        print("  WARNING: yfinance not available, Z values from reports used as-is")
 
     # Build active list
     active = []
