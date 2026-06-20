@@ -112,7 +112,7 @@ export async function onRequestPost(context) {
   // Works with any OpenAI-compatible API (OpenCode Go, OpenAI, etc.)
   const apiKey = env.CHAT_API_KEY || env.OPENCODE_GO_API_KEY;
   const apiEndpoint = env.CHAT_API_ENDPOINT || "https://opencode.ai/zen/go/v1/chat/completions";
-  const model = env.CHAT_MODEL || "glm-5";
+  const model = env.CHAT_MODEL || "deepseek-v4-flash";
 
   if (!apiKey) {
     return Response.json({
