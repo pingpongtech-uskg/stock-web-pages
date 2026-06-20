@@ -292,8 +292,16 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
     except Exception as e:
         print(f"  WARNING: value scores failed: {e}")
 
-    # Build active list
+    # Build active list — must pass ALL current screening criteria:
+    #   (a) last_date within 30 days
+    #   (b) Z <= 0  (recomputed live from yfinance)
+    #   (c) 10-day net cumulative shares > 0  (buy - sell, no just-positive-days bug)
+    #   (d) G >= 80 and L >= 80  (FinMind, stable — kept from last scoring)
     active = []
+    today_s = ref.strftime('%Y-%m-%d')
+    kicked_z = 0
+    kicked_net = 0
+    kicked_score = 0
     for code, entry in latest_by_code.items():
         try:
             last_d = datetime.strptime(entry["last_date"], "%Y-%m-%d").date()
@@ -301,32 +309,47 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             last_d = date(2000, 1, 1)
 
         if last_d < cutoff:
-            continue  # Skip — expired from active
+            continue  # Expired — 30 days inactive
 
+        # ── Re-validate current screening criteria ──
+        # (b) Z must still be <= 0
+        if code in z_cache and z_cache[code] is not None:
+            z = z_cache[code]
+            if z > 0:
+                kicked_z += 1
+                continue  # Z flipped positive → kick
+        # If Z unavailable, keep it (don't penalize missing data)
+
+        # (c) 10-day net cumulative shares must be > 0 (recalculated to TODAY)
+        corrected_shares = calc_net_shares_10d(trust_cache, code, today_s)
+        if corrected_shares <= 0:
+            kicked_net += 1
+            continue  # No longer net buying → kick
+
+        # (d) G >= 80 and L >= 80
+        gs = entry.get("g_score", 0)
+        ls = entry.get("l_score", 0)
+        if gs < 80 or ls < 80:
+            kicked_score += 1
+            continue  # Fundamental scores degraded → kick
+
+        # ── Passed all checks — keep in Active ──
         dates = code_to_dates.get(code, [])
         first_date = min(dates) if dates else entry["last_date"]
 
-        # Use recomputed Z if available
+        # Update Z from live data
         if code in z_cache and z_cache[code] is not None:
             entry["regression_z"] = z_cache[code]
 
         entry["first_date"] = first_date
 
-        # Recalculate net_shares_10d correctly (buy - sell, not just positive days)
-        corrected_shares = calc_net_shares_10d(trust_cache, code, entry["last_date"])
-        if corrected_shares > 0:
-            entry["net_shares_10d"] = round(corrected_shares)
-            entry["net_shares_10d_zhang"] = round(corrected_shares / 1000)
-            cur_p = entry.get("cur_price", 0)
-            if cur_p > 0:
-                entry["net_amount_10d"] = round(corrected_shares * cur_p)
-                entry["net_amount_10d_k"] = round(corrected_shares * cur_p / 1000)
-        else:
-            # Corrected net is zero or negative — was only in list due to bug
-            entry["net_shares_10d"] = 0
-            entry["net_shares_10d_zhang"] = 0
-            entry["net_amount_10d"] = 0
-            entry["net_amount_10d_k"] = 0
+        # Update net_shares_10d with corrected formula
+        entry["net_shares_10d"] = round(corrected_shares)
+        entry["net_shares_10d_zhang"] = round(corrected_shares / 1000)
+        cur_p = entry.get("cur_price", 0)
+        if cur_p > 0:
+            entry["net_amount_10d"] = round(corrected_shares * cur_p)
+            entry["net_amount_10d_k"] = round(corrected_shares * cur_p / 1000)
 
         # 最初上榜股價 & 漲跌幅
         first_p = first_price_map.get(code, entry.get("cur_price", 0))
@@ -337,7 +360,7 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         else:
             entry["change_pct"] = None
 
-        # Add value scores if available
+        # Add value scores
         if code in value_cache:
             vs = value_cache[code]
             entry["cheap_score"] = vs.get("cheap_score")
@@ -347,6 +370,13 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             entry["dividend_score"] = None
 
         active.append(entry)
+
+    if kicked_z or kicked_net or kicked_score:
+        parts = []
+        if kicked_z: parts.append(f"Z>0: {kicked_z}")
+        if kicked_net: parts.append(f"net≤0: {kicked_net}")
+        if kicked_score: parts.append(f"G/L<80: {kicked_score}")
+        print(f"  Kicked from Active: {', '.join(parts)}")
 
     # Sort active: by last_date DESC (newest first)
     active.sort(key=lambda x: x["last_date"], reverse=True)
