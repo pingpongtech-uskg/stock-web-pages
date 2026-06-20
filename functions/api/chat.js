@@ -155,8 +155,25 @@ export async function onRequestPost(context) {
   // ── Search SearXNG for relevant info ──
   const searchContext = await searchSearXNG(message, env);
 
-  // ── Build prompt with search results ──
+  // ── Build system prompt ──
   const systemPrompt = buildSystemPrompt(activeStocks, searchContext);
+
+  // ── Build messages array with conversation history ──
+  const messages = [
+    { role: "system", content: systemPrompt },
+  ];
+
+  // Include conversation history (if provided by client)
+  if (body.history && Array.isArray(body.history)) {
+    for (const h of body.history.slice(-10)) {
+      if (h.role && h.content) {
+        messages.push({ role: h.role, content: h.content });
+      }
+    }
+  }
+
+  // Current message
+  messages.push({ role: "user", content: message });
 
   // ── Get API config ──
   const apiKey = env.CHAT_API_KEY || env.OPENCODE_GO_API_KEY;
@@ -178,10 +195,7 @@ export async function onRequestPost(context) {
       },
       body: JSON.stringify({
         model: model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: message },
-        ],
+        messages: messages,
         max_tokens: 1200,
         temperature: 0.7,
       }),

@@ -73,6 +73,8 @@ const base = import.meta.env.BASE_URL;
   const sendBtn = document.getElementById("chat-send") as HTMLButtonElement;
 
   let isWaiting = false;
+  // Conversation history: [{role: "user"|"assistant", content: "..."}]
+  let history: Array<{role: string; content: string}> = [];
 
   function scrollToBottom() {
     messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -123,16 +125,30 @@ const base = import.meta.env.BASE_URL;
     addMessage("user", text);
     addLoading();
 
+    // Add user message to history
+    history.push({ role: "user", content: text });
+
+    // Keep only last 6 exchanges (12 messages) to avoid token bloat
+    if (history.length > 12) history = history.slice(-12);
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({
+          message: text,
+          history: history.slice(0, -1), // Exclude current message (sent as `message`)
+        }),
       });
 
       const data = await res.json();
       removeLoading();
-      addMessage("bot", data.reply || "抱歉，我沒有回應 😅");
+
+      const reply = data.reply || "抱歉，我沒有回應 😅";
+      addMessage("bot", reply);
+
+      // Add assistant reply to history
+      history.push({ role: "assistant", content: reply });
     } catch {
       removeLoading();
       addMessage("bot", "網路好像不太穩，再試一次好嗎？ 🙇");
