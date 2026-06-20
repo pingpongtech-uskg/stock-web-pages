@@ -48,7 +48,15 @@ const base = import.meta.env.BASE_URL;
         <img src={`${base}logo.svg`} alt="" width="36" height="36" />
         <span>Hermes Stock Radar</span>
       </a>
-      <span class="data-note">TWSE screening results</span>
+      <div class="topbar-right">
+        <a href={`${base}chat`} class="chat-link" aria-label="AI 策略問答">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>問AI</span>
+        </a>
+        <span class="data-note">TWSE screening results</span>
+      </div>
     </nav>
 
     <section class="hero-main">
@@ -263,6 +271,29 @@ applyFilters();
 .data-note {
   color: var(--color-muted);
   font-size: 0.82rem;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.chat-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3B82F6, #60A5FA);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 780;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.chat-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 .hero-main {
   min-height: 248px;

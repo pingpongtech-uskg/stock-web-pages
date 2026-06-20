@@ -1,0 +1,405 @@
+---
+// src/pages/chat.astro — Strategy A chatbot
+// Glass morphism chat UI with bright Claude Code blue
+import Layout from "../components/Layout.astro";
+
+const title = "雷達小幫手 · 策略A聊天室";
+const description = "法人初建倉策略問答 — 投信10日買超TOP10 + Z≤0 + G≥80 & L≥80";
+const base = import.meta.env.BASE_URL;
+---
+
+<Layout title={title} description={description}>
+  <div class="chat-page">
+    <!-- Top bar -->
+    <header class="chat-topbar glass-surface">
+      <a href={base} class="back-link" aria-label="回到榜單">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>榜單</span>
+      </a>
+      <div class="chat-brand">
+        <span class="chat-icon">🔵</span>
+        <span class="chat-title">雷達小幫手</span>
+        <span class="chat-badge">策略A</span>
+      </div>
+      <div class="spacer"></div>
+    </header>
+
+    <!-- Messages area -->
+    <div id="chat-messages" class="chat-messages">
+      <!-- Welcome message -->
+      <div class="msg msg-bot">
+        <div class="msg-bubble">
+          <p>👋 你好！我是<b>雷達小幫手</b>，專門解釋「法人初建倉」選股策略。</p>
+          <p>你可以問我：</p>
+          <ul>
+            <li>「今天榜上有哪些股票？」</li>
+            <li>「為什麼正新上榜？」</li>
+            <li>「Z-score 是什麼意思？」</li>
+            <li>「為什麼用金額排名不用張數？」</li>
+          </ul>
+          <p>儘管問，我用白話解釋給你聽 😊</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input area -->
+    <div class="chat-input-area glass-surface">
+      <div class="chat-input-wrap">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="輸入你的問題…"
+          autocomplete="off"
+          maxlength="2000"
+          aria-label="輸入問題"
+        />
+        <button id="chat-send" class="send-btn" aria-label="送出">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      <p class="chat-hint">以榜單資料為準，僅解釋策略邏輯，不提供買賣建議</p>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const messagesEl = document.getElementById("chat-messages")!;
+  const inputEl = document.getElementById("chat-input") as HTMLInputElement;
+  const sendBtn = document.getElementById("chat-send") as HTMLButtonElement;
+
+  let isWaiting = false;
+
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function addMessage(role: "user" | "bot", text: string) {
+    const div = document.createElement("div");
+    div.className = `msg msg-${role}`;
+
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+
+    // Support newlines -> <br>, and **bold** -> <strong>
+    const html = text
+      .split("\n")
+      .map((line) => `<p>${line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>") || "&nbsp;"}</p>`)
+      .join("");
+    bubble.innerHTML = html;
+
+    div.appendChild(bubble);
+    messagesEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  function addLoading() {
+    const div = document.createElement("div");
+    div.className = "msg msg-bot msg-loading";
+    div.innerHTML = '<div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+    div.id = "loading-msg";
+    messagesEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  function removeLoading() {
+    const el = document.getElementById("loading-msg");
+    if (el) el.remove();
+  }
+
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text || isWaiting) return;
+
+    isWaiting = true;
+    inputEl.value = "";
+    inputEl.disabled = true;
+    sendBtn.disabled = true;
+
+    addMessage("user", text);
+    addLoading();
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+
+      const data = await res.json();
+      removeLoading();
+      addMessage("bot", data.reply || "抱歉，我沒有回應 😅");
+    } catch {
+      removeLoading();
+      addMessage("bot", "網路好像不太穩，再試一次好嗎？ 🙇");
+    } finally {
+      isWaiting = false;
+      inputEl.disabled = false;
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  scrollToBottom();
+</script>
+
+<style>
+  /* ── Page layout ── */
+  .chat-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 12px;
+  }
+
+  /* ── Top bar ── */
+  .chat-topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    margin-top: 10px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .back-link:hover {
+    color: var(--color-text);
+    background: rgba(0,0,0,0.05);
+  }
+  .chat-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chat-icon {
+    font-size: 1.3rem;
+  }
+  .chat-title {
+    font-weight: 800;
+    font-size: 0.98rem;
+    color: var(--color-text);
+  }
+  .chat-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #60A5FA;
+    color: #fff;
+    letter-spacing: 0.02em;
+  }
+  .spacer {
+    flex: 1;
+  }
+
+  /* ── Messages ── */
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scroll-behavior: smooth;
+  }
+
+  .msg {
+    display: flex;
+    max-width: 85%;
+  }
+  .msg-user {
+    align-self: flex-end;
+  }
+  .msg-bot {
+    align-self: flex-start;
+  }
+
+  .msg-bubble {
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: var(--color-text);
+    overflow-wrap: break-word;
+  }
+
+  .msg-user .msg-bubble {
+    background: #60A5FA;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 14px rgba(96, 165, 250, 0.35);
+  }
+  .msg-user .msg-bubble p {
+    margin: 0;
+  }
+
+  .msg-bot .msg-bubble {
+    background: var(--color-card);
+    border: 1px solid var(--color-line);
+    border-bottom-left-radius: 4px;
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(22px) saturate(145%);
+    -webkit-backdrop-filter: blur(22px) saturate(145%);
+  }
+  .msg-bot .msg-bubble p {
+    margin: 0 0 6px;
+  }
+  .msg-bot .msg-bubble p:last-child {
+    margin-bottom: 0;
+  }
+  .msg-bot .msg-bubble ul {
+    margin: 6px 0;
+    padding-left: 20px;
+  }
+  .msg-bot .msg-bubble li {
+    margin-bottom: 3px;
+  }
+  .msg-bot .msg-bubble strong {
+    color: #3B82F6;
+  }
+
+  /* ── Typing indicator ── */
+  .typing-dots {
+    display: flex;
+    gap: 5px;
+    padding: 4px 0;
+  }
+  .typing-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-muted);
+    animation: bounce 1.3s infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+    30% { transform: translateY(-8px); opacity: 1; }
+  }
+
+  /* ── Input area ── */
+  .chat-input-area {
+    flex-shrink: 0;
+    margin-bottom: 12px;
+    padding: 12px 14px 8px;
+    border-radius: 12px;
+  }
+  .chat-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--color-line);
+    border-radius: 10px;
+    padding: 4px 4px 4px 16px;
+  }
+  .chat-input-wrap:focus-within {
+    border-color: #60A5FA;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+  }
+  .chat-input-wrap input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 0.95rem;
+    padding: 10px 0;
+  }
+  .chat-input-wrap input::placeholder {
+    color: var(--color-muted);
+  }
+  .chat-input-wrap input:disabled {
+    opacity: 0.5;
+  }
+
+  .send-btn {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 10px;
+    background: #60A5FA;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+  }
+  .send-btn:hover {
+    background: #3B82F6;
+    transform: scale(1.05);
+    box-shadow: 0 6px 18px rgba(96, 165, 250, 0.4);
+  }
+  .send-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .chat-hint {
+    margin: 6px 0 0;
+    font-size: 0.7rem;
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .chat-page {
+      padding: 0 6px;
+    }
+    .msg {
+      max-width: 92%;
+    }
+    .chat-topbar {
+      margin-top: 6px;
+      padding: 8px 12px;
+    }
+    .chat-input-area {
+      margin-bottom: 8px;
+      padding: 8px 10px 6px;
+    }
+  }
+
+  /* ── Dark mode tweaks ── */
+  @media (prefers-color-scheme: dark) {
+    .chat-input-wrap {
+      background: rgba(255,255,255,0.08);
+    }
+    .msg-user .msg-bubble {
+      box-shadow: 0 4px 14px rgba(96, 165, 250, 0.25);
+    }
+  }
+</style>
