@@ -131,6 +131,39 @@ def calc_consecutive_buy(trust_cache: dict, code: str, as_of_date: str | None = 
     return consecutive
 
 
+def calc_net_shares_10d(trust_cache: dict, code: str, as_of_date: str) -> float:
+    """
+    Calculate the TRUE 10-day cumulative net shares (buy - sell).
+    Uses sum of ALL daily net values (positive + negative), not just positive days.
+    """
+    if not trust_cache or code not in trust_cache:
+        return 0
+    
+    stock_data = trust_cache[code]
+    dates = stock_data.get('dates', [])
+    nets = stock_data.get('net', [])
+    
+    if not dates or len(dates) < 1:
+        return 0
+    
+    # Sort by date
+    zd = sorted(zip(dates, nets))
+    dt = [z[0] for z in zd]
+    nv = [z[1] for z in zd]
+    
+    # Find the index of as_of_date or the closest <= as_of_date
+    i = len(dt) - 1
+    for j in range(len(dt) - 1, -1, -1):
+        if dt[j] <= as_of_date:
+            i = j
+            break
+    
+    # Sum the last 10 days (or fewer if not enough data)
+    start = max(0, i - 9)
+    ts = sum(nv[j] for j in range(start, i + 1))
+    return ts if ts > 0 else 0
+
+
 def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: str | None = None) -> dict:
     """Build active (unique, recent) and archive (all, grouped by date)."""
     ref = date.today() if reference_date is None else datetime.strptime(reference_date, "%Y-%m-%d").date()
@@ -281,6 +314,16 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         entry["first_date"] = first_date
         entry["consecutive_buy_days"] = consecutive_buy
 
+        # Recalculate net_shares_10d correctly (buy - sell, not just positive days)
+        corrected_shares = calc_net_shares_10d(trust_cache, code, entry["last_date"])
+        if corrected_shares > 0:
+            entry["net_shares_10d"] = round(corrected_shares)
+            entry["net_shares_10d_zhang"] = round(corrected_shares / 1000)
+            cur_p = entry.get("cur_price", 0)
+            if cur_p > 0:
+                entry["net_amount_10d"] = round(corrected_shares * cur_p)
+                entry["net_amount_10d_k"] = round(corrected_shares * cur_p / 1000)
+
         # 最初上榜股價 & 漲跌幅
         first_p = first_price_map.get(code, entry.get("cur_price", 0))
         cur_p = entry.get("cur_price", 0)
@@ -316,6 +359,18 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         archive_entry = dict(entry)  # Shallow copy
         archive_entry["first_date"] = first_date
         archive_entry["consecutive_buy_days"] = consecutive_buy
+        
+        # Recalculate net_shares_10d with CORRECT formula (buy - sell, not just positive days)
+        corrected_shares = calc_net_shares_10d(trust_cache, code, entry["screening_date"])
+        if corrected_shares > 0:
+            archive_entry["net_shares_10d"] = round(corrected_shares)
+            archive_entry["net_shares_10d_zhang"] = round(corrected_shares / 1000)
+            # Recalculate amount using the original price from the report
+            price_at_time = entry.get("cur_price", 0)
+            if price_at_time > 0:
+                archive_entry["net_amount_10d"] = round(corrected_shares * price_at_time)
+                archive_entry["net_amount_10d_k"] = round(corrected_shares * price_at_time / 1000)
+        
         # Backfill value scores from cache (current snapshot for archive)
         if code in value_cache:
             vs = value_cache[code]
