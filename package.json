@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build:screening": "python3 data/build_screening_history.py",
-    "build": "astro build",
+    "build": "astro build && cp -r functions dist/functions",
     "preview": "astro preview"
   },
   "dependencies": {
