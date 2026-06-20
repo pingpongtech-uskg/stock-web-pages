@@ -3,8 +3,8 @@
 // Glass morphism chat UI with bright Claude Code blue
 import Layout from "../components/Layout.astro";
 
-const title = "雷達小幫手 · 策略A聊天室";
-const description = "法人初建倉策略問答 — 投信10日買超TOP10 + Z≤0 + G≥80 & L≥80";
+const title = "雷達小幫手 · 股票研究助理";
+const description = "台股研究助理 — 查找新聞、財報、法說會、基本面、產業趨勢";
 const base = import.meta.env.BASE_URL;
 ---
 
@@ -21,7 +21,7 @@ const base = import.meta.env.BASE_URL;
       <div class="chat-brand">
         <span class="chat-icon">🟤</span>
         <span class="chat-title">雷達小幫手</span>
-        <span class="chat-badge">策略A</span>
+        <span class="chat-badge">研究助理</span>
       </div>
       <div class="spacer"></div>
     </header>
@@ -31,15 +31,15 @@ const base = import.meta.env.BASE_URL;
       <!-- Welcome message -->
       <div class="msg msg-bot">
         <div class="msg-bubble">
-          <p>👋 你好！我是<b>雷達小幫手</b>，專門解釋「法人初建倉」選股策略。</p>
-          <p>你可以問我：</p>
+          <p>👋 你好！我是<b>雷達小幫手</b>，你的台股研究助理。</p>
+          <p>我可以幫你查找：</p>
           <ul>
-            <li>「今天榜上有哪些股票？」</li>
-            <li>「為什麼正新上榜？」</li>
-            <li>「Z-score 是什麼意思？」</li>
-            <li>「為什麼用金額排名不用張數？」</li>
+            <li>📊 股票即時榜單與法人動向</li>
+            <li>📰 新聞與法說會資訊</li>
+            <li>📈 基本面與技術面分析</li>
+            <li>🏭 產業趨勢與比較</li>
           </ul>
-          <p>儘管問，我用白話解釋給你聽 😊</p>
+          <p>輸入股票代號或問題，我來幫你查 😊</p>
         </div>
       </div>
     </div>
@@ -50,7 +50,7 @@ const base = import.meta.env.BASE_URL;
         <input
           id="chat-input"
           type="text"
-          placeholder="輸入你的問題…"
+          placeholder="輸入股票代號或問題…"
           autocomplete="off"
           maxlength="2000"
           aria-label="輸入問題"
@@ -62,7 +62,7 @@ const base = import.meta.env.BASE_URL;
           </svg>
         </button>
       </div>
-      <p class="chat-hint">以榜單資料為準，僅解釋策略邏輯，不提供買賣建議</p>
+      <p class="chat-hint">AI 搜尋結果僅供參考，不構成投資建議</p>
     </div>
   </div>
 </Layout>
@@ -268,17 +268,17 @@ const base = import.meta.env.BASE_URL;
 
   .msg-user .msg-bubble {
     background: var(--color-accent);
-    color: var(--color-text-inverse);
+    color: #ffffff;
     border-bottom-right-radius: 4px;
-    box-shadow: 0 4px 14px rgba(201, 100, 66, 0.25);
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
   }
   .msg-user .msg-bubble p {
     margin: 0;
   }
 
   .msg-bot .msg-bubble {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
+    background: #e8e6dc;
+    border: 1px solid #d4d1c2;
     border-bottom-left-radius: 4px;
     box-shadow: var(--shadow-md);
   }
@@ -337,7 +337,7 @@ const base = import.meta.env.BASE_URL;
   }
   .chat-input-wrap:focus-within {
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.15);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
   }
   .chat-input-wrap input {
     flex: 1;
@@ -369,12 +369,12 @@ const base = import.meta.env.BASE_URL;
     align-items: center;
     justify-content: center;
     transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
-    box-shadow: 0 4px 12px rgba(201, 100, 66, 0.25);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
   }
   .send-btn:hover {
     background: var(--color-accent-hover);
     transform: scale(1.05);
-    box-shadow: 0 6px 18px rgba(201, 100, 66, 0.35);
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
   }
   .send-btn:disabled {
     opacity: 0.4;
@@ -413,7 +413,11 @@ const base = import.meta.env.BASE_URL;
       background: rgba(255,255,255,0.06);
     }
     .msg-user .msg-bubble {
-      box-shadow: 0 4px 14px rgba(217, 119, 87, 0.2);
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+    }
+    .msg-bot .msg-bubble {
+      background: #3d3d3a;
+      border-color: #4d4c48;
     }
   }
 </style>

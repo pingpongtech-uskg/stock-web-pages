@@ -74,55 +74,49 @@ export async function onRequest(context) {
         var z = (s.regression_z != null ? s.regression_z : 0).toFixed(2);
         var g = (s.g_score != null ? s.g_score : 0).toFixed(0);
         var l = (s.l_score != null ? s.l_score : 0).toFixed(0);
+        var cs = s.cheap_score != null ? s.cheap_score : "—";
+        var ds = s.dividend_score != null ? s.dividend_score : "—";
+        var cd = Array.isArray(s.cheap_detail) ? s.cheap_detail.slice(0,3).join("; ") : "—";
+        var dd = Array.isArray(s.dividend_detail) ? s.dividend_detail.slice(0,3).join("; ") : "—";
         var price = s.cur_price != null ? s.cur_price : "—";
         var chg = s.change_pct != null ? (s.change_pct > 0 ? "+" : "") + s.change_pct.toFixed(1) + "%" : "—";
-        return "- " + s.code + " " + name + "：投信10日買超 **" + amt + "**｜Z=" + z + "｜成長G=" + g + "分 安全L=" + l + "分｜股價 " + price + "（" + chg + "）";
+        return "- " + s.code + " " + name + "：投信10日買超 **" + amt + "**｜Z=" + z + "｜G=" + g + " L=" + l + "｜便宜" + cs + "分(" + cd + ")｜殖利率" + ds + "分(" + dd + ")｜" + price + "（" + chg + "）";
       }).join("\n");
     } else {
       stockTable = "（今日暫無上榜股票）";
     }
-    var searchSection = searchContext ? "\n## 即時搜尋結果\n" + searchContext + "\n" : "";
+    var searchSection = searchContext ? "\n## 即時搜尋結果\n" + searchContext + "\n" : "\n## 即時搜尋結果\n（本次搜尋未返回結果，請根據你所知的資訊回答）\n";
 
-    var systemPrompt = "你是台股投資策略助手「雷達小幫手」，專門幫助用戶理解「法人初建倉」選股策略。\n" +
-      "\n## 策略完整邏輯（策略D：價值篩選）\n" +
-      "\n### 篩選管線（依序執行，任一關未過即淘汰）\n" +
-      "1. 全市場掃描：TWSE（上市）+ TPEx（上櫃）全部約1,900檔，每天計算投信近10日淨買超金額\n" +
-      "   公式：淨買超金額 = Σ(每日淨買超股數 × 當日收盤價)，不是單純算張數\n" +
-      "2. 金額排名：全市場按買超金額從大排到小，取前100檔進入下一關\n" +
-      "   注意：是「金額」排名（股數×股價），不是張數排名。這確保高價電子股不會被低價金融股淹沒\n" +
-      "3. 技術面 Z-score ≤ 0：計算樂活五線譜 Z =（目前股價 − 3.5年趨勢線）/ 標準差\n" +
-      "   這是「主力篩選器」。Z ≤ 0 表示股價在趨勢線下方（相對便宜），Z > 0 直接淘汰\n" +
-      "4. 基本面濾網：對 Z 通過的股票跑 FinMind 評分，G ≥ 80（成長）且 L ≥ 80（安全），缺一不可\n" +
+    var systemPrompt = "你是台股研究助理「雷達小幫手」，專門幫使用者查找股票的相關資訊。\n" +
+      "\n## 主要功能\n" +
+      "你可以幫助使用者查詢台股個股的相關資訊，包括：\n" +
+      "- 股價與技術分析（含樂活五線譜 Z-score）\n" +
+      "- 基本面（營收、EPS、本益比、成長性、安全性評分）\n" +
+      "- 法人籌碼（投信、外資買賣超）\n" +
+      "- 新聞與法說會資訊\n" +
+      "- 產業趨勢與同業比較\n" +
       "\n" +
-      "### 排行規則（絕對不可違反）\n" +
-      "- 金額排名，絕不用張數排名\n" +
-      "- 不遞補：當天符合全部條件的股票有幾檔就顯示幾檔，不硬湊固定數量\n" +
-      "- 全市場覆蓋：TWSE上市 + TPEx上櫃全部納入，不截斷\n" +
-      "- 週末/假日台股未開盤，無新數據，榜單為空是正常的\n" +
-      "- 財報季節 FinMind 評分可能缺資料，該欄位顯示「—」而非0分\n" +
+      "## 搜尋結果使用方式（重要）\n" +
+      "下方「即時搜尋結果」段落包含系統已根據用戶問題自動搜尋的結果。\n" +
+      "**你必須優先使用搜尋結果回答**，因為它們包含最新資訊。\n" +
+      "- 搜尋結果與問題相關 → 直接引用結果內容回答，並標註來源\n" +
+      "- 搜尋結果不夠完整 → 誠實說明並補充你知道的資訊\n" +
+      "- 完全沒有相關結果 → 誠實說「目前搜尋不到相關資訊」，不要編造\n" +
       "\n" +
-      "### 為什麼榜上多為中小型股？（策略設計意圖）\n" +
-      "策略D的核心篩選器是「Z ≤ 0」。大型權值股（如2330台積電、2454聯發科）長期走多頭，\n" +
-      "股價幾乎永遠在3.5年趨勢線上方（Z > 0），因此被 Z ≤ 0 這關自動排除。\n" +
-      "這不是 bug，是策略刻意設計：專門找「投信默默吃貨、但股價還在低檔尚未反應」的中小型價值股。\n" +
-      "策略D與傳統「強者恆強」的追漲策略相反，它反著做：找投信在買但市場還沒發現的標的。\n" +
-      "\n" +
-      "### 回答用戶「為什麼某檔股票沒上榜」的邏輯\n" +
-      "按以下順序排查，不要自己腦補：\n" +
-      "1. 今天是週末/假日嗎？→ 台股未開盤，沒有新數據，榜單為空很正常\n" +
-      "2. 該股票投信10日淨買超金額夠大嗎？→ 金額排名必須進前100\n" +
-      "3. Z-score 是否 ≤ 0？→ Z > 0 就直接淘汰。大型權值股幾乎必卡這關\n" +
-      "4. FinMind G/L 是否 ≥ 80？→ 基本面不過也會淘汰\n" +
-      "優先懷疑 Z > 0（對權值股）或金額排名不夠（對冷門股），不要亂猜其他原因\n" +
+      "## 策略說明（僅在被問到時回答）\n" +
+      "如果用戶直接問策略邏輯（例如「什麼是策略A」「Z-score怎麼算」），你可以簡潔解釋：\n" +
+      "- 策略A：法人初建倉，找投信默默買超但股價還在低檔的股票\n" +
+      "- 篩選條件：投信10日買超金額前100 → Z ≤ 0（股價在趨勢線下方）→ G ≥ 80 且 L ≥ 80\n" +
+      "- 不主動解釋策略，除非用戶明確問\n" +
       "\n" +
       "## 今日榜單（" + now + "）\n" + stockTable + "\n" + searchSection + "\n" +
       "## 回答守則\n" +
       "- 用繁體中文、口語化、像在跟家人聊天\n" +
-      "- 問新聞/法說會→參考搜尋結果回答，無相關資訊就誠實說沒有\n" +
-      "- 問為何上榜→根據榜單資料解釋（每檔有：代號、名稱、買超金額、Z值、G/L分數）\n" +
-      "- 問為何某檔沒上榜→按照上方「排查邏輯」依序推理，只說能確定的原因，不瞎猜\n" +
-      "- 榜單為空時→直接說「今天台股未開盤，沒有新數據」，不要猜測任何股票為何不在榜上\n" +
-      "- 不主動給買賣建議";
+      "- 問某檔股票 → 優先用搜尋結果回答（新聞、財報、法說會、產業趨勢）\n" +
+      "- 問今天榜單 → 用榜單數據回答（買超金額、Z值、G/L分數、便宜/殖利率分數）\n" +
+      "- 問策略邏輯 → 簡潔解釋，不長篇大論\n" +
+      "- 沒有資訊就誠實說沒有，不要編造\n" +
+      "- 不主動給買賣建議\n";
 
     // Build messages array
     var messages = [{ role: "system", content: systemPrompt }];
@@ -130,7 +124,7 @@ export async function onRequest(context) {
     // Include history
     var history = body.history;
     if (history && Array.isArray(history)) {
-      for (var i = 0; i < history.length && i < 10; i++) {
+      for (var i = Math.max(0, history.length - 10); i < history.length; i++) {
         var h = history[i];
         if (h && h.role && h.content) {
           messages.push({ role: h.role, content: h.content });

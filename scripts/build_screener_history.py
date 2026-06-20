@@ -376,14 +376,18 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         else:
             entry["change_pct"] = None
 
-        # Add value scores
+        # Add value scores with detail
         if code in value_cache:
             vs = value_cache[code]
             entry["cheap_score"] = vs.get("cheap_score")
+            entry["cheap_detail"] = vs.get("cheap_detail")
             entry["dividend_score"] = vs.get("dividend_score")
+            entry["dividend_detail"] = vs.get("dividend_detail")
         else:
             entry["cheap_score"] = None
+            entry["cheap_detail"] = None
             entry["dividend_score"] = None
+            entry["dividend_detail"] = None
 
         active.append(entry)
 
@@ -428,10 +432,14 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         if code in value_cache:
             vs = value_cache[code]
             archive_entry["cheap_score"] = vs.get("cheap_score")
+            archive_entry["cheap_detail"] = vs.get("cheap_detail")
             archive_entry["dividend_score"] = vs.get("dividend_score")
+            archive_entry["dividend_detail"] = vs.get("dividend_detail")
         else:
             archive_entry["cheap_score"] = None
+            archive_entry["cheap_detail"] = None
             archive_entry["dividend_score"] = None
+            archive_entry["dividend_detail"] = None
         archive_date_to_stocks[archive_entry["screening_date"]].append(archive_entry)
 
     archive = {}
