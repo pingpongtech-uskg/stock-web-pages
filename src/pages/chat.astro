@@ -19,7 +19,7 @@ const base = import.meta.env.BASE_URL;
         <span>榜單</span>
       </a>
       <div class="chat-brand">
-        <span class="chat-icon">🔵</span>
+        <span class="chat-icon">🟤</span>
         <span class="chat-title">雷達小幫手</span>
         <span class="chat-badge">策略A</span>
       </div>
@@ -227,8 +227,8 @@ const base = import.meta.env.BASE_URL;
     font-weight: 800;
     padding: 2px 8px;
     border-radius: 10px;
-    background: #60A5FA;
-    color: #fff;
+    background: var(--color-accent);
+    color: var(--color-text-inverse);
     letter-spacing: 0.02em;
   }
   .spacer {
@@ -267,10 +267,10 @@ const base = import.meta.env.BASE_URL;
   }
 
   .msg-user .msg-bubble {
-    background: #60A5FA;
-    color: #fff;
+    background: var(--color-accent);
+    color: var(--color-text-inverse);
     border-bottom-right-radius: 4px;
-    box-shadow: 0 4px 14px rgba(96, 165, 250, 0.35);
+    box-shadow: 0 4px 14px rgba(201, 100, 66, 0.25);
   }
   .msg-user .msg-bubble p {
     margin: 0;
@@ -296,7 +296,7 @@ const base = import.meta.env.BASE_URL;
     margin-bottom: 3px;
   }
   .msg-bot .msg-bubble strong {
-    color: #3B82F6;
+    color: var(--color-accent);
   }
 
   /* ── Typing indicator ── */
@@ -336,8 +336,8 @@ const base = import.meta.env.BASE_URL;
     padding: 4px 4px 4px 16px;
   }
   .chat-input-wrap:focus-within {
-    border-color: #60A5FA;
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.15);
   }
   .chat-input-wrap input {
     flex: 1;
@@ -362,19 +362,19 @@ const base = import.meta.env.BASE_URL;
     height: 42px;
     border: 0;
     border-radius: 10px;
-    background: #60A5FA;
-    color: #fff;
+    background: var(--color-accent);
+    color: var(--color-text-inverse);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
-    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+    box-shadow: 0 4px 12px rgba(201, 100, 66, 0.25);
   }
   .send-btn:hover {
-    background: #3B82F6;
+    background: var(--color-accent-hover);
     transform: scale(1.05);
-    box-shadow: 0 6px 18px rgba(96, 165, 250, 0.4);
+    box-shadow: 0 6px 18px rgba(201, 100, 66, 0.35);
   }
   .send-btn:disabled {
     opacity: 0.4;
@@ -410,10 +410,10 @@ const base = import.meta.env.BASE_URL;
   /* ── Dark mode tweaks ── */
   @media (prefers-color-scheme: dark) {
     .chat-input-wrap {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.06);
     }
     .msg-user .msg-bubble {
-      box-shadow: 0 4px 14px rgba(96, 165, 250, 0.25);
+      box-shadow: 0 4px 14px rgba(217, 119, 87, 0.2);
     }
   }
 </style>
