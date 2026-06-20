@@ -323,6 +323,12 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             if cur_p > 0:
                 entry["net_amount_10d"] = round(corrected_shares * cur_p)
                 entry["net_amount_10d_k"] = round(corrected_shares * cur_p / 1000)
+        else:
+            # Corrected net is zero or negative — was only in list due to bug
+            entry["net_shares_10d"] = 0
+            entry["net_shares_10d_zhang"] = 0
+            entry["net_amount_10d"] = 0
+            entry["net_amount_10d_k"] = 0
 
         # 最初上榜股價 & 漲跌幅
         first_p = first_price_map.get(code, entry.get("cur_price", 0))
@@ -370,6 +376,11 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             if price_at_time > 0:
                 archive_entry["net_amount_10d"] = round(corrected_shares * price_at_time)
                 archive_entry["net_amount_10d_k"] = round(corrected_shares * price_at_time / 1000)
+        else:
+            archive_entry["net_shares_10d"] = 0
+            archive_entry["net_shares_10d_zhang"] = 0
+            archive_entry["net_amount_10d"] = 0
+            archive_entry["net_amount_10d_k"] = 0
         
         # Backfill value scores from cache (current snapshot for archive)
         if code in value_cache:
