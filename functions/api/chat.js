@@ -108,23 +108,27 @@ export async function onRequestPost(context) {
 
   const systemPrompt = buildSystemPrompt(activeStocks);
 
-  // Get API key from env (set in Cloudflare Pages dashboard)
-  const apiKey = env.OPENAI_API_KEY;
+  // Get API config from env vars (set in Cloudflare dashboard)
+  // Works with any OpenAI-compatible API (OpenCode Go, OpenAI, etc.)
+  const apiKey = env.CHAT_API_KEY || env.OPENCODE_GO_API_KEY;
+  const apiEndpoint = env.CHAT_API_ENDPOINT || "https://opencode.ai/zen/go/v1/chat/completions";
+  const model = env.CHAT_MODEL || "glm-5";
+
   if (!apiKey) {
     return Response.json({
-      reply: "⚠️ 系統尚未設定 OpenAI API 金鑰。請管理員在 Cloudflare Pages 環境變數中設定 OPENAI_API_KEY。",
+      reply: "⚠️ 系統尚未設定 API 金鑰。請管理員在 Cloudflare 環境變數中設定 CHAT_API_KEY 或 OPENCODE_GO_API_KEY。",
     }, { status: 500 });
   }
 
   try {
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    const r = await fetch(apiEndpoint, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
+        model: model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message },
@@ -136,7 +140,7 @@ export async function onRequestPost(context) {
 
     if (!r.ok) {
       const errText = await r.text();
-      console.error(`OpenAI API error ${r.status}: ${errText}`);
+      console.error(`API error ${r.status}: ${errText}`);
       return Response.json({
         reply: "抱歉，AI 服務暫時出了點問題，請稍後再試 🙇",
       }, { status: 502 });
