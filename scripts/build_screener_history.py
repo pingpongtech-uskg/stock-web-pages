@@ -34,15 +34,31 @@ ARCHIVE_AFTER_DAYS = 30
 MAX_CONSECUTIVE_GAP = 3  # For screening streak (weekend tolerance)
 
 
+def is_trading_day(date_str: str) -> bool:
+    """Check if date_str (YYYY-MM-DD) is a trading day (Mon-Fri)."""
+    try:
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+        return dt.weekday() < 5
+    except:
+        return True  # Keep unknown format
+
 def load_reports(reports_dir: str) -> list[dict]:
-    """Load all daily_trust10_*.json files, return sorted by date DESC."""
+    """Load all daily_trust10_*.json files, return sorted by date DESC.
+    Filters out non-trading-day (weekend) reports."""
     pattern = os.path.join(reports_dir, "daily_trust10_*.json")
     files = sorted(glob.glob(pattern), reverse=True)
     reports = []
+    skipped = 0
     for fpath in files:
         with open(fpath, encoding="utf-8") as f:
             data = json.load(f)
+        report_date = data.get("date", "")
+        if not is_trading_day(report_date):
+            skipped += 1
+            continue
         reports.append(data)
+    if skipped:
+        print(f"  Skipped {skipped} non-trading-day reports")
     return reports
 
 
