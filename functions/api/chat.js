@@ -38,8 +38,10 @@ export async function onRequest(context) {
       }
     } catch (e) {}
 
-    // Search SearXNG
+    // Search SearXNG with 8s timeout
     var searchContext = null;
+    var searchController = new AbortController();
+    var searchTimeout = setTimeout(function () { searchController.abort(); }, 8000);
     try {
       var baseUrl = env.SEARXNG_URL;
       if (baseUrl) {
@@ -48,6 +50,7 @@ export async function onRequest(context) {
         if (cfId && cfSecret) {
           var searchRes = await fetch(baseUrl + encodeURIComponent(message), {
             headers: { "CF-Access-Client-Id": cfId, "CF-Access-Client-Secret": cfSecret },
+            signal: searchController.signal,
           });
           if (searchRes.ok) {
             var searchData = await searchRes.json();
@@ -61,6 +64,7 @@ export async function onRequest(context) {
         }
       }
     } catch (e) {}
+    clearTimeout(searchTimeout);
 
     // Build system prompt
     var now = new Date().toLocaleDateString("zh-TW", {
@@ -145,7 +149,9 @@ export async function onRequest(context) {
     var apiEndpoint = env.CHAT_API_ENDPOINT || "https://opencode.ai/zen/go/v1/chat/completions";
     var model = env.CHAT_MODEL || "deepseek-v4-flash";
 
-    // Call LLM
+    // Call LLM with 25s timeout
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function () { controller.abort(); }, 25000);
     var r = await fetch(apiEndpoint, {
       method: "POST",
       headers: {
@@ -155,10 +161,12 @@ export async function onRequest(context) {
       body: JSON.stringify({
         model: model,
         messages: messages,
-        max_tokens: 1200,
+        max_tokens: 3000,
         temperature: 0.7,
       }),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     if (!r.ok) {
       return new Response(JSON.stringify({ reply: "抱歉，AI 服務暫時出了點問題 🙇" }), {
@@ -180,6 +188,12 @@ export async function onRequest(context) {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
+    if (err.name === "AbortError") {
+      return new Response(JSON.stringify({ reply: "查詢時間過長，請試著縮短問題或簡化關鍵字 🙇" }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
     return new Response(JSON.stringify({ reply: "網路連線不穩，請稍後再試 🙇" }), {
       status: 502,
       headers: { "Content-Type": "application/json" },
