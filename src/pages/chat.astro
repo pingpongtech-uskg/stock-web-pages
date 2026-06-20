@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL;
 <Layout title={title} description={description}>
   <div class="chat-page">
     <!-- Top bar -->
-    <header class="chat-topbar glass-surface">
+    <header class="chat-topbar surface">
       <a href={base} class="back-link" aria-label="回到榜單">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"></polyline>
@@ -45,7 +45,7 @@ const base = import.meta.env.BASE_URL;
     </div>
 
     <!-- Input area -->
-    <div class="chat-input-area glass-surface">
+    <div class="chat-input-area surface">
       <div class="chat-input-wrap">
         <input
           id="chat-input"
@@ -197,7 +197,7 @@ const base = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: var(--color-muted);
+    color: var(--color-text-muted);
     font-size: 0.85rem;
     font-weight: 700;
     text-decoration: none;
@@ -277,12 +277,10 @@ const base = import.meta.env.BASE_URL;
   }
 
   .msg-bot .msg-bubble {
-    background: var(--color-card);
-    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-bottom-left-radius: 4px;
-    box-shadow: var(--shadow-card);
-    backdrop-filter: blur(22px) saturate(145%);
-    -webkit-backdrop-filter: blur(22px) saturate(145%);
+    box-shadow: var(--shadow-md);
   }
   .msg-bot .msg-bubble p {
     margin: 0 0 6px;
@@ -311,7 +309,7 @@ const base = import.meta.env.BASE_URL;
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--color-muted);
+    background: var(--color-text-muted);
     animation: bounce 1.3s infinite;
   }
   .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
@@ -333,7 +331,7 @@ const base = import.meta.env.BASE_URL;
     align-items: center;
     gap: 10px;
     background: rgba(255,255,255,0.55);
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-border);
     border-radius: 10px;
     padding: 4px 4px 4px 16px;
   }
@@ -352,7 +350,7 @@ const base = import.meta.env.BASE_URL;
     padding: 10px 0;
   }
   .chat-input-wrap input::placeholder {
-    color: var(--color-muted);
+    color: var(--color-text-muted);
   }
   .chat-input-wrap input:disabled {
     opacity: 0.5;
@@ -387,7 +385,7 @@ const base = import.meta.env.BASE_URL;
   .chat-hint {
     margin: 6px 0 0;
     font-size: 0.7rem;
-    color: var(--color-muted);
+    color: var(--color-text-muted);
     text-align: center;
   }
 

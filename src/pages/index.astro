@@ -65,7 +65,7 @@ const base = import.meta.env.BASE_URL;
         <h1>Screening Results</h1>
         <p class="subtitle">Active: 近30日上榜，依最新上榜日排序。超過30日未上榜自動移至Archive。</p>
       </div>
-      <div class="hero-metrics glass-surface" aria-label="Screening result summary">
+      <div class="hero-metrics surface" aria-label="Screening result summary">
         <div>
           <span class="metric-value">{active.length}</span>
           <span class="metric-label">Active</span>
@@ -79,7 +79,7 @@ const base = import.meta.env.BASE_URL;
   </header>
 
   <main class="container">
-    <section class="controls glass-surface" aria-label="Screening filters">
+    <section class="controls surface" aria-label="Screening filters">
       <label class="search-wrap">
         <span class="search-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img">
@@ -125,7 +125,7 @@ const base = import.meta.env.BASE_URL;
             </div>
           );
         })}
-        <p id="empty-active" class="empty-state glass-surface" hidden>No matching active results.</p>
+        <p id="empty-active" class="empty-state surface" hidden>No matching active results.</p>
       </div>
     </section>
 
@@ -140,7 +140,7 @@ const base = import.meta.env.BASE_URL;
         {archiveDates.map((dateStr) => {
           const entries = archive[dateStr] || [];
           return (
-            <details class="archive-group glass-surface" open={archiveDates.indexOf(dateStr) < 3}>
+            <details class="archive-group surface" open={archiveDates.indexOf(dateStr) < 3}>
               <summary class="archive-header">
                 <span class="archive-date">{dateStr}</span>
                 <span class="archive-count">{entries.length} stocks</span>
@@ -163,7 +163,7 @@ const base = import.meta.env.BASE_URL;
             </details>
           );
         })}
-        <p id="empty-archive" class="empty-state glass-surface" hidden>No matching archive results.</p>
+        <p id="empty-archive" class="empty-state surface" hidden>No matching archive results.</p>
       </div>
     </section>
   </main>
@@ -244,9 +244,9 @@ applyFilters();
 </script>
 
 <style>
-/* ═══ Hero (unchanged from original) ═══ */
+/* ═══ Hero ═══ */
 .hero {
-  padding: 26px 0 22px;
+  padding: 40px 0 28px;
 }
 .topbar {
   display: flex;
@@ -260,16 +260,14 @@ applyFilters();
   align-items: center;
   gap: 10px;
   color: var(--color-text);
-  font-size: 0.98rem;
-  font-weight: 820;
-  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 .brand img {
   display: block;
-  filter: drop-shadow(0 10px 18px rgba(59, 130, 246, 0.22));
 }
 .data-note {
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 0.82rem;
 }
 .topbar-right {
@@ -282,21 +280,18 @@ applyFilters();
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #3B82F6, #60A5FA);
+  border-radius: 6px;
+  background: var(--color-accent);
   color: #fff;
   font-size: 0.82rem;
-  font-weight: 780;
-  text-decoration: none;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
-  transition: transform 0.15s, box-shadow 0.15s;
+  font-weight: 600;
+  transition: background 0.15s;
 }
 .chat-link:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  background: var(--color-accent-hover);
 }
 .hero-main {
-  min-height: 248px;
+  min-height: 200px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
   align-items: end;
@@ -307,53 +302,55 @@ applyFilters();
 }
 .eyebrow {
   margin: 0 0 10px;
-  color: var(--color-primary);
+  color: var(--color-accent);
   font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 h1 {
   margin: 0;
   max-width: 780px;
-  font-size: clamp(3rem, 8vw, 6.6rem);
-  line-height: 0.92;
-  letter-spacing: 0;
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.02em;
+  font-weight: 800;
 }
 .subtitle {
   max-width: 640px;
-  margin: 18px 0 0;
-  color: var(--color-ink-soft);
-  font-size: 1rem;
+  margin: 16px 0 0;
+  color: var(--color-text-soft);
+  font-size: 0.95rem;
   line-height: 1.7;
 }
 .hero-metrics {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 .hero-metrics div {
-  min-height: 112px;
+  min-height: 100px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 18px;
-  background: rgba(255,255,255,0.18);
+  background: var(--color-bg-subtle);
+}
+.hero-metrics div:first-child {
+  border-right: 1px solid var(--color-border);
 }
 .metric-value {
   font-size: 2rem;
-  font-weight: 860;
+  font-weight: 800;
 }
 .metric-label {
   margin-top: 4px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 0.8rem;
-  font-weight: 740;
+  font-weight: 600;
 }
 
-/* ═══ Controls (unchanged) ═══ */
+/* ═══ Controls ═══ */
 .controls {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -361,26 +358,29 @@ h1 {
   align-items: center;
   margin: 8px 0 24px;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   position: sticky;
   top: 10px;
   z-index: 4;
 }
 .search-wrap {
   min-width: 0;
-  height: 46px;
+  height: 44px;
   display: flex;
   align-items: center;
   gap: 9px;
   padding: 0 14px;
-  border: 1px solid var(--color-line);
-  border-radius: 8px;
-  background: rgba(255,255,255,0.42);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.search-wrap:focus-within {
+  border-color: var(--color-accent);
 }
 .search-icon {
   width: 18px;
   height: 18px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
 }
 .search-icon svg {
   width: 100%;
@@ -397,37 +397,37 @@ h1 {
   font-size: 0.95rem;
 }
 .search-wrap input::placeholder {
-  color: var(--color-muted);
+  color: var(--color-text-muted);
 }
 .status-tabs {
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
   padding: 4px;
-  border: 1px solid var(--color-line);
-  border-radius: 8px;
-  background: rgba(255,255,255,0.34);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle);
 }
 .status-tab {
   min-width: 116px;
-  height: 38px;
+  height: 36px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 4px;
   background: transparent;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   cursor: pointer;
-  font-size: 0.86rem;
-  font-weight: 780;
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  font-size: 0.84rem;
+  font-weight: 600;
+  transition: background 0.12s, color 0.12s;
 }
 .status-tab span {
   color: inherit;
   opacity: 0.72;
 }
 .status-tab.active {
-  background: var(--color-card-strong);
+  background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 0 8px 18px rgba(36,55,72,0.12);
+  border: 1px solid var(--color-border);
 }
 
 /* ═══ Results ═══ */
@@ -444,7 +444,7 @@ h1 {
 }
 .results-head p {
   margin: 0;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 0.84rem;
 }
 
@@ -467,7 +467,7 @@ h1 {
   padding-bottom: 48px;
 }
 .archive-group {
-  border-radius: var(--radius-card, 8px);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 .archive-group[hidden] {
@@ -489,13 +489,13 @@ h1 {
 }
 .archive-date {
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--color-text);
 }
 .archive-count {
   font-size: 0.78rem;
-  color: var(--color-muted);
-  font-weight: 750;
+  color: var(--color-text-muted);
+  font-weight: 600;
 }
 .archive-body {
   display: flex;
@@ -507,17 +507,18 @@ h1 {
 .empty-state {
   margin: 0 0 48px;
   padding: 28px;
-  border-radius: 8px;
-  color: var(--color-muted);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
   text-align: center;
 }
 
 /* ═══ Footer ═══ */
 .page-footer {
-  color: var(--color-muted, #667085);
+  color: var(--color-text-muted);
   font-size: 0.8rem;
   padding: 26px 16px 34px;
   text-align: center;
+  border-top: 1px solid var(--color-border);
 }
 
 /* ═══ Responsive ═══ */
@@ -532,7 +533,7 @@ h1 {
 }
 @media (max-width: 700px) {
   .hero {
-    padding-top: 18px;
+    padding-top: 20px;
   }
   .topbar {
     align-items: flex-start;
@@ -540,7 +541,7 @@ h1 {
     margin-bottom: 30px;
   }
   h1 {
-    font-size: 3.25rem;
+    font-size: 2.8rem;
   }
   .controls {
     position: static;
@@ -558,7 +559,7 @@ h1 {
     width: min(100% - 20px, 1200px);
   }
   h1 {
-    font-size: 2.8rem;
+    font-size: 2.2rem;
   }
 }
 </style>
