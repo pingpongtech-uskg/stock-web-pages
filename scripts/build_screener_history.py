@@ -177,7 +177,7 @@ def calc_net_shares_10d(trust_cache: dict, code: str, as_of_date: str) -> float:
     # Sum the last 10 days (or fewer if not enough data)
     start = max(0, i - 9)
     ts = sum(nv[j] for j in range(start, i + 1))
-    return ts if ts > 0 else 0
+    return ts
 
 
 def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: str | None = None) -> dict:
