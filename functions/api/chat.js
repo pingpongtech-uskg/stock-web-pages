@@ -3,28 +3,26 @@
  * 
  * Strategy A chatbot with SearXNG web search integration.
  * 1. User asks question
- * 2. Search SearXNG for relevant info (news, financials, announcements)
+ * 2. Search SearXNG for relevant info
  * 3. Feed search results + live screening data → LLM
  * 4. Return answer in conversational Chinese
  * 
  * Env vars (set in Cloudflare Pages dashboard):
- *   CHAT_API_KEY          — API key for LLM (OpenCode Go or OpenAI-compatible)
- *   CHAT_API_ENDPOINT     — LLM endpoint (default: opencode.ai/zen/go/v1)
+ *   CHAT_API_KEY          — API key for LLM
+ *   CHAT_API_ENDPOINT     — LLM endpoint
  *   CHAT_MODEL            — Model name (default: deepseek-v4-flash)
- *   SEARXNG_URL           — SearXNG search endpoint (default: none, search disabled)
+ *   SEARXNG_URL           — SearXNG search endpoint
  *   CF_ACCESS_CLIENT_ID   — Cloudflare Zero Trust service token ID
  *   CF_ACCESS_CLIENT_SECRET — Cloudflare Zero Trust service token secret
  */
 
 function fmtAmount(v) {
+  if (!v && v !== 0) return "—";
   if (v >= 1e8) return (v / 1e8).toFixed(2) + " 億";
   if (v >= 1e4) return (v / 1e4).toFixed(1) + " 萬";
   return Number(v).toLocaleString("zh-TW");
 }
 
-/**
- * Search SearXNG via Cloudflare Zero Trust
- */
 async function searchSearXNG(query, env) {
   const baseUrl = env.SEARXNG_URL;
   if (!baseUrl) return null;
@@ -47,7 +45,6 @@ async function searchSearXNG(query, env) {
     const data = await res.json();
     const results = data.results || [];
 
-    // Return top 5 results as text context
     return results.slice(0, 5).map((r, i) =>
       `[${i + 1}] ${r.title}\n${r.content || r.snippet || ""}\n來源: ${r.url}`
     ).join("\n\n");
@@ -68,7 +65,7 @@ function buildSystemPrompt(stocks, searchContext) {
   if (stocks && stocks.length > 0) {
     stockTable = stocks
       .map((s) => {
-        const name = s.name_zh || s.code;
+        const name = s.name_zh || s.code || "—";
         const amt = fmtAmount(s.net_amount_10d);
         const z = (s.regression_z ?? 0).toFixed(2);
         const g = (s.g_score ?? 0).toFixed(0);
@@ -121,76 +118,97 @@ ${searchSection}
 }
 
 export async function onRequestPost(context) {
-  const { request, env } = context;
-
-  let message;
   try {
-    const body = await request.json();
-    message = (body.message || "").trim();
-  } catch {
-    return Response.json({ reply: "訊息格式錯誤，請再試一次。" }, { status: 400 });
-  }
+    const { request, env } = context;
 
-  if (!message) {
-    return Response.json({ reply: "請輸入你想問的問題 😊" }, { status: 400 });
-  }
-
-  if (message.length > 2000) {
-    return Response.json({ reply: "訊息太長了，請縮短到2000字以內 🙏" }, { status: 400 });
-  }
-
-  // ── Fetch live screening data ──
-  let activeStocks = [];
-  try {
-    const dataUrl = new URL("/data/screener_history.json", request.url);
-    const dataRes = await fetch(dataUrl.toString());
-    if (dataRes.ok) {
-      const json = await dataRes.json();
-      activeStocks = json.active || [];
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ reply: "訊息格式錯誤，請再試一次。" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
-  } catch {
-    console.warn("Could not fetch screening data, using degraded mode");
-  }
 
-  // ── Search SearXNG for relevant info ──
-  const searchContext = await searchSearXNG(message, env);
+    const message = (body.message || "").trim();
+    if (!message) {
+      return new Response(JSON.stringify({ reply: "請輸入你想問的問題 😊" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
-  // ── Build system prompt ──
-  const systemPrompt = buildSystemPrompt(activeStocks, searchContext);
+    if (message.length > 2000) {
+      return new Response(JSON.stringify({ reply: "訊息太長了，請縮短到2000字以內 🙏" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
-  // ── Build messages array with conversation history ──
-  const messages = [
-    { role: "system", content: systemPrompt },
-  ];
+    // ── Fetch live screening data ──
+    let activeStocks = [];
+    try {
+      // Use relative URL for same-origin fetch within CF Pages
+      const dataRes = await fetch(new URL("/data/screener_history.json", request.url));
+      if (dataRes.ok) {
+        const json = await dataRes.json();
+        activeStocks = json.active || [];
+      }
+    } catch (e) {
+      // Degraded mode — no screening data available
+      console.warn("Could not fetch screening data:", e.message);
+    }
 
-  // Include conversation history (if provided by client)
-  if (body.history && Array.isArray(body.history)) {
-    for (const h of body.history.slice(-10)) {
-      if (h.role && h.content) {
-        messages.push({ role: h.role, content: h.content });
+    // ── Search SearXNG ──
+    let searchContext = null;
+    try {
+      searchContext = await searchSearXNG(message, env);
+    } catch (e) {
+      console.warn("Search failed:", e.message);
+    }
+
+    // ── Build system prompt ──
+    const systemPrompt = buildSystemPrompt(activeStocks, searchContext);
+
+    // ── Build messages array ──
+    const messages = [
+      { role: "system", content: systemPrompt },
+    ];
+
+    // Include conversation history
+    const history = body.history;
+    if (history && Array.isArray(history)) {
+      for (const h of history.slice(-10)) {
+        if (h && h.role && h.content) {
+          messages.push({ role: h.role, content: h.content });
+        }
       }
     }
-  }
 
-  // Current message
-  messages.push({ role: "user", content: message });
+    // Current message
+    messages.push({ role: "user", content: message });
 
-  // ── Get API config ──
-  const apiKey = env.CHAT_API_KEY || env.OPENCODE_GO_API_KEY;
-  const apiEndpoint = env.CHAT_API_ENDPOINT || "https://opencode.ai/zen/go/v1/chat/completions";
-  const model = env.CHAT_MODEL || "deepseek-v4-flash";
+    // ── Get API config ──
+    const apiKey = env.CHAT_API_KEY || "";
+    if (!apiKey) {
+      return new Response(JSON.stringify({
+        reply: "⚠️ 系統尚未設定 API 金鑰。請管理員在 Cloudflare Pages Dashboard → Settings → Environment variables 中設定 CHAT_API_KEY。",
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
-  if (!apiKey) {
-    return Response.json({
-      reply: "⚠️ 系統尚未設定 API 金鑰。請管理員在 Cloudflare 環境變數中設定 CHAT_API_KEY 或 OPENCODE_GO_API_KEY。",
-    }, { status: 500 });
-  }
+    const apiEndpoint = env.CHAT_API_ENDPOINT || "https://opencode.ai/zen/go/v1/chat/completions";
+    const model = env.CHAT_MODEL || "deepseek-v4-flash";
 
-  try {
+    // ── Call LLM ──
     const r = await fetch(apiEndpoint, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -202,25 +220,36 @@ export async function onRequestPost(context) {
     });
 
     if (!r.ok) {
-      const errText = await r.text();
-      console.error(`API error ${r.status}: ${errText}`);
-      return Response.json({
+      const errText = await r.text().catch(() => "");
+      console.error(`LLM API error ${r.status}: ${errText.slice(0, 200)}`);
+      return new Response(JSON.stringify({
         reply: "抱歉，AI 服務暫時出了點問題，請稍後再試 🙇",
-      }, { status: 502 });
+      }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const data = await r.json();
     const reply = data.choices?.[0]?.message?.content?.trim();
 
     if (!reply) {
-      return Response.json({ reply: "抱歉，我沒有產生回應，請再問一次。" });
+      return new Response(JSON.stringify({ reply: "抱歉，我沒有產生回應，請再問一次。" }), {
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    return Response.json({ reply });
+    return new Response(JSON.stringify({ reply }), {
+      headers: { "Content-Type": "application/json" },
+    });
+
   } catch (err) {
-    console.error("Chat function error:", err.message);
-    return Response.json({
+    console.error("Chat function error:", err && err.message ? err.message : String(err));
+    return new Response(JSON.stringify({
       reply: "網路連線暫時不穩，請稍後再試 🙇",
-    }, { status: 502 });
+    }), {
+      status: 502,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
