@@ -65,16 +65,6 @@ const base = import.meta.env.BASE_URL;
         <h1>Screening Results</h1>
         <p class="subtitle">Active: 近30日上榜，依最新上榜日排序。超過30日未上榜自動移至Archive。</p>
       </div>
-      <div class="hero-metrics surface" aria-label="Screening result summary">
-        <div>
-          <span class="metric-value">{active.length}</span>
-          <span class="metric-label">Active</span>
-        </div>
-        <div>
-          <span class="metric-value">{totalArchiveEntries}</span>
-          <span class="metric-label">Archive</span>
-        </div>
-      </div>
     </section>
   </header>
 
@@ -100,7 +90,7 @@ const base = import.meta.env.BASE_URL;
           Active <span data-count="active">{active.length}</span>
         </button>
         <button class="status-tab" type="button" data-status="archive" role="tab" aria-selected="false">
-          Archive <span data-count="archive">{totalArchiveEntries}</span>
+          Archive
         </button>
       </div>
     </section>

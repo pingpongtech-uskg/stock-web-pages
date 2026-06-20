@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build:screening": "python3 data/build_screening_history.py",
-    "build": "astro build && cp -r functions dist/functions",
+    "build:screening": "python3 scripts/build_screener_history.py",
+    "build": "astro build && cp -r functions dist/functions && cp src/data/screener_history.json dist/data/screener_history.json",
     "preview": "astro preview"
   },
   "dependencies": {
