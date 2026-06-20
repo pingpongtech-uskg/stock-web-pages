@@ -7,3 +7,10 @@ dist/
 __pycache__/
 *.pyc
 public/data/stocks/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
