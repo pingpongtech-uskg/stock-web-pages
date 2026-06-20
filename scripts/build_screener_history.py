@@ -305,14 +305,12 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
 
         dates = code_to_dates.get(code, [])
         first_date = min(dates) if dates else entry["last_date"]
-        consecutive_buy = calc_consecutive_buy(trust_cache, code, entry["last_date"])
 
         # Use recomputed Z if available
         if code in z_cache and z_cache[code] is not None:
             entry["regression_z"] = z_cache[code]
 
         entry["first_date"] = first_date
-        entry["consecutive_buy_days"] = consecutive_buy
 
         # Recalculate net_shares_10d correctly (buy - sell, not just positive days)
         corrected_shares = calc_net_shares_10d(trust_cache, code, entry["last_date"])
@@ -361,12 +359,10 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         code = entry["code"]
         dates = code_to_dates.get(code, [])
         first_date = min(dates) if dates else entry["last_date"]
-        consecutive_buy = calc_consecutive_buy(trust_cache, code, entry["screening_date"])
         archive_entry = dict(entry)  # Shallow copy
         archive_entry["first_date"] = first_date
-        archive_entry["consecutive_buy_days"] = consecutive_buy
-        
-        # Recalculate net_shares_10d with CORRECT formula (buy - sell, not just positive days)
+
+        # Recalculate net_shares_10d with CORRECT formula
         corrected_shares = calc_net_shares_10d(trust_cache, code, entry["screening_date"])
         if corrected_shares > 0:
             archive_entry["net_shares_10d"] = round(corrected_shares)
@@ -422,7 +418,7 @@ def main():
         cp = s.get('cur_price', '-')
         ch = s.get('change_pct', '-')
         ch_str = f"{ch:+.1f}%" if isinstance(ch, (int, float)) else "-"
-        print(f"  {s['code']} {s['name_zh']} | 首次:{s['first_date']} 最新:{s['last_date']} | 連續買超:{s['consecutive_buy_days']}日 | Z={s['regression_z']} | 股價:{fp}>{cp} ({ch_str})")
+        print(f"  {s['code']} {s['name_zh']} | 首次:{s['first_date']} 最新:{s['last_date']} | Z={s['regression_z']} | 股價:{fp}>{cp} ({ch_str})")
 
     print(f"\nArchive: {archive_entries} entries across {archive_dates} dates")
 

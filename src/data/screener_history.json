@@ -16,7 +16,6 @@
       "rank": 29,
       "screening_date": "2026-06-20",
       "first_date": "2026-06-02",
-      "consecutive_buy_days": 0,
       "first_price": 34.0,
       "change_pct": -12.79,
       "cheap_score": 83.3,
@@ -38,7 +37,6 @@
       "rank": 47,
       "screening_date": "2026-06-20",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 1,
       "first_price": 70.8,
       "change_pct": 5.23,
       "cheap_score": 66.7,
@@ -60,7 +58,6 @@
       "rank": 49,
       "screening_date": "2026-06-20",
       "first_date": "2026-06-18",
-      "consecutive_buy_days": 2,
       "first_price": 176.5,
       "change_pct": 0.0,
       "cheap_score": 0.0,
@@ -82,7 +79,6 @@
       "rank": 62,
       "screening_date": "2026-06-20",
       "first_date": "2026-05-27",
-      "consecutive_buy_days": 5,
       "first_price": 25.25,
       "change_pct": 3.56,
       "cheap_score": 66.7,
@@ -104,7 +100,6 @@
       "rank": 73,
       "screening_date": "2026-06-20",
       "first_date": "2026-06-20",
-      "consecutive_buy_days": 2,
       "first_price": 327.0,
       "change_pct": 0.0,
       "cheap_score": 66.7,
@@ -126,7 +121,6 @@
       "rank": 80,
       "screening_date": "2026-06-20",
       "first_date": "2026-06-20",
-      "consecutive_buy_days": 0,
       "first_price": 117.0,
       "change_pct": 0.0,
       "cheap_score": 33.3,
@@ -148,7 +142,6 @@
       "rank": 85,
       "screening_date": "2026-06-20",
       "first_date": "2026-06-15",
-      "consecutive_buy_days": 0,
       "first_price": 103.0,
       "change_pct": -2.43,
       "cheap_score": 33.3,
@@ -170,7 +163,6 @@
       "rank": 91,
       "screening_date": "2026-06-20",
       "first_date": "2026-06-20",
-      "consecutive_buy_days": 0,
       "first_price": 61.5,
       "change_pct": 0.0,
       "cheap_score": 66.7,
@@ -192,7 +184,6 @@
       "rank": 87,
       "screening_date": "2026-06-19",
       "first_date": "2026-06-12",
-      "consecutive_buy_days": 0,
       "first_price": 68.5,
       "change_pct": 1.46,
       "cheap_score": 66.7,
@@ -214,7 +205,6 @@
       "rank": 24,
       "screening_date": "2026-06-16",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 0,
       "first_price": 35.2,
       "change_pct": 20.88,
       "cheap_score": 33.3,
@@ -236,7 +226,6 @@
       "rank": 87,
       "screening_date": "2026-06-16",
       "first_date": "2026-05-27",
-      "consecutive_buy_days": 0,
       "first_price": 18.45,
       "change_pct": 19.24,
       "cheap_score": 33.3,
@@ -258,7 +247,6 @@
       "rank": 87,
       "screening_date": "2026-06-11",
       "first_date": "2026-06-08",
-      "consecutive_buy_days": 1,
       "first_price": 142.5,
       "change_pct": 10.53,
       "cheap_score": 33.3,
@@ -280,7 +268,6 @@
       "rank": 30,
       "screening_date": "2026-06-08",
       "first_date": "2026-05-29",
-      "consecutive_buy_days": 2,
       "first_price": 111.5,
       "change_pct": 6.73,
       "cheap_score": 16.7,
@@ -302,7 +289,6 @@
       "rank": 40,
       "screening_date": "2026-05-31",
       "first_date": "2026-05-29",
-      "consecutive_buy_days": 5,
       "first_price": 94.6,
       "change_pct": 14.69,
       "cheap_score": 16.7,
@@ -324,7 +310,6 @@
       "rank": 93,
       "screening_date": "2026-05-31",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 1,
       "first_price": 52.2,
       "change_pct": 16.67,
       "cheap_score": 33.3,
@@ -346,7 +331,6 @@
       "rank": 38,
       "screening_date": "2026-05-27",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 0,
       "first_price": 126.0,
       "change_pct": 9.92,
       "cheap_score": 16.7,
@@ -368,7 +352,6 @@
       "rank": 100,
       "screening_date": "2026-05-26",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 1,
       "first_price": 39.9,
       "change_pct": 5.01,
       "cheap_score": 66.7,
@@ -390,7 +373,6 @@
       "rank": 91,
       "screening_date": "2026-05-27",
       "first_date": "2026-05-26",
-      "consecutive_buy_days": 0,
       "first_price": 121.0,
       "change_pct": -14.46,
       "cheap_score": 83.3,
@@ -415,7 +397,6 @@
         "rank": 29,
         "screening_date": "2026-06-20",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 0,
         "first_price": 34.0,
         "change_pct": -12.79,
         "cheap_score": 83.3,
@@ -437,7 +418,6 @@
         "rank": 47,
         "screening_date": "2026-06-20",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1,
         "first_price": 70.8,
         "change_pct": 5.23,
         "cheap_score": 66.7,
@@ -459,7 +439,6 @@
         "rank": 49,
         "screening_date": "2026-06-20",
         "first_date": "2026-06-18",
-        "consecutive_buy_days": 2,
         "first_price": 176.5,
         "change_pct": 0.0,
         "cheap_score": 0.0,
@@ -481,7 +460,6 @@
         "rank": 62,
         "screening_date": "2026-06-20",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 5,
         "first_price": 25.25,
         "change_pct": 3.56,
         "cheap_score": 66.7,
@@ -503,7 +481,6 @@
         "rank": 73,
         "screening_date": "2026-06-20",
         "first_date": "2026-06-20",
-        "consecutive_buy_days": 2,
         "first_price": 327.0,
         "change_pct": 0.0,
         "cheap_score": 66.7,
@@ -525,7 +502,6 @@
         "rank": 80,
         "screening_date": "2026-06-20",
         "first_date": "2026-06-20",
-        "consecutive_buy_days": 0,
         "first_price": 117.0,
         "change_pct": 0.0,
         "cheap_score": 33.3,
@@ -547,7 +523,6 @@
         "rank": 85,
         "screening_date": "2026-06-20",
         "first_date": "2026-06-15",
-        "consecutive_buy_days": 0,
         "first_price": 103.0,
         "change_pct": -2.43,
         "cheap_score": 33.3,
@@ -569,7 +544,6 @@
         "rank": 91,
         "screening_date": "2026-06-20",
         "first_date": "2026-06-20",
-        "consecutive_buy_days": 0,
         "first_price": 61.5,
         "change_pct": 0.0,
         "cheap_score": 66.7,
@@ -593,7 +567,6 @@
         "rank": 36,
         "screening_date": "2026-06-19",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 0,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -613,7 +586,6 @@
         "rank": 60,
         "screening_date": "2026-06-19",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -633,7 +605,6 @@
         "rank": 63,
         "screening_date": "2026-06-19",
         "first_date": "2026-06-18",
-        "consecutive_buy_days": 2,
         "cheap_score": 0.0,
         "dividend_score": 40.0
       },
@@ -653,7 +624,6 @@
         "rank": 80,
         "screening_date": "2026-06-19",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 5,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -673,7 +643,6 @@
         "rank": 87,
         "screening_date": "2026-06-19",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 0,
         "first_price": 68.5,
         "change_pct": 1.46,
         "cheap_score": 66.7,
@@ -697,7 +666,6 @@
         "rank": 36,
         "screening_date": "2026-06-18",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 0,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -717,7 +685,6 @@
         "rank": 60,
         "screening_date": "2026-06-18",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -737,7 +704,6 @@
         "rank": 63,
         "screening_date": "2026-06-18",
         "first_date": "2026-06-18",
-        "consecutive_buy_days": 2,
         "cheap_score": 0.0,
         "dividend_score": 40.0
       },
@@ -757,7 +723,6 @@
         "rank": 80,
         "screening_date": "2026-06-18",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 5,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -777,7 +742,6 @@
         "rank": 87,
         "screening_date": "2026-06-18",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 0,
         "cheap_score": 66.7,
         "dividend_score": 100.0
       }
@@ -799,7 +763,6 @@
         "rank": 31,
         "screening_date": "2026-06-17",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 0,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -819,7 +782,6 @@
         "rank": 66,
         "screening_date": "2026-06-17",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -839,7 +801,6 @@
         "rank": 82,
         "screening_date": "2026-06-17",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 4,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -859,7 +820,6 @@
         "rank": 84,
         "screening_date": "2026-06-17",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 4,
         "cheap_score": 66.7,
         "dividend_score": 100.0
       },
@@ -879,7 +839,6 @@
         "rank": 87,
         "screening_date": "2026-06-17",
         "first_date": "2026-06-15",
-        "consecutive_buy_days": 1,
         "cheap_score": 33.3,
         "dividend_score": 40.0
       }
@@ -901,7 +860,6 @@
         "rank": 25,
         "screening_date": "2026-06-16",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 1,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -921,7 +879,6 @@
         "rank": 24,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "first_price": 35.2,
         "change_pct": 20.88,
         "cheap_score": 33.3,
@@ -943,7 +900,6 @@
         "rank": 54,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -963,7 +919,6 @@
         "rank": 88,
         "screening_date": "2026-06-16",
         "first_date": "2026-06-15",
-        "consecutive_buy_days": 1,
         "cheap_score": 33.3,
         "dividend_score": 40.0
       },
@@ -983,7 +938,6 @@
         "rank": 86,
         "screening_date": "2026-06-16",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 3,
         "cheap_score": 66.7,
         "dividend_score": 100.0
       },
@@ -1003,7 +957,6 @@
         "rank": 99,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 3,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1023,7 +976,6 @@
         "rank": 87,
         "screening_date": "2026-06-16",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "first_price": 18.45,
         "change_pct": 19.24,
         "cheap_score": 33.3,
@@ -1047,7 +999,6 @@
         "rank": 25,
         "screening_date": "2026-06-15",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 1,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -1067,7 +1018,6 @@
         "rank": 24,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -1087,7 +1037,6 @@
         "rank": 54,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1107,7 +1056,6 @@
         "rank": 87,
         "screening_date": "2026-06-15",
         "first_date": "2026-06-15",
-        "consecutive_buy_days": 1,
         "cheap_score": 33.3,
         "dividend_score": 40.0
       },
@@ -1127,7 +1075,6 @@
         "rank": 86,
         "screening_date": "2026-06-15",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 3,
         "cheap_score": 66.7,
         "dividend_score": 100.0
       },
@@ -1147,7 +1094,6 @@
         "rank": 100,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 3,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1167,7 +1113,6 @@
         "rank": 88,
         "screening_date": "2026-06-15",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -1189,7 +1134,6 @@
         "rank": 18,
         "screening_date": "2026-06-12",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -1209,7 +1153,6 @@
         "rank": 25,
         "screening_date": "2026-06-12",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 0,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -1229,7 +1172,6 @@
         "rank": 50,
         "screening_date": "2026-06-12",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1249,7 +1191,6 @@
         "rank": 88,
         "screening_date": "2026-06-12",
         "first_date": "2026-06-12",
-        "consecutive_buy_days": 2,
         "cheap_score": 66.7,
         "dividend_score": 100.0
       },
@@ -1269,7 +1210,6 @@
         "rank": 87,
         "screening_date": "2026-06-12",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -1291,7 +1231,6 @@
         "rank": 16,
         "screening_date": "2026-06-11",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -1311,7 +1250,6 @@
         "rank": 27,
         "screening_date": "2026-06-11",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 9,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -1331,7 +1269,6 @@
         "rank": 45,
         "screening_date": "2026-06-11",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1351,7 +1288,6 @@
         "rank": 87,
         "screening_date": "2026-06-11",
         "first_date": "2026-06-08",
-        "consecutive_buy_days": 1,
         "first_price": 142.5,
         "change_pct": 10.53,
         "cheap_score": 33.3,
@@ -1373,7 +1309,6 @@
         "rank": 94,
         "screening_date": "2026-06-11",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -1395,7 +1330,6 @@
         "rank": 16,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -1415,7 +1349,6 @@
         "rank": 30,
         "screening_date": "2026-06-10",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 8,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -1435,7 +1368,6 @@
         "rank": 39,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1455,7 +1387,6 @@
         "rank": 87,
         "screening_date": "2026-06-10",
         "first_date": "2026-06-08",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 80.0
       },
@@ -1475,7 +1406,6 @@
         "rank": 90,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1495,7 +1425,6 @@
         "rank": 91,
         "screening_date": "2026-06-10",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -1517,7 +1446,6 @@
         "rank": 12,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -1537,7 +1465,6 @@
         "rank": 35,
         "screening_date": "2026-06-09",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 7,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -1557,7 +1484,6 @@
         "rank": 37,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1577,7 +1503,6 @@
         "rank": 86,
         "screening_date": "2026-06-09",
         "first_date": "2026-06-08",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 80.0
       },
@@ -1597,7 +1522,6 @@
         "rank": 89,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1617,7 +1541,6 @@
         "rank": 91,
         "screening_date": "2026-06-09",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -1639,7 +1562,6 @@
         "rank": 10,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -1659,7 +1581,6 @@
         "rank": 30,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 2,
         "first_price": 111.5,
         "change_pct": 6.73,
         "cheap_score": 16.7,
@@ -1681,7 +1602,6 @@
         "rank": 33,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 14,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1701,7 +1621,6 @@
         "rank": 39,
         "screening_date": "2026-06-08",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 6,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -1721,7 +1640,6 @@
         "rank": 87,
         "screening_date": "2026-06-08",
         "first_date": "2026-06-08",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 80.0
       },
@@ -1741,7 +1659,6 @@
         "rank": 89,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1761,7 +1678,6 @@
         "rank": 90,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -1783,7 +1699,6 @@
         "rank": 10,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -1803,7 +1718,6 @@
         "rank": 30,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 13,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1823,7 +1737,6 @@
         "rank": 41,
         "screening_date": "2026-06-05",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 5,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -1843,7 +1756,6 @@
         "rank": 90,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 4,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1863,7 +1775,6 @@
         "rank": 91,
         "screening_date": "2026-06-05",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -1885,7 +1796,6 @@
         "rank": 8,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 12,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -1905,7 +1815,6 @@
         "rank": 25,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 12,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1925,7 +1834,6 @@
         "rank": 41,
         "screening_date": "2026-06-04",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 4,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -1945,7 +1853,6 @@
         "rank": 91,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 3,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -1965,7 +1872,6 @@
         "rank": 92,
         "screening_date": "2026-06-04",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -1987,7 +1893,6 @@
         "rank": 9,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 11,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -2007,7 +1912,6 @@
         "rank": 25,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 11,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2027,7 +1931,6 @@
         "rank": 50,
         "screening_date": "2026-06-03",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 3,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -2047,7 +1950,6 @@
         "rank": 90,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 2,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2067,7 +1969,6 @@
         "rank": 91,
         "screening_date": "2026-06-03",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 2,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -2089,7 +1990,6 @@
         "rank": 11,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 10,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -2109,7 +2009,6 @@
         "rank": 25,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 10,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2129,7 +2028,6 @@
         "rank": 26,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 7,
         "cheap_score": 16.7,
         "dividend_score": 60.0
       },
@@ -2149,7 +2047,6 @@
         "rank": 68,
         "screening_date": "2026-06-02",
         "first_date": "2026-06-02",
-        "consecutive_buy_days": 2,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       },
@@ -2169,7 +2066,6 @@
         "rank": 91,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2189,7 +2085,6 @@
         "rank": 94,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -2211,7 +2106,6 @@
         "rank": 11,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 9,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -2231,7 +2125,6 @@
         "rank": 25,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 6,
         "cheap_score": 16.7,
         "dividend_score": 60.0
       },
@@ -2251,7 +2144,6 @@
         "rank": 26,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 9,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2271,7 +2163,6 @@
         "rank": 88,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2291,7 +2182,6 @@
         "rank": 98,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -2313,7 +2203,6 @@
         "rank": 13,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 8,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -2333,7 +2222,6 @@
         "rank": 21,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 5,
         "cheap_score": 16.7,
         "dividend_score": 60.0
       },
@@ -2353,7 +2241,6 @@
         "rank": 23,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 8,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2373,7 +2260,6 @@
         "rank": 40,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 5,
         "first_price": 94.6,
         "change_pct": 14.69,
         "cheap_score": 16.7,
@@ -2395,7 +2281,6 @@
         "rank": 78,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2415,7 +2300,6 @@
         "rank": 93,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1,
         "first_price": 52.2,
         "change_pct": 16.67,
         "cheap_score": 33.3,
@@ -2437,7 +2321,6 @@
         "rank": 95,
         "screening_date": "2026-05-31",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -2459,7 +2342,6 @@
         "rank": 13,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 8,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -2479,7 +2361,6 @@
         "rank": 21,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 5,
         "cheap_score": 16.7,
         "dividend_score": 60.0
       },
@@ -2499,7 +2380,6 @@
         "rank": 23,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 8,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2519,7 +2399,6 @@
         "rank": 40,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-29",
-        "consecutive_buy_days": 5,
         "cheap_score": 16.7,
         "dividend_score": 60.0
       },
@@ -2539,7 +2418,6 @@
         "rank": 78,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2559,7 +2437,6 @@
         "rank": 93,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -2579,7 +2456,6 @@
         "rank": 95,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       }
@@ -2601,7 +2477,6 @@
         "rank": 16,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 7,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -2621,7 +2496,6 @@
         "rank": 21,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 7,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2641,7 +2515,6 @@
         "rank": 59,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2661,7 +2534,6 @@
         "rank": 80,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -2681,7 +2553,6 @@
         "rank": 38,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "first_price": 126.0,
         "change_pct": 9.92,
         "cheap_score": 16.7,
@@ -2703,7 +2574,6 @@
         "rank": 85,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-27",
-        "consecutive_buy_days": 1,
         "cheap_score": 33.3,
         "dividend_score": 20.0
       },
@@ -2723,7 +2593,6 @@
         "rank": 91,
         "screening_date": "2026-05-27",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "first_price": 121.0,
         "change_pct": -14.46,
         "cheap_score": 83.3,
@@ -2747,7 +2616,6 @@
         "rank": 19,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 6,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -2767,7 +2635,6 @@
         "rank": 25,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 6,
         "cheap_score": 66.7,
         "dividend_score": 80.0
       },
@@ -2787,7 +2654,6 @@
         "rank": 79,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 33.3,
         "dividend_score": 60.0
       },
@@ -2807,7 +2673,6 @@
         "rank": 100,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 1,
         "first_price": 39.9,
         "change_pct": 5.01,
         "cheap_score": 66.7,
@@ -2829,7 +2694,6 @@
         "rank": 38,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 16.7,
         "dividend_score": 60.0
       },
@@ -2849,7 +2713,6 @@
         "rank": 90,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "consecutive_buy_days": 0,
         "cheap_score": 83.3,
         "dividend_score": 80.0
       }
