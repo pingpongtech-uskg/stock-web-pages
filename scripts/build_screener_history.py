@@ -383,11 +383,15 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             entry["cheap_detail"] = vs.get("cheap_detail")
             entry["dividend_score"] = vs.get("dividend_score")
             entry["dividend_detail"] = vs.get("dividend_detail")
+            entry["ex_dividend_date"] = vs.get("ex_dividend_date")
+            entry["dividend_per_share"] = vs.get("dividend_per_share")
         else:
             entry["cheap_score"] = None
             entry["cheap_detail"] = None
             entry["dividend_score"] = None
             entry["dividend_detail"] = None
+            entry["ex_dividend_date"] = None
+            entry["dividend_per_share"] = None
 
         active.append(entry)
 
@@ -435,11 +439,15 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             archive_entry["cheap_detail"] = vs.get("cheap_detail")
             archive_entry["dividend_score"] = vs.get("dividend_score")
             archive_entry["dividend_detail"] = vs.get("dividend_detail")
+            archive_entry["ex_dividend_date"] = vs.get("ex_dividend_date")
+            archive_entry["dividend_per_share"] = vs.get("dividend_per_share")
         else:
             archive_entry["cheap_score"] = None
             archive_entry["cheap_detail"] = None
             archive_entry["dividend_score"] = None
             archive_entry["dividend_detail"] = None
+            archive_entry["ex_dividend_date"] = None
+            archive_entry["dividend_per_share"] = None
         archive_date_to_stocks[archive_entry["screening_date"]].append(archive_entry)
 
     archive = {}

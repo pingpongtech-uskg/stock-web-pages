@@ -27,6 +27,8 @@ interface ScreeningEntry {
   regression_z: number;
   rank: number;
   screening_date: string;
+  ex_dividend_date?: string | null;
+  dividend_per_share?: number | null;
 }
 
 const active = (screenerData.active || []) as ScreeningEntry[];

@@ -268,11 +268,26 @@ def compute_scores(code: str) -> dict | None:
     
     dividend_score = round(div_checks / 5 * 100, 1)
     
+    # ── EX-DIVIDEND DATE + PER-SHARE AMOUNT ──
+    ex_div_raw = info.get("exDividendDate")
+    div_rate = info.get("dividendRate")
+
+    ex_dividend_date = None
+    if ex_div_raw is not None:
+        try:
+            ex_dividend_date = datetime.fromtimestamp(ex_div_raw).strftime("%Y-%m-%d")
+        except (ValueError, OSError):
+            ex_dividend_date = None
+
+    dividend_per_share = round(div_rate, 2) if div_rate is not None else None
+    
     return {
         "cheap_score": cheap_score,
         "cheap_detail": cheap_detail,
         "dividend_score": dividend_score,
         "dividend_detail": div_detail,
+        "ex_dividend_date": ex_dividend_date,
+        "dividend_per_share": dividend_per_share,
         "updated_at": datetime.now().isoformat(),
     }
 

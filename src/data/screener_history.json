@@ -1,23 +1,61 @@
 {
   "active": [
     {
+      "code": "1513",
+      "name_zh": "中興電",
+      "name_en": "Chung-Hsin Electric and Machinery Manufacturing Corp.",
+      "net_amount_10d": 3077872317,
+      "net_amount_10d_k": 3077872,
+      "net_shares_10d": 17537734,
+      "net_shares_10d_zhang": 17538,
+      "last_date": "2026-06-26",
+      "cur_price": 175.5,
+      "g_score": 80.0,
+      "l_score": 83.3,
+      "regression_z": -0.21,
+      "rank": 25,
+      "screening_date": "2026-06-26",
+      "first_date": "2026-06-18",
+      "first_price": 176.5,
+      "change_pct": -0.57,
+      "cheap_score": 16.7,
+      "cheap_detail": [
+        "✗ PE=22.9 ≥ 15",
+        "✗ PB=4.25 ≥ 1.5",
+        "✗ 股價在52週低點73% (≥ 50%)",
+        "✗ Z=0.16 ≥ -0.5",
+        "✗ 殖利率=3.2% ≤ 4%",
+        "✓ 5y均殖利率=3.1% > 3%"
+      ],
+      "dividend_score": 80.0,
+      "dividend_detail": [
+        "✗ 殖利率=3.2% ≤ 4%",
+        "✓ 5y均殖利率=3.1% > 3%",
+        "✓ 連續23年發股息 (≥ 5)",
+        "✓ 近3年股利穩定 (無減>30%)",
+        "✓ 配息率=57% 在30-90%"
+      ],
+      "ex_dividend_date": "2026-07-09",
+      "dividend_per_share": 6.0
+    },
+    {
       "code": "1216",
       "name_zh": "統一",
       "name_en": "Uni-President Enterprises Corp.",
-      "net_amount_10d": 2928970346,
-      "net_amount_10d_k": 2928970,
-      "net_shares_10d": 38742994,
-      "net_shares_10d_zhang": 38743,
-      "last_date": "2026-06-25",
-      "cur_price": 75.6,
+      "net_amount_10d": 3046436918,
+      "net_amount_10d_k": 3046437,
+      "net_shares_10d": 40836956,
+      "net_shares_10d_zhang": 40837,
+      "last_date": "2026-06-26",
+      "cur_price": 74.6,
       "g_score": 100.0,
       "l_score": 100.0,
-      "regression_z": -0.88,
-      "rank": 27,
-      "screening_date": "2026-06-25",
+      "regression_z": -1.06,
+      "rank": 26,
+      "screening_date": "2026-06-26",
       "first_date": "2026-05-26",
       "first_price": 70.8,
-      "change_pct": 6.78,
+      "change_pct": 5.37,
       "cheap_score": 50.0,
       "cheap_detail": [
         "✗ PE=22.0 ≥ 15",
@@ -34,62 +72,28 @@
         "✓ 連續26年發股息 (≥ 5)",
         "✓ 近3年股利穩定 (無減>30%)",
         "✓ 配息率=87% 在30-90%"
-      ]
-    },
-    {
-      "code": "2105",
-      "name_zh": "正新",
-      "name_en": "Cheng Shin Rubber Ind. Co., Ltd.",
-      "net_amount_10d": 1105028976,
-      "net_amount_10d_k": 1105029,
-      "net_shares_10d": 37332060,
-      "net_shares_10d_zhang": 37332,
-      "last_date": "2026-06-25",
-      "cur_price": 29.6,
-      "g_score": 100.0,
-      "l_score": 100.0,
-      "regression_z": -1.36,
-      "rank": 49,
-      "screening_date": "2026-06-25",
-      "first_date": "2026-06-02",
-      "first_price": 34.0,
-      "change_pct": -12.94,
-      "cheap_score": 83.3,
-      "cheap_detail": [
-        "✗ PE=19.7 ≥ 15",
-        "✓ PB=1.13 < 1.5",
-        "✓ 股價在52週低點10% (< 50%)",
-        "✓ Z=-1.36 < -0.5",
-        "✓ 殖利率=6.2% > 4%",
-        "✓ 5y均殖利率=4.2% > 3%"
       ],
-      "dividend_score": 80.0,
-      "dividend_detail": [
-        "✓ 殖利率=6.2% > 4%",
-        "✓ 5y均殖利率=4.2% > 3%",
-        "✓ 連續27年發股息 (≥ 5)",
-        "✓ 近3年股利穩定 (無減>30%)",
-        "✗ 配息率=160% 不在30-90%"
-      ]
+      "ex_dividend_date": "2026-07-30",
+      "dividend_per_share": 3.0
     },
     {
       "code": "2633",
       "name_zh": "台灣高鐵",
       "name_en": "Taiwan High Speed Rail Corporation",
-      "net_amount_10d": 1091675104,
-      "net_amount_10d_k": 1091675,
-      "net_shares_10d": 41587623,
-      "net_shares_10d_zhang": 41588,
-      "last_date": "2026-06-25",
-      "cur_price": 26.25,
+      "net_amount_10d": 1375314908,
+      "net_amount_10d_k": 1375315,
+      "net_shares_10d": 52795198,
+      "net_shares_10d_zhang": 52795,
+      "last_date": "2026-06-26",
+      "cur_price": 26.05,
       "g_score": 100.0,
       "l_score": 83.3,
-      "regression_z": -0.49,
-      "rank": 50,
-      "screening_date": "2026-06-25",
+      "regression_z": -0.67,
+      "rank": 41,
+      "screening_date": "2026-06-26",
       "first_date": "2026-05-27",
       "first_price": 25.25,
-      "change_pct": 3.96,
+      "change_pct": 3.17,
       "cheap_score": 50.0,
       "cheap_detail": [
         "✗ PE=22.4 ≥ 15",
@@ -106,26 +110,66 @@
         "✓ 連續10年發股息 (≥ 5)",
         "✓ 近3年股利穩定 (無減>30%)",
         "✓ 配息率=90% 在30-90%"
-      ]
+      ],
+      "ex_dividend_date": "2026-07-14",
+      "dividend_per_share": 1.15
+    },
+    {
+      "code": "2105",
+      "name_zh": "正新",
+      "name_en": "Cheng Shin Rubber Ind. Co., Ltd.",
+      "net_amount_10d": 681834481,
+      "net_amount_10d_k": 681834,
+      "net_shares_10d": 23191649,
+      "net_shares_10d_zhang": 23192,
+      "last_date": "2026-06-26",
+      "cur_price": 29.4,
+      "g_score": 100.0,
+      "l_score": 100.0,
+      "regression_z": -1.38,
+      "rank": 62,
+      "screening_date": "2026-06-26",
+      "first_date": "2026-06-02",
+      "first_price": 34.0,
+      "change_pct": -13.53,
+      "cheap_score": 83.3,
+      "cheap_detail": [
+        "✗ PE=19.7 ≥ 15",
+        "✓ PB=1.13 < 1.5",
+        "✓ 股價在52週低點10% (< 50%)",
+        "✓ Z=-1.36 < -0.5",
+        "✓ 殖利率=6.2% > 4%",
+        "✓ 5y均殖利率=4.2% > 3%"
+      ],
+      "dividend_score": 80.0,
+      "dividend_detail": [
+        "✓ 殖利率=6.2% > 4%",
+        "✓ 5y均殖利率=4.2% > 3%",
+        "✓ 連續27年發股息 (≥ 5)",
+        "✓ 近3年股利穩定 (無減>30%)",
+        "✗ 配息率=160% 不在30-90%"
+      ],
+      "ex_dividend_date": "2026-06-17",
+      "dividend_per_share": 1.8
     },
     {
       "code": "1476",
       "name_zh": "儒鴻",
       "name_en": "Eclat Textile Co., Ltd.",
-      "net_amount_10d": 473083059,
-      "net_amount_10d_k": 473083,
-      "net_shares_10d": 1473779,
-      "net_shares_10d_zhang": 1474,
-      "last_date": "2026-06-25",
-      "cur_price": 321.0,
+      "net_amount_10d": 546499004,
+      "net_amount_10d_k": 546499,
+      "net_shares_10d": 1732168,
+      "net_shares_10d_zhang": 1732,
+      "last_date": "2026-06-26",
+      "cur_price": 315.5,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -1.53,
-      "rank": 69,
-      "screening_date": "2026-06-25",
+      "regression_z": -1.62,
+      "rank": 67,
+      "screening_date": "2026-06-26",
       "first_date": "2026-06-22",
       "first_price": 317.0,
-      "change_pct": 1.26,
+      "change_pct": -0.47,
       "cheap_score": 50.0,
       "cheap_detail": [
         "✗ PE=16.0 ≥ 15",
@@ -142,154 +186,470 @@
         "✓ 連續26年發股息 (≥ 5)",
         "✓ 近3年股利穩定 (無減>30%)",
         "✓ 配息率=85% 在30-90%"
-      ]
-    },
-    {
-      "code": "9917",
-      "name_zh": "中保科",
-      "name_en": "Taiwan Secom Co., Ltd.",
-      "net_amount_10d": 154764000,
-      "net_amount_10d_k": 154764,
-      "net_shares_10d": 1433000,
-      "net_shares_10d_zhang": 1433,
-      "last_date": "2026-06-25",
-      "cur_price": 108.0,
-      "g_score": 80.0,
-      "l_score": 83.3,
-      "regression_z": -1.12,
-      "rank": 85,
-      "screening_date": "2026-06-25",
-      "first_date": "2026-06-22",
-      "first_price": 116.5,
-      "change_pct": -7.3,
-      "cheap_score": 66.7,
-      "cheap_detail": [
-        "✗ PE=16.0 ≥ 15",
-        "✗ PB=5.35 ≥ 1.5",
-        "✓ 股價在52週低點23% (< 50%)",
-        "✓ Z=-1.12 < -0.5",
-        "✓ 殖利率=5.4% > 4%",
-        "✓ 5y均殖利率=4.5% > 3%"
       ],
-      "dividend_score": 100.0,
-      "dividend_detail": [
-        "✓ 殖利率=5.4% > 4%",
-        "✓ 5y均殖利率=4.5% > 3%",
-        "✓ 連續27年發股息 (≥ 5)",
-        "✓ 近3年股利穩定 (無減>30%)",
-        "✓ 配息率=77% 在30-90%"
-      ]
+      "ex_dividend_date": "2026-06-17",
+      "dividend_per_share": 15.0
     },
     {
-      "code": "2606",
-      "name_zh": "裕民",
-      "name_en": "U-Ming Marine Transport Corporation",
-      "net_amount_10d": 1665900,
-      "net_amount_10d_k": 1666,
-      "net_shares_10d": 27000,
-      "net_shares_10d_zhang": 27,
-      "last_date": "2026-06-22",
-      "cur_price": 61.7,
+      "code": "3526",
+      "name_zh": "凡甲",
+      "name_en": "Alltop Technology Co., Ltd.",
+      "net_amount_10d": 373418704,
+      "net_amount_10d_k": 373419,
+      "net_shares_10d": 1228351,
+      "net_shares_10d_zhang": 1228,
+      "last_date": "2026-06-26",
+      "cur_price": 304.0,
       "g_score": 100.0,
-      "l_score": 100.0,
-      "regression_z": -0.22,
-      "rank": 96,
-      "screening_date": "2026-06-23",
-      "first_date": "2026-06-22",
-      "first_price": 62.0,
-      "change_pct": -0.48,
-      "cheap_score": 66.7,
+      "l_score": 83.3,
+      "regression_z": -0.24,
+      "rank": 79,
+      "screening_date": "2026-06-26",
+      "first_date": "2026-06-26",
+      "first_price": 304.0,
+      "change_pct": 0.0,
+      "cheap_score": 50.0,
       "cheap_detail": [
-        "✓ PE=14.3 < 15",
-        "✓ PB=1.28 < 1.5",
-        "✗ 股價在52週低點54% (≥ 50%)",
-        "✗ Z=-0.22 ≥ -0.5",
-        "✓ 殖利率=4.6% > 4%",
-        "✓ 5y均殖利率=4.9% > 3%"
+        "✗ PE=19.7 ≥ 15",
+        "✗ PB=5.56 ≥ 1.5",
+        "✓ 股價在52週低點45% (< 50%)",
+        "✗ Z=-0.24 ≥ -0.5",
+        "✓ 殖利率=5.4% > 4%",
+        "✓ 5y均殖利率=5.8% > 3%"
       ],
-      "dividend_score": 100.0,
+      "dividend_score": 80.0,
       "dividend_detail": [
-        "✓ 殖利率=4.6% > 4%",
-        "✓ 5y均殖利率=4.9% > 3%",
-        "✓ 連續27年發股息 (≥ 5)",
+        "✓ 殖利率=5.4% > 4%",
+        "✓ 5y均殖利率=5.8% > 3%",
+        "✓ 連續19年發股息 (≥ 5)",
         "✓ 近3年股利穩定 (無減>30%)",
-        "✓ 配息率=74% 在30-90%"
-      ]
+        "✗ 配息率=107% 不在30-90%"
+      ],
+      "ex_dividend_date": "2026-04-16",
+      "dividend_per_share": 16.84
     },
     {
       "code": "6191",
       "name_zh": "精成科",
       "name_en": "Global Brands Manufacture Ltd.",
-      "net_amount_10d": 14010038,
-      "net_amount_10d_k": 14010,
-      "net_shares_10d": 141088,
-      "net_shares_10d_zhang": 141,
-      "last_date": "2026-06-15",
-      "cur_price": 99.3,
+      "net_amount_10d": 227641344,
+      "net_amount_10d_k": 227641,
+      "net_shares_10d": 2265088,
+      "net_shares_10d_zhang": 2265,
+      "last_date": "2026-06-26",
+      "cur_price": 100.5,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -0.96,
-      "rank": 87,
-      "screening_date": "2026-06-17",
+      "regression_z": -0.88,
+      "rank": 85,
+      "screening_date": "2026-06-26",
       "first_date": "2026-06-15",
       "first_price": 103.0,
-      "change_pct": -3.59,
+      "change_pct": -2.43,
       "cheap_score": 50.0,
       "cheap_detail": [
         "✗ PE=15.2 ≥ 15",
         "✗ PB=1.79 ≥ 1.5",
         "✓ 股價在52週低點27% (< 50%)",
         "✓ Z=-0.96 < -0.5",
-        "✗ 殖利率=3.1% ≤ 4%",
+        "✗ 殖利率=2.6% ≤ 4%",
         "✓ 5y均殖利率=3.9% > 3%"
       ],
       "dividend_score": 80.0,
       "dividend_detail": [
-        "✗ 殖利率=3.1% ≤ 4%",
+        "✗ 殖利率=2.6% ≤ 4%",
         "✓ 5y均殖利率=3.9% > 3%",
         "✓ 連續9年發股息 (≥ 5)",
         "✓ 近3年股利穩定 (無減>30%)",
         "✓ 配息率=46% 在30-90%"
-      ]
+      ],
+      "ex_dividend_date": "2025-07-18",
+      "dividend_per_share": 2.6
     },
     {
-      "code": "1229",
-      "name_zh": "聯華",
-      "name_en": "Lien Hwa Industrial Holdings Corporation",
-      "net_amount_10d": 328690,
-      "net_amount_10d_k": 329,
-      "net_shares_10d": 7591,
-      "net_shares_10d_zhang": 8,
-      "last_date": "2026-05-26",
-      "cur_price": 43.3,
+      "code": "9917",
+      "name_zh": "中保科",
+      "name_en": "Taiwan Secom Co., Ltd.",
+      "net_amount_10d": 156245500,
+      "net_amount_10d_k": 156246,
+      "net_shares_10d": 1481000,
+      "net_shares_10d_zhang": 1481,
+      "last_date": "2026-06-26",
+      "cur_price": 105.5,
       "g_score": 80.0,
       "l_score": 83.3,
-      "regression_z": -0.62,
-      "rank": 100,
-      "screening_date": "2026-05-26",
-      "first_date": "2026-05-26",
-      "first_price": 39.9,
-      "change_pct": 8.52,
-      "cheap_score": 83.3,
+      "regression_z": -1.34,
+      "rank": 88,
+      "screening_date": "2026-06-26",
+      "first_date": "2026-06-22",
+      "first_price": 116.5,
+      "change_pct": -9.44,
+      "cheap_score": 66.7,
       "cheap_detail": [
-        "✗ PE=16.8 ≥ 15",
-        "✓ PB=1.39 < 1.5",
-        "✓ 股價在52週低點40% (< 50%)",
-        "✓ Z=-0.62 < -0.5",
-        "✓ 殖利率=4.3% > 4%",
-        "✓ 5y均殖利率=3.9% > 3%"
+        "✗ PE=16.0 ≥ 15",
+        "✗ PB=5.35 ≥ 1.5",
+        "✓ 股價在52週低點23% (< 50%)",
+        "✓ Z=-1.12 < -0.5",
+        "✓ 殖利率=5.3% > 4%",
+        "✓ 5y均殖利率=4.5% > 3%"
       ],
       "dividend_score": 100.0,
       "dividend_detail": [
-        "✓ 殖利率=4.3% > 4%",
-        "✓ 5y均殖利率=3.9% > 3%",
-        "✓ 連續26年發股息 (≥ 5)",
+        "✓ 殖利率=5.3% > 4%",
+        "✓ 5y均殖利率=4.5% > 3%",
+        "✓ 連續27年發股息 (≥ 5)",
         "✓ 近3年股利穩定 (無減>30%)",
-        "✓ 配息率=51% 在30-90%"
-      ]
+        "✓ 配息率=77% 在30-90%"
+      ],
+      "ex_dividend_date": "2026-06-24",
+      "dividend_per_share": 5.7
+    },
+    {
+      "code": "3015",
+      "name_zh": "全漢",
+      "name_en": "FSP Technology Inc.",
+      "net_amount_10d": 10656032,
+      "net_amount_10d_k": 10656,
+      "net_shares_10d": 178493,
+      "net_shares_10d_zhang": 178,
+      "last_date": "2026-05-29",
+      "cur_price": 59.7,
+      "g_score": 80.0,
+      "l_score": 83.3,
+      "regression_z": -0.09,
+      "rank": 93,
+      "screening_date": "2026-05-29",
+      "first_date": "2026-05-26",
+      "first_price": 52.2,
+      "change_pct": 14.37,
+      "cheap_score": 33.3,
+      "cheap_detail": [
+        "✗ PE=33.8 ≥ 15",
+        "✓ PB=0.97 < 1.5",
+        "✗ 股價在52週低點62% (≥ 50%)",
+        "✗ Z=0.15 ≥ -0.5",
+        "✗ 殖利率=3.6% ≤ 4%",
+        "✓ 5y均殖利率=6.7% > 3%"
+      ],
+      "dividend_score": 60.0,
+      "dividend_detail": [
+        "✗ 殖利率=3.6% ≤ 4%",
+        "✓ 5y均殖利率=6.7% > 3%",
+        "✓ 連續24年發股息 (≥ 5)",
+        "✓ 近3年股利穩定 (無減>30%)",
+        "✗ 配息率=162% 不在30-90%"
+      ],
+      "ex_dividend_date": "2026-06-16",
+      "dividend_per_share": 2.2
     }
   ],
   "archive": {
+    "2026-06-26": [
+      {
+        "code": "1513",
+        "name_zh": "中興電",
+        "name_en": "Chung-Hsin Electric and Machinery Manufacturing Corp.",
+        "net_amount_10d": 3077872317,
+        "net_amount_10d_k": 3077872,
+        "net_shares_10d": 17537734,
+        "net_shares_10d_zhang": 17538,
+        "last_date": "2026-06-26",
+        "cur_price": 175.5,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -0.21,
+        "rank": 25,
+        "screening_date": "2026-06-26",
+        "first_date": "2026-06-18",
+        "first_price": 176.5,
+        "change_pct": -0.57,
+        "cheap_score": 16.7,
+        "cheap_detail": [
+          "✗ PE=22.9 ≥ 15",
+          "✗ PB=4.25 ≥ 1.5",
+          "✗ 股價在52週低點73% (≥ 50%)",
+          "✗ Z=0.16 ≥ -0.5",
+          "✗ 殖利率=3.2% ≤ 4%",
+          "✓ 5y均殖利率=3.1% > 3%"
+        ],
+        "dividend_score": 80.0,
+        "dividend_detail": [
+          "✗ 殖利率=3.2% ≤ 4%",
+          "✓ 5y均殖利率=3.1% > 3%",
+          "✓ 連續23年發股息 (≥ 5)",
+          "✓ 近3年股利穩定 (無減>30%)",
+          "✓ 配息率=57% 在30-90%"
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 6.0
+      },
+      {
+        "code": "1216",
+        "name_zh": "統一",
+        "name_en": "Uni-President Enterprises Corp.",
+        "net_amount_10d": 3046436918,
+        "net_amount_10d_k": 3046437,
+        "net_shares_10d": 40836956,
+        "net_shares_10d_zhang": 40837,
+        "last_date": "2026-06-26",
+        "cur_price": 74.6,
+        "g_score": 100.0,
+        "l_score": 100.0,
+        "regression_z": -1.06,
+        "rank": 26,
+        "screening_date": "2026-06-26",
+        "first_date": "2026-05-26",
+        "first_price": 70.8,
+        "change_pct": 5.37,
+        "cheap_score": 50.0,
+        "cheap_detail": [
+          "✗ PE=22.0 ≥ 15",
+          "✗ PB=2.97 ≥ 1.5",
+          "✓ 股價在52週低點38% (< 50%)",
+          "✓ Z=-0.88 < -0.5",
+          "✗ 殖利率=4.0% ≤ 4%",
+          "✓ 5y均殖利率=3.9% > 3%"
+        ],
+        "dividend_score": 80.0,
+        "dividend_detail": [
+          "✗ 殖利率=4.0% ≤ 4%",
+          "✓ 5y均殖利率=3.9% > 3%",
+          "✓ 連續26年發股息 (≥ 5)",
+          "✓ 近3年股利穩定 (無減>30%)",
+          "✓ 配息率=87% 在30-90%"
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
+      },
+      {
+        "code": "2633",
+        "name_zh": "台灣高鐵",
+        "name_en": "Taiwan High Speed Rail Corporation",
+        "net_amount_10d": 1375314908,
+        "net_amount_10d_k": 1375315,
+        "net_shares_10d": 52795198,
+        "net_shares_10d_zhang": 52795,
+        "last_date": "2026-06-26",
+        "cur_price": 26.05,
+        "g_score": 100.0,
+        "l_score": 83.3,
+        "regression_z": -0.67,
+        "rank": 41,
+        "screening_date": "2026-06-26",
+        "first_date": "2026-05-27",
+        "first_price": 25.25,
+        "change_pct": 3.17,
+        "cheap_score": 50.0,
+        "cheap_detail": [
+          "✗ PE=22.4 ≥ 15",
+          "✗ PB=1.97 ≥ 1.5",
+          "✓ 股價在52週低點33% (< 50%)",
+          "✗ Z=-0.49 ≥ -0.5",
+          "✓ 殖利率=4.4% > 4%",
+          "✓ 5y均殖利率=3.2% > 3%"
+        ],
+        "dividend_score": 100.0,
+        "dividend_detail": [
+          "✓ 殖利率=4.4% > 4%",
+          "✓ 5y均殖利率=3.2% > 3%",
+          "✓ 連續10年發股息 (≥ 5)",
+          "✓ 近3年股利穩定 (無減>30%)",
+          "✓ 配息率=90% 在30-90%"
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
+      },
+      {
+        "code": "2105",
+        "name_zh": "正新",
+        "name_en": "Cheng Shin Rubber Ind. Co., Ltd.",
+        "net_amount_10d": 681834481,
+        "net_amount_10d_k": 681834,
+        "net_shares_10d": 23191649,
+        "net_shares_10d_zhang": 23192,
+        "last_date": "2026-06-26",
+        "cur_price": 29.4,
+        "g_score": 100.0,
+        "l_score": 100.0,
+        "regression_z": -1.38,
+        "rank": 62,
+        "screening_date": "2026-06-26",
+        "first_date": "2026-06-02",
+        "first_price": 34.0,
+        "change_pct": -13.53,
+        "cheap_score": 83.3,
+        "cheap_detail": [
+          "✗ PE=19.7 ≥ 15",
+          "✓ PB=1.13 < 1.5",
+          "✓ 股價在52週低點10% (< 50%)",
+          "✓ Z=-1.36 < -0.5",
+          "✓ 殖利率=6.2% > 4%",
+          "✓ 5y均殖利率=4.2% > 3%"
+        ],
+        "dividend_score": 80.0,
+        "dividend_detail": [
+          "✓ 殖利率=6.2% > 4%",
+          "✓ 5y均殖利率=4.2% > 3%",
+          "✓ 連續27年發股息 (≥ 5)",
+          "✓ 近3年股利穩定 (無減>30%)",
+          "✗ 配息率=160% 不在30-90%"
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
+      },
+      {
+        "code": "1476",
+        "name_zh": "儒鴻",
+        "name_en": "Eclat Textile Co., Ltd.",
+        "net_amount_10d": 546499004,
+        "net_amount_10d_k": 546499,
+        "net_shares_10d": 1732168,
+        "net_shares_10d_zhang": 1732,
+        "last_date": "2026-06-26",
+        "cur_price": 315.5,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -1.62,
+        "rank": 67,
+        "screening_date": "2026-06-26",
+        "first_date": "2026-06-22",
+        "first_price": 317.0,
+        "change_pct": -0.47,
+        "cheap_score": 50.0,
+        "cheap_detail": [
+          "✗ PE=16.0 ≥ 15",
+          "✗ PB=3.20 ≥ 1.5",
+          "✓ 股價在52週低點8% (< 50%)",
+          "✓ Z=-1.53 < -0.5",
+          "✓ 殖利率=4.7% > 4%",
+          "✗ 5y均殖利率=2.6% ≤ 3%"
+        ],
+        "dividend_score": 80.0,
+        "dividend_detail": [
+          "✓ 殖利率=4.7% > 4%",
+          "✗ 5y均殖利率=2.6% ≤ 3%",
+          "✓ 連續26年發股息 (≥ 5)",
+          "✓ 近3年股利穩定 (無減>30%)",
+          "✓ 配息率=85% 在30-90%"
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 15.0
+      },
+      {
+        "code": "3526",
+        "name_zh": "凡甲",
+        "name_en": "Alltop Technology Co., Ltd.",
+        "net_amount_10d": 373418704,
+        "net_amount_10d_k": 373419,
+        "net_shares_10d": 1228351,
+        "net_shares_10d_zhang": 1228,
+        "last_date": "2026-06-26",
+        "cur_price": 304.0,
+        "g_score": 100.0,
+        "l_score": 83.3,
+        "regression_z": -0.24,
+        "rank": 79,
+        "screening_date": "2026-06-26",
+        "first_date": "2026-06-26",
+        "first_price": 304.0,
+        "change_pct": 0.0,
+        "cheap_score": 50.0,
+        "cheap_detail": [
+          "✗ PE=19.7 ≥ 15",
+          "✗ PB=5.56 ≥ 1.5",
+          "✓ 股價在52週低點45% (< 50%)",
+          "✗ Z=-0.24 ≥ -0.5",
+          "✓ 殖利率=5.4% > 4%",
+          "✓ 5y均殖利率=5.8% > 3%"
+        ],
+        "dividend_score": 80.0,
+        "dividend_detail": [
+          "✓ 殖利率=5.4% > 4%",
+          "✓ 5y均殖利率=5.8% > 3%",
+          "✓ 連續19年發股息 (≥ 5)",
+          "✓ 近3年股利穩定 (無減>30%)",
+          "✗ 配息率=107% 不在30-90%"
+        ],
+        "ex_dividend_date": "2026-04-16",
+        "dividend_per_share": 16.84
+      },
+      {
+        "code": "6191",
+        "name_zh": "精成科",
+        "name_en": "Global Brands Manufacture Ltd.",
+        "net_amount_10d": 227641344,
+        "net_amount_10d_k": 227641,
+        "net_shares_10d": 2265088,
+        "net_shares_10d_zhang": 2265,
+        "last_date": "2026-06-26",
+        "cur_price": 100.5,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -0.88,
+        "rank": 85,
+        "screening_date": "2026-06-26",
+        "first_date": "2026-06-15",
+        "first_price": 103.0,
+        "change_pct": -2.43,
+        "cheap_score": 50.0,
+        "cheap_detail": [
+          "✗ PE=15.2 ≥ 15",
+          "✗ PB=1.79 ≥ 1.5",
+          "✓ 股價在52週低點27% (< 50%)",
+          "✓ Z=-0.96 < -0.5",
+          "✗ 殖利率=2.6% ≤ 4%",
+          "✓ 5y均殖利率=3.9% > 3%"
+        ],
+        "dividend_score": 80.0,
+        "dividend_detail": [
+          "✗ 殖利率=2.6% ≤ 4%",
+          "✓ 5y均殖利率=3.9% > 3%",
+          "✓ 連續9年發股息 (≥ 5)",
+          "✓ 近3年股利穩定 (無減>30%)",
+          "✓ 配息率=46% 在30-90%"
+        ],
+        "ex_dividend_date": "2025-07-18",
+        "dividend_per_share": 2.6
+      },
+      {
+        "code": "9917",
+        "name_zh": "中保科",
+        "name_en": "Taiwan Secom Co., Ltd.",
+        "net_amount_10d": 156245500,
+        "net_amount_10d_k": 156246,
+        "net_shares_10d": 1481000,
+        "net_shares_10d_zhang": 1481,
+        "last_date": "2026-06-26",
+        "cur_price": 105.5,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -1.34,
+        "rank": 88,
+        "screening_date": "2026-06-26",
+        "first_date": "2026-06-22",
+        "first_price": 116.5,
+        "change_pct": -9.44,
+        "cheap_score": 66.7,
+        "cheap_detail": [
+          "✗ PE=16.0 ≥ 15",
+          "✗ PB=5.35 ≥ 1.5",
+          "✓ 股價在52週低點23% (< 50%)",
+          "✓ Z=-1.12 < -0.5",
+          "✓ 殖利率=5.3% > 4%",
+          "✓ 5y均殖利率=4.5% > 3%"
+        ],
+        "dividend_score": 100.0,
+        "dividend_detail": [
+          "✓ 殖利率=5.3% > 4%",
+          "✓ 5y均殖利率=4.5% > 3%",
+          "✓ 連續27年發股息 (≥ 5)",
+          "✓ 近3年股利穩定 (無減>30%)",
+          "✓ 配息率=77% 在30-90%"
+        ],
+        "ex_dividend_date": "2026-06-24",
+        "dividend_per_share": 5.7
+      }
+    ],
     "2026-06-25": [
       {
         "code": "1216",
@@ -307,8 +667,6 @@
         "rank": 27,
         "screening_date": "2026-06-25",
         "first_date": "2026-05-26",
-        "first_price": 70.8,
-        "change_pct": 6.78,
         "cheap_score": 50.0,
         "cheap_detail": [
           "✗ PE=22.0 ≥ 15",
@@ -325,7 +683,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2105",
@@ -343,8 +703,6 @@
         "rank": 49,
         "screening_date": "2026-06-25",
         "first_date": "2026-06-02",
-        "first_price": 34.0,
-        "change_pct": -12.94,
         "cheap_score": 83.3,
         "cheap_detail": [
           "✗ PE=19.7 ≥ 15",
@@ -361,7 +719,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "2633",
@@ -379,8 +739,6 @@
         "rank": 50,
         "screening_date": "2026-06-25",
         "first_date": "2026-05-27",
-        "first_price": 25.25,
-        "change_pct": 3.96,
         "cheap_score": 50.0,
         "cheap_detail": [
           "✗ PE=22.4 ≥ 15",
@@ -397,7 +755,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "1476",
@@ -415,8 +775,6 @@
         "rank": 69,
         "screening_date": "2026-06-25",
         "first_date": "2026-06-22",
-        "first_price": 317.0,
-        "change_pct": 1.26,
         "cheap_score": 50.0,
         "cheap_detail": [
           "✗ PE=16.0 ≥ 15",
@@ -433,7 +791,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=85% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 15.0
       },
       {
         "code": "9917",
@@ -451,25 +811,25 @@
         "rank": 85,
         "screening_date": "2026-06-25",
         "first_date": "2026-06-22",
-        "first_price": 116.5,
-        "change_pct": -7.3,
         "cheap_score": 66.7,
         "cheap_detail": [
           "✗ PE=16.0 ≥ 15",
           "✗ PB=5.35 ≥ 1.5",
           "✓ 股價在52週低點23% (< 50%)",
           "✓ Z=-1.12 < -0.5",
-          "✓ 殖利率=5.4% > 4%",
+          "✓ 殖利率=5.3% > 4%",
           "✓ 5y均殖利率=4.5% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=5.4% > 4%",
+          "✓ 殖利率=5.3% > 4%",
           "✓ 5y均殖利率=4.5% > 3%",
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=77% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-24",
+        "dividend_per_share": 5.7
       }
     ],
     "2026-06-24": [
@@ -505,7 +865,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2105",
@@ -539,7 +901,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "2633",
@@ -573,7 +937,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "1476",
@@ -607,7 +973,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=85% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 15.0
       },
       {
         "code": "9917",
@@ -631,17 +999,19 @@
           "✗ PB=5.35 ≥ 1.5",
           "✓ 股價在52週低點23% (< 50%)",
           "✓ Z=-1.12 < -0.5",
-          "✓ 殖利率=5.4% > 4%",
+          "✓ 殖利率=5.3% > 4%",
           "✓ 5y均殖利率=4.5% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=5.4% > 4%",
+          "✓ 殖利率=5.3% > 4%",
           "✓ 5y均殖利率=4.5% > 3%",
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=77% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-24",
+        "dividend_per_share": 5.7
       }
     ],
     "2026-06-23": [
@@ -677,7 +1047,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "1216",
@@ -711,7 +1083,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2633",
@@ -745,7 +1119,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "1476",
@@ -779,7 +1155,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=85% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 15.0
       },
       {
         "code": "9917",
@@ -803,53 +1181,55 @@
           "✗ PB=5.35 ≥ 1.5",
           "✓ 股價在52週低點23% (< 50%)",
           "✓ Z=-1.12 < -0.5",
-          "✓ 殖利率=5.4% > 4%",
+          "✓ 殖利率=5.3% > 4%",
           "✓ 5y均殖利率=4.5% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=5.4% > 4%",
+          "✓ 殖利率=5.3% > 4%",
           "✓ 5y均殖利率=4.5% > 3%",
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=77% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-24",
+        "dividend_per_share": 5.7
       },
       {
         "code": "2606",
         "name_zh": "裕民",
         "name_en": "U-Ming Marine Transport Corporation",
-        "net_amount_10d": 30418100,
-        "net_amount_10d_k": 30418,
+        "net_amount_10d": 29382800,
+        "net_amount_10d_k": 29383,
         "net_shares_10d": 493000,
         "net_shares_10d_zhang": 493,
         "last_date": "2026-06-22",
-        "cur_price": 61.7,
+        "cur_price": 59.6,
         "g_score": 100.0,
         "l_score": 100.0,
         "regression_z": -0.22,
         "rank": 96,
         "screening_date": "2026-06-23",
         "first_date": "2026-06-22",
-        "first_price": 62.0,
-        "change_pct": -0.48,
         "cheap_score": 66.7,
         "cheap_detail": [
           "✓ PE=14.3 < 15",
           "✓ PB=1.28 < 1.5",
           "✗ 股價在52週低點54% (≥ 50%)",
           "✗ Z=-0.22 ≥ -0.5",
-          "✓ 殖利率=4.6% > 4%",
+          "✓ 殖利率=4.5% > 4%",
           "✓ 5y均殖利率=4.9% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=4.6% > 4%",
+          "✓ 殖利率=4.5% > 4%",
           "✓ 5y均殖利率=4.9% > 3%",
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=74% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-16",
+        "dividend_per_share": 2.8
       }
     ],
     "2026-06-22": [
@@ -885,18 +1265,20 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "1513",
         "name_zh": "中興電",
         "name_en": "Chung-Hsin Electric and Machinery Manufacturing Corp.",
-        "net_amount_10d": 1450621075,
-        "net_amount_10d_k": 1450621,
+        "net_amount_10d": 1419256295,
+        "net_amount_10d_k": 1419256,
         "net_shares_10d": 7841195,
         "net_shares_10d_zhang": 7841,
         "last_date": "2026-06-22",
-        "cur_price": 185.0,
+        "cur_price": 181.0,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -0.0,
@@ -919,7 +1301,9 @@
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=57% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 6.0
       },
       {
         "code": "1216",
@@ -953,7 +1337,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2633",
@@ -987,7 +1373,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "1476",
@@ -1021,7 +1409,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=85% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 15.0
       },
       {
         "code": "9917",
@@ -1045,17 +1435,19 @@
           "✗ PB=5.35 ≥ 1.5",
           "✓ 股價在52週低點23% (< 50%)",
           "✓ Z=-1.12 < -0.5",
-          "✓ 殖利率=5.4% > 4%",
+          "✓ 殖利率=5.3% > 4%",
           "✓ 5y均殖利率=4.5% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=5.4% > 4%",
+          "✓ 殖利率=5.3% > 4%",
           "✓ 5y均殖利率=4.5% > 3%",
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=77% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-24",
+        "dividend_per_share": 5.7
       },
       {
         "code": "2606",
@@ -1079,17 +1471,19 @@
           "✓ PB=1.28 < 1.5",
           "✗ 股價在52週低點54% (≥ 50%)",
           "✗ Z=-0.22 ≥ -0.5",
-          "✓ 殖利率=4.6% > 4%",
+          "✓ 殖利率=4.5% > 4%",
           "✓ 5y均殖利率=4.9% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=4.6% > 4%",
+          "✓ 殖利率=4.5% > 4%",
           "✓ 5y均殖利率=4.9% > 3%",
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=74% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-16",
+        "dividend_per_share": 2.8
       }
     ],
     "2026-06-19": [
@@ -1125,7 +1519,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "1216",
@@ -1159,7 +1555,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "1513",
@@ -1193,7 +1591,9 @@
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=57% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 6.0
       },
       {
         "code": "2633",
@@ -1227,7 +1627,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2006",
@@ -1238,7 +1640,7 @@
         "net_shares_10d": 0,
         "net_shares_10d_zhang": 0,
         "last_date": "2026-06-18",
-        "cur_price": 70.0,
+        "cur_price": 69.8,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -0.41,
@@ -1247,21 +1649,23 @@
         "first_date": "2026-06-12",
         "cheap_score": 66.7,
         "cheap_detail": [
-          "✓ PE=10.9 < 15",
+          "✓ PE=10.8 < 15",
           "✗ PB=1.58 ≥ 1.5",
           "✓ 股價在52週低點45% (< 50%)",
           "✗ Z=-0.32 ≥ -0.5",
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%",
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=62% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-03-20",
+        "dividend_per_share": 4.3
       }
     ],
     "2026-06-18": [
@@ -1297,7 +1701,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "1216",
@@ -1331,7 +1737,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "1513",
@@ -1365,7 +1773,9 @@
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=57% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 6.0
       },
       {
         "code": "2633",
@@ -1399,7 +1809,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2006",
@@ -1419,21 +1831,23 @@
         "first_date": "2026-06-12",
         "cheap_score": 66.7,
         "cheap_detail": [
-          "✓ PE=10.9 < 15",
+          "✓ PE=10.8 < 15",
           "✗ PB=1.58 ≥ 1.5",
           "✓ 股價在52週低點45% (< 50%)",
           "✗ Z=-0.32 ≥ -0.5",
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%",
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=62% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-03-20",
+        "dividend_per_share": 4.3
       }
     ],
     "2026-06-17": [
@@ -1469,7 +1883,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "1216",
@@ -1503,7 +1919,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2633",
@@ -1537,7 +1955,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2006",
@@ -1557,57 +1977,59 @@
         "first_date": "2026-06-12",
         "cheap_score": 66.7,
         "cheap_detail": [
-          "✓ PE=10.9 < 15",
+          "✓ PE=10.8 < 15",
           "✗ PB=1.58 ≥ 1.5",
           "✓ 股價在52週低點45% (< 50%)",
           "✗ Z=-0.32 ≥ -0.5",
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%",
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=62% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-03-20",
+        "dividend_per_share": 4.3
       },
       {
         "code": "6191",
         "name_zh": "精成科",
         "name_en": "Global Brands Manufacture Ltd.",
-        "net_amount_10d": 116975400,
-        "net_amount_10d_k": 116975,
+        "net_amount_10d": 117800000,
+        "net_amount_10d_k": 117800,
         "net_shares_10d": 1178000,
         "net_shares_10d_zhang": 1178,
         "last_date": "2026-06-15",
-        "cur_price": 99.3,
+        "cur_price": 100.0,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -0.96,
+        "regression_z": -0.91,
         "rank": 87,
         "screening_date": "2026-06-17",
         "first_date": "2026-06-15",
-        "first_price": 103.0,
-        "change_pct": -3.59,
         "cheap_score": 50.0,
         "cheap_detail": [
           "✗ PE=15.2 ≥ 15",
           "✗ PB=1.79 ≥ 1.5",
           "✓ 股價在52週低點27% (< 50%)",
           "✓ Z=-0.96 < -0.5",
-          "✗ 殖利率=3.1% ≤ 4%",
+          "✗ 殖利率=2.6% ≤ 4%",
           "✓ 5y均殖利率=3.9% > 3%"
         ],
         "dividend_score": 80.0,
         "dividend_detail": [
-          "✗ 殖利率=3.1% ≤ 4%",
+          "✗ 殖利率=2.6% ≤ 4%",
           "✓ 5y均殖利率=3.9% > 3%",
           "✓ 連續9年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=46% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2025-07-18",
+        "dividend_per_share": 2.6
       }
     ],
     "2026-06-16": [
@@ -1643,18 +2065,20 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "2618",
         "name_zh": "長榮航",
         "name_en": "EVA Airways Corp.",
-        "net_amount_10d": 2823685956,
-        "net_amount_10d_k": 2823686,
+        "net_amount_10d": 2779268425,
+        "net_amount_10d_k": 2779268,
         "net_shares_10d": 63453617,
         "net_shares_10d_zhang": 63454,
         "last_date": "2026-06-15",
-        "cur_price": 44.5,
+        "cur_price": 43.8,
         "g_score": 100.0,
         "l_score": 100.0,
         "regression_z": -0.26,
@@ -1677,7 +2101,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "1216",
@@ -1711,7 +2137,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "6191",
@@ -1735,17 +2163,19 @@
           "✗ PB=1.79 ≥ 1.5",
           "✓ 股價在52週低點27% (< 50%)",
           "✓ Z=-0.96 < -0.5",
-          "✗ 殖利率=3.1% ≤ 4%",
+          "✗ 殖利率=2.6% ≤ 4%",
           "✓ 5y均殖利率=3.9% > 3%"
         ],
         "dividend_score": 80.0,
         "dividend_detail": [
-          "✗ 殖利率=3.1% ≤ 4%",
+          "✗ 殖利率=2.6% ≤ 4%",
           "✓ 5y均殖利率=3.9% > 3%",
           "✓ 連續9年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=46% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2025-07-18",
+        "dividend_per_share": 2.6
       },
       {
         "code": "2006",
@@ -1765,21 +2195,23 @@
         "first_date": "2026-06-12",
         "cheap_score": 66.7,
         "cheap_detail": [
-          "✓ PE=10.9 < 15",
+          "✓ PE=10.8 < 15",
           "✗ PB=1.58 ≥ 1.5",
           "✓ 股價在52週低點45% (< 50%)",
           "✗ Z=-0.32 ≥ -0.5",
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%",
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=62% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-03-20",
+        "dividend_per_share": 4.3
       },
       {
         "code": "2633",
@@ -1813,18 +2245,20 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2610",
         "name_zh": "華航",
         "name_en": "China Airlines, Ltd.",
-        "net_amount_10d": 18621924,
-        "net_amount_10d_k": 18622,
+        "net_amount_10d": 17852423,
+        "net_amount_10d_k": 17852,
         "net_shares_10d": 769501,
         "net_shares_10d_zhang": 770,
         "last_date": "2026-06-15",
-        "cur_price": 24.2,
+        "cur_price": 23.2,
         "g_score": 100.0,
         "l_score": 83.3,
         "regression_z": -0.11,
@@ -1837,17 +2271,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-15": [
@@ -1883,7 +2319,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "2618",
@@ -1917,7 +2355,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "1216",
@@ -1951,7 +2391,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "6191",
@@ -1975,17 +2417,19 @@
           "✗ PB=1.79 ≥ 1.5",
           "✓ 股價在52週低點27% (< 50%)",
           "✓ Z=-0.96 < -0.5",
-          "✗ 殖利率=3.1% ≤ 4%",
+          "✗ 殖利率=2.6% ≤ 4%",
           "✓ 5y均殖利率=3.9% > 3%"
         ],
         "dividend_score": 80.0,
         "dividend_detail": [
-          "✗ 殖利率=3.1% ≤ 4%",
+          "✗ 殖利率=2.6% ≤ 4%",
           "✓ 5y均殖利率=3.9% > 3%",
           "✓ 連續9年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=46% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2025-07-18",
+        "dividend_per_share": 2.6
       },
       {
         "code": "2006",
@@ -2005,21 +2449,23 @@
         "first_date": "2026-06-12",
         "cheap_score": 66.7,
         "cheap_detail": [
-          "✓ PE=10.9 < 15",
+          "✓ PE=10.8 < 15",
           "✗ PB=1.58 ≥ 1.5",
           "✓ 股價在52週低點45% (< 50%)",
           "✗ Z=-0.32 ≥ -0.5",
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%",
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=62% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-03-20",
+        "dividend_per_share": 4.3
       },
       {
         "code": "2633",
@@ -2053,7 +2499,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2610",
@@ -2077,17 +2525,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-12": [
@@ -2123,7 +2573,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "2105",
@@ -2157,7 +2609,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "1216",
@@ -2191,7 +2645,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2006",
@@ -2211,21 +2667,23 @@
         "first_date": "2026-06-12",
         "cheap_score": 66.7,
         "cheap_detail": [
-          "✓ PE=10.9 < 15",
+          "✓ PE=10.8 < 15",
           "✗ PB=1.58 ≥ 1.5",
           "✓ 股價在52週低點45% (< 50%)",
           "✗ Z=-0.32 ≥ -0.5",
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=6.2% > 4%",
+          "✓ 殖利率=6.1% > 4%",
           "✓ 5y均殖利率=6.6% > 3%",
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=62% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-03-20",
+        "dividend_per_share": 4.3
       },
       {
         "code": "2610",
@@ -2249,17 +2707,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-11": [
@@ -2295,7 +2755,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "2105",
@@ -2329,7 +2791,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "1216",
@@ -2363,18 +2827,20 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "3014",
         "name_zh": "聯陽",
         "name_en": "ITE Tech. Inc",
-        "net_amount_10d": 205388188,
-        "net_amount_10d_k": 205388,
+        "net_amount_10d": 188323294,
+        "net_amount_10d_k": 188323,
         "net_shares_10d": 1218921,
         "net_shares_10d_zhang": 1219,
         "last_date": "2026-06-11",
-        "cur_price": 168.5,
+        "cur_price": 154.5,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -0.27,
@@ -2387,17 +2853,19 @@
           "✗ PB=4.51 ≥ 1.5",
           "✗ 股價在52週低點96% (≥ 50%)",
           "✗ Z=0.85 ≥ -0.5",
-          "✓ 殖利率=5.1% > 4%",
+          "✓ 殖利率=5.0% > 4%",
           "✓ 5y均殖利率=6.6% > 3%"
         ],
         "dividend_score": 80.0,
         "dividend_detail": [
-          "✓ 殖利率=5.1% > 4%",
+          "✓ 殖利率=5.0% > 4%",
           "✓ 5y均殖利率=6.6% > 3%",
           "✓ 連續13年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=97% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 8.5
       },
       {
         "code": "2610",
@@ -2421,17 +2889,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-10": [
@@ -2467,7 +2937,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "2105",
@@ -2501,7 +2973,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "1216",
@@ -2535,7 +3009,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "3014",
@@ -2559,17 +3035,19 @@
           "✗ PB=4.51 ≥ 1.5",
           "✗ 股價在52週低點96% (≥ 50%)",
           "✗ Z=0.85 ≥ -0.5",
-          "✓ 殖利率=5.1% > 4%",
+          "✓ 殖利率=5.0% > 4%",
           "✓ 5y均殖利率=6.6% > 3%"
         ],
         "dividend_score": 80.0,
         "dividend_detail": [
-          "✓ 殖利率=5.1% > 4%",
+          "✓ 殖利率=5.0% > 4%",
           "✓ 5y均殖利率=6.6% > 3%",
           "✓ 連續13年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=97% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 8.5
       },
       {
         "code": "2633",
@@ -2603,7 +3081,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2610",
@@ -2627,17 +3107,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-09": [
@@ -2673,7 +3155,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "2105",
@@ -2707,7 +3191,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "1216",
@@ -2741,7 +3227,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "3014",
@@ -2765,17 +3253,19 @@
           "✗ PB=4.51 ≥ 1.5",
           "✗ 股價在52週低點96% (≥ 50%)",
           "✗ Z=0.85 ≥ -0.5",
-          "✓ 殖利率=5.1% > 4%",
+          "✓ 殖利率=5.0% > 4%",
           "✓ 5y均殖利率=6.6% > 3%"
         ],
         "dividend_score": 80.0,
         "dividend_detail": [
-          "✓ 殖利率=5.1% > 4%",
+          "✓ 殖利率=5.0% > 4%",
           "✓ 5y均殖利率=6.6% > 3%",
           "✓ 連續13年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=97% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 8.5
       },
       {
         "code": "2633",
@@ -2809,7 +3299,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2610",
@@ -2833,17 +3325,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-08": [
@@ -2879,41 +3373,45 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "3045",
         "name_zh": "台灣大",
         "name_en": "Taiwan Mobile Co., Ltd.",
-        "net_amount_10d": 3673239000,
-        "net_amount_10d_k": 3673239,
+        "net_amount_10d": 3627323512,
+        "net_amount_10d_k": 3627324,
         "net_shares_10d": 30610325,
         "net_shares_10d_zhang": 30610,
         "last_date": "2026-06-08",
-        "cur_price": 120.0,
+        "cur_price": 118.5,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -0.15,
         "rank": 30,
         "screening_date": "2026-06-08",
         "first_date": "2026-05-29",
-        "cheap_score": 33.3,
+        "cheap_score": 16.7,
         "cheap_detail": [
           "✗ PE=24.8 ≥ 15",
           "✗ PB=3.99 ≥ 1.5",
           "✗ 股價在52週低點91% (≥ 50%)",
           "✗ Z=1.00 ≥ -0.5",
-          "✓ 殖利率=4.0% > 4%",
+          "✗ 殖利率=4.0% ≤ 4%",
           "✓ 5y均殖利率=4.2% > 3%"
         ],
-        "dividend_score": 80.0,
+        "dividend_score": 60.0,
         "dividend_detail": [
-          "✓ 殖利率=4.0% > 4%",
+          "✗ 殖利率=4.0% ≤ 4%",
           "✓ 5y均殖利率=4.2% > 3%",
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=93% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 4.74
       },
       {
         "code": "1216",
@@ -2947,7 +3445,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2105",
@@ -2981,7 +3481,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "3014",
@@ -3005,17 +3507,19 @@
           "✗ PB=4.51 ≥ 1.5",
           "✗ 股價在52週低點96% (≥ 50%)",
           "✗ Z=0.85 ≥ -0.5",
-          "✓ 殖利率=5.1% > 4%",
+          "✓ 殖利率=5.0% > 4%",
           "✓ 5y均殖利率=6.6% > 3%"
         ],
         "dividend_score": 80.0,
         "dividend_detail": [
-          "✓ 殖利率=5.1% > 4%",
+          "✓ 殖利率=5.0% > 4%",
           "✓ 5y均殖利率=6.6% > 3%",
           "✓ 連續13年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=97% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 8.5
       },
       {
         "code": "2633",
@@ -3049,7 +3553,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2610",
@@ -3073,17 +3579,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-05": [
@@ -3119,7 +3627,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "1216",
@@ -3153,7 +3663,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2105",
@@ -3187,7 +3699,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "2633",
@@ -3221,7 +3735,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2610",
@@ -3245,17 +3761,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-04": [
@@ -3291,7 +3809,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "1216",
@@ -3325,7 +3845,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2105",
@@ -3359,7 +3881,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "2633",
@@ -3393,7 +3917,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2610",
@@ -3417,17 +3943,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-03": [
@@ -3463,7 +3991,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "1216",
@@ -3497,7 +4027,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2105",
@@ -3531,7 +4063,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "2633",
@@ -3565,7 +4099,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2610",
@@ -3589,17 +4125,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-02": [
@@ -3635,7 +4173,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "1216",
@@ -3669,7 +4209,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "3045",
@@ -3687,23 +4229,25 @@
         "rank": 26,
         "screening_date": "2026-06-02",
         "first_date": "2026-05-29",
-        "cheap_score": 33.3,
+        "cheap_score": 16.7,
         "cheap_detail": [
           "✗ PE=24.8 ≥ 15",
           "✗ PB=3.99 ≥ 1.5",
           "✗ 股價在52週低點91% (≥ 50%)",
           "✗ Z=1.00 ≥ -0.5",
-          "✓ 殖利率=4.0% > 4%",
+          "✗ 殖利率=4.0% ≤ 4%",
           "✓ 5y均殖利率=4.2% > 3%"
         ],
-        "dividend_score": 80.0,
+        "dividend_score": 60.0,
         "dividend_detail": [
-          "✓ 殖利率=4.0% > 4%",
+          "✗ 殖利率=4.0% ≤ 4%",
           "✓ 5y均殖利率=4.2% > 3%",
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=93% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 4.74
       },
       {
         "code": "2105",
@@ -3737,7 +4281,9 @@
           "✓ 連續27年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=160% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-17",
+        "dividend_per_share": 1.8
       },
       {
         "code": "2633",
@@ -3771,7 +4317,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2610",
@@ -3795,17 +4343,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-06-01": [
@@ -3841,7 +4391,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "3045",
@@ -3859,23 +4411,25 @@
         "rank": 25,
         "screening_date": "2026-06-01",
         "first_date": "2026-05-29",
-        "cheap_score": 33.3,
+        "cheap_score": 16.7,
         "cheap_detail": [
           "✗ PE=24.8 ≥ 15",
           "✗ PB=3.99 ≥ 1.5",
           "✗ 股價在52週低點91% (≥ 50%)",
           "✗ Z=1.00 ≥ -0.5",
-          "✓ 殖利率=4.0% > 4%",
+          "✗ 殖利率=4.0% ≤ 4%",
           "✓ 5y均殖利率=4.2% > 3%"
         ],
-        "dividend_score": 80.0,
+        "dividend_score": 60.0,
         "dividend_detail": [
-          "✓ 殖利率=4.0% > 4%",
+          "✗ 殖利率=4.0% ≤ 4%",
           "✓ 5y均殖利率=4.2% > 3%",
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=93% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 4.74
       },
       {
         "code": "1216",
@@ -3909,7 +4463,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2633",
@@ -3943,7 +4499,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "2610",
@@ -3967,17 +4525,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-05-29": [
@@ -4013,7 +4573,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "3045",
@@ -4031,23 +4593,25 @@
         "rank": 21,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-29",
-        "cheap_score": 33.3,
+        "cheap_score": 16.7,
         "cheap_detail": [
           "✗ PE=24.8 ≥ 15",
           "✗ PB=3.99 ≥ 1.5",
           "✗ 股價在52週低點91% (≥ 50%)",
           "✗ Z=1.00 ≥ -0.5",
-          "✓ 殖利率=4.0% > 4%",
+          "✗ 殖利率=4.0% ≤ 4%",
           "✓ 5y均殖利率=4.2% > 3%"
         ],
-        "dividend_score": 80.0,
+        "dividend_score": 60.0,
         "dividend_detail": [
-          "✓ 殖利率=4.0% > 4%",
+          "✗ 殖利率=4.0% ≤ 4%",
           "✓ 5y均殖利率=4.2% > 3%",
           "✓ 連續23年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=93% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 4.74
       },
       {
         "code": "1216",
@@ -4081,18 +4645,20 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "4904",
         "name_zh": "遠傳",
         "name_en": "Far EasTone Telecommunications Co., Ltd.",
-        "net_amount_10d": 1166799018,
-        "net_amount_10d_k": 1166799,
+        "net_amount_10d": 1150668156,
+        "net_amount_10d_k": 1150668,
         "net_shares_10d": 10753908,
         "net_shares_10d_zhang": 10754,
         "last_date": "2026-05-29",
-        "cur_price": 108.5,
+        "cur_price": 107.0,
         "g_score": 100.0,
         "l_score": 83.3,
         "regression_z": -0.46,
@@ -4101,21 +4667,23 @@
         "first_date": "2026-05-29",
         "cheap_score": 16.7,
         "cheap_detail": [
-          "✗ PE=28.6 ≥ 15",
+          "✗ PE=28.2 ≥ 15",
           "✗ PB=4.08 ≥ 1.5",
           "✗ 股價在52週低點85% (≥ 50%)",
           "✗ Z=2.79 ≥ -0.5",
-          "✗ 殖利率=3.6% ≤ 4%",
+          "✗ 殖利率=3.5% ≤ 4%",
           "✓ 5y均殖利率=4.2% > 3%"
         ],
         "dividend_score": 60.0,
         "dividend_detail": [
-          "✗ 殖利率=3.6% ≤ 4%",
+          "✗ 殖利率=3.5% ≤ 4%",
           "✓ 5y均殖利率=4.2% > 3%",
           "✓ 連續20年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=94% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 3.81
       },
       {
         "code": "2633",
@@ -4149,41 +4717,47 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "3015",
         "name_zh": "全漢",
         "name_en": "FSP Technology Inc.",
-        "net_amount_10d": 36932486,
-        "net_amount_10d_k": 36932,
+        "net_amount_10d": 36027278,
+        "net_amount_10d_k": 36027,
         "net_shares_10d": 603472,
         "net_shares_10d_zhang": 603,
         "last_date": "2026-05-29",
-        "cur_price": 61.2,
+        "cur_price": 59.7,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -1.82,
+        "regression_z": -0.09,
         "rank": 93,
         "screening_date": "2026-05-29",
         "first_date": "2026-05-26",
+        "first_price": 52.2,
+        "change_pct": 14.37,
         "cheap_score": 33.3,
         "cheap_detail": [
-          "✗ PE=33.1 ≥ 15",
+          "✗ PE=33.8 ≥ 15",
           "✓ PB=0.97 < 1.5",
           "✗ 股價在52週低點62% (≥ 50%)",
           "✗ Z=0.15 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.6% ≤ 4%",
           "✓ 5y均殖利率=6.7% > 3%"
         ],
         "dividend_score": 60.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.6% ≤ 4%",
           "✓ 5y均殖利率=6.7% > 3%",
           "✓ 連續24年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=162% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-16",
+        "dividend_per_share": 2.2
       },
       {
         "code": "2610",
@@ -4207,17 +4781,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       }
     ],
     "2026-05-27": [
@@ -4253,7 +4829,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "1216",
@@ -4287,7 +4865,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "2633",
@@ -4321,7 +4901,9 @@
           "✓ 連續10年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=90% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-14",
+        "dividend_per_share": 1.15
       },
       {
         "code": "3015",
@@ -4341,21 +4923,23 @@
         "first_date": "2026-05-26",
         "cheap_score": 33.3,
         "cheap_detail": [
-          "✗ PE=33.1 ≥ 15",
+          "✗ PE=33.8 ≥ 15",
           "✓ PB=0.97 < 1.5",
           "✗ 股價在52週低點62% (≥ 50%)",
           "✗ Z=0.15 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.6% ≤ 4%",
           "✓ 5y均殖利率=6.7% > 3%"
         ],
         "dividend_score": 60.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.6% ≤ 4%",
           "✓ 5y均殖利率=6.7% > 3%",
           "✓ 連續24年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=162% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-16",
+        "dividend_per_share": 2.2
       },
       {
         "code": "2377",
@@ -4366,7 +4950,7 @@
         "net_shares_10d": 0,
         "net_shares_10d_zhang": 0,
         "last_date": "2026-05-27",
-        "cur_price": 133.5,
+        "cur_price": 131.5,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -0.13,
@@ -4389,7 +4973,9 @@
           "✓ 連續25年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=74% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2025-08-25",
+        "dividend_per_share": 5.0
       },
       {
         "code": "2610",
@@ -4413,17 +4999,19 @@
           "✓ PB=1.44 < 1.5",
           "✗ 股價在52週低點92% (≥ 50%)",
           "✗ Z=1.27 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%"
         ],
         "dividend_score": 40.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.4% ≤ 4%",
           "✗ 5y均殖利率=2.5% ≤ 3%",
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=33% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-10",
+        "dividend_per_share": 0.81
       },
       {
         "code": "2548",
@@ -4434,7 +5022,7 @@
         "net_shares_10d": 0,
         "net_shares_10d_zhang": 0,
         "last_date": "2026-05-25",
-        "cur_price": 103.0,
+        "cur_price": 102.5,
         "g_score": 100.0,
         "l_score": 83.3,
         "regression_z": -0.1,
@@ -4447,17 +5035,19 @@
           "✗ PB=1.60 ≥ 1.5",
           "✓ 股價在52週低點24% (< 50%)",
           "✓ Z=-1.10 < -0.5",
-          "✓ 殖利率=7.9% > 4%",
+          "✓ 殖利率=7.8% > 4%",
           "✓ 5y均殖利率=7.0% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=7.9% > 4%",
+          "✓ 殖利率=7.8% > 4%",
           "✓ 5y均殖利率=7.0% > 3%",
           "✓ 連續24年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=63% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-02",
+        "dividend_per_share": 8.0
       }
     ],
     "2026-05-26": [
@@ -4493,7 +5083,9 @@
           "✗ 連續4年發股息 (< 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=50% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 2.0
       },
       {
         "code": "1216",
@@ -4527,7 +5119,9 @@
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=87% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-30",
+        "dividend_per_share": 3.0
       },
       {
         "code": "3015",
@@ -4547,57 +5141,59 @@
         "first_date": "2026-05-26",
         "cheap_score": 33.3,
         "cheap_detail": [
-          "✗ PE=33.1 ≥ 15",
+          "✗ PE=33.8 ≥ 15",
           "✓ PB=0.97 < 1.5",
           "✗ 股價在52週低點62% (≥ 50%)",
           "✗ Z=0.15 ≥ -0.5",
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.6% ≤ 4%",
           "✓ 5y均殖利率=6.7% > 3%"
         ],
         "dividend_score": 60.0,
         "dividend_detail": [
-          "✗ 殖利率=3.5% ≤ 4%",
+          "✗ 殖利率=3.6% ≤ 4%",
           "✓ 5y均殖利率=6.7% > 3%",
           "✓ 連續24年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✗ 配息率=162% 不在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-16",
+        "dividend_per_share": 2.2
       },
       {
         "code": "1229",
         "name_zh": "聯華",
         "name_en": "Lien Hwa Industrial Holdings Corporation",
-        "net_amount_10d": 3334100,
-        "net_amount_10d_k": 3334,
+        "net_amount_10d": 3268650,
+        "net_amount_10d_k": 3269,
         "net_shares_10d": 77000,
         "net_shares_10d_zhang": 77,
         "last_date": "2026-05-26",
-        "cur_price": 43.3,
+        "cur_price": 42.45,
         "g_score": 80.0,
         "l_score": 83.3,
-        "regression_z": -0.62,
+        "regression_z": -1.39,
         "rank": 100,
         "screening_date": "2026-05-26",
         "first_date": "2026-05-26",
-        "first_price": 39.9,
-        "change_pct": 8.52,
         "cheap_score": 83.3,
         "cheap_detail": [
           "✗ PE=16.8 ≥ 15",
           "✓ PB=1.39 < 1.5",
           "✓ 股價在52週低點40% (< 50%)",
           "✓ Z=-0.62 < -0.5",
-          "✓ 殖利率=4.3% > 4%",
+          "✓ 殖利率=4.2% > 4%",
           "✓ 5y均殖利率=3.9% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=4.3% > 4%",
+          "✓ 殖利率=4.2% > 4%",
           "✓ 5y均殖利率=3.9% > 3%",
           "✓ 連續26年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=51% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-07-08",
+        "dividend_per_share": 1.8
       },
       {
         "code": "2377",
@@ -4631,7 +5227,9 @@
           "✓ 連續25年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=74% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2025-08-25",
+        "dividend_per_share": 5.0
       },
       {
         "code": "2548",
@@ -4655,17 +5253,19 @@
           "✗ PB=1.60 ≥ 1.5",
           "✓ 股價在52週低點24% (< 50%)",
           "✓ Z=-1.10 < -0.5",
-          "✓ 殖利率=7.9% > 4%",
+          "✓ 殖利率=7.8% > 4%",
           "✓ 5y均殖利率=7.0% > 3%"
         ],
         "dividend_score": 100.0,
         "dividend_detail": [
-          "✓ 殖利率=7.9% > 4%",
+          "✓ 殖利率=7.8% > 4%",
           "✓ 5y均殖利率=7.0% > 3%",
           "✓ 連續24年發股息 (≥ 5)",
           "✓ 近3年股利穩定 (無減>30%)",
           "✓ 配息率=63% 在30-90%"
-        ]
+        ],
+        "ex_dividend_date": "2026-06-02",
+        "dividend_per_share": 8.0
       }
     ]
   }

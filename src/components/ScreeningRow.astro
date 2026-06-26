@@ -22,6 +22,8 @@ export interface ScreeningEntry {
   regression_z: number;
   rank: number;
   screening_date: string;
+  ex_dividend_date?: string | null;
+  dividend_per_share?: number | null;
 }
 
 interface Props {
@@ -49,6 +51,19 @@ function hasValue(v: number | null | undefined): boolean {
 }
 
 const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
+
+function isFutureDiv(dateStr: string): boolean {
+  if (!dateStr) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(dateStr) > today;
+}
+
+function formatDivDate(dateStr: string): string {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
 ---
 
 <a href={statementUrl} target="_blank" rel="noopener" class:list={["screening-row", "surface", { "is-archive": isArchive }]}>
@@ -118,6 +133,18 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
       <span class="col-label">Z</span>
       <span class="col-value col-muted">{entry.regression_z.toFixed(2)}</span>
     </div>
+
+    {hasValue(entry.dividend_per_share) && (
+      <div class="col col-div">
+        <span class="col-label">配息</span>
+        <span class="col-value">{entry.dividend_per_share!.toFixed(1)} 元</span>
+        {entry.ex_dividend_date && (
+          <span class:list={["col-sub", { "div-future": isFutureDiv(entry.ex_dividend_date) }]}>
+            除息 {formatDivDate(entry.ex_dividend_date)}
+          </span>
+        )}
+      </div>
+    )}
   </div>
 </a>
 
@@ -215,6 +242,16 @@ const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
 .col-date { min-width: 85px; }
 .col-price-block { min-width: 118px; }
 .col-z { min-width: 44px; }
+
+.col-div { min-width: 72px; }
+.col-div .col-value {
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+.col-div .div-future {
+  color: var(--color-accent, #c96442);
+  font-weight: 700;
+}
 
 /* ── Price tracking block ── */
 .price-track {
