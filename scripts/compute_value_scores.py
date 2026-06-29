@@ -9,12 +9,12 @@ No scraping. Uses yfinance info + dividend history + 3.5yr regression.
   2. PB < 1.5 (price-to-book low)
   3. Price in lower 50% of 52-week range
   4. Z < -0.5 (below 樂活五線譜 trend)
-  5. Dividend yield > 4%
-  6. 5yr avg dividend yield > 3%
+  5. Dividend yield > 6%
+  6. 5yr avg dividend yield > 6%
 
 定存股 (5 indicators, each 1pt):
-  1. Dividend yield > 4%
-  2. 5yr avg dividend yield > 3%
+  1. Dividend yield > 6%
+  2. 5yr avg dividend yield > 6%
   3. 5+ consecutive years of dividends
   4. Dividend stable (no cut >30% in last 3 years)
   5. Payout ratio 30-90% (from yfinance, may be unreliable)
@@ -166,25 +166,25 @@ def compute_scores(code: str) -> dict | None:
     else:
         cheap_detail.append("✗ Z計算失敗")
     
-    # 5. Dividend yield > 4%
+    # 5. Dividend yield > 6%
     div_yield = compute_dividend_yield(code, info, dividends, price)
     if div_yield is not None:
-        if div_yield > 4:
+        if div_yield > 6:
             cheap_checks += 1
-            cheap_detail.append(f"✓ 殖利率={div_yield:.1f}% > 4%")
+            cheap_detail.append(f"✓ 殖利率={div_yield:.1f}% > 6%")
         else:
-            cheap_detail.append(f"✗ 殖利率={div_yield:.1f}% ≤ 4%")
+            cheap_detail.append(f"✗ 殖利率={div_yield:.1f}% ≤ 6%")
     else:
         cheap_detail.append("✗ 殖利率不足")
     
-    # 6. 5yr avg dividend yield > 3%
+    # 6. 5yr avg dividend yield > 6%
     avg5 = compute_5yr_avg_yield(code, info, dividends, price)
     if avg5 is not None:
-        if avg5 > 3:
+        if avg5 > 6:
             cheap_checks += 1
-            cheap_detail.append(f"✓ 5y均殖利率={avg5:.1f}% > 3%")
+            cheap_detail.append(f"✓ 5y均殖利率={avg5:.1f}% > 6%")
         else:
-            cheap_detail.append(f"✗ 5y均殖利率={avg5:.1f}% ≤ 3%")
+            cheap_detail.append(f"✗ 5y均殖利率={avg5:.1f}% ≤ 6%")
     else:
         cheap_detail.append("✗ 5y均殖利率不足")
     
@@ -194,23 +194,23 @@ def compute_scores(code: str) -> dict | None:
     div_checks = 0
     div_detail = []
     
-    # 1. Dividend yield > 4%
+    # 1. Dividend yield > 6%
     if div_yield is not None:
-        if div_yield > 4:
+        if div_yield > 6:
             div_checks += 1
-            div_detail.append(f"✓ 殖利率={div_yield:.1f}% > 4%")
+            div_detail.append(f"✓ 殖利率={div_yield:.1f}% > 6%")
         else:
-            div_detail.append(f"✗ 殖利率={div_yield:.1f}% ≤ 4%")
+            div_detail.append(f"✗ 殖利率={div_yield:.1f}% ≤ 6%")
     else:
         div_detail.append("✗ 殖利率不足")
     
-    # 2. 5yr avg > 3%
+    # 2. 5yr avg > 6%
     if avg5 is not None:
-        if avg5 > 3:
+        if avg5 > 6:
             div_checks += 1
-            div_detail.append(f"✓ 5y均殖利率={avg5:.1f}% > 3%")
+            div_detail.append(f"✓ 5y均殖利率={avg5:.1f}% > 6%")
         else:
-            div_detail.append(f"✗ 5y均殖利率={avg5:.1f}% ≤ 3%")
+            div_detail.append(f"✗ 5y均殖利率={avg5:.1f}% ≤ 6%")
     else:
         div_detail.append("✗ 5y均殖利率不足")
     
