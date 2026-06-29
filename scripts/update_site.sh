@@ -44,19 +44,20 @@ fi
 
 if $DO_DEPLOY; then
     echo ""
-    echo "=== Step 5: Deploy to gh-pages ==="
-    DEPLOY_DIR=$(mktemp -d)
-    cp -r dist/* "$DEPLOY_DIR/"
-    echo ".nojekyll" > "$DEPLOY_DIR/.nojekyll"
-    cd "$DEPLOY_DIR"
-    git init -q
-    git checkout -b gh-pages
-    git add -A
-    git commit -q -m "deploy: $(date +%Y%m%d-%H%M)"
-    git push https://github.com/pingpongtech-uskg/stock-web-pages.git gh-pages --force -q
-    cd /root/stock-web-pages
-    rm -rf "$DEPLOY_DIR"
-    echo "Deployed to gh-pages."
+    echo "=== Step 5: Deploy to Cloudflare Pages (production) ==="
+    python3 << 'PYEOF'
+import subprocess, os
+r = subprocess.run(["infisical","secrets","get","Cloudflare_TOKEN","--env","dev","--silent","--plain"], capture_output=True, text=True)
+env = os.environ.copy()
+env["CLOUDFLARE_API_TOKEN"] = r.stdout.strip()
+result = subprocess.run(
+    ["npx","wrangler","pages","deploy","dist","--project-name","stock-web-pages","--branch","main","--commit-dirty=true"],
+    cwd="/root/stock-web-pages", env=env, capture_output=True, text=True, timeout=120
+)
+print(result.stdout)
+if result.stderr: print(result.stderr[-200:])
+PYEOF
+    echo "Deployed to Cloudflare Pages."
 fi
 
 echo ""
