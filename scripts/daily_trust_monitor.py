@@ -298,30 +298,39 @@ def score_stock(code, api):
             cx = float(cfp[d].get('PropertyPlantAndEquipment',0) or 0)
             afcf[y] = afcf.get(y,0) + cfo - abs(cx)
             qc[y] = qc.get(y,0) + 1
-        fcfv = [v for y,v in afcf.items() if qc.get(y,0) >= 3]
+        # 取最近 5 年
+        years = sorted(afcf.keys(), reverse=True)[:5]
+        fcfv = [afcf[y] for y in years if qc.get(y, 0) >= 3]
         if len(fcfv) >= 3:
             if sum(1 for v in fcfv if v > 0) >= 3:
-                result['l'][0] = True; ld.append('✅ 近3年FCF皆正')
-            if sum(fcfv)/len(fcfv) > 0:
-                result['l'][1] = True; ld.append('✅ 平均FCF為正')
+                result['l'][0] = True; ld.append('✅ 近5年3年FCF>0')
+            if sum(fcfv) / len(fcfv) > 0:
+                result['l'][1] = True; ld.append('✅ 近5年平均FCF>0')
         if fin is not None:
             fp = defaultdict(dict)
             for _, r in fin.iterrows():
                 fp[r['date']][r['type']] = r['value']
-            pairs = []
+            # 合併到年：每年 CFO/NI 取加權平均（用 NI 加權）
+            cy_pairs = defaultdict(list)
             for d in cfd:
                 if d in fp:
                     try:
-                        cfo = float(cfp[d].get('CashFlowsFromOperatingActivities',0) or 0)
-                        ni = float(fp[d].get('IncomeAfterTaxes',0) or 0)
-                        if ni > 0: pairs.append(cfo/ni*100)
-                    except: pass
-            if len(pairs) >= 3:
-                ok = sum(1 for r in pairs if r > 100)
-                if ok >= 3:
-                    result['l'][2] = True; ld.append('✅ CFO/NI比>100%')
-                if sum(pairs)/len(pairs) > 100:
-                    result['l'][3] = True; ld.append('✅ 平均CFO/NI>100%')
+                        cfo = float(cfp[d].get('CashFlowsFromOperatingActivities', 0) or 0)
+                        ni = float(fp[d].get('IncomeAfterTaxes', 0) or 0)
+                        if ni > 0:
+                            cy_pairs[d[:4]].append(cfo / ni * 100)
+                    except:
+                        pass
+            # 每年取平均，最近 5 年
+            yr_ratios = [(y, sum(vals) / len(vals)) for y, vals in sorted(cy_pairs.items(), reverse=True)[:5] if vals]
+            if len(yr_ratios) >= 3:
+                ok_years = sum(1 for _, r in yr_ratios if r > 100)
+                if ok_years >= 3:
+                    result['l'][2] = True
+                    ld.append('✅ 近5年3年CFO/NI>100%')
+                if sum(r for _, r in yr_ratios) / len(yr_ratios) > 100:
+                    result['l'][3] = True
+                    ld.append('✅ 近5年平均CFO/NI>100%')
     
     # L5-L6: AR & Inventory turnover (需 balance sheet)
     bs = ff('taiwan_stock_balance_sheet', stock_id=code, start_date='2019-01-01')
