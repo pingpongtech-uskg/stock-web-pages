@@ -142,7 +142,7 @@ def _call_finmind(method_name, token, *args, **kwargs):
     Rotates tokens between retries.
     Returns None if all retries fail.
     """
-    for attempt in range(3):
+    for attempt in range(2):
         try:
             _finmind_rate_limit()
             from FinMind.data import DataLoader
@@ -155,10 +155,10 @@ def _call_finmind(method_name, token, *args, **kwargs):
             if ("Requests reach the upper limit" in err_str
                     or "rate limit" in err_str.lower()
                     or "429" in err_str):
-                if attempt < 2:
-                    wait = [5, 10, 20][attempt]
-                    print(f"    FinMind rate-limited (attempt {attempt+1}/3), "
-                          f"waiting {wait}s + rotating token...", file=sys.stderr)
+                if attempt < 1:
+                    wait = 5
+                    print(f"    FinMind rate-limited, waiting {wait}s + rotating token...",
+                          file=sys.stderr)
                     time.sleep(wait)
                     token = _load_finmind_token()
                     if not token:
@@ -169,35 +169,41 @@ def _call_finmind(method_name, token, *args, **kwargs):
 
 
 def _compute_payout_ratios(code: str) -> dict | None:
-    """Compute annual payout ratios (股息發放率) for last 5 years using FinMind.
+    """Compute annual payout ratios (股息發放率) for last 5 years.
+
+    Primary: FinMind. Falls back to yfinance-based estimates when FinMind
+    is rate-limited or unavailable.
 
     Returns: {year: payout_ratio_pct, ...} or None if insufficient data.
     """
+    result = _compute_payout_ratios_finmind(code)
+    if result is not None:
+        return result
+    return _compute_payout_ratios_yfinance(code)
+
+
+def _compute_payout_ratios_finmind(code: str) -> dict | None:
+    """Compute payout ratios via FinMind (with retry/backoff + token rotation)."""
     token = _load_finmind_token()
     if not token:
         return None
 
     try:
-        # Get per-share dividends with retry/backoff
         div_df = _call_finmind(
             "taiwan_stock_dividend", token,
             stock_id=code, start_date='2018-01-01'
         )
         if div_df is None or len(div_df) == 0:
-            print(f"  {code}: FinMind dividend data unavailable", file=sys.stderr)
             return None
 
         # Parse dividend years: sum CashEarningsDistribution + CashStatutorySurplus per year
-        # FinMind uses ROC year format (e.g. '106年' = 2017)
         yearly_div_per_share = {}
         for _, row in div_df.iterrows():
             try:
                 year_str = str(row.get('year', ''))
-                # Parse ROC year: '106年' → 2017
                 if '年' in year_str:
                     year = 1911 + int(year_str.replace('年', ''))
                 else:
-                    # Fallback: use date column
                     year = int(str(row['date'])[:4])
                 cash = float(row.get('CashEarningsDistribution', 0) or 0) + float(row.get('CashStatutorySurplus', 0) or 0)
                 yearly_div_per_share[year] = yearly_div_per_share.get(year, 0) + cash
@@ -207,17 +213,14 @@ def _compute_payout_ratios(code: str) -> dict | None:
         if not yearly_div_per_share:
             return None
 
-        # Get financial statements for Net Income with retry/backoff
         fin_df = _call_finmind(
             "taiwan_stock_financial_statement", token,
             stock_id=code,
             start_date=f'{min(yearly_div_per_share.keys())-1}-01-01'
         )
         if fin_df is None or len(fin_df) == 0:
-            print(f"  {code}: FinMind financial statement unavailable", file=sys.stderr)
             return None
 
-        # Aggregate quarterly Net Income to yearly
         yearly_ni = {}
         for _, row in fin_df.iterrows():
             try:
@@ -227,7 +230,7 @@ def _compute_payout_ratios(code: str) -> dict | None:
             except Exception:
                 pass
 
-        # Get shares outstanding via yfinance
+        # Shares outstanding from yfinance
         shares = None
         try:
             import yfinance as yf
@@ -240,20 +243,8 @@ def _compute_payout_ratios(code: str) -> dict | None:
             pass
 
         if shares is None or shares <= 0:
-            # Fallback: try FinMind stock info
-            try:
-                info_df = _call_finmind("taiwan_stock_info", token, timeout=30)
-                if info_df is not None:
-                    for _, row in info_df.iterrows():
-                        if str(row.get('stock_id', '')).strip() == code:
-                            # Try to get shares outstanding from info
-                            pass
-            except Exception:
-                pass
-            if shares is None or shares <= 0:
-                return None
+            return None
 
-        # Compute EPS = Net Income / Shares per year
         payout_ratios = {}
         for year in sorted(set(list(yearly_div_per_share.keys()) + list(yearly_ni.keys()))):
             ni = yearly_ni.get(year, 0)
@@ -267,6 +258,64 @@ def _compute_payout_ratios(code: str) -> dict | None:
 
     except Exception as e:
         print(f"  FinMind payout ratio failed for {code}: {e}", file=sys.stderr)
+        return None
+
+
+def _compute_payout_ratios_yfinance(code: str) -> dict | None:
+    """Compute payout ratios via yfinance as fallback.
+
+    Uses yfinance dividends per year and trailing EPS.
+    Falls back to yfinance payoutRatio field for single-year estimate.
+    """
+    try:
+        import yfinance as yf
+        tk = None
+        for ext in ['.TW', '.TWO']:
+            tk = yf.Ticker(f'{code}{ext}')
+            divs = tk.dividends
+            if len(divs) > 0:
+                break
+
+        if tk is None or len(divs) == 0:
+            return None
+
+        # Get trailing EPS
+        eps = tk.info.get('trailingEps') or tk.info.get('earningsPerShare')
+
+        # Group dividends by year
+        this_year = datetime.now().year
+        yearly_div = {}
+        for d, amt in divs.items():
+            y = d.year
+            if y < this_year:
+                yearly_div[y] = yearly_div.get(y, 0) + float(amt)
+
+        if len(yearly_div) >= 3 and eps and eps > 0:
+            # Per-year payout ratio using trailing EPS as approximation
+            payout_ratios = {}
+            for y in sorted(yearly_div.keys())[-5:]:
+                div_per_share = yearly_div[y]
+                if div_per_share > 0 and eps > 0:
+                    payout_ratios[y] = round(div_per_share / eps * 100, 1)
+            if len(payout_ratios) >= 3:
+                return payout_ratios
+
+        # Last resort: use yfinance payoutRatio field
+        pr = tk.info.get('payoutRatio')
+        if pr and 0 < pr < 2:
+            # Replicate it across recent years with dividends
+            payout_ratios = {}
+            for y in sorted(yearly_div.keys())[-5:]:
+                payout_ratios[y] = round(pr * 100, 1)
+            if len(payout_ratios) >= 3:
+                print(f"  {code}: using yfinance payoutRatio={pr*100:.0f}% as fallback",
+                      file=sys.stderr)
+                return payout_ratios
+
+        return None
+
+    except Exception as e:
+        print(f"  yfinance payout ratio failed for {code}: {e}", file=sys.stderr)
         return None
 
 
@@ -359,6 +408,7 @@ def _get_quarterly_pe_pb_history(code: str):
     """Compute quarterly PE and PB values from FinMind + yfinance (5yr history).
 
     Falls back to yfinance-based simple PE/PB when FinMind data is unavailable.
+    FinMind is tried once (no heavy retry) — yfinance fallback is the primary path.
 
     Returns: (pe_values: list[float], pb_values: list[float], current_pe: float, current_pb: float)
     """
@@ -383,76 +433,76 @@ def _get_quarterly_pe_pb_history(code: str):
     for d in hist['Close'].index:
         price_dict[d.strftime('%Y-%m-%d')] = float(hist['Close'].loc[d])
 
+    # Try FinMind once (rate-limited calls fall through to yfinance fallback)
     token = _load_finmind_token()
-
-    if token:
+    if token and shares > 0:
         try:
-            # Get quarterly financials with retry/backoff
-            fin = _call_finmind(
-                "taiwan_stock_financial_statement", token,
+            _finmind_rate_limit()
+            from FinMind.data import DataLoader
+            api = DataLoader()
+            api.login_by_token(api_token=token)
+
+            fin = api.taiwan_stock_financial_statement(
                 stock_id=code, start_date='2019-01-01'
             )
-            bs = _call_finmind(
-                "taiwan_stock_balance_sheet", token,
-                stock_id=code, start_date='2019-01-01'
-            )
+            if fin is not None and len(fin) > 0:
+                _finmind_rate_limit()
+                api2 = DataLoader()
+                api2.login_by_token(api_token=_load_finmind_token())
+                bs = api2.taiwan_stock_balance_sheet(
+                    stock_id=code, start_date='2019-01-01'
+                )
 
-            if fin is not None and bs is not None:
-                # EPS from Net Income
-                from collections import defaultdict as dd
-                quarterly_ni = dd(float)
-                for _, row in fin.iterrows():
-                    if row['type'] == 'IncomeAfterTaxes':
-                        quarterly_ni[row['date']] += float(row['value'])
+                if bs is not None and len(bs) > 0:
+                    # EPS from Net Income
+                    from collections import defaultdict as dd
+                    quarterly_ni = dd(float)
+                    for _, row in fin.iterrows():
+                        if row['type'] == 'IncomeAfterTaxes':
+                            quarterly_ni[row['date']] += float(row['value'])
 
-                # Book Value from Equity
-                quarterly_bv = {}
-                for _, row in bs.iterrows():
-                    if row['type'] == 'Equity':
-                        quarterly_bv[row['date']] = float(row['value'])
+                    # Book Value from Equity
+                    quarterly_bv = {}
+                    for _, row in bs.iterrows():
+                        if row['type'] == 'Equity':
+                            quarterly_bv[row['date']] = float(row['value'])
 
-                # Compute PE per quarter (TTM)
-                ni_dates = sorted(quarterly_ni.keys())
-                pe_values = []
-                for i, d in enumerate(ni_dates):
-                    ttm_ni = sum(quarterly_ni[ni_dates[j]] for j in range(max(0, i-3), i+1))
-                    ttm_eps = ttm_ni / shares if shares > 0 else 0
-                    if ttm_eps <= 0:
-                        continue
-                    price = _find_nearest_price(price_dict, d)
-                    if price:
-                        pe_values.append(price / ttm_eps)
+                    # Compute PE per quarter (TTM)
+                    ni_dates = sorted(quarterly_ni.keys())
+                    pe_values = []
+                    for i, d in enumerate(ni_dates):
+                        ttm_ni = sum(quarterly_ni[ni_dates[j]] for j in range(max(0, i-3), i+1))
+                        ttm_eps = ttm_ni / shares
+                        if ttm_eps <= 0:
+                            continue
+                        price = _find_nearest_price(price_dict, d)
+                        if price:
+                            pe_values.append(price / ttm_eps)
 
-                # Compute PB per quarter
-                bv_dates = sorted(quarterly_bv.keys())
-                pb_values = []
-                for d in bv_dates:
-                    bv = quarterly_bv[d]
-                    bvps = bv / shares if shares > 0 else 0
-                    if bvps <= 0:
-                        continue
-                    price = _find_nearest_price(price_dict, d)
-                    if price:
-                        pb_values.append(price / bvps)
+                    # Compute PB per quarter
+                    bv_dates = sorted(quarterly_bv.keys())
+                    pb_values = []
+                    for d in bv_dates:
+                        bv = quarterly_bv[d]
+                        bvps = bv / shares
+                        if bvps <= 0:
+                            continue
+                        price = _find_nearest_price(price_dict, d)
+                        if price:
+                            pb_values.append(price / bvps)
 
-                if pe_values or pb_values:
-                    return (pe_values if pe_values else None,
-                            pb_values if pb_values else None,
-                            current_pe, current_pb)
-
-        except Exception as e:
-            print(f"  {code}: FinMind historical data failed ({e}), falling back to yfinance PE/PB",
-                  file=sys.stderr)
+                    if pe_values or pb_values:
+                        return (pe_values if pe_values else None,
+                                pb_values if pb_values else None,
+                                current_pe, current_pb)
+        except Exception:
+            pass
 
     # ── yfinance fallback: use simple thresholds when FinMind unavailable ──
-    print(f"  {code}: using yfinance PE/PB fallback", file=sys.stderr)
-    # Generate representative 5yr-like values based on current PE/PB
-    # We return [current_pe * 0.8, current_pe, current_pe * 1.2] as synthetic history
-    # so percentile logic degrades gracefully (current is ~50%ile)
+    # Generate representative 5yr-like values so percentile logic degrades gracefully
     fallback_pe = None
     fallback_pb = None
     if current_pe and current_pe > 0:
-        # Synthetic 5yr range: 80%-120% of current
         fallback_pe = [current_pe * 0.8, current_pe, current_pe * 1.2]
     if current_pb and current_pb > 0:
         fallback_pb = [current_pb * 0.8, current_pb, current_pb * 1.2]
