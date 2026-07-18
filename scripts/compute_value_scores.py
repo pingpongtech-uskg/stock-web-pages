@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-compute_value_scores.py — Compute 便宜 (cheap) and 定存 (dividend) scores from yfinance.
+compute_value_scores.py — Compute 便宜 (cheap) and 定存 (dividend) scores.
 
-No scraping. Uses yfinance info + dividend history + 3.5yr regression.
+Uses yfinance for price/PE/PB/dividends + FinMind for historical payout ratios.
 
 便宜股 (6 indicators, each 1pt):
   1. PE < 15 (trailing PE ratio low)
@@ -12,23 +12,137 @@ No scraping. Uses yfinance info + dividend history + 3.5yr regression.
   5. Dividend yield > 6%
   6. 5yr avg dividend yield > 6%
 
-定存股 (5 indicators, each 1pt):
+定存股 (5 indicators, each 1pt, matching StatementDog):
   1. Dividend yield > 6%
   2. 5yr avg dividend yield > 6%
   3. 5+ consecutive years of dividends
-  4. Dividend stable (no cut >30% in last 3 years)
-  5. Payout ratio 30-90% (from yfinance, may be unreliable)
+  4. 股息發放率五年內有三年大於 50% (payout >50% in 3 of 5 years)
+  5. 股息發放率五年平均大於 50% (avg payout >50% in 5 years)
 
 Output: data/value_scores_cache.json → {code: {cheap_score, cheap_detail, dividend_score, dividend_detail}}
 """
 import json
 import os
 import sys
+import re
 import numpy as np
 from datetime import datetime, timedelta
 
 CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "value_scores_cache.json")
 CACHE_TTL_HOURS = 24
+
+
+# ── FinMind token loading (same pattern as daily_trust_monitor.py) ──
+
+def _load_finmind_token() -> str | None:
+    """Load FinMind token from existing scripts."""
+    src_files = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tw-stock-monitor", "scripts", "download_otc_prices.py"),
+    ]
+    for fp in src_files:
+        if os.path.exists(fp):
+            with open(fp) as f:
+                content = f.read()
+            for m in re.finditer(
+                r"eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", content
+            ):
+                return m.group()
+    return None
+
+
+def _compute_payout_ratios(code: str) -> dict | None:
+    """Compute annual payout ratios (股息發放率) for last 5 years using FinMind.
+    
+    Returns: {year: payout_ratio_pct, ...} or None if insufficient data.
+    """
+    token = _load_finmind_token()
+    if not token:
+        return None
+    
+    try:
+        from FinMind.data import DataLoader
+        api = DataLoader()
+        api.login_by_token(api_token=token)
+        
+        # Get per-share dividends
+        div_df = api.taiwan_stock_dividend(stock_id=code, start_date='2018-01-01')
+        if div_df is None or len(div_df) == 0:
+            return None
+        
+        # Parse dividend years: sum CashEarningsDistribution + CashStatutorySurplus per year
+        # FinMind uses ROC year format (e.g. '106年' = 2017)
+        yearly_div_per_share = {}
+        for _, row in div_df.iterrows():
+            try:
+                year_str = str(row.get('year', ''))
+                # Parse ROC year: '106年' → 2017
+                if '年' in year_str:
+                    year = 1911 + int(year_str.replace('年', ''))
+                else:
+                    # Fallback: use date column
+                    year = int(str(row['date'])[:4])
+                cash = float(row.get('CashEarningsDistribution', 0) or 0) + float(row.get('CashStatutorySurplus', 0) or 0)
+                yearly_div_per_share[year] = yearly_div_per_share.get(year, 0) + cash
+            except:
+                pass
+        
+        if not yearly_div_per_share:
+            return None
+        
+        # Get financial statements for Net Income
+        fin_df = api.taiwan_stock_financial_statement(stock_id=code, start_date=f'{min(yearly_div_per_share.keys())-1}-01-01')
+        if fin_df is None or len(fin_df) == 0:
+            return None
+        
+        # Aggregate quarterly Net Income to yearly
+        yearly_ni = {}
+        for _, row in fin_df.iterrows():
+            try:
+                year = int(row['date'][:4])
+                if row['type'] == 'IncomeAfterTaxes' or row['type'] == 'NetIncome':
+                    yearly_ni[year] = yearly_ni.get(year, 0) + float(row['value'])
+            except:
+                pass
+        
+        # Get shares outstanding
+        info_df = api.taiwan_stock_info(timeout=30)
+        shares = None
+        if info_df is not None:
+            for _, row in info_df.iterrows():
+                if str(row.get('stock_id', '')).strip() == code:
+                    # Try to get current shares outstanding
+                    pass
+        
+        # Fallback: use yfinance for shares
+        if shares is None:
+            try:
+                import yfinance as yf
+                for ext in ['.TW', '.TWO']:
+                    tk = yf.Ticker(f'{code}{ext}')
+                    shares = tk.info.get('sharesOutstanding')
+                    if shares:
+                        break
+            except:
+                pass
+        
+        if shares is None or shares <= 0:
+            return None
+        
+        # Compute EPS = Net Income / Shares per year
+        payout_ratios = {}
+        for year in sorted(set(list(yearly_div_per_share.keys()) + list(yearly_ni.keys()))):
+            ni = yearly_ni.get(year, 0)
+            div = yearly_div_per_share.get(year, 0)
+            if ni > 0 and shares > 0:
+                eps = ni / shares
+                if eps > 0:
+                    payout_ratios[year] = round(div / eps * 100, 1)
+        
+        return payout_ratios if len(payout_ratios) >= 3 else None
+        
+    except Exception as e:
+        print(f"  FinMind payout ratio failed for {code}: {e}", file=sys.stderr)
+        return None
 
 
 def fetch_stock_data(code: str) -> dict | None:
@@ -232,39 +346,32 @@ def compute_scores(code: str) -> dict | None:
     else:
         div_detail.append("✗ 無股利紀錄")
     
-    # 4. Dividend stable in last 3 years (no cut > 30%)
-    if len(dividends) > 0:
-        yearly = {}
-        for d, amt in dividends.items():
-            yearly[d.year] = yearly.get(d.year, 0) + amt
-        recent = sorted(yearly.items())[-3:]
-        if len(recent) >= 3:
-            stable = True
-            for i in range(1, len(recent)):
-                prev = recent[i-1][1]
-                curr = recent[i][1]
-                if prev > 0 and curr < prev * 0.7:  # >30% cut
-                    stable = False
-                    break
-            if stable:
-                div_checks += 1
-                div_detail.append("✓ 近3年股利穩定 (無減>30%)")
-            else:
-                div_detail.append("✗ 近3年股利不穩定")
+    # 4. 股息發放率五年內有三年大於 50% (StatementDog)
+    # 5. 股息發放率五年平均大於 50% (StatementDog)
+    payout_ratios = _compute_payout_ratios(code)
+    if payout_ratios is not None and len(payout_ratios) >= 3:
+        years = sorted(payout_ratios.keys())[-5:]
+        recent_pr = [payout_ratios[y] for y in years]
+        # 3 of 5 years > 50%
+        ok_count = sum(1 for pr in recent_pr if pr > 50)
+        if ok_count >= 3:
+            div_checks += 1
+            div_detail.append(f"✓ 配息率五年有{ok_count}年>50%")
         else:
-            div_detail.append("✗ 股利紀錄<3年")
+            div_detail.append(f"✗ 配息率五年僅{ok_count}年>50% (需≥3)")
+        # Average > 50%
+        avg_pr = sum(recent_pr) / len(recent_pr)
+        if avg_pr > 50:
+            div_checks += 1
+            div_detail.append(f"✓ 配息率五年平均={avg_pr:.0f}% > 50%")
+        else:
+            div_detail.append(f"✗ 配息率五年平均={avg_pr:.0f}% ≤ 50%")
+    elif payout_ratios is not None:
+        div_detail.append(f"✗ 配息率資料不足 ({len(payout_ratios)}年)")
+        div_detail.append(f"✗ 配息率資料不足")
     else:
-        div_detail.append("✗ 無股利紀錄")
-    
-    # 5. Payout ratio check (from yfinance — may be unreliable for TW stocks)
-    payout = info.get("payoutRatio")
-    if payout is not None and 0.3 <= payout <= 0.9:
-        div_checks += 1
-        div_detail.append(f"✓ 配息率={payout*100:.0f}% 在30-90%")
-    elif payout is not None:
-        div_detail.append(f"✗ 配息率={payout*100:.0f}% 不在30-90%")
-    else:
-        div_detail.append("— 配息率: 無資料 (yfinance TW限制)")
+        div_detail.append("— 配息率: FinMind資料不足")
+        div_detail.append("— 配息率: FinMind資料不足")
     
     dividend_score = round(div_checks / 5 * 100, 1)
     
