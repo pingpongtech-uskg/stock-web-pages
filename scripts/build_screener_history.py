@@ -381,8 +381,15 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             entry["net_amount_10d"] = round(corrected_shares * cur_p)
             entry["net_amount_10d_k"] = round(corrected_shares * cur_p / 1000)
 
-        # 最初上榜股價 & 漲跌幅
-        first_p = first_price_map.get(code, entry.get("cur_price", 0))
+        # 最初上榜股價 & 漲跌幅 — use capped first_date price
+        first_p = None
+        # Find price on the (possibly capped) first_date
+        for e in all_entries:
+            if e["code"] == code and e["screening_date"] == first_date:
+                first_p = e.get("cur_price", 0)
+                break
+        if first_p is None:
+            first_p = first_price_map.get(code, entry.get("cur_price", 0))
         cur_p = entry.get("cur_price", 0)
         entry["first_price"] = first_p
         if first_p and first_p > 0 and cur_p:
