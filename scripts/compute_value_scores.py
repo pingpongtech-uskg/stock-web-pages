@@ -30,6 +30,7 @@ from datetime import datetime, timedelta
 
 CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "value_scores_cache.json")
 CACHE_TTL_HOURS = 24
+CACHE_VERSION = 2  # Increment when scoring logic changes to force cache invalidation
 
 
 # ── FinMind token loading (same pattern as daily_trust_monitor.py) ──
@@ -581,12 +582,16 @@ def compute_scores(code: str) -> dict | None:
 
 
 def load_cache() -> dict:
-    """Load existing cache, return {} if expired or missing."""
+    """Load existing cache, return {} if expired, version mismatch, or missing."""
     if not os.path.exists(CACHE_FILE):
         return {}
     try:
         with open(CACHE_FILE, encoding="utf-8") as f:
             cache = json.load(f)
+        # Check version — force invalidation on scoring logic change
+        if cache.get("_version") != CACHE_VERSION:
+            print(f"  Cache version mismatch ({cache.get('_version')} → {CACHE_VERSION}), invalidating...", file=sys.stderr)
+            return {}
         # Check TTL
         updated = cache.get("_updated_at", "")
         if updated:
@@ -600,6 +605,7 @@ def load_cache() -> dict:
 
 def save_cache(cache: dict):
     """Save cache to file."""
+    cache["_version"] = CACHE_VERSION
     cache["_updated_at"] = datetime.now().isoformat()
     os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
