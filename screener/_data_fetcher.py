@@ -75,6 +75,30 @@ BS_FIELD_MAP = {
 }
 
 
+def _merge_dfs(qdf, adf, code):
+    """Merge quarterly and annual DataFrames, deduplicating by date+type.
+
+    Quarterly data (recent granular) + annual data (older history) combined
+    gives maximum time coverage for scoring modules.
+
+    When same date+type appears in both (e.g. Q4 = year-end), the quarterly
+    value is kept (first in combined, finer granularity).
+    """
+    if qdf is None and adf is None:
+        return None
+    if qdf is None:
+        return adf
+    if adf is None:
+        return qdf
+
+    combined = pd.concat([qdf, adf], ignore_index=True)
+    combined = combined.drop_duplicates(
+        subset=['date', 'stock_id', 'type'], keep='first'
+    )
+    combined = combined.sort_values('date').reset_index(drop=True)
+    return combined
+
+
 def _yf_ticker(code):
     """Get yfinance Ticker with proper suffix"""
     suffix = '.TW'  # TWSE default
@@ -113,30 +137,35 @@ def _yf_to_df(yf_data, field_map, stock_id=''):
 
 
 def yf_financials(code):
-    """yfinance 損益表（季度優先，年度備援）"""
+    """yfinance 損益表（季度+年度合併，最大化歷史長度）"""
     try:
         ticker = _yf_ticker(code)
         if ticker is None:
             return None
+        # Primary: quarterly financials (granular, recent quarters)
         q = ticker.quarterly_financials
-        if q is not None and not q.empty:
-            df = _yf_to_df(q, FIN_FIELD_MAP, code)
-            if df is not None and len(df) >= 10:
-                return df
+        qdf = _yf_to_df(q, FIN_FIELD_MAP, code) if q is not None and not q.empty else None
+        # Supplementary: annual financials for older years (deeper history)
         a = ticker.financials
-        return _yf_to_df(a, FIN_FIELD_MAP, code)
+        adf = _yf_to_df(a, FIN_FIELD_MAP, code) if a is not None and not a.empty else None
+        return _merge_dfs(qdf, adf, code)
     except:
         return None
 
 
 def yf_cashflow(code):
-    """yfinance 現金流量表"""
+    """yfinance 現金流量表（季度優先，年度補充以延長歷史）"""
     try:
         ticker = _yf_ticker(code)
         if ticker is None:
             return None
-        cf = ticker.cashflow
-        return _yf_to_df(cf, CF_FIELD_MAP, code)
+        # Primary: quarterly cash flow (granular, dates match financials)
+        qcf = ticker.quarterly_cashflow
+        qdf = _yf_to_df(qcf, CF_FIELD_MAP, code) if qcf is not None and not qcf.empty else None
+        # Supplementary: annual cash flow for older data
+        acf = ticker.cashflow
+        adf = _yf_to_df(acf, CF_FIELD_MAP, code) if acf is not None and not acf.empty else None
+        return _merge_dfs(qdf, adf, code)
     except:
         return None
 
@@ -223,9 +252,13 @@ def fm_sg(api, func, stock_id, **kw):
 
 def fetch_data(stock_id, data_type, finmind_api=None, **kw):
     """
-    統一資料擷取：yfinance 主力 → FinMind 備援
+    統一資料擷取：雙源合併（yfinance 近期詳細 + FinMind 深層歷史）
     data_type: 'month_revenue' | 'financial_statement' | 'cash_flow' | 'balance_sheet' | 'dividend'
     回傳格式相容 FinMind DataFrame
+
+    策略：對 financial_statement / cash_flow / balance_sheet，
+    同時請求 yfinance（近期季度資料）與 FinMind（5年以上歷史），
+    合併去重後回傳，最大化時間覆蓋範圍。
     """
     now = datetime.now()
     
@@ -259,15 +292,13 @@ def fetch_data(stock_id, data_type, finmind_api=None, **kw):
         pass
     
     if data_type != 'month_revenue':
-        # 有 FinMind 備援時嚴格檢查，無備援時直接接受 yfinance
         age_limits = {'financial_statement': 100, 'cash_flow': 365, 'balance_sheet': 365, 'dividend': 365}
         age_limit = age_limits.get(data_type, 100)
         yf_ok = yf_data is not None and _yf_recent_enough(yf_data, min_points=3, max_age_days=age_limit)
-        
-        if yf_ok:
-            return yf_data
-        # yfinance 不夠新 → 試 FinMind
-        if finmind_api is not None:
+
+        # 試 FinMind（有深層歷史資料）
+        fm_df = None
+        if finmind_api is not None and data_type in ('financial_statement', 'cash_flow', 'balance_sheet'):
             func_map = {
                 'month_revenue': 'taiwan_stock_month_revenue',
                 'financial_statement': 'taiwan_stock_financial_statement',
@@ -278,9 +309,21 @@ def fetch_data(stock_id, data_type, finmind_api=None, **kw):
             func_name = func_map.get(data_type)
             if func_name:
                 fm_df = fm_sg(finmind_api, func_name, stock_id, **kw)
-                if fm_df is not None:
-                    return fm_df
-        # FinMind 也失敗 → 回頭用 yfinance（有總比沒有好）
+
+        # 雙源合併：yfinance（近期詳細） + FinMind（深層歷史）
+        if yf_ok and fm_df is not None and len(fm_df) > 0:
+            # Merge: yfinance quarterly + FinMind historical, deduplicate
+            combined = pd.concat([yf_data, fm_df], ignore_index=True)
+            combined = combined.drop_duplicates(
+                subset=['date', 'stock_id', 'type'], keep='first'
+            )
+            return combined.sort_values('date').reset_index(drop=True)
+
+        if yf_ok:
+            return yf_data
+        if fm_df is not None and len(fm_df) > 0:
+            return fm_df
+        # 都失敗 → 回頭用 yfinance（有總比沒有好）
         if yf_data is not None:
             return yf_data
         return None

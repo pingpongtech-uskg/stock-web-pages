@@ -503,7 +503,7 @@ def calc_score_fresh(stock_id):
     result = {'g': [False]*5, 'l': [False]*6, 'd': [False]*5}
     
     # ── 擷取資料（yfinance 主力） ──
-    fin = fetch_data(stock_id, 'financial_statement', finmind_api, start_date='2023-01-01')
+    fin = fetch_data(stock_id, 'financial_statement', finmind_api, start_date='2019-01-01')
     cf = fetch_data(stock_id, 'cash_flow', finmind_api, start_date='2019-01-01')
     bs = fetch_data(stock_id, 'balance_sheet', finmind_api, start_date='2019-01-01')
     div = fetch_data(stock_id, 'dividend', finmind_api, start_date='2015-01-01')

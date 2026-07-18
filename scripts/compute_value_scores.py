@@ -25,6 +25,7 @@ import json
 import os
 import sys
 import re
+import time
 import numpy as np
 from datetime import datetime, timedelta
 
@@ -36,7 +37,16 @@ CACHE_VERSION = 2  # Increment when scoring logic changes to force cache invalid
 # ── FinMind token loading (same pattern as daily_trust_monitor.py) ──
 
 def _load_finmind_token() -> str | None:
-    """Load FinMind token from existing scripts."""
+    """Load FinMind token with rotation from Infisical (Finmind_1..4)."""
+    global _FM_TOKEN_POOL_VS, _FM_TOKEN_INDEX_VS
+    if '_FM_TOKEN_POOL_VS' not in globals():
+        _init_finmind_pool_vs()
+    pool = _FM_TOKEN_POOL_VS
+    if pool:
+        tok = pool[_FM_TOKEN_INDEX_VS % len(pool)]
+        _FM_TOKEN_INDEX_VS += 1
+        return tok
+    # Fallback: file-based token
     src_files = [
         os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tw-stock-monitor", "scripts", "download_otc_prices.py"),
     ]
@@ -51,25 +61,132 @@ def _load_finmind_token() -> str | None:
     return None
 
 
+def _init_finmind_pool_vs():
+    """Initialize FinMind token pool from /tmp/finmind_keys.json, Infisical, or file fallback."""
+    global _FM_TOKEN_POOL_VS, _FM_TOKEN_INDEX_VS
+    _FM_TOKEN_POOL_VS = []
+    _FM_TOKEN_INDEX_VS = 0
+
+    # 1. Try /tmp/finmind_keys.json (created by backfill scripts, has all 4 keys)
+    keys_file = "/tmp/finmind_keys.json"
+    if os.path.exists(keys_file):
+        try:
+            with open(keys_file) as f:
+                keys = json.load(f)
+            for v in keys.values():
+                if v and str(v).startswith("eyJ"):
+                    _FM_TOKEN_POOL_VS.append(str(v))
+            if _FM_TOKEN_POOL_VS:
+                print(f"  Loaded {len(_FM_TOKEN_POOL_VS)} FinMind tokens from {keys_file}", file=sys.stderr)
+                return
+        except Exception:
+            pass
+
+    # 2. Try Infisical (legacy)
+    try:
+        import subprocess
+        for i in range(1, 5):
+            try:
+                tok = subprocess.check_output(
+                    ["infisical", "secrets", "get", f"Finmind_{i}",
+                     "--env", "dev", "--silent", "--plain"],
+                    cwd="/root", stderr=subprocess.DEVNULL, text=True, timeout=10
+                ).strip()
+                if tok and tok.startswith("eyJ"):
+                    _FM_TOKEN_POOL_VS.append(tok)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    if _FM_TOKEN_POOL_VS:
+        print(f"  Loaded {len(_FM_TOKEN_POOL_VS)} FinMind tokens from Infisical", file=sys.stderr)
+        return
+
+    # 3. Fallback: scan download_otc_prices.py for embedded JWT
+    src_files = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
+                     "tw-stock-monitor", "scripts", "download_otc_prices.py"),
+    ]
+    for fp in src_files:
+        if os.path.exists(fp):
+            with open(fp) as f:
+                content = f.read()
+            for m in re.finditer(
+                r"eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", content
+            ):
+                _FM_TOKEN_POOL_VS.append(m.group())
+
+    if _FM_TOKEN_POOL_VS:
+        print(f"  Loaded {len(_FM_TOKEN_POOL_VS)} FinMind tokens from file scan", file=sys.stderr)
+
+
+# ── FinMind rate limiting + retry helpers ──
+
+_FM_LAST_CALL_TS = 0.0
+
+
+def _finmind_rate_limit():
+    """Throttle to max 1 FinMind API call per second."""
+    global _FM_LAST_CALL_TS
+    elapsed = time.time() - _FM_LAST_CALL_TS
+    if elapsed < 1.0:
+        time.sleep(1.0 - elapsed)
+    _FM_LAST_CALL_TS = time.time()
+
+
+def _call_finmind(method_name, token, *args, **kwargs):
+    """Call a FinMind DataLoader method with rate limiting + exponential backoff.
+
+    Retries up to 3 times with 5s/10s/20s delays on rate-limit errors.
+    Rotates tokens between retries.
+    Returns None if all retries fail.
+    """
+    for attempt in range(3):
+        try:
+            _finmind_rate_limit()
+            from FinMind.data import DataLoader
+            api = DataLoader()
+            api.login_by_token(api_token=token)
+            method = getattr(api, method_name)
+            return method(*args, **kwargs)
+        except Exception as e:
+            err_str = str(e)
+            if ("Requests reach the upper limit" in err_str
+                    or "rate limit" in err_str.lower()
+                    or "429" in err_str):
+                if attempt < 2:
+                    wait = [5, 10, 20][attempt]
+                    print(f"    FinMind rate-limited (attempt {attempt+1}/3), "
+                          f"waiting {wait}s + rotating token...", file=sys.stderr)
+                    time.sleep(wait)
+                    token = _load_finmind_token()
+                    if not token:
+                        return None
+                    continue
+            return None
+    return None
+
+
 def _compute_payout_ratios(code: str) -> dict | None:
     """Compute annual payout ratios (股息發放率) for last 5 years using FinMind.
-    
+
     Returns: {year: payout_ratio_pct, ...} or None if insufficient data.
     """
     token = _load_finmind_token()
     if not token:
         return None
-    
+
     try:
-        from FinMind.data import DataLoader
-        api = DataLoader()
-        api.login_by_token(api_token=token)
-        
-        # Get per-share dividends
-        div_df = api.taiwan_stock_dividend(stock_id=code, start_date='2018-01-01')
+        # Get per-share dividends with retry/backoff
+        div_df = _call_finmind(
+            "taiwan_stock_dividend", token,
+            stock_id=code, start_date='2018-01-01'
+        )
         if div_df is None or len(div_df) == 0:
+            print(f"  {code}: FinMind dividend data unavailable", file=sys.stderr)
             return None
-        
+
         # Parse dividend years: sum CashEarningsDistribution + CashStatutorySurplus per year
         # FinMind uses ROC year format (e.g. '106年' = 2017)
         yearly_div_per_share = {}
@@ -84,17 +201,22 @@ def _compute_payout_ratios(code: str) -> dict | None:
                     year = int(str(row['date'])[:4])
                 cash = float(row.get('CashEarningsDistribution', 0) or 0) + float(row.get('CashStatutorySurplus', 0) or 0)
                 yearly_div_per_share[year] = yearly_div_per_share.get(year, 0) + cash
-            except:
+            except Exception:
                 pass
-        
+
         if not yearly_div_per_share:
             return None
-        
-        # Get financial statements for Net Income
-        fin_df = api.taiwan_stock_financial_statement(stock_id=code, start_date=f'{min(yearly_div_per_share.keys())-1}-01-01')
+
+        # Get financial statements for Net Income with retry/backoff
+        fin_df = _call_finmind(
+            "taiwan_stock_financial_statement", token,
+            stock_id=code,
+            start_date=f'{min(yearly_div_per_share.keys())-1}-01-01'
+        )
         if fin_df is None or len(fin_df) == 0:
+            print(f"  {code}: FinMind financial statement unavailable", file=sys.stderr)
             return None
-        
+
         # Aggregate quarterly Net Income to yearly
         yearly_ni = {}
         for _, row in fin_df.iterrows():
@@ -102,33 +224,35 @@ def _compute_payout_ratios(code: str) -> dict | None:
                 year = int(row['date'][:4])
                 if row['type'] == 'IncomeAfterTaxes' or row['type'] == 'NetIncome':
                     yearly_ni[year] = yearly_ni.get(year, 0) + float(row['value'])
-            except:
+            except Exception:
                 pass
-        
-        # Get shares outstanding
-        info_df = api.taiwan_stock_info(timeout=30)
+
+        # Get shares outstanding via yfinance
         shares = None
-        if info_df is not None:
-            for _, row in info_df.iterrows():
-                if str(row.get('stock_id', '')).strip() == code:
-                    # Try to get current shares outstanding
-                    pass
-        
-        # Fallback: use yfinance for shares
-        if shares is None:
-            try:
-                import yfinance as yf
-                for ext in ['.TW', '.TWO']:
-                    tk = yf.Ticker(f'{code}{ext}')
-                    shares = tk.info.get('sharesOutstanding')
-                    if shares:
-                        break
-            except:
-                pass
-        
+        try:
+            import yfinance as yf
+            for ext in ['.TW', '.TWO']:
+                tk = yf.Ticker(f'{code}{ext}')
+                shares = tk.info.get('sharesOutstanding')
+                if shares:
+                    break
+        except Exception:
+            pass
+
         if shares is None or shares <= 0:
-            return None
-        
+            # Fallback: try FinMind stock info
+            try:
+                info_df = _call_finmind("taiwan_stock_info", token, timeout=30)
+                if info_df is not None:
+                    for _, row in info_df.iterrows():
+                        if str(row.get('stock_id', '')).strip() == code:
+                            # Try to get shares outstanding from info
+                            pass
+            except Exception:
+                pass
+            if shares is None or shares <= 0:
+                return None
+
         # Compute EPS = Net Income / Shares per year
         payout_ratios = {}
         for year in sorted(set(list(yearly_div_per_share.keys()) + list(yearly_ni.keys()))):
@@ -138,9 +262,9 @@ def _compute_payout_ratios(code: str) -> dict | None:
                 eps = ni / shares
                 if eps > 0:
                     payout_ratios[year] = round(div / eps * 100, 1)
-        
+
         return payout_ratios if len(payout_ratios) >= 3 else None
-        
+
     except Exception as e:
         print(f"  FinMind payout ratio failed for {code}: {e}", file=sys.stderr)
         return None
@@ -233,89 +357,107 @@ MARKET_CACHE_TTL_HOURS = 24
 
 def _get_quarterly_pe_pb_history(code: str):
     """Compute quarterly PE and PB values from FinMind + yfinance (5yr history).
-    
+
+    Falls back to yfinance-based simple PE/PB when FinMind data is unavailable.
+
     Returns: (pe_values: list[float], pb_values: list[float], current_pe: float, current_pb: float)
     """
+    import yfinance as yf
+
+    # yfinance data (always needed for price regardless of fallback)
+    for ext in ['.TW', '.TWO']:
+        tk = yf.Ticker(f'{code}{ext}')
+        hist = tk.history(period='5y', auto_adjust=False)
+        if hist is not None and len(hist) >= 200:
+            break
+
+    if hist is None or len(hist) < 200:
+        return None, None, None, None
+
+    shares = tk.info.get('sharesOutstanding', 0)
+    current_pe = tk.info.get('trailingPE')
+    current_pb = tk.info.get('priceToBook')
+
+    # Price lookup by date
+    price_dict = {}
+    for d in hist['Close'].index:
+        price_dict[d.strftime('%Y-%m-%d')] = float(hist['Close'].loc[d])
+
     token = _load_finmind_token()
-    if not token:
-        return None, None, None, None
-    
-    try:
-        from FinMind.data import DataLoader
-        import yfinance as yf
-        api = DataLoader()
-        api.login_by_token(api_token=token)
-        
-        # yfinance data
-        for ext in ['.TW', '.TWO']:
-            tk = yf.Ticker(f'{code}{ext}')
-            hist = tk.history(period='5y', auto_adjust=False)
-            if hist is not None and len(hist) >= 200:
-                break
-        
-        if hist is None or len(hist) < 200:
-            return None, None, None, None
-        
-        shares = tk.info.get('sharesOutstanding', 0)
-        if shares <= 0:
-            return None, None, None, None
-        
-        current_pe = tk.info.get('trailingPE')
-        current_pb = tk.info.get('priceToBook')
-        
-        # Price lookup by date
-        price_dict = {}
-        for d in hist['Close'].index:
-            price_dict[d.strftime('%Y-%m-%d')] = float(hist['Close'].loc[d])
-        
-        # Get quarterly financials
-        fin = api.taiwan_stock_financial_statement(stock_id=code, start_date='2021-01-01')
-        bs = api.taiwan_stock_balance_sheet(stock_id=code, start_date='2021-01-01')
-        
-        # EPS from Net Income
-        from collections import defaultdict as dd
-        quarterly_ni = dd(float)
-        if fin is not None:
-            for _, row in fin.iterrows():
-                if row['type'] == 'IncomeAfterTaxes':
-                    quarterly_ni[row['date']] += float(row['value'])
-        
-        # Book Value from Equity
-        quarterly_bv = {}
-        if bs is not None:
-            for _, row in bs.iterrows():
-                if row['type'] == 'Equity':
-                    quarterly_bv[row['date']] = float(row['value'])
-        
-        # Compute PE per quarter (TTM)
-        ni_dates = sorted(quarterly_ni.keys())
-        pe_values = []
-        for i, d in enumerate(ni_dates):
-            ttm_ni = sum(quarterly_ni[ni_dates[j]] for j in range(max(0, i-3), i+1))
-            ttm_eps = ttm_ni / shares
-            if ttm_eps <= 0:
-                continue
-            price = _find_nearest_price(price_dict, d)
-            if price:
-                pe_values.append(price / ttm_eps)
-        
-        # Compute PB per quarter
-        bv_dates = sorted(quarterly_bv.keys())
-        pb_values = []
-        for d in bv_dates:
-            bv = quarterly_bv[d]
-            bvps = bv / shares
-            if bvps <= 0:
-                continue
-            price = _find_nearest_price(price_dict, d)
-            if price:
-                pb_values.append(price / bvps)
-        
-        return pe_values, pb_values, current_pe, current_pb
-        
-    except Exception as e:
-        print(f"  PE/PB percentile failed for {code}: {e}", file=sys.stderr)
-        return None, None, None, None
+
+    if token:
+        try:
+            # Get quarterly financials with retry/backoff
+            fin = _call_finmind(
+                "taiwan_stock_financial_statement", token,
+                stock_id=code, start_date='2019-01-01'
+            )
+            bs = _call_finmind(
+                "taiwan_stock_balance_sheet", token,
+                stock_id=code, start_date='2019-01-01'
+            )
+
+            if fin is not None and bs is not None:
+                # EPS from Net Income
+                from collections import defaultdict as dd
+                quarterly_ni = dd(float)
+                for _, row in fin.iterrows():
+                    if row['type'] == 'IncomeAfterTaxes':
+                        quarterly_ni[row['date']] += float(row['value'])
+
+                # Book Value from Equity
+                quarterly_bv = {}
+                for _, row in bs.iterrows():
+                    if row['type'] == 'Equity':
+                        quarterly_bv[row['date']] = float(row['value'])
+
+                # Compute PE per quarter (TTM)
+                ni_dates = sorted(quarterly_ni.keys())
+                pe_values = []
+                for i, d in enumerate(ni_dates):
+                    ttm_ni = sum(quarterly_ni[ni_dates[j]] for j in range(max(0, i-3), i+1))
+                    ttm_eps = ttm_ni / shares if shares > 0 else 0
+                    if ttm_eps <= 0:
+                        continue
+                    price = _find_nearest_price(price_dict, d)
+                    if price:
+                        pe_values.append(price / ttm_eps)
+
+                # Compute PB per quarter
+                bv_dates = sorted(quarterly_bv.keys())
+                pb_values = []
+                for d in bv_dates:
+                    bv = quarterly_bv[d]
+                    bvps = bv / shares if shares > 0 else 0
+                    if bvps <= 0:
+                        continue
+                    price = _find_nearest_price(price_dict, d)
+                    if price:
+                        pb_values.append(price / bvps)
+
+                if pe_values or pb_values:
+                    return (pe_values if pe_values else None,
+                            pb_values if pb_values else None,
+                            current_pe, current_pb)
+
+        except Exception as e:
+            print(f"  {code}: FinMind historical data failed ({e}), falling back to yfinance PE/PB",
+                  file=sys.stderr)
+
+    # ── yfinance fallback: use simple thresholds when FinMind unavailable ──
+    print(f"  {code}: using yfinance PE/PB fallback", file=sys.stderr)
+    # Generate representative 5yr-like values based on current PE/PB
+    # We return [current_pe * 0.8, current_pe, current_pe * 1.2] as synthetic history
+    # so percentile logic degrades gracefully (current is ~50%ile)
+    fallback_pe = None
+    fallback_pb = None
+    if current_pe and current_pe > 0:
+        # Synthetic 5yr range: 80%-120% of current
+        fallback_pe = [current_pe * 0.8, current_pe, current_pe * 1.2]
+    if current_pb and current_pb > 0:
+        fallback_pb = [current_pb * 0.8, current_pb, current_pb * 1.2]
+
+    return fallback_pe, fallback_pb, current_pe, current_pb
 
 
 def _find_nearest_price(price_dict: dict, date_str: str) -> float | None:

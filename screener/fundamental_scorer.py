@@ -112,41 +112,85 @@ def _yf_to_fm_style(yf_data, field_map, stock_id: str):
 
 
 def _yf_financials(symbol: str):
-    """Fetch quarterly financials from yfinance, return FinMind-style list of dicts."""
+    """Fetch quarterly + annual financials from yfinance, return FinMind-style list."""
     try:
         import yfinance as yf
 
         ticker = yf.Ticker(_yf_ticker_symbol(symbol))
         q = ticker.quarterly_financials
-        if q is None or q.empty:
-            return None
-        field_map = {
+        q_rows = _yf_to_fm_style(q, {
             "Total Revenue": "Revenue",
             "Gross Profit": "GrossProfit",
             "Operating Income": "OperatingIncome",
             "Pretax Income": "PreTaxIncome",
             "Net Income": "IncomeAfterTaxes",
             "Basic EPS": "EPS",
-        }
-        return _yf_to_fm_style(q, field_map, symbol)
+        }, symbol) if q is not None and not q.empty else None
+        
+        a = ticker.financials
+        a_rows = _yf_to_fm_style(a, {
+            "Total Revenue": "Revenue",
+            "Gross Profit": "GrossProfit",
+            "Operating Income": "OperatingIncome",
+            "Pretax Income": "PreTaxIncome",
+            "Net Income": "IncomeAfterTaxes",
+            "Basic EPS": "EPS",
+        }, symbol) if a is not None and not a.empty else None
+        
+        # Merge: quarterly (first) then annual, deduplicating by date+type
+        if q_rows is None and a_rows is None:
+            return None
+        if q_rows is None:
+            return a_rows
+        if a_rows is None:
+            return q_rows
+        
+        seen = set()
+        merged = []
+        for r in q_rows + a_rows:
+            key = (r['date'], r['type'])
+            if key not in seen:
+                seen.add(key)
+                merged.append(r)
+        return merged
     except Exception:
         return None
 
 
 def _yf_cashflow(symbol: str):
-    """Fetch quarterly cash flow from yfinance, return FinMind-style list."""
+    """Fetch quarterly + annual cash flow from yfinance, return FinMind-style list."""
     try:
         import yfinance as yf
 
         ticker = yf.Ticker(_yf_ticker_symbol(symbol))
-        cf = ticker.cashflow
-        if cf is None or cf.empty:
-            return None
-        field_map = {
+        qcf = ticker.quarterly_cashflow
+        q_rows = _yf_to_fm_style(qcf, {
             "Operating Cash Flow": "CashFlowsFromOperatingActivities",
             "Free Cash Flow": "FreeCashFlow",
-        }
-        return _yf_to_fm_style(cf, field_map, symbol)
+        }, symbol) if qcf is not None and not qcf.empty else None
+        
+        acf = ticker.cashflow
+        a_rows = _yf_to_fm_style(acf, {
+            "Operating Cash Flow": "CashFlowsFromOperatingActivities",
+            "Free Cash Flow": "FreeCashFlow",
+        }, symbol) if acf is not None and not acf.empty else None
+        
+        # Merge: quarterly (first) then annual, deduplicating by date+type
+        if q_rows is None and a_rows is None:
+            return None
+        if q_rows is None:
+            return a_rows
+        if a_rows is None:
+            return q_rows
+        
+        seen = set()
+        merged = []
+        for r in q_rows + a_rows:
+            key = (r['date'], r['type'])
+            if key not in seen:
+                seen.add(key)
+                merged.append(r)
+        return merged
     except Exception:
         return None
 
