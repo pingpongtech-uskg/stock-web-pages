@@ -224,6 +224,175 @@ def compute_z(hist) -> float | None:
     return round(float((p[-1] - trend[-1]) / sigma), 2)
 
 
+# ── PE/PB 5-year percentile + market median ──
+
+MARKET_CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "market_pe_pb_cache.json")
+MARKET_CACHE_TTL_HOURS = 24
+
+
+def _get_quarterly_pe_pb_history(code: str):
+    """Compute quarterly PE and PB values from FinMind + yfinance (5yr history).
+    
+    Returns: (pe_values: list[float], pb_values: list[float], current_pe: float, current_pb: float)
+    """
+    token = _load_finmind_token()
+    if not token:
+        return None, None, None, None
+    
+    try:
+        from FinMind.data import DataLoader
+        import yfinance as yf
+        api = DataLoader()
+        api.login_by_token(api_token=token)
+        
+        # yfinance data
+        for ext in ['.TW', '.TWO']:
+            tk = yf.Ticker(f'{code}{ext}')
+            hist = tk.history(period='5y', auto_adjust=False)
+            if hist is not None and len(hist) >= 200:
+                break
+        
+        if hist is None or len(hist) < 200:
+            return None, None, None, None
+        
+        shares = tk.info.get('sharesOutstanding', 0)
+        if shares <= 0:
+            return None, None, None, None
+        
+        current_pe = tk.info.get('trailingPE')
+        current_pb = tk.info.get('priceToBook')
+        
+        # Price lookup by date
+        price_dict = {}
+        for d in hist['Close'].index:
+            price_dict[d.strftime('%Y-%m-%d')] = float(hist['Close'].loc[d])
+        
+        # Get quarterly financials
+        fin = api.taiwan_stock_financial_statement(stock_id=code, start_date='2021-01-01')
+        bs = api.taiwan_stock_balance_sheet(stock_id=code, start_date='2021-01-01')
+        
+        # EPS from Net Income
+        from collections import defaultdict as dd
+        quarterly_ni = dd(float)
+        if fin is not None:
+            for _, row in fin.iterrows():
+                if row['type'] == 'IncomeAfterTaxes':
+                    quarterly_ni[row['date']] += float(row['value'])
+        
+        # Book Value from Equity
+        quarterly_bv = {}
+        if bs is not None:
+            for _, row in bs.iterrows():
+                if row['type'] == 'Equity':
+                    quarterly_bv[row['date']] = float(row['value'])
+        
+        # Compute PE per quarter (TTM)
+        ni_dates = sorted(quarterly_ni.keys())
+        pe_values = []
+        for i, d in enumerate(ni_dates):
+            ttm_ni = sum(quarterly_ni[ni_dates[j]] for j in range(max(0, i-3), i+1))
+            ttm_eps = ttm_ni / shares
+            if ttm_eps <= 0:
+                continue
+            price = _find_nearest_price(price_dict, d)
+            if price:
+                pe_values.append(price / ttm_eps)
+        
+        # Compute PB per quarter
+        bv_dates = sorted(quarterly_bv.keys())
+        pb_values = []
+        for d in bv_dates:
+            bv = quarterly_bv[d]
+            bvps = bv / shares
+            if bvps <= 0:
+                continue
+            price = _find_nearest_price(price_dict, d)
+            if price:
+                pb_values.append(price / bvps)
+        
+        return pe_values, pb_values, current_pe, current_pb
+        
+    except Exception as e:
+        print(f"  PE/PB percentile failed for {code}: {e}", file=sys.stderr)
+        return None, None, None, None
+
+
+def _find_nearest_price(price_dict: dict, date_str: str) -> float | None:
+    """Find the closest price on or before date_str."""
+    from datetime import datetime
+    d_dt = datetime.strptime(date_str, '%Y-%m-%d')
+    last_price = None
+    for pd_str, pv in sorted(price_dict.items()):
+        pd_dt = datetime.strptime(pd_str, '%Y-%m-%d')
+        if pd_dt <= d_dt:
+            last_price = pv
+        else:
+            break
+    return last_price
+
+
+def _compute_percentile(values: list[float], current: float) -> float | None:
+    """Compute percentile of current within values (0-100, higher = more expensive)."""
+    if not values or current is None:
+        return None
+    s = sorted(values)
+    rank = sum(1 for v in s if v <= current)
+    return round(rank / len(s) * 100, 1)
+
+
+def _get_market_median_pe_pb():
+    """Get cached market median PE and PB. Recomputes if stale (>24h)."""
+    import json as _json
+    try:
+        with open(MARKET_CACHE_FILE) as f:
+            cache = _json.load(f)
+        cache_time = datetime.strptime(cache.get('updated_at', '2000-01-01'), '%Y-%m-%dT%H:%M:%S')
+        if (datetime.now() - cache_time).total_seconds() < MARKET_CACHE_TTL_HOURS * 3600:
+            return cache.get('median_pe'), cache.get('median_pb')
+    except:
+        pass
+    
+    # Compute from a representative sample (top Taiwan stocks by market cap)
+    try:
+        import yfinance as yf
+        sample_codes = [
+            '2330', '2317', '2454', '2308', '2382', '2303', '2881', '2882', '2891',
+            '2886', '2892', '1301', '1303', '1326', '2002', '2412', '3045', '4904',
+            '1216', '2884', '2885', '2880', '2890', '5880', '6505', '3711', '2603',
+            '2609', '2615', '2207', '2912', '2327', '2347', '2357', '2379', '2383',
+        ]
+        pes, pbs = [], []
+        for c in sample_codes:
+            try:
+                for ext in ['.TW', '.TWO']:
+                    tk = yf.Ticker(f'{c}{ext}')
+                    info = tk.info
+                    pe = info.get('trailingPE')
+                    pb = info.get('priceToBook')
+                    if pe and 0 < pe < 100:
+                        pes.append(pe)
+                    if pb and 0 < pb < 20:
+                        pbs.append(pb)
+                    if pe or pb:
+                        break
+            except:
+                pass
+        
+        median_pe = sorted(pes)[len(pes)//2] if pes else 15.0
+        median_pb = sorted(pbs)[len(pbs)//2] if pbs else 1.8
+        
+        cache = {'median_pe': median_pe, 'median_pb': median_pb, 'updated_at': datetime.now().isoformat()}
+        os.makedirs(os.path.dirname(MARKET_CACHE_FILE), exist_ok=True)
+        with open(MARKET_CACHE_FILE, 'w') as f:
+            _json.dump(cache, f)
+        
+        print(f"  Market median: PE={median_pe:.1f}, PB={median_pb:.2f} (from {len(pes)} stocks)", file=sys.stderr)
+        return median_pe, median_pb
+    except Exception as e:
+        print(f"  Market median failed: {e}", file=sys.stderr)
+        return None, None
+
+
 def compute_scores(code: str) -> dict | None:
     """Compute cheap and dividend scores for a stock."""
     data = fetch_stock_data(code)
@@ -236,49 +405,61 @@ def compute_scores(code: str) -> dict | None:
     
     price = info.get("regularMarketPrice") or float(hist['Close'].iloc[-1])
     
-    # ── CHEAP SCORE ──
+    # ── CHEAP SCORE (StatementDog: 6 indicators) ──
     cheap_checks = 0
     cheap_detail = []
     
-    # 1. PE < 15
-    pe = info.get("trailingPE")
-    if pe is not None and pe < 15:
-        cheap_checks += 1
-        cheap_detail.append(f"✓ PE={pe:.1f} < 15")
-    else:
-        cheap_detail.append(f"✗ PE={'N/A' if pe is None else f'{pe:.1f}'} ≥ 15")
+    # Get PE/PB percentile data + market median
+    pe_hist, pb_hist, current_pe, current_pb = _get_quarterly_pe_pb_history(code)
+    market_pe, market_pb = _get_market_median_pe_pb()
     
-    # 2. PB < 1.5
-    pb = info.get("priceToBook")
-    if pb is not None and pb < 1.5:
-        cheap_checks += 1
-        cheap_detail.append(f"✓ PB={pb:.2f} < 1.5")
-    else:
-        cheap_detail.append(f"✗ PB={'N/A' if pb is None else f'{pb:.2f}'} ≥ 1.5")
-    
-    # 3. Price in lower 50% of 52-week range
-    low52 = info.get("fiftyTwoWeekLow")
-    high52 = info.get("fiftyTwoWeekHigh")
-    if low52 and high52 and high52 > low52:
-        pct = round((price - low52) / (high52 - low52) * 100)
-        if pct < 50:
+    # 1. PE in lowest 20% of 5-year range (StatementDog: 本益比在5年內區間最低20%)
+    if current_pe is not None and pe_hist:
+        pe_pct = _compute_percentile(pe_hist, current_pe)
+        if pe_pct is not None and pe_pct <= 20:
             cheap_checks += 1
-            cheap_detail.append(f"✓ 股價在52週低點{pct}% (< 50%)")
+            cheap_detail.append(f"✓ PE={current_pe:.1f} 在5年區間最低{pe_pct:.0f}% (≤ 20%)")
+        elif pe_pct is not None:
+            cheap_detail.append(f"✗ PE={current_pe:.1f} 在5年區間{pe_pct:.0f}% (> 20%)")
         else:
-            cheap_detail.append(f"✗ 股價在52週低點{pct}% (≥ 50%)")
+            cheap_detail.append(f"✗ PE={current_pe:.1f} 區間計算失敗")
     else:
-        cheap_detail.append("✗ 52週高低點不足")
+        pe = info.get("trailingPE")
+        cheap_detail.append(f"— PE 5年百分位: 資料不足 (PE={'N/A' if pe is None else f'{pe:.1f}'})")
     
-    # 4. Z < -0.5
-    z = compute_z(hist)
-    if z is not None:
-        if z < -0.5:
+    # 2. PE lower than 50% of peer companies (StatementDog: 本益比低於50%公司)
+    if current_pe is not None and market_pe is not None:
+        if current_pe < market_pe:
             cheap_checks += 1
-            cheap_detail.append(f"✓ Z={z:.2f} < -0.5")
+            cheap_detail.append(f"✓ PE={current_pe:.1f} < 市場中位數{market_pe:.1f}")
         else:
-            cheap_detail.append(f"✗ Z={z:.2f} ≥ -0.5")
+            cheap_detail.append(f"✗ PE={current_pe:.1f} ≥ 市場中位數{market_pe:.1f}")
     else:
-        cheap_detail.append("✗ Z計算失敗")
+        cheap_detail.append("— PE同業比較: 資料不足")
+    
+    # 3. PB in lowest 20% of 5-year range (StatementDog: 股價淨值比在5年內區間最低20%)
+    if current_pb is not None and pb_hist:
+        pb_pct = _compute_percentile(pb_hist, current_pb)
+        if pb_pct is not None and pb_pct <= 20:
+            cheap_checks += 1
+            cheap_detail.append(f"✓ PB={current_pb:.2f} 在5年區間最低{pb_pct:.0f}% (≤ 20%)")
+        elif pb_pct is not None:
+            cheap_detail.append(f"✗ PB={current_pb:.2f} 在5年區間{pb_pct:.0f}% (> 20%)")
+        else:
+            cheap_detail.append(f"✗ PB={current_pb:.2f} 區間計算失敗")
+    else:
+        pb = info.get("priceToBook")
+        cheap_detail.append(f"— PB 5年百分位: 資料不足 (PB={'N/A' if pb is None else f'{pb:.2f}'})")
+    
+    # 4. PB lower than 50% of peer companies (StatementDog: 股價淨值比低於50%公司)
+    if current_pb is not None and market_pb is not None:
+        if current_pb < market_pb:
+            cheap_checks += 1
+            cheap_detail.append(f"✓ PB={current_pb:.2f} < 市場中位數{market_pb:.2f}")
+        else:
+            cheap_detail.append(f"✗ PB={current_pb:.2f} ≥ 市場中位數{market_pb:.2f}")
+    else:
+        cheap_detail.append("— PB同業比較: 資料不足")
     
     # 5. Dividend yield > 6%
     div_yield = compute_dividend_yield(code, info, dividends, price)
