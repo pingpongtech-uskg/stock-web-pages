@@ -30,7 +30,8 @@ REPORTS_DIR = "/root/tw-stock-monitor/output/reports"
 TRUST_CACHE_FILE = "/root/tw-stock-monitor/output/trust_all_cache.json"
 DATA_DIR = "/root/tw-stock-monitor/data"
 OUTPUT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "data", "screener_history.json")
-ARCHIVE_AFTER_DAYS = 30
+ARCHIVE_AFTER_DAYS = 30  # Inactivity threshold (last_date)
+ACTIVE_FIRST_DATE_MAX_DAYS = 30  # Max days since first appearance before removal
 MAX_CONSECUTIVE_GAP = 3  # For screening streak (weekend tolerance)
 
 
@@ -184,6 +185,7 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
     """Build active (unique, recent) and archive (all, grouped by date)."""
     ref = date.today() if reference_date is None else datetime.strptime(reference_date, "%Y-%m-%d").date()
     cutoff = ref - timedelta(days=ARCHIVE_AFTER_DAYS)
+    first_date_cutoff = ref - timedelta(days=ACTIVE_FIRST_DATE_MAX_DAYS)
 
     # Build name_zh lookup
     name_zh_map: dict[str, str] = {
@@ -352,6 +354,18 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         # ── Passed all checks — keep in Active ──
         dates = code_to_dates.get(code, [])
         first_date = min(dates) if dates else entry["last_date"]
+
+        # Cap first_date: show at most ACTIVE_FIRST_DATE_MAX_DAYS ago
+        # (e.g. if stock first appeared 47 days ago, display shows 30 days ago)
+        try:
+            first_d = datetime.strptime(first_date, "%Y-%m-%d").date()
+            if first_d < first_date_cutoff:
+                # Find earliest date within the window
+                recent_dates = [d for d in dates if d >= first_date_cutoff.strftime("%Y-%m-%d")]
+                if recent_dates:
+                    first_date = min(recent_dates)
+        except (ValueError, KeyError):
+            pass
 
         # Update Z from live data
         if code in z_cache and z_cache[code] is not None:
