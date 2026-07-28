@@ -330,13 +330,23 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             continue  # Expired — 30 days inactive
 
         # ── Re-validate current screening criteria ──
-        # (b) Z must still be <= 0
+        # (b) Z must still be <= -1 (backtested — better WR/return than <= 0)
+        # Use yfinance Z if available, otherwise fall back to report's Z
+        z_for_check = None
         if code in z_cache and z_cache[code] is not None:
-            z = z_cache[code]
-            if z > 0:
-                kicked_z += 1
-                continue  # Z flipped positive → kick
-        # If Z unavailable, keep it (don't penalize missing data)
+            z_for_check = z_cache[code]
+        else:
+            # Fallback: use the report's original regression_z
+            report_z = entry.get("regression_z")
+            if report_z is not None:
+                try:
+                    z_for_check = float(report_z)
+                except (TypeError, ValueError):
+                    pass
+
+        if z_for_check is not None and z_for_check > -1:
+            kicked_z += 1
+            continue  # Z above -1σ → kick
 
         # (c) 10-day net cumulative shares must be > 0 (recalculated to TODAY)
         corrected_shares = calc_net_shares_10d(trust_cache, code, today_s)
@@ -418,7 +428,7 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
 
     if kicked_z or kicked_net or kicked_score:
         parts = []
-        if kicked_z: parts.append(f"Z>0: {kicked_z}")
+        if kicked_z: parts.append(f"Z>-1: {kicked_z}")
         if kicked_net: parts.append(f"net≤0: {kicked_net}")
         if kicked_score: parts.append(f"G/L<80: {kicked_score}")
         print(f"  Kicked from Active: {', '.join(parts)}")
