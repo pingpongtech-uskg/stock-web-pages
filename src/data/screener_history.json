@@ -127,8 +127,8 @@
       "g_score": 80.0,
       "l_score": 83.3,
       "regression_z": -1.8,
-      "rank": 33,
-      "screening_date": "2026-07-27",
+      "rank": 32,
+      "screening_date": "2026-07-28",
       "first_date": "2026-06-29",
       "first_price": 106.0,
       "change_pct": -16.6,
@@ -344,6 +344,46 @@
     }
   ],
   "archive": {
+    "2026-07-28": [
+      {
+        "code": "6191",
+        "name_zh": "精成科",
+        "name_en": "Global Brands Manufacture Ltd.",
+        "net_amount_10d": 1354730000,
+        "net_amount_10d_k": 1354730,
+        "net_shares_10d": 15325000,
+        "net_shares_10d_zhang": 15325,
+        "last_date": "2026-07-24",
+        "cur_price": 88.4,
+        "g_score": 80.0,
+        "l_score": 83.3,
+        "regression_z": -1.8,
+        "rank": 32,
+        "screening_date": "2026-07-28",
+        "first_date": "2026-06-15",
+        "first_price": 106.0,
+        "change_pct": -16.6,
+        "cheap_score": 33.3,
+        "cheap_detail": [
+          "✗ PE=13.5 在5年區間79% (> 20%)",
+          "✓ PE=13.5 < 市場中位數20.9",
+          "✗ PB=1.59 在5年區間78% (> 20%)",
+          "✓ PB=1.59 < 市場中位數2.32",
+          "✗ 殖利率=2.9% ≤ 6%",
+          "✗ 5y均殖利率=3.9% ≤ 6%"
+        ],
+        "dividend_score": 40.0,
+        "dividend_detail": [
+          "✗ 殖利率=2.9% ≤ 6%",
+          "✗ 5y均殖利率=3.9% ≤ 6%",
+          "✓ 連續10年發股息 (≥ 5)",
+          "✓ 配息率五年有3年>50%",
+          "✗ 配息率五年平均=40% ≤ 50%"
+        ],
+        "ex_dividend_date": "2026-07-09",
+        "dividend_per_share": 2.6
+      }
+    ],
     "2026-07-27": [
       {
         "code": "1216",
@@ -399,8 +439,6 @@
         "rank": 33,
         "screening_date": "2026-07-27",
         "first_date": "2026-06-15",
-        "first_price": 106.0,
-        "change_pct": -16.6,
         "cheap_score": 33.3,
         "cheap_detail": [
           "✗ PE=13.5 在5年區間79% (> 20%)",
