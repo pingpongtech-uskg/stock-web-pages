@@ -47,9 +47,38 @@ if $DO_DEPLOY; then
     echo "=== Step 5: Deploy to Cloudflare Pages (production) ==="
     python3 << 'PYEOF'
 import subprocess, os
-r = subprocess.run(["infisical","secrets","get","Cloudflare_TOKEN","--env","dev","--silent","--plain"], capture_output=True, text=True)
+
+# Get Cloudflare token from Infisical using INFISICAL_TOKEN env var
+tok = os.environ.get("INFISICAL_TOKEN")
+cf_token = None
+if tok:
+    # If machine identity token is set, use it to get the secret
+    env = os.environ.copy()
+    env["INFISICAL_TOKEN"] = tok
+    r = subprocess.run(
+        ["infisical", "secrets", "get", "Cloudflare_TOKEN",
+         "--env", "dev", "--silent", "--plain",
+         "--projectId", "35ccbcb8-b5ec-44dd-8b62-b1f49120c869"],
+        capture_output=True, text=True, timeout=15
+    )
+    if r.returncode == 0 and r.stdout.strip():
+        cf_token = r.stdout.strip()
+
+if not cf_token:
+    # Fallback: read from INFISICAL_TOKEN and call infisical run
+    r = subprocess.run(
+        ["infisical", "run", "--token", tok, "--projectId", "35ccbcb8-b5ec-44dd-8b62-b1f49120c869",
+         "--env", "dev", "--", "bash", "-c", "echo $Cloudflare_TOKEN"],
+        capture_output=True, text=True, timeout=15
+    )
+    cf_token = r.stdout.strip().split('\n')[-1] if r.stdout.strip() else None
+
+if not cf_token:
+    print("ERROR: Could not get Cloudflare_TOKEN from Infisical")
+    exit(1)
+
 env = os.environ.copy()
-env["CLOUDFLARE_API_TOKEN"] = r.stdout.strip()
+env["CLOUDFLARE_API_TOKEN"] = cf_token
 result = subprocess.run(
     ["npx","wrangler","pages","deploy","dist","--project-name","stock-web-pages","--branch","main","--commit-dirty=true"],
     cwd="/root/stock-web-pages", env=env, capture_output=True, text=True, timeout=120

@@ -32,6 +32,7 @@ DATA_DIR = "/root/tw-stock-monitor/data"
 OUTPUT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "data", "screener_history.json")
 ARCHIVE_AFTER_DAYS = 30  # Inactivity threshold (last_date)
 ACTIVE_FIRST_DATE_MAX_DAYS = 30  # Max days since first appearance before removal
+CONFIRMATION_GRACE_DAYS = 5  # Must be confirmed in a report within this many days
 MAX_CONSECUTIVE_GAP = 3  # For screening streak (weekend tolerance)
 
 
@@ -312,22 +313,40 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
 
     # Build active list — must pass ALL current screening criteria:
     #   (a) last_date within 30 days
-    #   (b) Z <= 0  (recomputed live from yfinance)
-    #   (c) 10-day net cumulative shares > 0  (buy - sell, no just-positive-days bug)
-    #   (d) G >= 80 and L >= 80  (FinMind, stable — kept from last scoring)
+    #   (a2) last confirmed within CONFIRMATION_GRACE calendar days of latest report
+    #   (b) Z <= -1  (recomputed live from yfinance)
+    #   (c) 10-day net cumulative shares > 0
+    #   (d) G >= 80 and L >= 80
+    # Latest report date for freshness check
+    latest_report_date = max(
+        datetime.strptime(r["date"], "%Y-%m-%d").date()
+        for r in reports if r.get("date")
+    ) if reports else ref
+    confirmation_cutoff = latest_report_date - timedelta(days=CONFIRMATION_GRACE_DAYS)
+
     active = []
     today_s = ref.strftime('%Y-%m-%d')
     kicked_z = 0
     kicked_net = 0
     kicked_score = 0
+    kicked_stale = 0
     for code, entry in latest_by_code.items():
+        # Use screening_date (actual report date) for freshness — not last_date
+        # which is the stock's last trading date from the report.
         try:
-            last_d = datetime.strptime(entry["last_date"], "%Y-%m-%d").date()
+            confirmed_d = datetime.strptime(entry["screening_date"], "%Y-%m-%d").date()
         except (ValueError, KeyError):
-            last_d = date(2000, 1, 1)
+            confirmed_d = date(2000, 1, 1)
 
-        if last_d < cutoff:
+        if confirmed_d < cutoff:
             continue  # Expired — 30 days inactive
+
+        # ── Recent confirmation check ──
+        # Must have appeared in a report within the grace period.
+        # If the monitor stopped picking it up, cached scores are irrelevant — archive it.
+        if confirmed_d <= confirmation_cutoff:
+            kicked_stale += 1
+            continue
 
         # ── Re-validate current screening criteria ──
         # (b) Z must still be <= -1 (backtested — better WR/return than <= 0)
@@ -426,8 +445,9 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
 
         active.append(entry)
 
-    if kicked_z or kicked_net or kicked_score:
+    if kicked_z or kicked_net or kicked_score or kicked_stale:
         parts = []
+        if kicked_stale: parts.append(f"stale>{CONFIRMATION_GRACE_DAYS}d: {kicked_stale}")
         if kicked_z: parts.append(f"Z>-1: {kicked_z}")
         if kicked_net: parts.append(f"net≤0: {kicked_net}")
         if kicked_score: parts.append(f"G/L<80: {kicked_score}")
@@ -500,6 +520,7 @@ def main():
         print("WARNING: trust cache not found, consecutive_buy_days will be 0")
 
     result = consolidate(reports, trust_cache)
+    result["generated_at"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
     active_count = len(result["active"])
     archive_dates = len(result["archive"])
