@@ -13,7 +13,7 @@
       "g_score": 80.0,
       "l_score": 83.3,
       "regression_z": -2.58,
-      "rank": 42,
+      "rank": 43,
       "screening_date": "2026-07-30",
       "first_date": "2026-07-02",
       "first_price": 110.0,
@@ -54,7 +54,7 @@
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -2.58,
-        "rank": 42,
+        "rank": 43,
         "screening_date": "2026-07-30",
         "first_date": "2026-06-15",
         "first_price": 110.0,
@@ -10175,5 +10175,5 @@
       }
     ]
   },
-  "generated_at": "2026-07-30T10:04:37"
+  "generated_at": "2026-07-30T12:34:46"
 }
