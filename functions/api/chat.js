@@ -82,9 +82,14 @@ export async function onRequest(context) {
         var ds = s.dividend_score != null ? s.dividend_score : "—";
         var cd = Array.isArray(s.cheap_detail) ? s.cheap_detail.slice(0,3).join("; ") : "—";
         var dd = Array.isArray(s.dividend_detail) ? s.dividend_detail.slice(0,3).join("; ") : "—";
+        var v = (s.valuation != null && typeof s.valuation === "object") ? s.valuation : null;
+        var pegy = (v && v.peg_y != null) ? v.peg_y.toFixed(2) : "—";
+        var peg = (v && v.peg != null) ? v.peg.toFixed(2) : "—";
+        var dy = (v && v.div_yield_3y_pct != null) ? v.div_yield_3y_pct.toFixed(1) + "%" : "—";
+        var fill = (v && v.avg_fill_days != null) ? Math.round(v.avg_fill_days) + "天" : "—";
         var price = s.cur_price != null ? s.cur_price : "—";
         var chg = s.change_pct != null ? (s.change_pct > 0 ? "+" : "") + s.change_pct.toFixed(1) + "%" : "—";
-        return "- " + s.code + " " + name + "：投信10日買超 **" + amt + "**｜Z=" + z + "｜G=" + g + " L=" + l + "｜便宜" + cs + "分(" + cd + ")｜殖利率" + ds + "分(" + dd + ")｜" + price + "（" + chg + "）";
+        return "- " + s.code + " " + name + "：投信10日買超 **" + amt + "**｜Z=" + z + "｜G=" + g + " L=" + l + "｜便宜" + cs + "分(" + cd + ")｜殖利率" + ds + "分(" + dd + ")｜PEGY=" + pegy + "(PE調整後)｜PEG=" + peg + "｜3年均殖利率" + dy + "｜平均填息" + fill + "｜" + price + "（" + chg + "）";
       }).join("\n");
     } else {
       stockTable = "（今日暫無上榜股票）";
@@ -117,7 +122,10 @@ export async function onRequest(context) {
       "## 回答守則\n" +
       "- 用繁體中文、口語化、像在跟家人聊天\n" +
       "- 問某檔股票 → 優先用搜尋結果回答（新聞、財報、法說會、產業趨勢）\n" +
-      "- 問今天榜單 → 用榜單數據回答（買超金額、Z值、G/L分數、便宜/殖利率分數）\n" +
+      "- 問今天榜單 → 用榜單數據回答（買超金額、Z值、G/L分數、便宜/殖利率分數、PEGY/殖利率/填息補充資料）\n" +
+      "\n## PEGY 指標說明（榜單中的補充估值資料）\n" +
+      "PEGY = 本益比 ÷ (EPS成長率% + 殖利率%)，是 Lynch 殖利率調整版 PEG，適合台股高配息文化。\n" +
+      "判讀：低於 0.75 便宜（祖魯法則門檻）、0.75~1 合理偏高、大於 1 偏貴。PEG（未調整版）在 EPS 負成長時會顯示 — 。此為補充參考資料，非篩選條件，回答時註明即可。\n" +
       "- 問策略邏輯 → 簡潔解釋，不長篇大論\n" +
       "- 沒有資訊就誠實說沒有，不要編造\n" +
       "- 不主動給買賣建議\n";

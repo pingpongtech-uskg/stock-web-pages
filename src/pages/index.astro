@@ -29,6 +29,14 @@ interface ScreeningEntry {
   screening_date: string;
   ex_dividend_date?: string | null;
   dividend_per_share?: number | null;
+  valuation?: {
+    peg?: number | null;
+    peg_y?: number | null;
+    pe?: number | null;
+    div_yield_3y_pct?: number | null;
+    avg_fill_days?: number | null;
+    fill_rate?: number | null;
+  } | null;
 }
 
 const active = (screenerData.active || []) as ScreeningEntry[];

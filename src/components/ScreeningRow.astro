@@ -24,6 +24,14 @@ export interface ScreeningEntry {
   screening_date: string;
   ex_dividend_date?: string | null;
   dividend_per_share?: number | null;
+  valuation?: {
+    peg?: number | null;
+    peg_y?: number | null;
+    pe?: number | null;
+    div_yield_3y_pct?: number | null;
+    avg_fill_days?: number | null;
+    fill_rate?: number | null;
+  } | null;
 }
 
 interface Props {
@@ -145,6 +153,18 @@ function formatDivDate(dateStr: string): string {
         )}
       </div>
     )}
+
+    {hasValue(entry.valuation) && (
+      <div class="col col-valuation">
+        <span class="col-label">PEGY</span>
+        <span class:list={["col-value", { "peg-cheap": (entry.valuation!.peg_y ?? Infinity) < 0.75 }]}>
+          {hasValue(entry.valuation!.peg_y) ? entry.valuation!.peg_y!.toFixed(2) : "—"}
+        </span>
+        {hasValue(entry.valuation!.pe) && (
+          <span class="col-sub">PE {entry.valuation!.pe!.toFixed(1)}</span>
+        )}
+      </div>
+    )}
   </div>
 </a>
 
@@ -235,6 +255,11 @@ function formatDivDate(dateStr: string): string {
 .col-muted {
   color: var(--color-text-muted);
   font-weight: 500;
+}
+
+.col-valuation { min-width: 72px; }
+.col-valuation .peg-cheap {
+  color: #089981; /* PEGY < 0.75：祖魯法則便宜區（TradingView 漲色） */
 }
 
 .col-amount { min-width: 115px; }

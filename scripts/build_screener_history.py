@@ -28,6 +28,35 @@ from collections import defaultdict
 
 REPORTS_DIR = "/root/tw-stock-monitor/output/reports"
 TRUST_CACHE_FILE = "/root/tw-stock-monitor/output/trust_all_cache.json"
+VALUATION_CACHE_FILE = "/root/tw-stock-monitor/output/valuation_cache.json"
+VALUATION_CACHE_TTL_HOURS = 24  # 補充展示資料，24hr 快取；過期後下次 build 重算
+
+
+def load_valuation_cache() -> dict:
+    """Load PEG/PEGY display cache (TTL 24h). Returns {code: valuation_dict}."""
+    try:
+        if os.path.exists(VALUATION_CACHE_FILE):
+            with open(VALUATION_CACHE_FILE) as f:
+                cache = json.load(f)
+            gen = cache.get("_generated_at", "")
+            try:
+                gen_dt = datetime.fromisoformat(gen)
+                if datetime.now() - gen_dt < timedelta(hours=VALUATION_CACHE_TTL_HOURS):
+                    return {k: v for k, v in cache.items() if not k.startswith("_")}
+                print("  valuation cache expired (>24h), will recompute")
+            except ValueError:
+                pass
+    except Exception as e:
+        print(f"  WARNING: valuation cache read failed: {e}")
+    return {}
+
+
+def save_valuation_cache(vals: dict):
+    """Persist valuation display data for next build within TTL."""
+    os.makedirs(os.path.dirname(VALUATION_CACHE_FILE), exist_ok=True)
+    payload = {"_generated_at": datetime.now().isoformat(), **vals}
+    with open(VALUATION_CACHE_FILE, "w") as f:
+        json.dump(payload, f, ensure_ascii=False)
 DATA_DIR = "/root/tw-stock-monitor/data"
 OUTPUT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "data", "screener_history.json")
 ARCHIVE_AFTER_DAYS = 30  # Inactivity threshold (last_date)
@@ -311,6 +340,46 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
     except Exception as e:
         print(f"  WARNING: value scores failed: {e}")
 
+    # ── PEG/PEGY 補充展示資料（valuation_scorer，display-only，不影響篩選）──
+    # 優先讀 24hr 快取；缺的 code 才即時計算（每檔 ≤3 FinMind calls + sleep 2s）
+    valuation_cache = load_valuation_cache()
+    valuation_data: dict[str, dict] = {}
+    missing_codes = [c for c in latest_by_code if c not in valuation_cache]
+    if valuation_cache:
+        print(f"  valuation cache hit: {len(valuation_cache)} codes")
+    if missing_codes:
+        print(f"Computing PEG/PEGY display data for {len(missing_codes)} stocks...")
+        try:
+            import sys
+            sys.path.insert(0, "/root/tw-stock-monitor")
+            from valuation_scorer import score_valuation
+            api = None
+            for c in missing_codes:
+                try:
+                    v = score_valuation(c, signal_date=None, finmind_api=api)
+                    if v.get("error"):
+                        print(f"    {c}: error — {v['error'][:80]}")
+                        continue
+                    # 更新共享 API 供下一檔重用（減少重複登入）
+                    try:
+                        from valuation_scorer import _get_api
+                        api = _get_api(api)
+                    except Exception:
+                        pass
+                    valuation_data[c] = v
+                except Exception as e:
+                    print(f"    {c}: failed ({type(e).__name__}: {str(e)[:60]})")
+            if valuation_data:
+                valuation_cache.update(valuation_data)
+                save_valuation_cache(valuation_cache)
+                print(f"  valuation computed for {len(valuation_data)} codes, cache saved")
+        except ImportError:
+            print("  WARNING: valuation_scorer not available, PEG/PEGY will show —")
+        except Exception as e:
+            print(f"  WARNING: valuation display data failed: {e}")
+    else:
+        valuation_data = {}
+
     # Build active list — must pass ALL current screening criteria:
     #   (a) last_date within 30 days
     #   (a2) last confirmed within CONFIRMATION_GRACE calendar days of latest report
@@ -381,6 +450,9 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             continue  # Fundamental scores degraded → kick
 
         # ── Passed all checks — keep in Active ──
+        # Update screening_date to latest scan date for UI display
+        entry["screening_date"] = today_s
+
         dates = code_to_dates.get(code, [])
         first_date = min(dates) if dates else entry["last_date"]
 
@@ -443,6 +515,20 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             entry["ex_dividend_date"] = None
             entry["dividend_per_share"] = None
 
+        # PEG/PEGY 補充展示資料（display-only；valuation_cache 為 24hr 快取）
+        vv = valuation_cache.get(code)
+        if isinstance(vv, dict):
+            entry["valuation"] = {
+                "peg": vv.get("peg"),
+                "peg_y": vv.get("peg_y"),
+                "pe": vv.get("pe"),
+                "div_yield_3y_pct": vv.get("div_yield_3y_pct"),
+                "avg_fill_days": vv.get("avg_fill_days"),
+                "fill_rate": vv.get("fill_rate"),
+            }
+        else:
+            entry["valuation"] = None
+
         active.append(entry)
 
     if kicked_z or kicked_net or kicked_score or kicked_stale:
@@ -499,6 +585,21 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             archive_entry["dividend_detail"] = None
             archive_entry["ex_dividend_date"] = None
             archive_entry["dividend_per_share"] = None
+
+        # PEG/PEGY 補充展示（archive 同步帶入；無資料為 null）
+        vv = valuation_cache.get(code) if isinstance(valuation_cache, dict) else None
+        archive_entry["valuation"] = (
+            {
+                "peg": vv.get("peg"),
+                "peg_y": vv.get("peg_y"),
+                "pe": vv.get("pe"),
+                "div_yield_3y_pct": vv.get("div_yield_3y_pct"),
+                "avg_fill_days": vv.get("avg_fill_days"),
+                "fill_rate": vv.get("fill_rate"),
+            }
+            if isinstance(vv, dict)
+            else None
+        )
         archive_date_to_stocks[archive_entry["screening_date"]].append(archive_entry)
 
     archive = {}
