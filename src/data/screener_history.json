@@ -39,9 +39,9 @@
         "dividend_per_share": 15.0,
         "valuation": {
           "peg": null,
-          "peg_y": 7.8405,
+          "peg_y": 5.2202,
           "pe": 13.72,
-          "div_yield_3y_pct": 4.5605,
+          "div_yield_3y_pct": 7.4627,
           "avg_fill_days": 25.0,
           "fill_rate": 0.6
         }
@@ -52,12 +52,12 @@
         "code": "1736",
         "name_zh": "喬山",
         "name_en": "Johnson Health Tech .Co., Ltd.",
-        "net_amount_10d": 97917000,
-        "net_amount_10d_k": 97917,
+        "net_amount_10d": 97531500,
+        "net_amount_10d_k": 97532,
         "net_shares_10d": 771000,
         "net_shares_10d_zhang": 771,
         "last_date": "2026-08-05",
-        "cur_price": 127.0,
+        "cur_price": 126.5,
         "g_score": 100.0,
         "l_score": 83.3,
         "regression_z": -1.14,
@@ -84,10 +84,10 @@
         "ex_dividend_date": "2026-08-04",
         "dividend_per_share": 4.5,
         "valuation": {
-          "peg": 0.2296,
-          "peg_y": 0.223,
-          "pe": 11.48,
-          "div_yield_3y_pct": 1.4695,
+          "peg": 0.2288,
+          "peg_y": 0.2136,
+          "pe": 11.44,
+          "div_yield_3y_pct": 3.5573,
           "avg_fill_days": 6.6667,
           "fill_rate": 1.0
         }
@@ -98,12 +98,12 @@
         "code": "6191",
         "name_zh": "精成科",
         "name_en": "Global Brands Manufacture Ltd.",
-        "net_amount_10d": 299502300,
-        "net_amount_10d_k": 299502,
+        "net_amount_10d": 298763700,
+        "net_amount_10d_k": 298764,
         "net_shares_10d": 3693000,
         "net_shares_10d_zhang": 3693,
         "last_date": "2026-08-03",
-        "cur_price": 81.1,
+        "cur_price": 80.9,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -1.98,
@@ -131,9 +131,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -142,12 +142,12 @@
         "code": "1216",
         "name_zh": "統一",
         "name_en": "Uni-President Enterprises Corp.",
-        "net_amount_10d": 161109803,
-        "net_amount_10d_k": 161110,
+        "net_amount_10d": 162150564,
+        "net_amount_10d_k": 162151,
         "net_shares_10d": 2081522,
         "net_shares_10d_zhang": 2082,
         "last_date": "2026-08-06",
-        "cur_price": 77.4,
+        "cur_price": 77.9,
         "g_score": 100.0,
         "l_score": 100.0,
         "regression_z": -1.27,
@@ -174,10 +174,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -220,10 +220,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -265,9 +265,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -310,10 +310,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -355,9 +355,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -400,10 +400,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -445,9 +445,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -490,10 +490,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -535,9 +535,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -581,9 +581,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -627,9 +627,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -673,9 +673,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -718,10 +718,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -763,9 +763,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -806,10 +806,10 @@
         "ex_dividend_date": "2026-07-23",
         "dividend_per_share": 5.0,
         "valuation": {
-          "peg": 1.457,
-          "peg_y": 1.3439,
+          "peg": 1.5313,
+          "peg_y": 1.3437,
           "pe": 27.48,
-          "div_yield_3y_pct": 1.5873,
+          "div_yield_3y_pct": 2.5063,
           "avg_fill_days": 8.0,
           "fill_rate": 0.3333
         }
@@ -818,12 +818,12 @@
         "code": "2633",
         "name_zh": "台灣高鐵",
         "name_en": "Taiwan High Speed Rail Corporation",
-        "net_amount_10d": 130056800,
-        "net_amount_10d_k": 130057,
+        "net_amount_10d": 130553200,
+        "net_amount_10d_k": 130553,
         "net_shares_10d": 4964000,
         "net_shares_10d_zhang": 4964,
         "last_date": "2026-07-27",
-        "cur_price": 26.2,
+        "cur_price": 26.3,
         "g_score": 100.0,
         "l_score": 83.3,
         "regression_z": -0.45,
@@ -851,9 +851,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -862,12 +862,12 @@
         "code": "1229",
         "name_zh": "聯華",
         "name_en": "Lien Hwa Industrial Holdings Corporation",
-        "net_amount_10d": 38631800,
-        "net_amount_10d_k": 38632,
+        "net_amount_10d": 38447400,
+        "net_amount_10d_k": 38447,
         "net_shares_10d": 922000,
         "net_shares_10d_zhang": 922,
         "last_date": "2026-07-27",
-        "cur_price": 41.9,
+        "cur_price": 41.7,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -0.56,
@@ -894,10 +894,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 1.8,
         "valuation": {
-          "peg": 28.256,
-          "peg_y": 4.5508,
-          "pe": 16.83,
-          "div_yield_3y_pct": 3.1026,
+          "peg": 3.2437,
+          "peg_y": 0.8307,
+          "pe": 16.75,
+          "div_yield_3y_pct": 15.0,
           "avg_fill_days": 23.0,
           "fill_rate": 0.3333
         }
@@ -940,10 +940,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -985,9 +985,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -1028,10 +1028,10 @@
         "ex_dividend_date": "2026-07-23",
         "dividend_per_share": 5.0,
         "valuation": {
-          "peg": 1.457,
-          "peg_y": 1.3439,
+          "peg": 1.5313,
+          "peg_y": 1.3437,
           "pe": 27.48,
-          "div_yield_3y_pct": 1.5873,
+          "div_yield_3y_pct": 2.5063,
           "avg_fill_days": 8.0,
           "fill_rate": 0.3333
         }
@@ -1073,9 +1073,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -1084,12 +1084,12 @@
         "code": "9917",
         "name_zh": "中保科",
         "name_en": "Taiwan Secom Co., Ltd.",
-        "net_amount_10d": 98340000,
-        "net_amount_10d_k": 98340,
+        "net_amount_10d": 98787000,
+        "net_amount_10d_k": 98787,
         "net_shares_10d": 894000,
         "net_shares_10d_zhang": 894,
         "last_date": "2026-07-24",
-        "cur_price": 110.0,
+        "cur_price": 110.5,
         "g_score": 100.0,
         "l_score": 83.3,
         "regression_z": -0.78,
@@ -1116,10 +1116,10 @@
         "ex_dividend_date": "2026-06-24",
         "dividend_per_share": 5.7,
         "valuation": {
-          "peg": 2.5809,
-          "peg_y": 1.4736,
-          "pe": 16.03,
-          "div_yield_3y_pct": 4.6667,
+          "peg": 2.1489,
+          "peg_y": 1.273,
+          "pe": 16.11,
+          "div_yield_3y_pct": 5.1584,
           "avg_fill_days": 21.0,
           "fill_rate": 0.3333
         }
@@ -1128,12 +1128,12 @@
         "code": "8070",
         "name_zh": "長華*",
         "name_en": "Chang Wah Electromaterials Inc.",
-        "net_amount_10d": 85795276,
-        "net_amount_10d_k": 85795,
+        "net_amount_10d": 86320553,
+        "net_amount_10d_k": 86321,
         "net_shares_10d": 1750924,
         "net_shares_10d_zhang": 1751,
         "last_date": "2026-07-24",
-        "cur_price": 49.0,
+        "cur_price": 49.3,
         "g_score": 100.0,
         "l_score": 83.3,
         "regression_z": -0.45,
@@ -1162,8 +1162,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 28.99,
-          "div_yield_3y_pct": 1.3268,
+          "pe": 29.17,
+          "div_yield_3y_pct": 1.3845,
           "avg_fill_days": 20.8,
           "fill_rate": 0.8333
         }
@@ -1204,10 +1204,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 1.8,
         "valuation": {
-          "peg": 28.256,
-          "peg_y": 4.5508,
-          "pe": 16.83,
-          "div_yield_3y_pct": 3.1026,
+          "peg": 3.2437,
+          "peg_y": 0.8307,
+          "pe": 16.75,
+          "div_yield_3y_pct": 15.0,
           "avg_fill_days": 23.0,
           "fill_rate": 0.3333
         }
@@ -1250,10 +1250,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -1295,9 +1295,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -1338,10 +1338,10 @@
         "ex_dividend_date": "2026-07-23",
         "dividend_per_share": 5.0,
         "valuation": {
-          "peg": 1.457,
-          "peg_y": 1.3439,
+          "peg": 1.5313,
+          "peg_y": 1.3437,
           "pe": 27.48,
-          "div_yield_3y_pct": 1.5873,
+          "div_yield_3y_pct": 2.5063,
           "avg_fill_days": 8.0,
           "fill_rate": 0.3333
         }
@@ -1350,12 +1350,12 @@
         "code": "2006",
         "name_zh": "東和鋼鐵",
         "name_en": "Tung Ho Steel Enterprise Corporation",
-        "net_amount_10d": 180728378,
-        "net_amount_10d_k": 180728,
+        "net_amount_10d": 179633054,
+        "net_amount_10d_k": 179633,
         "net_shares_10d": 2190647,
         "net_shares_10d_zhang": 2191,
         "last_date": "2026-07-22",
-        "cur_price": 82.5,
+        "cur_price": 82.0,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -0.07,
@@ -1382,10 +1382,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -1428,8 +1428,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 28.99,
-          "div_yield_3y_pct": 1.3268,
+          "pe": 29.17,
+          "div_yield_3y_pct": 1.3845,
           "avg_fill_days": 20.8,
           "fill_rate": 0.8333
         }
@@ -1471,9 +1471,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -1514,10 +1514,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 1.8,
         "valuation": {
-          "peg": 28.256,
-          "peg_y": 4.5508,
-          "pe": 16.83,
-          "div_yield_3y_pct": 3.1026,
+          "peg": 3.2437,
+          "peg_y": 0.8307,
+          "pe": 16.75,
+          "div_yield_3y_pct": 15.0,
           "avg_fill_days": 23.0,
           "fill_rate": 0.3333
         }
@@ -1560,10 +1560,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -1605,9 +1605,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -1650,8 +1650,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 28.99,
-          "div_yield_3y_pct": 1.3268,
+          "pe": 29.17,
+          "div_yield_3y_pct": 1.3845,
           "avg_fill_days": 20.8,
           "fill_rate": 0.8333
         }
@@ -1692,10 +1692,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -1737,9 +1737,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -1783,9 +1783,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -1826,10 +1826,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -1872,8 +1872,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 28.99,
-          "div_yield_3y_pct": 1.3268,
+          "pe": 29.17,
+          "div_yield_3y_pct": 1.3845,
           "avg_fill_days": 20.8,
           "fill_rate": 0.8333
         }
@@ -1914,10 +1914,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -1959,9 +1959,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -1972,12 +1972,12 @@
         "code": "5269",
         "name_zh": "祥碩",
         "name_en": "ASMedia Technology Inc.",
-        "net_amount_10d": 1760945200,
-        "net_amount_10d_k": 1760945,
+        "net_amount_10d": 1779812470,
+        "net_amount_10d_k": 1779812,
         "net_shares_10d": 1257818,
         "net_shares_10d_zhang": 1258,
         "last_date": "2026-07-20",
-        "cur_price": 1400.0,
+        "cur_price": 1415.0,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -0.67,
@@ -2004,10 +2004,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -2049,9 +2049,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -2060,12 +2060,12 @@
         "code": "2317",
         "name_zh": "鴻海",
         "name_en": "Hon Hai Precision Industry Co., Ltd.",
-        "net_amount_10d": 754337432,
-        "net_amount_10d_k": 754337,
+        "net_amount_10d": 752788485,
+        "net_amount_10d_k": 752788,
         "net_shares_10d": 3097895,
         "net_shares_10d_zhang": 3098,
         "last_date": "2026-07-20",
-        "cur_price": 243.5,
+        "cur_price": 243.0,
         "g_score": 100.0,
         "l_score": 100.0,
         "regression_z": -0.37,
@@ -2092,10 +2092,10 @@
         "ex_dividend_date": "2026-07-02",
         "dividend_per_share": 7.17,
         "valuation": {
-          "peg": 0.7599,
-          "peg_y": 0.6865,
-          "pe": 16.05,
-          "div_yield_3y_pct": 2.2587,
+          "peg": 1.0433,
+          "peg_y": 0.8751,
+          "pe": 16.02,
+          "div_yield_3y_pct": 2.9514,
           "avg_fill_days": 8.0,
           "fill_rate": 0.6667
         }
@@ -2138,8 +2138,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 28.99,
-          "div_yield_3y_pct": 1.3268,
+          "pe": 29.17,
+          "div_yield_3y_pct": 1.3845,
           "avg_fill_days": 20.8,
           "fill_rate": 0.8333
         }
@@ -2148,12 +2148,12 @@
         "code": "3045",
         "name_zh": "台灣大",
         "name_en": "Taiwan Mobile Co., Ltd.",
-        "net_amount_10d": 165430145,
-        "net_amount_10d_k": 165430,
+        "net_amount_10d": 166149406,
+        "net_amount_10d_k": 166149,
         "net_shares_10d": 1438523,
         "net_shares_10d_zhang": 1439,
         "last_date": "2026-07-20",
-        "cur_price": 115.0,
+        "cur_price": 115.5,
         "g_score": 100.0,
         "l_score": 83.3,
         "regression_z": -0.67,
@@ -2180,10 +2180,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -2224,10 +2224,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -2269,9 +2269,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -2314,10 +2314,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -2359,9 +2359,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -2402,10 +2402,10 @@
         "ex_dividend_date": "2026-07-02",
         "dividend_per_share": 7.17,
         "valuation": {
-          "peg": 0.7599,
-          "peg_y": 0.6865,
-          "pe": 16.05,
-          "div_yield_3y_pct": 2.2587,
+          "peg": 1.0433,
+          "peg_y": 0.8751,
+          "pe": 16.02,
+          "div_yield_3y_pct": 2.9514,
           "avg_fill_days": 8.0,
           "fill_rate": 0.6667
         }
@@ -2446,10 +2446,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -2492,8 +2492,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 28.99,
-          "div_yield_3y_pct": 1.3268,
+          "pe": 29.17,
+          "div_yield_3y_pct": 1.3845,
           "avg_fill_days": 20.8,
           "fill_rate": 0.8333
         }
@@ -2535,9 +2535,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -2578,10 +2578,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -2624,10 +2624,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -2668,10 +2668,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -2713,9 +2713,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -2756,10 +2756,10 @@
         "ex_dividend_date": "2026-07-02",
         "dividend_per_share": 7.17,
         "valuation": {
-          "peg": 0.7599,
-          "peg_y": 0.6865,
-          "pe": 16.05,
-          "div_yield_3y_pct": 2.2587,
+          "peg": 1.0433,
+          "peg_y": 0.8751,
+          "pe": 16.02,
+          "div_yield_3y_pct": 2.9514,
           "avg_fill_days": 8.0,
           "fill_rate": 0.6667
         }
@@ -2800,10 +2800,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -2845,9 +2845,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -2858,12 +2858,12 @@
         "code": "4904",
         "name_zh": "遠傳",
         "name_en": "Far EasTone Telecommunications Co., Ltd.",
-        "net_amount_10d": 2886043184,
-        "net_amount_10d_k": 2886043,
+        "net_amount_10d": 2914477108,
+        "net_amount_10d_k": 2914477,
         "net_shares_10d": 28433923,
         "net_shares_10d_zhang": 28434,
         "last_date": "2026-07-15",
-        "cur_price": 101.5,
+        "cur_price": 102.5,
         "g_score": 100,
         "l_score": 83,
         "regression_z": -0.3,
@@ -2890,10 +2890,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 3.81,
         "valuation": {
-          "peg": 3.7132,
-          "peg_y": 2.643,
-          "pe": 24.7,
-          "div_yield_3y_pct": 2.6936,
+          "peg": 4.4826,
+          "peg_y": 2.7935,
+          "pe": 24.94,
+          "div_yield_3y_pct": 3.3642,
           "avg_fill_days": 35.0,
           "fill_rate": 0.6667
         }
@@ -2934,10 +2934,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -2946,12 +2946,12 @@
         "code": "3293",
         "name_zh": "鈊象",
         "name_en": "International Games System Co.,Ltd.",
-        "net_amount_10d": 2643546500,
-        "net_amount_10d_k": 2643546,
+        "net_amount_10d": 2606881500,
+        "net_amount_10d_k": 2606882,
         "net_shares_10d": 3666500,
         "net_shares_10d_zhang": 3666,
         "last_date": "2026-07-15",
-        "cur_price": 721.0,
+        "cur_price": 711.0,
         "g_score": 100,
         "l_score": 83,
         "regression_z": -1.66,
@@ -2980,8 +2980,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 16.66,
-          "div_yield_3y_pct": 4.577,
+          "pe": 16.43,
+          "div_yield_3y_pct": 5.0633,
           "avg_fill_days": 21.5,
           "fill_rate": 0.6667
         }
@@ -3022,10 +3022,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -3067,9 +3067,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -3110,10 +3110,10 @@
         "ex_dividend_date": "2026-07-02",
         "dividend_per_share": 7.17,
         "valuation": {
-          "peg": 0.7599,
-          "peg_y": 0.6865,
-          "pe": 16.05,
-          "div_yield_3y_pct": 2.2587,
+          "peg": 1.0433,
+          "peg_y": 0.8751,
+          "pe": 16.02,
+          "div_yield_3y_pct": 2.9514,
           "avg_fill_days": 8.0,
           "fill_rate": 0.6667
         }
@@ -3122,12 +3122,12 @@
         "code": "3014",
         "name_zh": "聯陽",
         "name_en": "ITE Tech. Inc",
-        "net_amount_10d": 379882422,
-        "net_amount_10d_k": 379882,
+        "net_amount_10d": 382815878,
+        "net_amount_10d_k": 382816,
         "net_shares_10d": 2933455,
         "net_shares_10d_zhang": 2933,
         "last_date": "2026-07-15",
-        "cur_price": 129.5,
+        "cur_price": 130.5,
         "g_score": 80,
         "l_score": 83,
         "regression_z": -0.44,
@@ -3154,10 +3154,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 8.5,
         "valuation": {
-          "peg": 7.0723,
-          "peg_y": 1.7715,
-          "pe": 13.08,
-          "div_yield_3y_pct": 5.5341,
+          "peg": null,
+          "peg_y": 4.1148,
+          "pe": 13.18,
+          "div_yield_3y_pct": 5.7483,
           "avg_fill_days": 28.0,
           "fill_rate": 0.6667
         }
@@ -3166,12 +3166,12 @@
         "code": "2610",
         "name_zh": "華航",
         "name_en": "China Airlines, Ltd.",
-        "net_amount_10d": 321442562,
-        "net_amount_10d_k": 321443,
+        "net_amount_10d": 319874550,
+        "net_amount_10d_k": 319875,
         "net_shares_10d": 15680125,
         "net_shares_10d_zhang": 15680,
         "last_date": "2026-07-15",
-        "cur_price": 20.5,
+        "cur_price": 20.4,
         "g_score": 80,
         "l_score": 83,
         "regression_z": -0.03,
@@ -3198,10 +3198,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -3243,9 +3243,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -3286,10 +3286,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -3298,12 +3298,12 @@
         "code": "2105",
         "name_zh": "正新",
         "name_en": "Cheng Shin Rubber Ind. Co., Ltd.",
-        "net_amount_10d": 55878976,
-        "net_amount_10d_k": 55879,
+        "net_amount_10d": 55701301,
+        "net_amount_10d_k": 55701,
         "net_shares_10d": 1776756,
         "net_shares_10d_zhang": 1777,
         "last_date": "2026-07-15",
-        "cur_price": 31.45,
+        "cur_price": 31.35,
         "g_score": 100.0,
         "l_score": 66.7,
         "regression_z": -0.8,
@@ -3332,8 +3332,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -3378,8 +3378,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 16.66,
-          "div_yield_3y_pct": 4.577,
+          "pe": 16.43,
+          "div_yield_3y_pct": 5.0633,
           "avg_fill_days": 21.5,
           "fill_rate": 0.6667
         }
@@ -3420,10 +3420,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 3.81,
         "valuation": {
-          "peg": 3.7132,
-          "peg_y": 2.643,
-          "pe": 24.7,
-          "div_yield_3y_pct": 2.6936,
+          "peg": 4.4826,
+          "peg_y": 2.7935,
+          "pe": 24.94,
+          "div_yield_3y_pct": 3.3642,
           "avg_fill_days": 35.0,
           "fill_rate": 0.6667
         }
@@ -3464,10 +3464,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -3508,10 +3508,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -3552,10 +3552,10 @@
         "ex_dividend_date": "2026-07-02",
         "dividend_per_share": 7.17,
         "valuation": {
-          "peg": 0.7599,
-          "peg_y": 0.6865,
-          "pe": 16.05,
-          "div_yield_3y_pct": 2.2587,
+          "peg": 1.0433,
+          "peg_y": 0.8751,
+          "pe": 16.02,
+          "div_yield_3y_pct": 2.9514,
           "avg_fill_days": 8.0,
           "fill_rate": 0.6667
         }
@@ -3597,9 +3597,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -3608,12 +3608,12 @@
         "code": "2618",
         "name_zh": "長榮航",
         "name_en": "EVA Airways Corp.",
-        "net_amount_10d": 846220143,
-        "net_amount_10d_k": 846220,
+        "net_amount_10d": 837291677,
+        "net_amount_10d_k": 837292,
         "net_shares_10d": 19841035,
         "net_shares_10d_zhang": 19841,
         "last_date": "2026-07-14",
-        "cur_price": 42.65,
+        "cur_price": 42.2,
         "g_score": 80,
         "l_score": 83,
         "regression_z": -0.04,
@@ -3640,10 +3640,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -3684,10 +3684,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -3729,9 +3729,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -3772,10 +3772,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 8.5,
         "valuation": {
-          "peg": 7.0723,
-          "peg_y": 1.7715,
-          "pe": 13.08,
-          "div_yield_3y_pct": 5.5341,
+          "peg": null,
+          "peg_y": 4.1148,
+          "pe": 13.18,
+          "div_yield_3y_pct": 5.7483,
           "avg_fill_days": 28.0,
           "fill_rate": 0.6667
         }
@@ -3818,8 +3818,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 28.99,
-          "div_yield_3y_pct": 1.3268,
+          "pe": 29.17,
+          "div_yield_3y_pct": 1.3845,
           "avg_fill_days": 20.8,
           "fill_rate": 0.8333
         }
@@ -3860,10 +3860,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -3906,8 +3906,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -3950,10 +3950,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 3.81,
         "valuation": {
-          "peg": 3.7132,
-          "peg_y": 2.643,
-          "pe": 24.7,
-          "div_yield_3y_pct": 2.6936,
+          "peg": 4.4826,
+          "peg_y": 2.7935,
+          "pe": 24.94,
+          "div_yield_3y_pct": 3.3642,
           "avg_fill_days": 35.0,
           "fill_rate": 0.6667
         }
@@ -3996,8 +3996,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 16.66,
-          "div_yield_3y_pct": 4.577,
+          "pe": 16.43,
+          "div_yield_3y_pct": 5.0633,
           "avg_fill_days": 21.5,
           "fill_rate": 0.6667
         }
@@ -4038,10 +4038,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -4082,10 +4082,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -4126,10 +4126,10 @@
         "ex_dividend_date": "2026-07-02",
         "dividend_per_share": 7.17,
         "valuation": {
-          "peg": 0.7599,
-          "peg_y": 0.6865,
-          "pe": 16.05,
-          "div_yield_3y_pct": 2.2587,
+          "peg": 1.0433,
+          "peg_y": 0.8751,
+          "pe": 16.02,
+          "div_yield_3y_pct": 2.9514,
           "avg_fill_days": 8.0,
           "fill_rate": 0.6667
         }
@@ -4171,9 +4171,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -4214,10 +4214,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -4258,10 +4258,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -4303,9 +4303,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -4346,10 +4346,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -4390,10 +4390,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 8.5,
         "valuation": {
-          "peg": 7.0723,
-          "peg_y": 1.7715,
-          "pe": 13.08,
-          "div_yield_3y_pct": 5.5341,
+          "peg": null,
+          "peg_y": 4.1148,
+          "pe": 13.18,
+          "div_yield_3y_pct": 5.7483,
           "avg_fill_days": 28.0,
           "fill_rate": 0.6667
         }
@@ -4402,12 +4402,12 @@
         "code": "1513",
         "name_zh": "中興電",
         "name_en": "Chung-Hsin Electric and Machinery Manufacturing Corp.",
-        "net_amount_10d": 312664688,
-        "net_amount_10d_k": 312665,
+        "net_amount_10d": 315524426,
+        "net_amount_10d_k": 315524,
         "net_shares_10d": 1906492,
         "net_shares_10d_zhang": 1906,
         "last_date": "2026-07-13",
-        "cur_price": 164.0,
+        "cur_price": 165.5,
         "g_score": 80,
         "l_score": 83,
         "regression_z": -0.49,
@@ -4434,10 +4434,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -4480,10 +4480,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 3.81,
         "valuation": {
-          "peg": 3.7132,
-          "peg_y": 2.643,
-          "pe": 24.7,
-          "div_yield_3y_pct": 2.6936,
+          "peg": 4.4826,
+          "peg_y": 2.7935,
+          "pe": 24.94,
+          "div_yield_3y_pct": 3.3642,
           "avg_fill_days": 35.0,
           "fill_rate": 0.6667
         }
@@ -4526,8 +4526,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 16.66,
-          "div_yield_3y_pct": 4.577,
+          "pe": 16.43,
+          "div_yield_3y_pct": 5.0633,
           "avg_fill_days": 21.5,
           "fill_rate": 0.6667
         }
@@ -4568,10 +4568,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -4612,10 +4612,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -4656,10 +4656,10 @@
         "ex_dividend_date": "2026-07-02",
         "dividend_per_share": 7.17,
         "valuation": {
-          "peg": 0.7599,
-          "peg_y": 0.6865,
-          "pe": 16.05,
-          "div_yield_3y_pct": 2.2587,
+          "peg": 1.0433,
+          "peg_y": 0.8751,
+          "pe": 16.02,
+          "div_yield_3y_pct": 2.9514,
           "avg_fill_days": 8.0,
           "fill_rate": 0.6667
         }
@@ -4701,9 +4701,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -4744,10 +4744,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -4788,10 +4788,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -4832,10 +4832,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -4876,10 +4876,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 8.5,
         "valuation": {
-          "peg": 7.0723,
-          "peg_y": 1.7715,
-          "pe": 13.08,
-          "div_yield_3y_pct": 5.5341,
+          "peg": null,
+          "peg_y": 4.1148,
+          "pe": 13.18,
+          "div_yield_3y_pct": 5.7483,
           "avg_fill_days": 28.0,
           "fill_rate": 0.6667
         }
@@ -4922,10 +4922,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 3.81,
         "valuation": {
-          "peg": 3.7132,
-          "peg_y": 2.643,
-          "pe": 24.7,
-          "div_yield_3y_pct": 2.6936,
+          "peg": 4.4826,
+          "peg_y": 2.7935,
+          "pe": 24.94,
+          "div_yield_3y_pct": 3.3642,
           "avg_fill_days": 35.0,
           "fill_rate": 0.6667
         }
@@ -4968,8 +4968,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 16.66,
-          "div_yield_3y_pct": 4.577,
+          "pe": 16.43,
+          "div_yield_3y_pct": 5.0633,
           "avg_fill_days": 21.5,
           "fill_rate": 0.6667
         }
@@ -5010,10 +5010,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -5054,10 +5054,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -5098,10 +5098,10 @@
         "ex_dividend_date": "2026-07-02",
         "dividend_per_share": 7.17,
         "valuation": {
-          "peg": 0.7599,
-          "peg_y": 0.6865,
-          "pe": 16.05,
-          "div_yield_3y_pct": 2.2587,
+          "peg": 1.0433,
+          "peg_y": 0.8751,
+          "pe": 16.02,
+          "div_yield_3y_pct": 2.9514,
           "avg_fill_days": 8.0,
           "fill_rate": 0.6667
         }
@@ -5143,9 +5143,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -5186,10 +5186,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -5230,10 +5230,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -5274,10 +5274,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -5318,10 +5318,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 8.5,
         "valuation": {
-          "peg": 7.0723,
-          "peg_y": 1.7715,
-          "pe": 13.08,
-          "div_yield_3y_pct": 5.5341,
+          "peg": null,
+          "peg_y": 4.1148,
+          "pe": 13.18,
+          "div_yield_3y_pct": 5.7483,
           "avg_fill_days": 28.0,
           "fill_rate": 0.6667
         }
@@ -5364,10 +5364,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 3.81,
         "valuation": {
-          "peg": 3.7132,
-          "peg_y": 2.643,
-          "pe": 24.7,
-          "div_yield_3y_pct": 2.6936,
+          "peg": 4.4826,
+          "peg_y": 2.7935,
+          "pe": 24.94,
+          "div_yield_3y_pct": 3.3642,
           "avg_fill_days": 35.0,
           "fill_rate": 0.6667
         }
@@ -5410,8 +5410,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 16.66,
-          "div_yield_3y_pct": 4.577,
+          "pe": 16.43,
+          "div_yield_3y_pct": 5.0633,
           "avg_fill_days": 21.5,
           "fill_rate": 0.6667
         }
@@ -5452,10 +5452,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -5496,10 +5496,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -5540,10 +5540,10 @@
         "ex_dividend_date": "2026-07-02",
         "dividend_per_share": 7.17,
         "valuation": {
-          "peg": 0.7599,
-          "peg_y": 0.6865,
-          "pe": 16.05,
-          "div_yield_3y_pct": 2.2587,
+          "peg": 1.0433,
+          "peg_y": 0.8751,
+          "pe": 16.02,
+          "div_yield_3y_pct": 2.9514,
           "avg_fill_days": 8.0,
           "fill_rate": 0.6667
         }
@@ -5584,10 +5584,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -5629,9 +5629,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -5672,10 +5672,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -5717,9 +5717,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -5760,10 +5760,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -5808,8 +5808,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 16.66,
-          "div_yield_3y_pct": 4.577,
+          "pe": 16.43,
+          "div_yield_3y_pct": 5.0633,
           "avg_fill_days": 21.5,
           "fill_rate": 0.6667
         }
@@ -5850,10 +5850,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -5894,10 +5894,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -5938,10 +5938,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -5982,10 +5982,10 @@
         "ex_dividend_date": "2026-07-02",
         "dividend_per_share": 7.17,
         "valuation": {
-          "peg": 0.7599,
-          "peg_y": 0.6865,
-          "pe": 16.05,
-          "div_yield_3y_pct": 2.2587,
+          "peg": 1.0433,
+          "peg_y": 0.8751,
+          "pe": 16.02,
+          "div_yield_3y_pct": 2.9514,
           "avg_fill_days": 8.0,
           "fill_rate": 0.6667
         }
@@ -6027,9 +6027,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -6071,9 +6071,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -6118,8 +6118,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 16.66,
-          "div_yield_3y_pct": 4.577,
+          "pe": 16.43,
+          "div_yield_3y_pct": 5.0633,
           "avg_fill_days": 21.5,
           "fill_rate": 0.6667
         }
@@ -6160,10 +6160,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -6204,10 +6204,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -6248,10 +6248,10 @@
         "ex_dividend_date": "2026-07-21",
         "dividend_per_share": 45.38,
         "valuation": {
-          "peg": 0.2986,
-          "peg_y": 0.2892,
-          "pe": 14.93,
-          "div_yield_3y_pct": 1.6329,
+          "peg": 0.3018,
+          "peg_y": 0.2836,
+          "pe": 15.09,
+          "div_yield_3y_pct": 3.2068,
           "avg_fill_days": 11.6667,
           "fill_rate": 1.0
         }
@@ -6293,9 +6293,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -6337,9 +6337,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -6382,10 +6382,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -6426,10 +6426,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -6471,9 +6471,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -6515,9 +6515,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -6526,12 +6526,12 @@
         "code": "1476",
         "name_zh": "儒鴻",
         "name_en": "Eclat Textile Co., Ltd.",
-        "net_amount_10d": 594465480,
-        "net_amount_10d_k": 594465,
+        "net_amount_10d": 602014248,
+        "net_amount_10d_k": 602014,
         "net_shares_10d": 1887192,
         "net_shares_10d_zhang": 1887,
         "last_date": "2026-07-02",
-        "cur_price": 315.0,
+        "cur_price": 319.0,
         "g_score": 80,
         "l_score": 83,
         "regression_z": -1.58,
@@ -6558,10 +6558,10 @@
         "ex_dividend_date": "2026-06-17",
         "dividend_per_share": 15.0,
         "valuation": {
-          "peg": 1.1735,
-          "peg_y": 0.8082,
-          "pe": 13.05,
-          "div_yield_3y_pct": 5.0265,
+          "peg": 4.1515,
+          "peg_y": 1.6755,
+          "pe": 13.21,
+          "div_yield_3y_pct": 4.7022,
           "avg_fill_days": 24.5,
           "fill_rate": 0.6667
         }
@@ -6575,7 +6575,7 @@
         "net_shares_10d": 0,
         "net_shares_10d_zhang": 0,
         "last_date": "2026-07-02",
-        "cur_price": 101.5,
+        "cur_price": 102.5,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -0.0,
@@ -6604,8 +6604,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 44.71,
-          "div_yield_3y_pct": 1.5764,
+          "pe": 45.15,
+          "div_yield_3y_pct": 2.1463,
           "avg_fill_days": 8.6667,
           "fill_rate": 1.0
         }
@@ -6648,10 +6648,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -6692,10 +6692,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -6737,9 +6737,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -6780,10 +6780,10 @@
         "ex_dividend_date": "2026-06-17",
         "dividend_per_share": 15.0,
         "valuation": {
-          "peg": 1.1735,
-          "peg_y": 0.8082,
-          "pe": 13.05,
-          "div_yield_3y_pct": 5.0265,
+          "peg": 4.1515,
+          "peg_y": 1.6755,
+          "pe": 13.21,
+          "div_yield_3y_pct": 4.7022,
           "avg_fill_days": 24.5,
           "fill_rate": 0.6667
         }
@@ -6825,9 +6825,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -6870,8 +6870,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -6912,10 +6912,10 @@
         "ex_dividend_date": "2026-06-24",
         "dividend_per_share": 5.7,
         "valuation": {
-          "peg": 2.5809,
-          "peg_y": 1.4736,
-          "pe": 16.03,
-          "div_yield_3y_pct": 4.6667,
+          "peg": 2.1489,
+          "peg_y": 1.273,
+          "pe": 16.11,
+          "div_yield_3y_pct": 5.1584,
           "avg_fill_days": 21.0,
           "fill_rate": 0.3333
         }
@@ -6958,10 +6958,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -7002,10 +7002,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -7047,9 +7047,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -7092,8 +7092,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -7134,10 +7134,10 @@
         "ex_dividend_date": "2026-06-17",
         "dividend_per_share": 15.0,
         "valuation": {
-          "peg": 1.1735,
-          "peg_y": 0.8082,
-          "pe": 13.05,
-          "div_yield_3y_pct": 5.0265,
+          "peg": 4.1515,
+          "peg_y": 1.6755,
+          "pe": 13.21,
+          "div_yield_3y_pct": 4.7022,
           "avg_fill_days": 24.5,
           "fill_rate": 0.6667
         }
@@ -7179,9 +7179,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -7222,10 +7222,10 @@
         "ex_dividend_date": "2026-06-24",
         "dividend_per_share": 5.7,
         "valuation": {
-          "peg": 2.5809,
-          "peg_y": 1.4736,
-          "pe": 16.03,
-          "div_yield_3y_pct": 4.6667,
+          "peg": 2.1489,
+          "peg_y": 1.273,
+          "pe": 16.11,
+          "div_yield_3y_pct": 5.1584,
           "avg_fill_days": 21.0,
           "fill_rate": 0.3333
         }
@@ -7239,7 +7239,7 @@
         "net_shares_10d": 0,
         "net_shares_10d_zhang": 0,
         "last_date": "2026-06-26",
-        "cur_price": 279.0,
+        "cur_price": 278.0,
         "g_score": 100.0,
         "l_score": 83.3,
         "regression_z": -0.24,
@@ -7266,10 +7266,10 @@
         "ex_dividend_date": "2026-04-16",
         "dividend_per_share": 16.84,
         "valuation": {
-          "peg": 0.5039,
-          "peg_y": 0.4521,
-          "pe": 15.71,
-          "div_yield_3y_pct": 3.576,
+          "peg": 0.502,
+          "peg_y": 0.4342,
+          "pe": 15.65,
+          "div_yield_3y_pct": 4.8679,
           "avg_fill_days": 14.0,
           "fill_rate": 1.0
         }
@@ -7312,10 +7312,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -7358,8 +7358,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -7401,9 +7401,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -7444,10 +7444,10 @@
         "ex_dividend_date": "2026-06-17",
         "dividend_per_share": 15.0,
         "valuation": {
-          "peg": 1.1735,
-          "peg_y": 0.8082,
-          "pe": 13.05,
-          "div_yield_3y_pct": 5.0265,
+          "peg": 4.1515,
+          "peg_y": 1.6755,
+          "pe": 13.21,
+          "div_yield_3y_pct": 4.7022,
           "avg_fill_days": 24.5,
           "fill_rate": 0.6667
         }
@@ -7488,10 +7488,10 @@
         "ex_dividend_date": "2026-06-24",
         "dividend_per_share": 5.7,
         "valuation": {
-          "peg": 2.5809,
-          "peg_y": 1.4736,
-          "pe": 16.03,
-          "div_yield_3y_pct": 4.6667,
+          "peg": 2.1489,
+          "peg_y": 1.273,
+          "pe": 16.11,
+          "div_yield_3y_pct": 5.1584,
           "avg_fill_days": 21.0,
           "fill_rate": 0.3333
         }
@@ -7534,10 +7534,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -7580,8 +7580,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -7623,9 +7623,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -7666,10 +7666,10 @@
         "ex_dividend_date": "2026-06-17",
         "dividend_per_share": 15.0,
         "valuation": {
-          "peg": 1.1735,
-          "peg_y": 0.8082,
-          "pe": 13.05,
-          "div_yield_3y_pct": 5.0265,
+          "peg": 4.1515,
+          "peg_y": 1.6755,
+          "pe": 13.21,
+          "div_yield_3y_pct": 4.7022,
           "avg_fill_days": 24.5,
           "fill_rate": 0.6667
         }
@@ -7710,10 +7710,10 @@
         "ex_dividend_date": "2026-06-24",
         "dividend_per_share": 5.7,
         "valuation": {
-          "peg": 2.5809,
-          "peg_y": 1.4736,
-          "pe": 16.03,
-          "div_yield_3y_pct": 4.6667,
+          "peg": 2.1489,
+          "peg_y": 1.273,
+          "pe": 16.11,
+          "div_yield_3y_pct": 5.1584,
           "avg_fill_days": 21.0,
           "fill_rate": 0.3333
         }
@@ -7758,8 +7758,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -7800,10 +7800,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -7845,9 +7845,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -7888,10 +7888,10 @@
         "ex_dividend_date": "2026-06-17",
         "dividend_per_share": 15.0,
         "valuation": {
-          "peg": 1.1735,
-          "peg_y": 0.8082,
-          "pe": 13.05,
-          "div_yield_3y_pct": 5.0265,
+          "peg": 4.1515,
+          "peg_y": 1.6755,
+          "pe": 13.21,
+          "div_yield_3y_pct": 4.7022,
           "avg_fill_days": 24.5,
           "fill_rate": 0.6667
         }
@@ -7932,10 +7932,10 @@
         "ex_dividend_date": "2026-06-24",
         "dividend_per_share": 5.7,
         "valuation": {
-          "peg": 2.5809,
-          "peg_y": 1.4736,
-          "pe": 16.03,
-          "div_yield_3y_pct": 4.6667,
+          "peg": 2.1489,
+          "peg_y": 1.273,
+          "pe": 16.11,
+          "div_yield_3y_pct": 5.1584,
           "avg_fill_days": 21.0,
           "fill_rate": 0.3333
         }
@@ -7944,12 +7944,12 @@
         "code": "2606",
         "name_zh": "裕民",
         "name_en": "U-Ming Marine Transport Corporation",
-        "net_amount_10d": 35643900,
-        "net_amount_10d_k": 35644,
+        "net_amount_10d": 38454000,
+        "net_amount_10d_k": 38454,
         "net_shares_10d": 493000,
         "net_shares_10d_zhang": 493,
         "last_date": "2026-06-22",
-        "cur_price": 72.3,
+        "cur_price": 78.0,
         "g_score": 100.0,
         "l_score": 100.0,
         "regression_z": -0.22,
@@ -7976,10 +7976,10 @@
         "ex_dividend_date": "2026-06-16",
         "dividend_per_share": 2.8,
         "valuation": {
-          "peg": 0.6108,
-          "peg_y": 0.4977,
-          "pe": 10.66,
-          "div_yield_3y_pct": 3.965,
+          "peg": 0.7565,
+          "peg_y": 0.612,
+          "pe": 11.5,
+          "div_yield_3y_pct": 3.5897,
           "avg_fill_days": 32.0,
           "fill_rate": 1.0
         }
@@ -8024,8 +8024,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -8066,10 +8066,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -8110,10 +8110,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -8155,9 +8155,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -8198,10 +8198,10 @@
         "ex_dividend_date": "2026-06-17",
         "dividend_per_share": 15.0,
         "valuation": {
-          "peg": 1.1735,
-          "peg_y": 0.8082,
-          "pe": 13.05,
-          "div_yield_3y_pct": 5.0265,
+          "peg": 4.1515,
+          "peg_y": 1.6755,
+          "pe": 13.21,
+          "div_yield_3y_pct": 4.7022,
           "avg_fill_days": 24.5,
           "fill_rate": 0.6667
         }
@@ -8242,10 +8242,10 @@
         "ex_dividend_date": "2026-06-24",
         "dividend_per_share": 5.7,
         "valuation": {
-          "peg": 2.5809,
-          "peg_y": 1.4736,
-          "pe": 16.03,
-          "div_yield_3y_pct": 4.6667,
+          "peg": 2.1489,
+          "peg_y": 1.273,
+          "pe": 16.11,
+          "div_yield_3y_pct": 5.1584,
           "avg_fill_days": 21.0,
           "fill_rate": 0.3333
         }
@@ -8286,10 +8286,10 @@
         "ex_dividend_date": "2026-06-16",
         "dividend_per_share": 2.8,
         "valuation": {
-          "peg": 0.6108,
-          "peg_y": 0.4977,
-          "pe": 10.66,
-          "div_yield_3y_pct": 3.965,
+          "peg": 0.7565,
+          "peg_y": 0.612,
+          "pe": 11.5,
+          "div_yield_3y_pct": 3.5897,
           "avg_fill_days": 32.0,
           "fill_rate": 1.0
         }
@@ -8334,8 +8334,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -8376,10 +8376,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -8420,10 +8420,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -8465,9 +8465,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -8508,10 +8508,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -8556,8 +8556,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -8598,10 +8598,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -8642,10 +8642,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 6.0,
         "valuation": {
-          "peg": 0.369,
-          "peg_y": 0.3525,
-          "pe": 18.45,
-          "div_yield_3y_pct": 2.3402,
+          "peg": 0.3724,
+          "peg_y": 0.3472,
+          "pe": 18.62,
+          "div_yield_3y_pct": 3.6254,
           "avg_fill_days": 1.6667,
           "fill_rate": 1.0
         }
@@ -8687,9 +8687,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -8730,10 +8730,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -8778,8 +8778,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -8820,10 +8820,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -8865,9 +8865,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -8908,10 +8908,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -8953,9 +8953,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -9000,8 +9000,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -9042,10 +9042,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -9086,10 +9086,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -9131,9 +9131,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -9174,10 +9174,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -9219,9 +9219,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -9262,10 +9262,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -9310,8 +9310,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -9352,10 +9352,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -9396,10 +9396,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -9441,9 +9441,9 @@
         "dividend_per_share": 2.6,
         "valuation": {
           "peg": null,
-          "peg_y": null,
-          "pe": 14.13,
-          "div_yield_3y_pct": 3.6708,
+          "peg_y": 6.1009,
+          "pe": 14.09,
+          "div_yield_3y_pct": 3.2138,
           "avg_fill_days": 2.5,
           "fill_rate": 0.6667
         }
@@ -9484,10 +9484,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -9529,9 +9529,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -9572,10 +9572,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -9618,10 +9618,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -9664,8 +9664,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -9706,10 +9706,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -9750,10 +9750,10 @@
         "ex_dividend_date": "2026-03-20",
         "dividend_per_share": 4.3,
         "valuation": {
-          "peg": 3.6702,
-          "peg_y": 1.4209,
-          "pe": 10.96,
-          "div_yield_3y_pct": 4.7273,
+          "peg": null,
+          "peg_y": 2.1399,
+          "pe": 10.89,
+          "div_yield_3y_pct": 5.2439,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -9794,10 +9794,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -9840,10 +9840,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -9886,8 +9886,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -9928,10 +9928,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -9972,10 +9972,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 8.5,
         "valuation": {
-          "peg": 7.0723,
-          "peg_y": 1.7715,
-          "pe": 13.08,
-          "div_yield_3y_pct": 5.5341,
+          "peg": null,
+          "peg_y": 4.1148,
+          "pe": 13.18,
+          "div_yield_3y_pct": 5.7483,
           "avg_fill_days": 28.0,
           "fill_rate": 0.6667
         }
@@ -10016,10 +10016,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -10062,10 +10062,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -10108,8 +10108,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -10150,10 +10150,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -10194,10 +10194,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 8.5,
         "valuation": {
-          "peg": 7.0723,
-          "peg_y": 1.7715,
-          "pe": 13.08,
-          "div_yield_3y_pct": 5.5341,
+          "peg": null,
+          "peg_y": 4.1148,
+          "pe": 13.18,
+          "div_yield_3y_pct": 5.7483,
           "avg_fill_days": 28.0,
           "fill_rate": 0.6667
         }
@@ -10239,9 +10239,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -10282,10 +10282,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -10328,10 +10328,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -10374,8 +10374,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -10416,10 +10416,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -10460,10 +10460,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 8.5,
         "valuation": {
-          "peg": 7.0723,
-          "peg_y": 1.7715,
-          "pe": 13.08,
-          "div_yield_3y_pct": 5.5341,
+          "peg": null,
+          "peg_y": 4.1148,
+          "pe": 13.18,
+          "div_yield_3y_pct": 5.7483,
           "avg_fill_days": 28.0,
           "fill_rate": 0.6667
         }
@@ -10505,9 +10505,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -10548,10 +10548,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -10594,10 +10594,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -10638,10 +10638,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -10682,10 +10682,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -10728,8 +10728,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -10770,10 +10770,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 8.5,
         "valuation": {
-          "peg": 7.0723,
-          "peg_y": 1.7715,
-          "pe": 13.08,
-          "div_yield_3y_pct": 5.5341,
+          "peg": null,
+          "peg_y": 4.1148,
+          "pe": 13.18,
+          "div_yield_3y_pct": 5.7483,
           "avg_fill_days": 28.0,
           "fill_rate": 0.6667
         }
@@ -10815,9 +10815,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -10858,10 +10858,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -10904,10 +10904,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -10948,10 +10948,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -10994,8 +10994,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -11037,9 +11037,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -11080,10 +11080,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -11126,10 +11126,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -11170,10 +11170,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -11216,8 +11216,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -11259,9 +11259,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -11302,10 +11302,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -11348,10 +11348,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -11392,10 +11392,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -11438,8 +11438,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -11481,9 +11481,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -11524,10 +11524,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -11570,10 +11570,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -11614,10 +11614,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -11658,10 +11658,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -11704,8 +11704,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 17.28,
-          "div_yield_3y_pct": 6.1473,
+          "pe": 17.23,
+          "div_yield_3y_pct": 5.7416,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -11747,9 +11747,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -11790,10 +11790,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -11836,10 +11836,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -11880,10 +11880,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -11924,10 +11924,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -11969,9 +11969,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -12012,10 +12012,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -12058,10 +12058,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -12102,10 +12102,10 @@
         "ex_dividend_date": "2026-07-09",
         "dividend_per_share": 4.74,
         "valuation": {
-          "peg": 2.6705,
-          "peg_y": 1.9072,
-          "pe": 21.74,
-          "div_yield_3y_pct": 3.2579,
+          "peg": 5.0703,
+          "peg_y": 2.8298,
+          "pe": 21.83,
+          "div_yield_3y_pct": 3.4088,
           "avg_fill_days": 48.0,
           "fill_rate": 0.3333
         }
@@ -12146,10 +12146,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -12190,10 +12190,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 3.81,
         "valuation": {
-          "peg": 3.7132,
-          "peg_y": 2.643,
-          "pe": 24.7,
-          "div_yield_3y_pct": 2.6936,
+          "peg": 4.4826,
+          "peg_y": 2.7935,
+          "pe": 24.94,
+          "div_yield_3y_pct": 3.3642,
           "avg_fill_days": 35.0,
           "fill_rate": 0.6667
         }
@@ -12235,9 +12235,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -12246,12 +12246,12 @@
         "code": "3015",
         "name_zh": "全漢",
         "name_en": "FSP Technology Inc.",
-        "net_amount_10d": 31682280,
-        "net_amount_10d_k": 31682,
+        "net_amount_10d": 31984016,
+        "net_amount_10d_k": 31984,
         "net_shares_10d": 603472,
         "net_shares_10d_zhang": 603,
         "last_date": "2026-05-29",
-        "cur_price": 52.5,
+        "cur_price": 53.0,
         "g_score": 80.0,
         "l_score": 83.3,
         "regression_z": -1.82,
@@ -12280,8 +12280,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 20.67,
-          "div_yield_3y_pct": 5.8413,
+          "pe": 20.87,
+          "div_yield_3y_pct": 4.1509,
           "avg_fill_days": 7.0,
           "fill_rate": 0.3333
         }
@@ -12322,10 +12322,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -12368,10 +12368,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -12412,10 +12412,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -12457,9 +12457,9 @@
         "dividend_per_share": 1.15,
         "valuation": {
           "peg": null,
-          "peg_y": 15.938,
-          "pe": 21.48,
-          "div_yield_3y_pct": 3.486,
+          "peg_y": null,
+          "pe": 21.56,
+          "div_yield_3y_pct": 4.3726,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -12502,8 +12502,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 20.67,
-          "div_yield_3y_pct": 5.8413,
+          "pe": 20.87,
+          "div_yield_3y_pct": 4.1509,
           "avg_fill_days": 7.0,
           "fill_rate": 0.3333
         }
@@ -12547,7 +12547,7 @@
           "peg": null,
           "peg_y": null,
           "pe": 12.49,
-          "div_yield_3y_pct": 3.9352,
+          "div_yield_3y_pct": 2.9167,
           "avg_fill_days": 7.5,
           "fill_rate": 0.6667
         }
@@ -12588,10 +12588,10 @@
         "ex_dividend_date": "2026-07-13",
         "dividend_per_share": 0.81,
         "valuation": {
-          "peg": 0.1898,
-          "peg_y": 0.1785,
-          "pe": 9.49,
-          "div_yield_3y_pct": 3.1646,
+          "peg": 0.2033,
+          "peg_y": 0.1872,
+          "pe": 9.44,
+          "div_yield_3y_pct": 3.9924,
           "avg_fill_days": 1.0,
           "fill_rate": 0.3333
         }
@@ -12605,7 +12605,7 @@
         "net_shares_10d": 0,
         "net_shares_10d_zhang": 0,
         "last_date": "2026-05-25",
-        "cur_price": 96.6,
+        "cur_price": 96.4,
         "g_score": 100.0,
         "l_score": 83.3,
         "regression_z": -0.1,
@@ -12634,8 +12634,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 7.81,
-          "div_yield_3y_pct": 7.0738,
+          "pe": 7.79,
+          "div_yield_3y_pct": 8.2988,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
@@ -12678,10 +12678,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 2.0,
         "valuation": {
-          "peg": 0.385,
-          "peg_y": 0.3297,
-          "pe": 8.98,
-          "div_yield_3y_pct": 3.9071,
+          "peg": 0.9172,
+          "peg_y": 0.6158,
+          "pe": 8.88,
+          "div_yield_3y_pct": 4.7393,
           "avg_fill_days": 52.0,
           "fill_rate": 0.3333
         }
@@ -12722,10 +12722,10 @@
         "ex_dividend_date": "2026-07-30",
         "dividend_per_share": 3.0,
         "valuation": {
-          "peg": 16.197,
-          "peg_y": 3.6702,
-          "pe": 18.7,
-          "div_yield_3y_pct": 3.9406,
+          "peg": 5.3457,
+          "peg_y": 2.553,
+          "pe": 18.82,
+          "div_yield_3y_pct": 3.8511,
           "avg_fill_days": 27.0,
           "fill_rate": 0.3333
         }
@@ -12768,8 +12768,8 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 20.67,
-          "div_yield_3y_pct": 5.8413,
+          "pe": 20.87,
+          "div_yield_3y_pct": 4.1509,
           "avg_fill_days": 7.0,
           "fill_rate": 0.3333
         }
@@ -12810,10 +12810,10 @@
         "ex_dividend_date": "2026-07-08",
         "dividend_per_share": 1.8,
         "valuation": {
-          "peg": 28.256,
-          "peg_y": 4.5508,
-          "pe": 16.83,
-          "div_yield_3y_pct": 3.1026,
+          "peg": 3.2437,
+          "peg_y": 0.8307,
+          "pe": 16.75,
+          "div_yield_3y_pct": 15.0,
           "avg_fill_days": 23.0,
           "fill_rate": 0.3333
         }
@@ -12857,7 +12857,7 @@
           "peg": null,
           "peg_y": null,
           "pe": 12.49,
-          "div_yield_3y_pct": 3.9352,
+          "div_yield_3y_pct": 2.9167,
           "avg_fill_days": 7.5,
           "fill_rate": 0.6667
         }
@@ -12900,13 +12900,13 @@
         "valuation": {
           "peg": null,
           "peg_y": null,
-          "pe": 7.81,
-          "div_yield_3y_pct": 7.0738,
+          "pe": 7.79,
+          "div_yield_3y_pct": 8.2988,
           "avg_fill_days": null,
           "fill_rate": 0.0
         }
       }
     ]
   },
-  "generated_at": "2026-08-24T12:33:08"
+  "generated_at": "2026-08-25T12:35:10"
 }
