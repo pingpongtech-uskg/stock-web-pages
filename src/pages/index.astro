@@ -49,6 +49,18 @@ const totalArchiveEntries = archiveDates.reduce((sum, d) => sum + (archive[d]?.l
 const title = "Hermes Stock Radar";
 const description = `${active.length} active screening results · ${totalArchiveEntries} archived`;
 const base = import.meta.env.BASE_URL;
+
+// 最後更新時間: screener_history.json 的 generated_at 為 UTC，轉台北時間顯示
+const generatedAt = (screenerData as { generated_at?: string }).generated_at ?? "";
+function formatTaipei(isoUtc: string): string {
+  if (!isoUtc) return "";
+  const d = new Date(isoUtc.endsWith("Z") ? isoUtc : isoUtc + "Z");
+  if (Number.isNaN(d.getTime())) return isoUtc;
+  const t = new Date(d.getTime() + 8 * 3600 * 1000);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${t.getUTCFullYear()}-${p(t.getUTCMonth() + 1)}-${p(t.getUTCDate())} ${p(t.getUTCHours())}:${p(t.getUTCMinutes())}`;
+}
+const lastUpdated = formatTaipei(generatedAt);
 ---
 
 <Layout title={title} description={description}>
@@ -74,6 +86,7 @@ const base = import.meta.env.BASE_URL;
         <p class="eyebrow">Daily screening console</p>
         <h1>Screening Results</h1>
         <p class="subtitle">Active: 近30日上榜，依最新上榜日排序。超過30日未上榜自動移至Archive。</p>
+        <p class="updated-note">最後更新: {lastUpdated || "—"}（台北時間）</p>
       </div>
     </section>
   </header>
@@ -169,7 +182,7 @@ const base = import.meta.env.BASE_URL;
   </main>
 
   <footer class="page-footer">
-    <p>資料來源: TWSE · 篩選條件: 投信10日買超TOP100 → Z≤0 → G≥80 & L≥80 · 技術指標僅供參考</p>
+    <p>資料來源: TWSE · 篩選條件: 投信10日買超TOP100 → Z≤0 → G≥80 & L≥80 · 技術指標僅供參考 · 最後更新: {lastUpdated || "—"}</p>
   </footer>
 </Layout>
 
@@ -348,6 +361,20 @@ h1 {
   color: var(--color-text-muted);
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+.updated-note {
+  margin: 10px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.updated-note::before {
+  content: "●";
+  color: var(--color-accent);
+  margin-right: 6px;
+  font-size: 0.62rem;
+  vertical-align: middle;
 }
 
 /* ═══ Controls ═══ */
