@@ -3,21 +3,42 @@
 # Run from the stock-web-pages repo root.
 #
 # Usage: bash scripts/update_site.sh [--push] [--deploy]
-#   --push:   commit dist/ + data changes to main branch
-#   --deploy: push dist/ to gh-pages branch (live site)
-#   both:     do both (recommended for daily cron)
+#   --push:   commit dependency/data changes to main; GitHub Actions deploys gh-pages
+#   --deploy: direct Cloudflare Pages deploy (requires a verified Cloudflare token)
+#   both:     do both (only when direct Cloudflare credentials are verified)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-echo "=== Step 1: Build screener_history.json (incl. value scores) ==="
+if [[ -n "$(git status --porcelain=v1)" ]]; then
+    echo "❌ Refusing to run: repository has pre-existing changes or staged files."
+    git status --short
+    exit 1
+fi
+
+echo "=== Step 1: Install the locked dependency tree ==="
+npm ci
+
+echo ""
+echo "=== Step 2: Repair non-breaking npm vulnerabilities before any push ==="
+# Major dependency upgrades are reviewed and pinned separately. Daily runs use
+# the safe fixer; if a new vulnerability needs a breaking upgrade, this command
+# fails and the pipeline stops before any commit or push.
+npm audit fix
+
+echo ""
+echo "=== Step 3: Reinstall after audit fix ==="
+npm ci
+
+echo ""
+echo "=== Step 4: Fail closed if any npm vulnerability remains ==="
+npm audit
+
+echo ""
+echo "=== Step 5: Build screener_history.json (incl. value scores) ==="
 python3 scripts/build_screener_history.py
 
 echo ""
-echo "=== Step 2: Install dependencies ==="
-npm install --silent
-
-echo ""
-echo "=== Step 3: Build Astro site ==="
+echo "=== Step 6: Build Astro site ==="
 npm run build
 
 DO_PUSH=false
@@ -31,8 +52,19 @@ done
 
 if $DO_PUSH; then
     echo ""
-    echo "=== Step 4: Commit to main ==="
-    git add src/data/screener_history.json data/value_scores_cache.json dist/ scripts/ 2>/dev/null || true
+    echo "=== Step 7: Commit to main ==="
+    stage_if_present() {
+        local path
+        for path in "$@"; do
+            if [[ -e "$path" ]]; then
+                git add -- "$path"
+            fi
+        done
+    }
+    stage_if_present .astro/content.d.ts package.json package-lock.json \
+        src/data/screener_history.json data/value_scores_cache.json dist/ scripts/
+    echo "Staged files:"
+    git diff --cached --name-only
     if ! git diff --cached --quiet; then
         git commit -m "daily: screening results $(date +%Y%m%d)"
         git push origin main
@@ -44,7 +76,7 @@ fi
 
 if $DO_DEPLOY; then
     echo ""
-    echo "=== Step 5: Deploy to Cloudflare Pages (production) ==="
+    echo "=== Step 8: Deploy to Cloudflare Pages (production) ==="
     python3 << 'PYEOF'
 import subprocess, os
 
