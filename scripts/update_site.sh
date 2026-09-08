@@ -34,8 +34,18 @@ echo "=== Step 4: Fail closed if any npm vulnerability remains ==="
 npm audit
 
 echo ""
-echo "=== Step 5: Build screener_history.json (incl. value scores) ==="
-python3 scripts/build_screener_history.py
+echo "=== Step 5: Build public institutional screener data ==="
+AS_OF="${STOCK_SCREENING_DATE:-$(date +%F)}"
+python3 scripts/run_public_screener.py \
+    --date "$AS_OF" \
+    --cache data/public_screener/trust_all_cache.json \
+    --meta data/public_screener/trust_cache_meta.json \
+    --reports data/public_screener/reports \
+    --site src/data/public_screener.json \
+    --price-history data/public_screener/price_history_cache.json \
+    --share-candidates 100 \
+    --output-candidates 100 \
+    --z-max 0
 
 echo ""
 echo "=== Step 6: Build Astro site ==="
@@ -61,8 +71,10 @@ if $DO_PUSH; then
             fi
         done
     }
-    stage_if_present .astro/content.d.ts package.json package-lock.json \
-        src/data/screener_history.json data/value_scores_cache.json dist/ scripts/
+    stage_if_present .astro/content.d.ts astro.config.mjs package.json package-lock.json \
+        src/data/public_screener.json data/public_screener scripts/ screener/ \
+        calibration/ docs/ src/pages/stock/ src/pages/index.astro \
+        src/components/ScreeningRow.astro .github/workflows/deploy.yml
     echo "Staged files:"
     git diff --cached --name-only
     if ! git diff --cached --quiet; then
@@ -113,7 +125,7 @@ env = os.environ.copy()
 env["CLOUDFLARE_API_TOKEN"] = cf_token
 result = subprocess.run(
     ["npx","wrangler","pages","deploy","dist","--project-name","stock-web-pages","--branch","main","--commit-dirty=true"],
-    cwd="/root/stock-web-pages", env=env, capture_output=True, text=True, timeout=120
+    cwd=os.getcwd(), env=env, capture_output=True, text=True, timeout=120
 )
 print(result.stdout)
 if result.stderr: print(result.stderr[-200:])

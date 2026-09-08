@@ -230,8 +230,11 @@ class TestLoadStocks:
 
     def test_load_real_data(self):
         """Load from the actual data dir — verify counts, shape, and range."""
+        data_dir = "/root/tw-stock-monitor/data"
+        if not os.path.isdir(data_dir) or not any(name.startswith("batch_") and name.endswith(".json") for name in os.listdir(data_dir)):
+            pytest.skip("external tw-stock-monitor batch data is not available in this checkout")
         result = load_stocks(
-            "/root/tw-stock-monitor/data",
+            data_dir,
             "2024-06-01",
             "2026-05-22",
         )

@@ -1,57 +1,54 @@
 ---
-// src/pages/index.astro — Screening results display
-// Active: flat list sorted by most recent 上榜日 (newest first)
-// Archive: date-grouped collapsible sections
+// src/pages/index.astro — public institutional screener results
 import Layout from "../components/Layout.astro";
 import ScreeningRow from "../components/ScreeningRow.astro";
-import screenerData from "../data/screener_history.json";
+import screenerData from "../data/public_screener.json";
+
+interface CategoryScore {
+  passed: number;
+  failed: number;
+  unknown: number;
+  not_applicable?: number;
+  total: number;
+  score: string;
+  status: string;
+}
 
 interface ScreeningEntry {
   code: string;
+  market: string;
   name_zh: string;
-  name_en: string;
+  name_en?: string;
   net_amount_10d: number;
   net_amount_10d_k: number;
   net_shares_10d: number;
   net_shares_10d_zhang: number;
-  first_date: string;
   last_date: string;
-  consecutive_buy_days: number;
+  window_dates?: string[];
+  window_net_shares?: number[];
   cur_price: number;
-  first_price?: number | null;
-  change_pct?: number | null;
-  g_score: number;
-  l_score: number;
-  cheap_score?: number | null;
-  dividend_score?: number | null;
-  regression_z: number;
+  regression_z: number | null;
+  z_status?: string;
   rank: number;
   screening_date: string;
-  ex_dividend_date?: string | null;
-  dividend_per_share?: number | null;
-  valuation?: {
-    peg?: number | null;
-    peg_y?: number | null;
-    pe?: number | null;
-    div_yield_3y_pct?: number | null;
-    avg_fill_days?: number | null;
-    fill_rate?: number | null;
-  } | null;
+  categories: Record<string, CategoryScore>;
+  criteria: unknown[];
+  data_quality?: { unknown_criteria?: number; coverage?: number };
 }
 
-const active = (screenerData.active || []) as ScreeningEntry[];
+const records = ((screenerData.records || []) as ScreeningEntry[]).filter((entry) => entry && entry.code);
+const active = ((screenerData.active || records) as ScreeningEntry[]).filter((entry) => entry && entry.code);
 const archive = (screenerData.archive || {}) as Record<string, ScreeningEntry[]>;
-
-// Sorted archive dates (descending)
 const archiveDates = Object.keys(archive).sort((a, b) => b.localeCompare(a));
 const totalArchiveEntries = archiveDates.reduce((sum, d) => sum + (archive[d]?.length || 0), 0);
+const categoryOptions = (screenerData.category_filter_options || []) as { id: string; label: string }[];
+const zOptions = (screenerData.z_options || [0, 1, 2]) as number[];
+const defaultZ = Number(screenerData.z_default ?? 0);
 
 const title = "Hermes Stock Radar";
-const description = `${active.length} active screening results · ${totalArchiveEntries} archived`;
+const description = `${active.length} active screening results · ${records.length} candidates`;
 const base = import.meta.env.BASE_URL;
-
-// 最後更新時間: screener_history.json 的 generated_at 為 UTC，轉台北時間顯示
-const generatedAt = (screenerData as { generated_at?: string }).generated_at ?? "";
+const generatedAt = (screenerData as { generated_at?: string | null }).generated_at ?? "";
 function formatTaipei(isoUtc: string): string {
   if (!isoUtc) return "";
   const d = new Date(isoUtc.endsWith("Z") ? isoUtc : isoUtc + "Z");
@@ -61,6 +58,10 @@ function formatTaipei(isoUtc: string): string {
   return `${t.getUTCFullYear()}-${p(t.getUTCMonth() + 1)}-${p(t.getUTCDate())} ${p(t.getUTCHours())}:${p(t.getUTCMinutes())}`;
 }
 const lastUpdated = formatTaipei(generatedAt);
+function categoryPasses(entry: ScreeningEntry, id: string): boolean {
+  const score = entry.categories?.[id];
+  return Boolean(score && score.total > 0 && score.passed / score.total > 0.5);
+}
 ---
 
 <Layout title={title} description={description}>
@@ -75,18 +76,22 @@ const lastUpdated = formatTaipei(generatedAt);
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
           </svg>
-          <span>問AI</span>
+          <span>問 AI</span>
         </a>
-        <span class="data-note">TWSE screening results</span>
+        <span class="data-note">Official institutional flow · public data</span>
       </div>
     </nav>
 
     <section class="hero-main">
       <div class="hero-copy">
-        <p class="eyebrow">Daily screening console</p>
-        <h1>Screening Results</h1>
-        <p class="subtitle">Active: 近30日上榜，依最新上榜日排序。超過30日未上榜自動移至Archive。</p>
+        <p class="eyebrow">Daily institutional screener</p>
+        <h1>投信買超雷達</h1>
+        <p class="subtitle">先依投信 10 日累積買超股數取候選，再以每日收盤價排序買超金額。G/L 已移除；每檔保留七類分數與每一項 criteria 明細。</p>
         <p class="updated-note">最後更新: {lastUpdated || "—"}（台北時間）</p>
+      </div>
+      <div class="hero-metrics" aria-label="Screening summary">
+        <div><span class="metric-value" data-count="active">{active.length}</span><span class="metric-label">Z 預設通過</span></div>
+        <div><span class="metric-value">{records.length}</span><span class="metric-label">金額候選</span></div>
       </div>
     </section>
   </header>
@@ -95,100 +100,92 @@ const lastUpdated = formatTaipei(generatedAt);
     <section class="controls surface" aria-label="Screening filters">
       <label class="search-wrap">
         <span class="search-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" role="img">
-            <path d="M10.75 4.5a6.25 6.25 0 1 0 0 12.5 6.25 6.25 0 0 0 0-12.5Zm-7.75 6.25a7.75 7.75 0 1 1 13.78 4.88l3.3 3.29a.75.75 0 1 1-1.06 1.06l-3.29-3.3A7.75 7.75 0 0 1 3 10.75Z" fill="currentColor"/>
-          </svg>
+          <svg viewBox="0 0 24 24" role="img"><path d="M10.75 4.5a6.25 6.25 0 1 0 0 12.5 6.25 6.25 0 0 0 0-12.5Zm-7.75 6.25a7.75 7.75 0 1 1 13.78 4.88l3.3 3.29a.75.75 0 1 1-1.06 1.06l-3.29-3.3A7.75 7.75 0 0 1 3 10.75Z" fill="currentColor"/></svg>
         </span>
-        <input
-          id="stock-search"
-          type="search"
-          placeholder="Search code or name"
-          autocomplete="off"
-          aria-label="Search stock code or name"
-        />
+        <input id="stock-search" type="search" placeholder="搜尋代號或名稱" autocomplete="off" aria-label="Search stock code or name" />
       </label>
 
+      <fieldset class="z-filters">
+        <legend>Z 篩選</legend>
+        {zOptions.map((value) => (
+          <label class:list={["z-option", { selected: value === defaultZ }]}>
+            <input type="radio" name="z-max" value={value} checked={value === defaultZ} />
+            <span>Z≤{value}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset class="category-filters">
+        <legend>類別（可複選，AND）</legend>
+        {categoryOptions.map((option) => (
+          <label class:list={["category-option", { selected: option.id === "all" }]}>
+            <input type="checkbox" value={option.id} data-category-filter={option.id} checked={option.id === "all"} />
+            <span>{option.label}</span>
+          </label>
+        ))}
+      </fieldset>
+
       <div class="status-tabs" role="tablist" aria-label="Screening status">
-        <button class="status-tab active" type="button" data-status="active" role="tab" aria-selected="true">
-          Active <span data-count="active">{active.length}</span>
-        </button>
-        <button class="status-tab" type="button" data-status="archive" role="tab" aria-selected="false">
-          Archive
-        </button>
+        <button class="status-tab active" type="button" data-status="active" role="tab" aria-selected="true">目前候選 <span data-count="active">{active.length}</span></button>
+        <button class="status-tab" type="button" data-status="archive" role="tab" aria-selected="false">歷史 <span>{totalArchiveEntries}</span></button>
       </div>
     </section>
 
-    <!-- Active Section -->
     <section id="section-active" class="results-section" data-section="active">
       <div class="results-head">
-        <h2 id="results-title">Active</h2>
-        <p><span id="visible-count-active">{active.length}</span> stocks — 依最新上榜日排序</p>
+        <h2 id="results-title">目前候選</h2>
+        <p><span id="visible-count-active">{active.length}</span> stocks — 預設 Z≤{defaultZ}</p>
       </div>
-
       <div id="active-grid" class="results-list" aria-live="polite">
-        {active.map((entry) => {
+        {records.map((entry) => {
           const searchText = `${entry.code} ${entry.name_zh ?? ""} ${entry.name_en ?? ""}`.toLowerCase();
+          const categoryState = Object.fromEntries(categoryOptions.filter((option) => option.id !== "all").map((option) => [option.id, categoryPasses(entry, option.id)]));
           return (
-            <div
-              class="screening-item"
-              data-status="active"
-              data-search={searchText}
-            >
+            <div class="screening-item" data-status="active" data-search={searchText} data-z={entry.regression_z ?? ""} data-categories={JSON.stringify(categoryState)}>
               <ScreeningRow entry={entry} variant="active" />
             </div>
           );
         })}
-        <p id="empty-active" class="empty-state surface" hidden>No matching active results.</p>
+        <p id="empty-active" class="empty-state surface" hidden>目前篩選沒有符合標的。</p>
       </div>
     </section>
 
-    <!-- Archive Section -->
     <section id="section-archive" class="results-section" data-section="archive" style="display:none">
       <div class="results-head">
-        <h2>Archive</h2>
+        <h2>歷史</h2>
         <p><span id="visible-count-archive">{totalArchiveEntries}</span> entries across {archiveDates.length} dates</p>
       </div>
-
       <div id="archive-grid" class="archive-list" aria-live="polite">
         {archiveDates.map((dateStr) => {
           const entries = archive[dateStr] || [];
           return (
             <details class="archive-group surface" open={archiveDates.indexOf(dateStr) < 3}>
-              <summary class="archive-header">
-                <span class="archive-date">{dateStr}</span>
-                <span class="archive-count">{entries.length} stocks</span>
-              </summary>
+              <summary class="archive-header"><span class="archive-date">{dateStr}</span><span class="archive-count">{entries.length} stocks</span></summary>
               <div class="archive-body" data-date={dateStr}>
                 {entries.map((entry) => {
                   const searchText = `${entry.code} ${entry.name_zh ?? ""} ${entry.name_en ?? ""}`.toLowerCase();
-                  return (
-                    <div
-                      class="screening-item"
-                      data-status="archive"
-                      data-search={searchText}
-                      data-date={dateStr}
-                    >
-                      <ScreeningRow entry={entry} variant="archive" />
-                    </div>
-                  );
+                  const categoryState = Object.fromEntries(categoryOptions.filter((option) => option.id !== "all").map((option) => [option.id, categoryPasses(entry, option.id)]));
+                  return <div class="screening-item" data-status="archive" data-search={searchText} data-z={entry.regression_z ?? ""} data-categories={JSON.stringify(categoryState)}><ScreeningRow entry={entry} variant="archive" /></div>;
                 })}
               </div>
             </details>
           );
         })}
-        <p id="empty-archive" class="empty-state surface" hidden>No matching archive results.</p>
+        <p id="empty-archive" class="empty-state surface" hidden>目前篩選沒有歷史標的。</p>
       </div>
     </section>
   </main>
 
   <footer class="page-footer">
-    <p>資料來源: TWSE · 篩選條件: 投信10日買超TOP100 → Z≤0 → G≥80 & L≥80 · 技術指標僅供參考 · 最後更新: {lastUpdated || "—"}</p>
+    <p>資料來源: TWSE T86 · TPEx 三大法人 API · 投信 10 日累積買超股數 × 官方收盤價 · Z 預設 ≤{defaultZ} · G/L filter removed · 點擊股票查看 criteria 明細</p>
   </footer>
 </Layout>
 
 <script>
 const search = document.getElementById("stock-search") as HTMLInputElement | null;
-const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>(".status-tab"));
+const statusTabs = Array.from(document.querySelectorAll<HTMLButtonElement>(".status-tab"));
+const zInputs = Array.from(document.querySelectorAll<HTMLInputElement>("input[name='z-max']"));
+const categoryInputs = Array.from(document.querySelectorAll<HTMLInputElement>("[data-category-filter]"));
 const sectionActive = document.getElementById("section-active");
 const sectionArchive = document.getElementById("section-archive");
 const emptyActive = document.getElementById("empty-active");
@@ -198,60 +195,89 @@ const countArchive = document.getElementById("visible-count-archive");
 const titleEl = document.getElementById("results-title");
 let selectedStatus = "active";
 
-function applyFilters() {
-  const query = (search?.value || "").trim().toLowerCase();
+function selectedZ(): number {
+  const selected = zInputs.find((input) => input.checked)?.value;
+  const value = Number(selected ?? "0");
+  return Number.isFinite(value) ? value : 0;
+}
 
-  // Show/hide sections
+function selectedCategories(): string[] {
+  return categoryInputs.filter((input) => input.checked && input.value !== "all").map((input) => input.value);
+}
+
+function itemMatches(item: Element, query: string): boolean {
+  const el = item as HTMLElement;
+  if (query && !(el.dataset.search || "").includes(query)) return false;
+  const z = Number(el.dataset.z);
+  if (!Number.isFinite(z) || z > selectedZ()) return false;
+  const categories = JSON.parse(el.dataset.categories || "{}");
+  return selectedCategories().every((category) => categories[category] === true);
+}
+
+function refreshSelectedStyles(): void {
+  for (const input of [...zInputs, ...categoryInputs]) {
+    input.closest("label")?.classList.toggle("selected", input.checked);
+  }
+}
+
+function applyFilters(): void {
+  const query = (search?.value || "").trim().toLowerCase();
+  refreshSelectedStyles();
   if (sectionActive) sectionActive.style.display = selectedStatus === "active" ? "" : "none";
   if (sectionArchive) sectionArchive.style.display = selectedStatus === "archive" ? "" : "none";
 
-  // Filter items in the active section
   let visibleActive = 0;
-  const activeItems = document.querySelectorAll('#active-grid .screening-item');
-  for (const item of activeItems) {
-    const el = item as HTMLElement;
-    const searchMatches = !query || (el.dataset.search || "").includes(query);
-    el.hidden = !searchMatches;
-    if (searchMatches) visibleActive++;
+  for (const item of document.querySelectorAll("#active-grid .screening-item")) {
+    const matches = itemMatches(item, query);
+    (item as HTMLElement).hidden = !matches;
+    if (matches) visibleActive++;
   }
   if (emptyActive) emptyActive.hidden = visibleActive !== 0;
   if (countActive) countActive.textContent = String(visibleActive);
 
-  // Filter items in the archive section
   let visibleArchive = 0;
-  const archiveItems = document.querySelectorAll('#archive-grid .screening-item');
-  const archiveGroups = document.querySelectorAll('#archive-grid .archive-group');
-  for (const group of archiveGroups) {
-    const details = group as HTMLDetailsElement;
+  for (const group of document.querySelectorAll<HTMLDetailsElement>("#archive-grid .archive-group")) {
     let groupVisible = 0;
-    const items = details.querySelectorAll('.screening-item');
-    for (const item of items) {
-      const el = item as HTMLElement;
-      const searchMatches = !query || (el.dataset.search || "").includes(query);
-      el.hidden = !searchMatches;
-      if (searchMatches) groupVisible++;
+    for (const item of group.querySelectorAll(".screening-item")) {
+      const matches = itemMatches(item, query);
+      (item as HTMLElement).hidden = !matches;
+      if (matches) groupVisible++;
     }
-    details.hidden = groupVisible === 0;
+    group.hidden = groupVisible === 0;
     visibleArchive += groupVisible;
   }
   if (emptyArchive) emptyArchive.hidden = visibleArchive !== 0;
   if (countArchive) countArchive.textContent = String(visibleArchive);
-
-  if (titleEl) titleEl.textContent = selectedStatus === "archive" ? "Archive" : "Active";
+  if (titleEl) titleEl.textContent = selectedStatus === "archive" ? "歷史" : "目前候選";
 }
 
-for (const tab of tabs) {
-  tab.addEventListener("click", () => {
-    selectedStatus = tab.dataset.status || "active";
-    for (const current of tabs) {
-      const isActive = current === tab;
-      current.classList.toggle("active", isActive);
-      current.setAttribute("aria-selected", String(isActive));
+for (const input of zInputs) input.addEventListener("change", applyFilters);
+for (const input of categoryInputs) {
+  input.addEventListener("change", () => {
+    if (input.value === "all" && input.checked) {
+      for (const other of categoryInputs) if (other.value !== "all") other.checked = false;
+    } else if (input.value !== "all" && input.checked) {
+      const all = categoryInputs.find((candidate) => candidate.value === "all");
+      if (all) all.checked = false;
+    }
+    if (!categoryInputs.some((candidate) => candidate.checked)) {
+      const all = categoryInputs.find((candidate) => candidate.value === "all");
+      if (all) all.checked = true;
     }
     applyFilters();
   });
 }
-
+for (const tab of statusTabs) {
+  tab.addEventListener("click", () => {
+    selectedStatus = tab.dataset.status || "active";
+    for (const current of statusTabs) {
+      const activeTab = current === tab;
+      current.classList.toggle("active", activeTab);
+      current.setAttribute("aria-selected", String(activeTab));
+    }
+    applyFilters();
+  });
+}
 search?.addEventListener("input", applyFilters);
 applyFilters();
 </script>
@@ -379,9 +405,9 @@ h1 {
 
 /* ═══ Controls ═══ */
 .controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   align-items: center;
   margin: 8px 0 24px;
   padding: 10px;
@@ -391,6 +417,7 @@ h1 {
   z-index: 4;
 }
 .search-wrap {
+  flex: 1 1 220px;
   min-width: 0;
   height: 44px;
   display: flex;
@@ -426,6 +453,50 @@ h1 {
 .search-wrap input::placeholder {
   color: var(--color-text-muted);
 }
+.z-filters,
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 4px;
+  border: 0;
+}
+.z-filters legend,
+.category-filters legend {
+  flex: 0 0 auto;
+  margin-right: 3px;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+.z-option,
+.category-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.z-option input,
+.category-option input { accent-color: var(--color-accent); }
+.z-option.selected,
+.category-option.selected {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
 .status-tabs {
   display: inline-grid;
   grid-template-columns: 1fr 1fr;

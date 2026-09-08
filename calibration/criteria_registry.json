@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "contract_id": "taiwan-health-check-7x33",
+  "contract_date": "2026-09-08",
+  "reference": {
+    "provider": "StatementDog",
+    "page_template": "https://statementdog.com/analysis/{code}/stock-health-check",
+    "mapping": {
+      "bomb": "safety",
+      "cd": "dividend",
+      "growth": "growth",
+      "cheap": "value",
+      "turnaround": "turnaround",
+      "quality": "continuity",
+      "chip": "chip"
+    }
+  },
+  "group_counts": {
+    "safety": 6,
+    "dividend": 5,
+    "growth": 5,
+    "value": 6,
+    "turnaround": 3,
+    "continuity": 5,
+    "chip": 3
+  },
+  "total_criteria": 33,
+  "status_model": ["PASS", "FAIL", "UNKNOWN", "BLOCKED"],
+  "groups": [
+    {
+      "id": "safety",
+      "reference_key": "bomb",
+      "label": "排除地雷股",
+      "criteria": [
+        {"id": "safety.fcf_positive_3_of_5", "label": "自由現金流入近五年有三年大於 0", "operator": "strict_gt", "threshold": 0, "window": "5 complete fiscal years", "required_fields": ["annual_cfo", "annual_capex"], "formula": "annual_fcf = annual_cfo - annual_capex; count(annual_fcf > 0) >= 3", "source_families": ["mops_cashflow"], "definition_status": "frozen"},
+        {"id": "safety.fcf_mean_positive", "label": "自由現金流入近五年平均大於 0", "operator": "strict_gt", "threshold": 0, "window": "5 complete fiscal years", "required_fields": ["annual_cfo", "annual_capex"], "formula": "mean(annual_fcf) > 0; annual_fcf = annual_cfo - annual_capex", "source_families": ["mops_cashflow"], "definition_status": "frozen"},
+        {"id": "safety.cfo_ni_ratio_3_of_5", "label": "營業現金流入對淨利比近五年有三年大於 100%", "operator": "strict_gt", "threshold": 100, "unit": "percent", "window": "5 complete fiscal years", "required_fields": ["annual_cfo", "annual_after_tax_income"], "formula": "annual_cfo / annual_after_tax_income * 100; count(ratio > 100) >= 3", "source_families": ["mops_cashflow", "mops_income"], "definition_status": "frozen"},
+        {"id": "safety.cfo_ni_ratio_mean", "label": "營業現金流入對淨利比近五年平均大於 100%", "operator": "strict_gt", "threshold": 100, "unit": "percent", "window": "5 complete fiscal years", "required_fields": ["annual_cfo", "annual_after_tax_income"], "formula": "mean(valid annual CFO/after-tax-income ratios) > 100", "source_families": ["mops_cashflow", "mops_income"], "definition_status": "frozen"},
+        {"id": "safety.receivable_days_not_worse", "label": "應收帳款週轉天數小於等於去年同期數據", "operator": "lte", "window": "latest fiscal quarter versus same quarter prior year", "required_fields": ["receivables", "revenue", "period_elapsed_days"], "formula": "receivable_days <= same_period_prior_year_receivable_days", "source_families": ["mops_balance", "mops_income"], "definition_status": "blocked_until_reference_calibration", "blocker": "Exact elapsed-day and quarter/YTD denominator semantics not frozen"},
+        {"id": "safety.inventory_days_not_worse", "label": "存貨週轉天數小於等於去年同期數據", "operator": "lte", "window": "latest fiscal quarter versus same quarter prior year", "required_fields": ["inventory", "cost_of_revenue", "period_elapsed_days"], "formula": "inventory_days <= same_period_prior_year_inventory_days", "source_families": ["mops_balance", "mops_income"], "definition_status": "blocked_until_reference_calibration", "blocker": "Exact elapsed-day and quarter/YTD denominator semantics not frozen"}
+      ]
+    },
+    {
+      "id": "dividend",
+      "reference_key": "cd",
+      "label": "定存股",
+      "criteria": [
+        {"id": "dividend.trailing_yield_gt_6", "label": "近一年股息殖利率大於 6 %", "operator": "strict_gt", "threshold": 6, "unit": "percent", "window": "trailing one year at as_of", "required_fields": ["cash_dividend", "dated_price"], "formula": "reference-aligned trailing cash dividend yield > 6", "source_families": ["mops_dividend", "market_price", "market_valuation"], "definition_status": "blocked_until_reference_calibration", "blocker": "Price/ex-dividend/date convention not independently frozen"},
+        {"id": "dividend.avg_yield_5y_gt_6", "label": "近五年平均股息殖利率大於 6 %", "operator": "strict_gt", "threshold": 6, "unit": "percent", "window": "5 complete dividend years", "required_fields": ["annual_cash_dividend", "five_dated_prices"], "formula": "reference-aligned mean of five annual yields > 6", "source_families": ["mops_dividend", "market_price"], "definition_status": "blocked_until_reference_calibration", "blocker": "Cannot use one current price for five historical years without reference proof"},
+        {"id": "dividend.consecutive_5y", "label": "連續五年都有發股息", "operator": "consecutive_years", "threshold": 5, "window": "5 complete dividend years", "required_fields": ["annual_cash_dividend"], "formula": "cash dividend exists for each of five consecutive years", "source_families": ["mops_dividend", "twse_dividend", "tpex_dividend"], "definition_status": "frozen"},
+        {"id": "dividend.payout_gt_50_3_of_5", "label": "股息發放率五年內有三年大於 50 %", "operator": "strict_gt", "threshold": 50, "unit": "percent", "window": "5 complete fiscal years", "required_fields": ["annual_cash_per_share", "annual_eps"], "formula": "cash_per_share / same_year_eps * 100; count(payout > 50) >= 3", "source_families": ["mops_dividend", "mops_income"], "definition_status": "frozen"},
+        {"id": "dividend.payout_mean_gt_50", "label": "股息發放率五年平均大於 50%", "operator": "strict_gt", "threshold": 50, "unit": "percent", "window": "5 complete fiscal years", "required_fields": ["annual_cash_per_share", "annual_eps"], "formula": "mean(valid same-year payout ratios) > 50", "source_families": ["mops_dividend", "mops_income"], "definition_status": "frozen"}
+      ]
+    },
+    {
+      "id": "growth",
+      "reference_key": "growth",
+      "label": "成長股",
+      "criteria": [
+        {"id": "growth.monthly_revenue_yoy_3_consecutive", "label": "月營收 YOY 連續三個月大於 0", "operator": "strict_gt", "threshold": 0, "unit": "percent", "window": "latest 3 chronological months", "required_fields": ["monthly_revenue", "prior_year_same_month_revenue"], "formula": "each of latest three monthly YoY values > 0", "source_families": ["mops_monthly_revenue", "twse_monthly_revenue", "tpex_monthly_revenue"], "definition_status": "frozen"},
+        {"id": "growth.gross_profit_yoy_gt_0", "label": "近一季毛利年增率大於 0", "operator": "strict_gt", "threshold": 0, "unit": "percent", "window": "latest quarter versus same quarter prior year", "required_fields": ["quarterly_gross_profit", "prior_year_quarterly_gross_profit"], "formula": "YoY gross profit > 0", "source_families": ["mops_income", "twse_income", "tpex_income"], "definition_status": "frozen"},
+        {"id": "growth.operating_income_yoy_gt_0", "label": "近一季營業利益年增率大於 0", "operator": "strict_gt", "threshold": 0, "unit": "percent", "window": "latest quarter versus same quarter prior year", "required_fields": ["quarterly_operating_income", "prior_year_quarterly_operating_income"], "formula": "YoY operating income > 0", "source_families": ["mops_income", "twse_income", "tpex_income"], "definition_status": "frozen"},
+        {"id": "growth.pretax_income_yoy_gt_0", "label": "近一季稅前淨利年增率大於 0", "operator": "strict_gt", "threshold": 0, "unit": "percent", "window": "latest quarter versus same quarter prior year", "required_fields": ["quarterly_pretax_income", "prior_year_quarterly_pretax_income"], "formula": "YoY pretax income > 0", "source_families": ["mops_income", "twse_income", "tpex_income"], "definition_status": "frozen"},
+        {"id": "growth.after_tax_income_yoy_gt_0", "label": "近一季稅後淨利年增率大於 0", "operator": "strict_gt", "threshold": 0, "unit": "percent", "window": "latest quarter versus same quarter prior year", "required_fields": ["quarterly_after_tax_income", "prior_year_quarterly_after_tax_income"], "formula": "YoY after-tax income > 0", "source_families": ["mops_income", "twse_income", "tpex_income"], "definition_status": "frozen"}
+      ]
+    },
+    {
+      "id": "value",
+      "reference_key": "cheap",
+      "label": "便宜股",
+      "criteria": [
+        {"id": "value.pe_lowest_20pct_5y", "label": "本益比在 5 年內區間最低 20 %", "operator": "lowest_percentile", "threshold": 20, "window": "5 years before as_of", "required_fields": ["current_pe", "dated_pe_history"], "formula": "current PE lies in lowest 20% of exact five-year history", "source_families": ["twse_valuation_history", "tpex_valuation_history"], "definition_status": "blocked_until_reference_calibration", "blocker": "History sampling, invalid-PE eligibility, percentile and tie rules not frozen"},
+        {"id": "value.pe_below_50pct_universe", "label": "本益比低於 50 % 公司", "operator": "below_median", "threshold": 50, "window": "same dated eligible universe", "required_fields": ["current_pe", "eligible_universe_pe"], "formula": "current PE below the eligible-universe median", "source_families": ["twse_valuation", "tpex_valuation", "company_universe"], "definition_status": "blocked_until_reference_calibration", "blocker": "Reference universe/peer scope and invalid PE exclusion not frozen"},
+        {"id": "value.pb_lowest_20pct_5y", "label": "股價淨值比在 5 年內區間最低 20 %", "operator": "lowest_percentile", "threshold": 20, "window": "5 years before as_of", "required_fields": ["current_pb", "dated_pb_history"], "formula": "current PB lies in lowest 20% of exact five-year history", "source_families": ["twse_valuation_history", "tpex_valuation_history"], "definition_status": "blocked_until_reference_calibration", "blocker": "History sampling, invalid-PB eligibility, percentile and tie rules not frozen"},
+        {"id": "value.pb_below_50pct_universe", "label": "股價淨值比低於 50 % 公司", "operator": "below_median", "threshold": 50, "window": "same dated eligible universe", "required_fields": ["current_pb", "eligible_universe_pb"], "formula": "current PB below the eligible-universe median", "source_families": ["twse_valuation", "tpex_valuation", "company_universe"], "definition_status": "blocked_until_reference_calibration", "blocker": "Reference universe/peer scope and invalid PB exclusion not frozen"},
+        {"id": "value.trailing_yield_gt_6", "label": "近一年股息殖利率大於 6 %", "operator": "strict_gt", "threshold": 6, "unit": "percent", "window": "trailing one year at as_of", "required_fields": ["cash_dividend", "dated_price"], "formula": "shared reference-aligned trailing yield > 6", "source_families": ["mops_dividend", "market_price", "market_valuation"], "definition_status": "blocked_until_reference_calibration", "blocker": "Shared yield convention pending"},
+        {"id": "value.avg_yield_5y_gt_6", "label": "近五年平均股息殖利率大於 6 %", "operator": "strict_gt", "threshold": 6, "unit": "percent", "window": "5 complete dividend years", "required_fields": ["annual_cash_dividend", "five_dated_prices"], "formula": "shared reference-aligned five-year average yield > 6", "source_families": ["mops_dividend", "market_price"], "definition_status": "blocked_until_reference_calibration", "blocker": "Shared yield convention pending"}
+      ]
+    },
+    {
+      "id": "turnaround",
+      "reference_key": "turnaround",
+      "label": "轉機股",
+      "criteria": [
+        {"id": "turnaround.pb_lt_3", "label": "公司股價淨值比小於 3 倍", "operator": "strict_lt", "threshold": 3, "unit": "倍", "window": "current dated snapshot", "required_fields": ["current_pb"], "formula": "current PB < 3", "source_families": ["twse_valuation", "tpex_valuation"], "definition_status": "frozen"},
+        {"id": "turnaround.f_score_ge_8", "label": "公司的 F-score 在 8 分以上", "operator": "gte", "threshold": 8, "unit": "points", "window": "two complete annual fiscal years", "required_fields": ["annual_roa", "annual_cfo", "annual_after_tax_income", "annual_long_term_debt_ratio", "annual_current_ratio", "annual_shares", "annual_gross_margin", "annual_asset_turnover"], "formula": "sum(nine annual Piotroski tests) >= 8", "source_families": ["mops_income", "mops_cashflow", "mops_balance"], "definition_status": "frozen", "note": "Nine tests and annual semantics follow the approved F-score reference."},
+        {"id": "turnaround.pb_lowest_top50", "label": "公司股價淨值比在最低的前 50 名", "operator": "rank_lte", "threshold": 50, "window": "same dated eligible universe", "required_fields": ["current_pb", "eligible_universe_pb"], "formula": "rank current PB ascending and retain rank <= 50", "source_families": ["twse_valuation", "tpex_valuation", "company_universe"], "definition_status": "blocked_until_reference_calibration", "blocker": "Universe, missing eligibility, ties and as-of rank semantics not frozen"}
+      ]
+    },
+    {
+      "id": "continuity",
+      "reference_key": "quality",
+      "label": "續優股",
+      "criteria": [
+        {"id": "continuity.listed_over_3y", "label": "公司上市超過三年", "operator": "age_gt", "threshold": 3, "unit": "years", "window": "as_of", "required_fields": ["listing_date"], "formula": "as_of - listing_date > 3 years", "source_families": ["company_universe"], "definition_status": "frozen"},
+        {"id": "continuity.croic_not_down", "label": "公司自由現金流報酬率和去年相比沒有下滑", "operator": "gte", "threshold": 0, "unit": "percent_change", "window": "latest complete fiscal year versus prior year", "required_fields": ["annual_cfo", "annual_capex", "annual_equity"], "formula": "FCF = CFO - CapEx; FCF_ROE = FCF / average shareholders equity * 100; current FCF_ROE >= prior FCF_ROE", "source_families": ["mops_cashflow", "mops_balance"], "definition_status": "frozen", "note": "Existing croic_* IDs retained as compatibility aliases; public model uses the explicit FCF ROE definition in the current specification."},
+        {"id": "continuity.croic_3y_top20", "label": "公司 3 年平均自由現金流報酬率排名在最高的前 20%", "operator": "rank_top_percent", "threshold": 20, "unit": "percentile", "window": "3 complete fiscal years and same dated universe", "required_fields": ["three_annual_fcf_roe", "eligible_universe_fcf_roe"], "formula": "rank three-year mean FCF_ROE in highest 20%", "source_families": ["mops_cashflow", "mops_balance", "company_universe"], "definition_status": "blocked_until_reference_calibration", "blocker": "Universe, tie, missing-value and rank semantics not frozen"},
+        {"id": "continuity.operating_income_3y_sum_gt_0", "label": "公司過去 3 年營業利益加總大於 0", "operator": "strict_gt", "threshold": 0, "window": "3 complete fiscal years", "required_fields": ["annual_operating_income"], "formula": "sum(last three complete annual operating incomes) > 0", "source_families": ["mops_income"], "definition_status": "frozen"},
+        {"id": "continuity.combined_value_top50", "label": "股價淨值比 + 本益比 + 殖利率綜合排名在前 50 名", "operator": "rank_lte", "threshold": 50, "window": "same dated eligible universe", "required_fields": ["current_pb", "current_pe", "current_yield", "eligible_universe_metrics"], "formula": "reference-defined composite rank of PB + PE + yield", "source_families": ["twse_valuation", "tpex_valuation", "company_universe"], "definition_status": "blocked_until_reference_calibration", "blocker": "Weights, normalization, direction, missing policy and ties are unknown"}
+      ]
+    },
+    {
+      "id": "chip",
+      "reference_key": "chip",
+      "label": "籌碼股",
+      "criteria": [
+        {"id": "chip.major_holder_ratio_up_3m", "label": "大股東持股比重連續三個月上升", "operator": "strict_increase_each_month", "threshold": 3, "unit": "months", "window": "three normalized month-end snapshots", "required_fields": ["major_holder_shares", "major_holder_denominator"], "formula": "major-holder ratio[t-2] < ratio[t-1] < ratio[t]", "source_families": ["mops_internal_holdings", "tdcc_dispersion"], "definition_status": "blocked_until_reference_calibration", "blocker": "Exact major-holder scope and denominator not frozen"},
+        {"id": "chip.director_holdings_not_down_12m", "label": "董監持股最新數值較 12 個月前數值持平或上升", "operator": "gte", "threshold": 0, "unit": "shares", "window": "latest month versus month 12 months earlier", "required_fields": ["director_supervisor_aggregate_holdings", "historical_month"], "formula": "latest aggregate director/supervisor holdings >= 12-month-prior aggregate", "source_families": ["mops_internal_holdings"], "definition_status": "blocked_until_reference_calibration", "blocker": "Aggregate label selection and month alignment must be frozen"},
+        {"id": "chip.shareholder_count_down_3m", "label": "總股東人數連續三個月下滑", "operator": "strict_decrease_each_month", "threshold": 3, "unit": "months", "window": "three normalized month-end snapshots", "required_fields": ["tdcc_shareholder_count", "snapshot_date"], "formula": "count[t-2] > count[t-1] > count[t]", "source_families": ["tdcc_openapi", "tdcc_query"], "definition_status": "frozen_with_source_gate", "blocker": "A single current snapshot is insufficient; collect and persist three months"}
+      ]
+    }
+  ]
+}

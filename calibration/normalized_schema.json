@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "schema_id": "public-osint-normalized-snapshot",
+  "status_enum": ["PASS", "FAIL", "UNKNOWN", "BLOCKED"],
+  "authority_enum": ["official_primary", "official_crosscheck", "free_secondary", "reference_only"],
+  "scope_enum": ["consolidated", "standalone", "unknown"],
+  "required_snapshot_fields": [
+    "entity",
+    "as_of",
+    "period",
+    "published_at",
+    "retrieved_at_utc",
+    "source_id",
+    "source_url",
+    "http_status",
+    "row_count",
+    "raw_snapshot_id",
+    "parser_version",
+    "schema_version",
+    "formula_version",
+    "authority",
+    "scope",
+    "fields"
+  ],
+  "required_field_record_fields": [
+    "canonical_name",
+    "source_label",
+    "value",
+    "unit",
+    "status",
+    "reason",
+    "source_id",
+    "source_url",
+    "period",
+    "published_at"
+  ],
+  "lineage_rules": {
+    "retrieved_at_utc": "ISO-8601 timestamp ending in Z",
+    "raw_snapshot_id": "sha256:<digest>",
+    "source_url": "HTTPS allow-listed host only",
+    "as_of": "No source publication later than this date may be scored",
+    "missing": "UNKNOWN or BLOCKED; never zero-filled"
+  }
+}

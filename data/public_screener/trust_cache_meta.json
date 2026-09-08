@@ -1,0 +1,150 @@
+{
+  "conflicts": [],
+  "errors": [
+    {
+      "date": "2026-09-06",
+      "error": "TWSE T86 status is not OK",
+      "market": "TWSE"
+    },
+    {
+      "date": "2026-09-06",
+      "error": "TPEx investment trust net-share field cannot be identified",
+      "market": "TPEx"
+    },
+    {
+      "date": "2026-09-05",
+      "error": "TWSE T86 status is not OK",
+      "market": "TWSE"
+    },
+    {
+      "date": "2026-09-05",
+      "error": "TPEx investment trust net-share field cannot be identified",
+      "market": "TPEx"
+    },
+    {
+      "date": "2026-08-30",
+      "error": "TWSE T86 status is not OK",
+      "market": "TWSE"
+    },
+    {
+      "date": "2026-08-30",
+      "error": "TPEx investment trust net-share field cannot be identified",
+      "market": "TPEx"
+    },
+    {
+      "date": "2026-08-29",
+      "error": "TWSE T86 status is not OK",
+      "market": "TWSE"
+    },
+    {
+      "date": "2026-08-29",
+      "error": "TPEx investment trust net-share field cannot be identified",
+      "market": "TPEx"
+    }
+  ],
+  "fetched_dates": {
+    "2026-08-26": {
+      "row_count": 1863,
+      "status": {
+        "TPEx": "PASS:777",
+        "TWSE": "PASS:1086"
+      }
+    },
+    "2026-08-27": {
+      "row_count": 1867,
+      "status": {
+        "TPEx": "PASS:783",
+        "TWSE": "PASS:1084"
+      }
+    },
+    "2026-08-28": {
+      "row_count": 1871,
+      "status": {
+        "TPEx": "PASS:792",
+        "TWSE": "PASS:1079"
+      }
+    },
+    "2026-08-29": {
+      "row_count": 0,
+      "status": {
+        "TPEx": "ERROR:ValueError",
+        "TWSE": "ERROR:ValueError"
+      }
+    },
+    "2026-08-30": {
+      "row_count": 0,
+      "status": {
+        "TPEx": "ERROR:ValueError",
+        "TWSE": "ERROR:ValueError"
+      }
+    },
+    "2026-08-31": {
+      "row_count": 1867,
+      "status": {
+        "TPEx": "PASS:782",
+        "TWSE": "PASS:1085"
+      }
+    },
+    "2026-09-01": {
+      "row_count": 1859,
+      "status": {
+        "TPEx": "PASS:779",
+        "TWSE": "PASS:1080"
+      }
+    },
+    "2026-09-02": {
+      "row_count": 1856,
+      "status": {
+        "TPEx": "PASS:770",
+        "TWSE": "PASS:1086"
+      }
+    },
+    "2026-09-03": {
+      "row_count": 1850,
+      "status": {
+        "TPEx": "PASS:778",
+        "TWSE": "PASS:1072"
+      }
+    },
+    "2026-09-04": {
+      "row_count": 1850,
+      "status": {
+        "TPEx": "PASS:767",
+        "TWSE": "PASS:1083"
+      }
+    },
+    "2026-09-05": {
+      "row_count": 0,
+      "status": {
+        "TPEx": "ERROR:ValueError",
+        "TWSE": "ERROR:ValueError"
+      }
+    },
+    "2026-09-06": {
+      "row_count": 0,
+      "status": {
+        "TPEx": "ERROR:ValueError",
+        "TWSE": "ERROR:ValueError"
+      }
+    },
+    "2026-09-07": {
+      "row_count": 1884,
+      "status": {
+        "TPEx": "PASS:796",
+        "TWSE": "PASS:1088"
+      }
+    },
+    "2026-09-08": {
+      "row_count": 1861,
+      "status": {
+        "TPEx": "PASS:773",
+        "TWSE": "PASS:1088"
+      }
+    }
+  },
+  "formula_version": "public-data-health-v1",
+  "last_run_as_of": "2026-09-08",
+  "last_run_at_utc": "2026-09-08T11:11:04Z",
+  "source": "official_twse_t86_tpex_3insti",
+  "successful_date_count": 10
+}

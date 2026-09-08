@@ -1,37 +1,33 @@
 ---
-// ScreeningRow.astro — Table-style card for screening results
-// Preserves glass-morphism design tokens from Layout.astro.
+// ScreeningRow.astro — public screener candidate row
+export interface CategoryScore {
+  passed: number;
+  failed: number;
+  unknown: number;
+  not_applicable?: number;
+  total: number;
+  score: string;
+  status: string;
+}
 
 export interface ScreeningEntry {
   code: string;
+  market?: string;
   name_zh: string;
-  name_en: string;
+  name_en?: string;
   net_amount_10d: number;
-  net_amount_10d_k: number;
+  net_amount_10d_k?: number;
   net_shares_10d: number;
-  net_shares_10d_zhang: number;
-  first_date: string;
+  net_shares_10d_zhang?: number;
   last_date: string;
+  window_dates?: string[];
   cur_price: number;
-  first_price?: number | null;
-  change_pct?: number | null;
-  g_score: number;
-  l_score: number;
-  cheap_score?: number | null;
-  dividend_score?: number | null;
-  regression_z: number;
-  rank: number;
-  screening_date: string;
-  ex_dividend_date?: string | null;
-  dividend_per_share?: number | null;
-  valuation?: {
-    peg?: number | null;
-    peg_y?: number | null;
-    pe?: number | null;
-    div_yield_3y_pct?: number | null;
-    avg_fill_days?: number | null;
-    fill_rate?: number | null;
-  } | null;
+  regression_z: number | null;
+  z_status?: string;
+  rank?: number;
+  screening_date?: string;
+  categories?: Record<string, CategoryScore>;
+  data_quality?: { unknown_criteria?: number; coverage?: number };
 }
 
 interface Props {
@@ -41,130 +37,93 @@ interface Props {
 
 const { entry, variant = "active" } = Astro.props;
 const isArchive = variant === "archive";
+const detailUrl = `${import.meta.env.BASE_URL}stock/${entry.code}`;
+const categoryMeta = [
+  ["turnaround", "轉機"],
+  ["value", "便宜"],
+  ["growth", "成長"],
+  ["chip", "籌碼"],
+  ["dividend", "定存"],
+  ["continuity", "績優"],
+  ["safety", "地雷"],
+] as const;
+const categories = entry.categories || {};
 
-function fmtAmount(v: number): string {
-  if (v >= 1e8) return (v / 1e8).toFixed(2) + " 億";
-  if (v >= 1e4) return (v / 1e4).toFixed(1) + " 萬";
-  return v.toLocaleString();
+function fmtAmount(value: number): string {
+  if (value >= 1e8) return `${(value / 1e8).toFixed(2)} 億`;
+  if (value >= 1e4) return `${(value / 1e4).toFixed(1)} 萬`;
+  return value.toLocaleString();
 }
 
-function fmtShares(zhang: number): string {
-  if (zhang >= 10000) return (zhang / 10000).toFixed(1) + " 萬張";
-  if (zhang >= 1000) return (zhang / 1000).toFixed(1) + " 千張";
-  return zhang + " 張";
+function fmtShares(value: number): string {
+  if (value >= 10000) return `${(value / 10000).toFixed(1)} 萬張`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1)} 千張`;
+  return `${value.toLocaleString()} 張`;
 }
 
-function hasValue(v: number | null | undefined): boolean {
-  return v != null && !isNaN(v);
+function categoryPercent(category: CategoryScore | undefined): string {
+  if (!category || !category.total) return "—";
+  return `${(category.passed / category.total * 100).toFixed(0)}%`;
 }
 
-const statementUrl = `https://statementdog.com/analysis/${entry.code}`;
-
-function isFutureDiv(dateStr: string): boolean {
-  if (!dateStr) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return new Date(dateStr) > today;
+function statusClass(category: CategoryScore | undefined): string {
+  if (!category) return "unknown";
+  if (category.status === "pass") return "pass";
+  if (category.status === "fail") return "fail";
+  if (category.status === "not_applicable") return "na";
+  return "unknown";
 }
 
-function formatDivDate(dateStr: string): string {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  return `${d.getMonth() + 1}/${d.getDate()}`;
+function fmtZ(value: number | null): string {
+  return value == null || !Number.isFinite(value) ? "—" : value.toFixed(2);
 }
 ---
 
-<a href={statementUrl} target="_blank" rel="noopener" class:list={["screening-row", "surface", { "is-archive": isArchive }]}>
+<a href={detailUrl} class:list={["screening-row", "surface", { "is-archive": isArchive }]} aria-label={`${entry.code} ${entry.name_zh} criteria 詳情`}>
   <div class="row-left">
     <div class="stock-identity">
       <span class="stock-code">{entry.code}</span>
+      <span class="stock-market">{entry.market || "—"}</span>
       <span class="stock-name">{entry.name_zh || "—"}</span>
     </div>
   </div>
 
   <div class="row-center">
     <div class="col col-amount">
-      <span class="col-label">投信10日買超</span>
+      <span class="col-label">投信 10 日買超</span>
       <span class="col-value col-value-primary">{fmtAmount(entry.net_amount_10d)}</span>
-      <span class="col-sub">{fmtShares(entry.net_shares_10d_zhang)}</span>
+      <span class="col-sub">{fmtShares(entry.net_shares_10d_zhang ?? entry.net_shares_10d / 1000)}</span>
     </div>
 
-    <div class="col col-dates">
-      <span class="col-label">首次上榜</span>
-      <span class="col-value">{entry.first_date}</span>
-      <span class="col-sub">最新: {entry.screening_date}</span>
+    <div class="col col-date">
+      <span class="col-label">資料日</span>
+      <span class="col-value">{entry.screening_date || entry.last_date}</span>
+      <span class="col-sub">排行 #{entry.rank ?? "—"}</span>
     </div>
 
-    {isArchive && (
-      <div class="col col-date">
-        <span class="col-label">篩選日期</span>
-        <span class="col-value">{entry.screening_date}</span>
-      </div>
-    )}
-
-    <!-- 4 fundamental scores in one compact block -->
-    <div class="score-block">
-      <div class:list={["score-pill", { pass: entry.g_score >= 80 }]}>
-        <span class="pill-label">成長</span>
-        <span class="pill-value">{entry.g_score.toFixed(0)}</span>
-      </div>
-      <div class:list={["score-pill", { pass: entry.l_score >= 80 }]}>
-        <span class="pill-label">地雷</span>
-        <span class="pill-value">{entry.l_score.toFixed(0)}</span>
-      </div>
-      <div class:list={["score-pill", { pass: hasValue(entry.cheap_score) && entry.cheap_score! >= 80 }]}>
-        <span class="pill-label">便宜</span>
-        <span class="pill-value">{hasValue(entry.cheap_score) ? entry.cheap_score!.toFixed(0) : "—"}</span>
-      </div>
-      <div class:list={["score-pill", { pass: hasValue(entry.dividend_score) && entry.dividend_score! >= 80 }]}>
-        <span class="pill-label">定存</span>
-        <span class="pill-value">{hasValue(entry.dividend_score) ? entry.dividend_score!.toFixed(0) : "—"}</span>
-      </div>
+    <div class="category-block" aria-label="七大類分數">
+      {categoryMeta.map(([key, label]) => {
+        const category = categories[key];
+        return (
+          <div class:list={["category-pill", statusClass(category)]} title={category ? `${category.passed} passed, ${category.failed} failed, ${category.unknown} unknown` : "資料不足"}>
+            <span class="pill-label">{label}</span>
+            <span class="pill-value">{category?.score || "—"}</span>
+            <span class="pill-percent">{categoryPercent(category)}</span>
+          </div>
+        );
+      })}
     </div>
 
-    <div class="col col-price-block">
-      <span class="col-label">股價追蹤</span>
-      <div class="price-track">
-        <span class="price-first">{hasValue(entry.first_price) ? entry.first_price!.toFixed(1) : '—'}</span>
-        <span class="price-arrow">→</span>
-        <span class="price-now">{entry.cur_price.toFixed(1)}</span>
-      </div>
-      {hasValue(entry.change_pct) && (
-        <span class:list={["price-change", { 'change-up': entry.change_pct! > 0, 'change-down': entry.change_pct! < 0 }]}>
-          {entry.change_pct! > 0 ? '+' : ''}{entry.change_pct!.toFixed(1)}%
-        </span>
-      )}
-      {!hasValue(entry.change_pct) && <span class="price-change price-na">—</span>}
+    <div class="col col-price">
+      <span class="col-label">收盤價</span>
+      <span class="col-value">{Number(entry.cur_price || 0).toFixed(2)}</span>
+      <span class="col-sub">{entry.last_date || "—"}</span>
     </div>
 
     <div class="col col-z">
       <span class="col-label">Z</span>
-      <span class="col-value col-muted">{entry.regression_z.toFixed(2)}</span>
+      <span class:list={["col-value", { "z-pass": entry.regression_z != null && entry.regression_z <= 0, "z-unknown": entry.regression_z == null }]}>{fmtZ(entry.regression_z)}</span>
     </div>
-
-    {hasValue(entry.dividend_per_share) && (
-      <div class="col col-div">
-        <span class="col-label">配息</span>
-        <span class="col-value">{entry.dividend_per_share!.toFixed(1)} 元</span>
-        {entry.ex_dividend_date && (
-          <span class:list={["col-sub", { "div-future": isFutureDiv(entry.ex_dividend_date) }]}>
-            除息 {formatDivDate(entry.ex_dividend_date)}
-          </span>
-        )}
-      </div>
-    )}
-
-    {hasValue(entry.valuation) && (
-      <div class="col col-valuation">
-        <span class="col-label">PEGY</span>
-        <span class:list={["col-value", { "peg-cheap": (entry.valuation!.peg_y ?? Infinity) < 0.75 }]}>
-          {hasValue(entry.valuation!.peg_y) ? entry.valuation!.peg_y!.toFixed(2) : "—"}
-        </span>
-        {hasValue(entry.valuation!.pe) && (
-          <span class="col-sub">PE {entry.valuation!.pe!.toFixed(1)}</span>
-        )}
-      </div>
-    )}
   </div>
 </a>
 
@@ -176,6 +135,7 @@ function formatDivDate(dateStr: string): string {
   padding: 12px 18px;
   border-radius: var(--radius-md, 8px);
   color: var(--color-text, #0a0a0a);
+  text-decoration: none;
   position: relative;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -183,196 +143,49 @@ function formatDivDate(dateStr: string): string {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 1px var(--color-accent);
 }
-.screening-row.is-archive {
-  opacity: 0.72;
+.screening-row.is-archive { opacity: 0.72; }
+.screening-row.is-archive:hover { opacity: 0.94; }
+.row-left { flex: 0 0 110px; min-width: 0; }
+.row-center { flex: 1 1 auto; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.stock-identity { display: flex; flex-direction: column; gap: 2px; }
+.stock-code { font-size: 1.02rem; font-weight: 800; letter-spacing: 0.02em; }
+.stock-market { font-size: 0.58rem; color: var(--color-accent); font-weight: 700; }
+.stock-name { font-size: 0.76rem; color: var(--color-muted, #667085); max-width: 105px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 0 0 auto; }
+.col-label { font-size: 0.62rem; font-weight: 750; color: var(--color-muted, #667085); letter-spacing: 0.04em; }
+.col-value { font-size: 0.85rem; font-weight: 700; }
+.col-value-primary { font-size: 0.92rem; }
+.col-sub { font-size: 0.68rem; color: var(--color-text-muted); }
+.col-amount { min-width: 116px; }
+.col-date { min-width: 86px; }
+.col-price { min-width: 78px; }
+.col-z { min-width: 45px; }
+.z-pass { color: var(--color-accent); }
+.z-unknown { color: var(--color-text-muted); font-weight: 500; }
+.category-block { display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 430px; min-width: 270px; }
+.category-pill { min-width: 48px; padding: 3px 6px; display: flex; flex-direction: column; align-items: center; border-radius: 6px; background: rgba(128,128,128,0.07); }
+.category-pill.pass { background: var(--color-accent-soft); }
+.category-pill.fail { background: rgba(242,54,69,0.07); }
+.category-pill.unknown { background: rgba(128,128,128,0.04); }
+.pill-label { font-size: 0.56rem; font-weight: 750; color: var(--color-muted, #667085); }
+.pill-value { font-size: 0.74rem; font-weight: 850; color: var(--color-text); }
+.category-pill.pass .pill-label, .category-pill.pass .pill-percent, .category-pill.pass .pill-value { color: var(--color-accent); }
+.category-pill.fail .pill-percent { color: var(--color-down, #f23645); }
+.pill-percent { font-size: 0.55rem; color: var(--color-text-muted); }
+@media (max-width: 1100px) {
+  .category-block { flex-basis: 330px; min-width: 220px; }
+  .category-pill { min-width: 42px; }
 }
-.screening-row.is-archive:hover {
-  opacity: 0.92;
-}
-
-.row-left {
-  flex: 0 0 105px;
-  min-width: 0;
-  position: relative;
-  z-index: 1;
-}
-.row-center {
-  flex: 1 1 auto;
-  display: flex;
-  gap: 10px;
-  min-width: 0;
-  position: relative;
-  z-index: 1;
-  align-items: center;
-}
-
-.stock-identity {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.stock-code {
-  font-size: 1.02rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-.stock-name {
-  font-size: 0.76rem;
-  color: var(--color-muted, #667085);
-  max-width: 95px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.col {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 0 0 auto;
-}
-.col-label {
-  font-size: 0.62rem;
-  font-weight: 750;
-  color: var(--color-muted, #667085);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.col-value {
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-.col-value-primary {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--color-text);
-}
-.col-sub {
-  font-size: 0.68rem;
-  color: var(--color-text-muted);
-}
-.col-muted {
-  color: var(--color-text-muted);
-  font-weight: 500;
-}
-
-.col-valuation { min-width: 72px; }
-.col-valuation .peg-cheap {
-  color: #089981; /* PEGY < 0.75：祖魯法則便宜區（TradingView 漲色） */
-}
-
-.col-amount { min-width: 115px; }
-.col-dates { min-width: 95px; }
-.col-date { min-width: 85px; }
-.col-price-block { min-width: 118px; }
-.col-z { min-width: 44px; }
-
-.col-div { min-width: 72px; }
-.col-div .col-value {
-  font-size: 0.82rem;
-  font-weight: 750;
-}
-.col-div .div-future {
-  color: var(--color-accent, #c96442);
-  font-weight: 700;
-}
-
-/* ── Price tracking block ── */
-.price-track {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-}
-.price-first {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-muted, #667085);
-}
-.price-arrow {
-  font-size: 0.65rem;
-  color: var(--color-muted, #667085);
-  font-weight: 400;
-}
-.price-now {
-  font-size: 1.02rem;
-  font-weight: 850;
-  color: var(--color-text);
-}
-.price-change {
-  font-size: 0.84rem;
-  font-weight: 800;
-  margin-top: 2px;
-}
-.price-change.change-up {
-  color: #089981;
-}
-.price-change.change-down {
-  color: #F23645;
-}
-.price-change.price-na {
-  font-size: 0.7rem;
-  color: var(--color-muted, #667085);
-  font-weight: 400;
-}
-
-/* ── Score block (4 fundamental pills) ── */
-.score-block {
-  display: inline-flex;
-  gap: 5px;
-  align-items: center;
-  flex: 0 0 auto;
-  padding: 2px 4px;
-  border-radius: 8px;
-  background: rgba(128, 128, 128, 0.04);
-}
-.score-pill {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  min-width: 48px;
-  background: rgba(128, 128, 128, 0.06);
-}
-.pill-label {
-  font-size: 0.58rem;
-  font-weight: 750;
-  color: var(--color-muted, #667085);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-.pill-value {
-  font-size: 0.88rem;
-  font-weight: 850;
-  color: var(--color-text);
-}
-.score-pill.pass {
-  background: var(--color-accent-soft);
-}
-.score-pill.pass .pill-value {
-  color: var(--color-accent);
-}
-.score-pill.pass .pill-label {
-  color: var(--color-accent);
-}
-
-@media (max-width: 960px) {
+@media (max-width: 800px) {
+  .screening-row { align-items: flex-start; padding: 11px 14px; }
   .row-center { flex-wrap: wrap; gap: 8px; }
-  .score-block { order: 10; }
+  .category-block { order: 10; flex-basis: 100%; min-width: 100%; }
+  .category-pill { flex: 1 1 42px; }
 }
-@media (max-width: 700px) {
-  .screening-row { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
-  .row-left { flex: 0 0 100%; }
-  .stock-identity { flex-direction: row; gap: 8px; align-items: baseline; }
-  .score-block {
-    width: 100%;
-    justify-content: space-around;
-  }
-}
-@media (max-width: 420px) {
-  .score-pill { min-width: 40px; padding: 3px 5px; }
-  .pill-value { font-size: 0.8rem; }
+@media (max-width: 500px) {
+  .row-left { flex: 0 0 78px; }
+  .stock-name { max-width: 78px; }
+  .col-amount { min-width: 96px; }
+  .col-date { min-width: 74px; }
 }
 </style>

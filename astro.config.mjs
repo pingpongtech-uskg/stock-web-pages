@@ -1,10 +1,9 @@
 import { defineConfig } from 'astro/config';
 
-// Cloudflare Pages deployment
-// Update `site` to your actual Cloudflare Pages domain after deployment:
-//   e.g. https://stock-radar.pages.dev
+// GitHub Pages deployment
+// Canonical site: https://pingpongtech-uskg.github.io/stock-web-pages/
 export default defineConfig({
-  site: 'https://YOUR_PROJECT.pages.dev',
+  site: 'https://pingpongtech-uskg.github.io/stock-web-pages/',
   base: '/',
   output: 'static',
 });
