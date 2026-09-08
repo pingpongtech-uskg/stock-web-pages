@@ -1,0 +1,733 @@
+{
+  "schema_version": "1.0",
+  "report_type": "acceptance_report",
+  "status": "base_verified_not_full_v1",
+  "tested_at": "2026-09-08T22:58:07+00:00",
+  "git_commit": "uncommitted",
+  "software_checks": {
+    "frontend_unit_tests": "pass",
+    "pipeline_tests": "pass",
+    "snapshot_validation": "pass",
+    "typecheck_and_build": "pass",
+    "route_and_responsive_smoke": "pass",
+    "finmind_live_seed": "pass"
+  },
+  "investment_target": {
+    "status": "not_evaluable",
+    "cagr_at_least": 0.5,
+    "max_drawdown_at_most": 0.3,
+    "software_release_blocker": false
+  },
+  "criteria": [
+    {
+      "criterion_id": "DATA-01",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DATA-02",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DATA-03",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DATA-04",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DATA-05",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DATA-06",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DATA-07",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DATA-08",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "OPS-01",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "OPS-02",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "OPS-03",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "OPS-04",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "OPS-05",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "OPS-06",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "OPS-07",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RANK-01",
+      "result": "pass",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "src/domain/indicators.test.ts",
+        "pipeline/test_indicators.py",
+        "reports/evidence/frontend-unit-tests.txt",
+        "reports/evidence/pipeline-tests.txt"
+      ],
+      "notes": "實際 unit tests 通過 golden OLS／十市場日法人公式；未因此推論策略績效有效。"
+    },
+    {
+      "criterion_id": "RANK-02",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RANK-03",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RANK-04",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RANK-05",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RANK-06",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RANK-07",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RANK-08",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "LOHAS-01",
+      "result": "pass",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "src/domain/indicators.test.ts",
+        "pipeline/test_indicators.py",
+        "reports/evidence/frontend-unit-tests.txt",
+        "reports/evidence/pipeline-tests.txt"
+      ],
+      "notes": "實際 unit tests 通過 golden OLS／十市場日法人公式；未因此推論策略績效有效。"
+    },
+    {
+      "criterion_id": "LOHAS-02",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "LOHAS-03",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "LOHAS-04",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "LOHAS-05",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "LOHAS-06",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "LOHAS-07",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "LOHAS-08",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RULE-01",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RULE-02",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RULE-03",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RULE-04",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RULE-05",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RULE-06",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "UI-01",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "UI-02",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "UI-03",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "UI-04",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "UI-05",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "UI-06",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "UI-07",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "UI-08",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "UI-09",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "UI-10",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DISC-01",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DISC-02",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DISC-03",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DISC-04",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DISC-05",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DEPLOY-01",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DEPLOY-02",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DEPLOY-03",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DEPLOY-04",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DEPLOY-05",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DEPLOY-06",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "DEPLOY-07",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "PERF-01",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "PERF-02",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "PERF-03",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RESEARCH-01",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RESEARCH-02",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RESEARCH-03",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RESEARCH-04",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RESEARCH-05",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RESEARCH-06",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RESEARCH-07",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    },
+    {
+      "criterion_id": "RESEARCH-08",
+      "result": "not_run",
+      "tested_at": "2026-09-08T22:58:07+00:00",
+      "git_commit": "uncommitted",
+      "evidence_paths": [
+        "reports/evidence/NOT_RUN.md"
+      ],
+      "notes": "完整專項驗收尚未執行；此 base 的 smoke 結果不冒充完整 v1 證據。"
+    }
+  ],
+  "notes": [
+    "本報告依 answers.key evidence contract；未執行項目不能視為 pass。",
+    "目前 live seed 使用 FinMind 免費版未調整價格，正式四年訊號與 P5 point-in-time 回測仍是 unknown/not_evaluable。"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["code", "name", "market", "signalState", "dataStatus"],
+  "properties": {
+    "code": { "type": "string", "pattern": "^[0-9A-Z-]+$" },
+    "name": { "type": "string" },
+    "market": { "enum": ["TWSE", "TPEx", "unknown"] },
+    "signalState": { "type": "string" },
+    "dataStatus": { "enum": ["pass", "fail", "unknown", "not_applicable"] }
+  }
+}

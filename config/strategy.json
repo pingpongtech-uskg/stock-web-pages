@@ -1,0 +1,21 @@
+{
+  "strategy_version": "quality-growth-v1",
+  "formula_version": "lohas-linear-4y-v1",
+  "currency": "TWD",
+  "liquidity": { "window_market_sessions": 20, "min_average_trading_money": 20000000 },
+  "trust": { "window_market_sessions": 10, "top_n_net_shares": 100, "top_n_participation": 100 },
+  "growth": { "months": 3, "revenue_growth_min": 0.15, "defensive_growth_min": 0.0 },
+  "quality": { "positive_years": 3, "roe_median_min": 0.12, "net_debt_to_ebitda_max": 2.0 },
+  "signal": { "z_low": -1.0, "z_current_max": 0.0, "weekly_ma_period": 10, "lookback_complete_weeks": 8 },
+  "risk": {
+    "stop_loss_pct": 0.12,
+    "initial_weight": 0.075,
+    "max_single_weight": 0.125,
+    "max_stock_weight": 0.75,
+    "max_industry_weight": 0.30,
+    "max_monthly_buys": 2,
+    "max_yearly_buys": 24,
+    "portfolio_drawdown_states": { "paused": 0.15, "defensive": 0.20, "crisis": 0.25 }
+  },
+  "execution": { "commission_each_way": 0.001425, "sell_tax": 0.003, "slippage_each_way": 0.001 }
+}

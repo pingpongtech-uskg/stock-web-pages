@@ -1,0 +1,520 @@
+{
+  "schemaVersion": "1.0",
+  "strategyVersion": "quality-growth-v1",
+  "formulaVersion": "lohas-linear-4y-v1",
+  "runId": "live-20260909-064103-5167b991c4",
+  "marketDate": "2026-09-08",
+  "generatedAt": "2026-09-08T22:41:03+00:00",
+  "nextExpectedUpdateAt": "2026-09-10T15:17:00+00:00",
+  "freshness": "degraded",
+  "statusMessage": "FinMind 免費版按股快照已生成；財務與調整價仍依規格標示 unknown。",
+  "sourceRefs": [
+    "FinMind:TaiwanStockInfo",
+    "FinMind:TaiwanStockPrice",
+    "FinMind:TaiwanStockInstitutionalInvestorsBuySell",
+    "FinMind:TaiwanStockMonthRevenue",
+    "FinMind:TaiwanStockFinancialStatements",
+    "FinMind:TaiwanStockBalanceSheet",
+    "FinMind:TaiwanStockCashFlowsStatement",
+    "FinMind:user_info"
+  ],
+  "coverage": {
+    "universeCount": 3147,
+    "databaseCount": 8,
+    "candidateCount": 6,
+    "pendingCount": 3139,
+    "financialCompleteCount": 0,
+    "priceCompleteCount": 8,
+    "completenessPct": 0.2542103590721322,
+    "finmindRequests": 50,
+    "queueStatus": "待補：免費版按股增量；未驗證欄位不進場"
+  },
+  "summary": {
+    "watchCount": 0,
+    "lowPositionCount": 0,
+    "candidateRouteCounts": {
+      "trust": 6,
+      "growth": 0,
+      "lowPosition": 0
+    },
+    "addedToday": 0,
+    "improvedToday": 0,
+    "removedToday": 0
+  },
+  "stocks": [
+    {
+      "code": "2330",
+      "name": "台積電",
+      "market": "TWSE",
+      "sector": "電子工業",
+      "asOf": "2026-09-08",
+      "lastPrice": 2470.0,
+      "changePct": 0.0040650406504065045,
+      "zScore": 2.170369781237412,
+      "slope": 1.8846265839563299,
+      "fiveLineStatus": "unknown",
+      "qualityStatus": "unknown",
+      "growthStatus": "unknown",
+      "liquidityStatus": "pass",
+      "dataStatus": "unknown",
+      "signalState": "待補資料",
+      "entryReasons": [
+        "營收線索：三月合計年增 +46.3%；營業利益條件待核對",
+        "價格描述：raw close proxy Z +2.17；未作正式四年訊號"
+      ],
+      "risks": [
+        "免費版未驗證核准調整價／公司行動",
+        "財務品質必要條件 unknown"
+      ],
+      "institutionNetShares10": -3730835.0,
+      "participation10": -0.016385491465926005,
+      "positiveDays10": 3,
+      "revenueGrowth3m": 0.4626949269068719,
+      "ttmOperatingProfitGrowth": null,
+      "sourceRefs": [
+        "FinMind:TaiwanStockInfo",
+        "FinMind:TaiwanStockPrice",
+        "FinMind:TaiwanStockInstitutionalInvestorsBuySell",
+        "FinMind:TaiwanStockMonthRevenue",
+        "FinMind:TaiwanStockFinancialStatements",
+        "FinMind:TaiwanStockBalanceSheet",
+        "FinMind:TaiwanStockCashFlowsStatement"
+      ]
+    },
+    {
+      "code": "2454",
+      "name": "聯發科",
+      "market": "TWSE",
+      "sector": "半導體業",
+      "asOf": "2026-09-08",
+      "lastPrice": 4710.0,
+      "changePct": -0.01050420168067227,
+      "zScore": 3.6603138542792255,
+      "slope": 2.433990903828066,
+      "fiveLineStatus": "unknown",
+      "qualityStatus": "unknown",
+      "growthStatus": "unknown",
+      "liquidityStatus": "pass",
+      "dataStatus": "unknown",
+      "signalState": "值得研究",
+      "entryReasons": [
+        "投信關注：十日淨買超 2,062,639 股，該股成交占比 2.12%",
+        "營收線索：三月合計年增 +6.3%；營業利益條件待核對",
+        "價格描述：raw close proxy Z +3.66；未作正式四年訊號"
+      ],
+      "risks": [
+        "免費版未驗證核准調整價／公司行動",
+        "財務品質必要條件 unknown"
+      ],
+      "institutionNetShares10": 2062639.0,
+      "participation10": 0.021240047249922067,
+      "positiveDays10": 5,
+      "revenueGrowth3m": 0.06273766165808597,
+      "ttmOperatingProfitGrowth": null,
+      "sourceRefs": [
+        "FinMind:TaiwanStockInfo",
+        "FinMind:TaiwanStockPrice",
+        "FinMind:TaiwanStockInstitutionalInvestorsBuySell",
+        "FinMind:TaiwanStockMonthRevenue",
+        "FinMind:TaiwanStockFinancialStatements",
+        "FinMind:TaiwanStockBalanceSheet",
+        "FinMind:TaiwanStockCashFlowsStatement"
+      ]
+    },
+    {
+      "code": "2303",
+      "name": "聯電",
+      "market": "TWSE",
+      "sector": "電子工業",
+      "asOf": "2026-09-08",
+      "lastPrice": 137.0,
+      "changePct": -0.04195804195804196,
+      "zScore": 2.6589880211350057,
+      "slope": 0.04817565722894354,
+      "fiveLineStatus": "unknown",
+      "qualityStatus": "unknown",
+      "growthStatus": "unknown",
+      "liquidityStatus": "pass",
+      "dataStatus": "unknown",
+      "signalState": "值得研究",
+      "entryReasons": [
+        "投信關注：十日淨買超 10,066,009 股，該股成交占比 0.50%",
+        "營收線索：三月合計年增 +24.1%；營業利益條件待核對",
+        "價格描述：raw close proxy Z +2.66；未作正式四年訊號"
+      ],
+      "risks": [
+        "免費版未驗證核准調整價／公司行動",
+        "財務品質必要條件 unknown"
+      ],
+      "institutionNetShares10": 10066009.0,
+      "participation10": 0.005004534284978733,
+      "positiveDays10": 6,
+      "revenueGrowth3m": 0.241123841804969,
+      "ttmOperatingProfitGrowth": null,
+      "sourceRefs": [
+        "FinMind:TaiwanStockInfo",
+        "FinMind:TaiwanStockPrice",
+        "FinMind:TaiwanStockInstitutionalInvestorsBuySell",
+        "FinMind:TaiwanStockMonthRevenue",
+        "FinMind:TaiwanStockFinancialStatements",
+        "FinMind:TaiwanStockBalanceSheet",
+        "FinMind:TaiwanStockCashFlowsStatement"
+      ]
+    },
+    {
+      "code": "2317",
+      "name": "鴻海",
+      "market": "TWSE",
+      "sector": "電子工業",
+      "asOf": "2026-09-08",
+      "lastPrice": 251.5,
+      "changePct": -0.017578125,
+      "zScore": 0.12328864201052923,
+      "slope": 0.1747663740668061,
+      "fiveLineStatus": "unknown",
+      "qualityStatus": "unknown",
+      "growthStatus": "unknown",
+      "liquidityStatus": "pass",
+      "dataStatus": "unknown",
+      "signalState": "值得研究",
+      "entryReasons": [
+        "投信關注：十日淨買超 2,188,611 股，該股成交占比 0.62%",
+        "營收線索：三月合計年增 +52.8%；營業利益條件待核對",
+        "價格描述：raw close proxy Z +0.12；未作正式四年訊號"
+      ],
+      "risks": [
+        "免費版未驗證核准調整價／公司行動",
+        "財務品質必要條件 unknown"
+      ],
+      "institutionNetShares10": 2188611.0,
+      "participation10": 0.006232161910809623,
+      "positiveDays10": 7,
+      "revenueGrowth3m": 0.5279000135255688,
+      "ttmOperatingProfitGrowth": null,
+      "sourceRefs": [
+        "FinMind:TaiwanStockInfo",
+        "FinMind:TaiwanStockPrice",
+        "FinMind:TaiwanStockInstitutionalInvestorsBuySell",
+        "FinMind:TaiwanStockMonthRevenue",
+        "FinMind:TaiwanStockFinancialStatements",
+        "FinMind:TaiwanStockBalanceSheet",
+        "FinMind:TaiwanStockCashFlowsStatement"
+      ]
+    },
+    {
+      "code": "2382",
+      "name": "廣達",
+      "market": "TWSE",
+      "sector": "電腦及週邊設備業",
+      "asOf": "2026-09-08",
+      "lastPrice": 328.0,
+      "changePct": -0.05611510791366906,
+      "zScore": -0.6856426872605285,
+      "slope": 0.2532968377616316,
+      "fiveLineStatus": "unknown",
+      "qualityStatus": "unknown",
+      "growthStatus": "unknown",
+      "liquidityStatus": "pass",
+      "dataStatus": "unknown",
+      "signalState": "值得研究",
+      "entryReasons": [
+        "投信關注：十日淨買超 6,540,111 股，該股成交占比 4.23%",
+        "營收線索：三月合計年增 +134.6%；營業利益條件待核對",
+        "價格描述：raw close proxy Z -0.69；未作正式四年訊號"
+      ],
+      "risks": [
+        "免費版未驗證核准調整價／公司行動",
+        "財務品質必要條件 unknown"
+      ],
+      "institutionNetShares10": 6540111.0,
+      "participation10": 0.04233012427894139,
+      "positiveDays10": 9,
+      "revenueGrowth3m": 1.3460935207840174,
+      "ttmOperatingProfitGrowth": null,
+      "sourceRefs": [
+        "FinMind:TaiwanStockInfo",
+        "FinMind:TaiwanStockPrice",
+        "FinMind:TaiwanStockInstitutionalInvestorsBuySell",
+        "FinMind:TaiwanStockMonthRevenue",
+        "FinMind:TaiwanStockFinancialStatements",
+        "FinMind:TaiwanStockBalanceSheet",
+        "FinMind:TaiwanStockCashFlowsStatement"
+      ]
+    },
+    {
+      "code": "2881",
+      "name": "富邦金",
+      "market": "TWSE",
+      "sector": "金融保險",
+      "asOf": "2026-09-08",
+      "lastPrice": 149.0,
+      "changePct": -0.0033444816053511705,
+      "zScore": 4.257339893520563,
+      "slope": 0.06329083510417374,
+      "fiveLineStatus": "unknown",
+      "qualityStatus": "unknown",
+      "growthStatus": "unknown",
+      "liquidityStatus": "pass",
+      "dataStatus": "unknown",
+      "signalState": "值得研究",
+      "entryReasons": [
+        "投信關注：十日淨買超 7,263,546 股，該股成交占比 3.51%",
+        "營收線索：三月合計年增 +33.4%；營業利益條件待核對",
+        "價格描述：raw close proxy Z +4.26；未作正式四年訊號"
+      ],
+      "risks": [
+        "免費版未驗證核准調整價／公司行動",
+        "財務品質必要條件 unknown"
+      ],
+      "institutionNetShares10": 7263546.0,
+      "participation10": 0.03513926737682127,
+      "positiveDays10": 5,
+      "revenueGrowth3m": 0.3338365066358414,
+      "ttmOperatingProfitGrowth": null,
+      "sourceRefs": [
+        "FinMind:TaiwanStockInfo",
+        "FinMind:TaiwanStockPrice",
+        "FinMind:TaiwanStockInstitutionalInvestorsBuySell",
+        "FinMind:TaiwanStockMonthRevenue",
+        "FinMind:TaiwanStockFinancialStatements",
+        "FinMind:TaiwanStockBalanceSheet",
+        "FinMind:TaiwanStockCashFlowsStatement"
+      ]
+    },
+    {
+      "code": "3034",
+      "name": "聯詠",
+      "market": "TWSE",
+      "sector": "電子工業",
+      "asOf": "2026-09-08",
+      "lastPrice": 534.0,
+      "changePct": -0.011111111111111112,
+      "zScore": 0.2907442298189415,
+      "slope": 0.09857723378249897,
+      "fiveLineStatus": "unknown",
+      "qualityStatus": "unknown",
+      "growthStatus": "unknown",
+      "liquidityStatus": "pass",
+      "dataStatus": "unknown",
+      "signalState": "值得研究",
+      "entryReasons": [
+        "投信關注：十日淨買超 1,262,535 股，該股成交占比 3.79%",
+        "營收線索：三月合計年增 +24.0%；營業利益條件待核對",
+        "價格描述：raw close proxy Z +0.29；未作正式四年訊號"
+      ],
+      "risks": [
+        "免費版未驗證核准調整價／公司行動",
+        "財務品質必要條件 unknown"
+      ],
+      "institutionNetShares10": 1262535.0,
+      "participation10": 0.03792720545617518,
+      "positiveDays10": 6,
+      "revenueGrowth3m": 0.23970817253311547,
+      "ttmOperatingProfitGrowth": null,
+      "sourceRefs": [
+        "FinMind:TaiwanStockInfo",
+        "FinMind:TaiwanStockPrice",
+        "FinMind:TaiwanStockInstitutionalInvestorsBuySell",
+        "FinMind:TaiwanStockMonthRevenue",
+        "FinMind:TaiwanStockFinancialStatements",
+        "FinMind:TaiwanStockBalanceSheet",
+        "FinMind:TaiwanStockCashFlowsStatement"
+      ]
+    },
+    {
+      "code": "3711",
+      "name": "日月光投控",
+      "market": "TWSE",
+      "sector": "電子工業",
+      "asOf": "2026-09-08",
+      "lastPrice": 618.0,
+      "changePct": -0.004830917874396135,
+      "zScore": 2.3944649414180184,
+      "slope": 0.3897498644004284,
+      "fiveLineStatus": "unknown",
+      "qualityStatus": "unknown",
+      "growthStatus": "unknown",
+      "liquidityStatus": "pass",
+      "dataStatus": "unknown",
+      "signalState": "待補資料",
+      "entryReasons": [
+        "營收線索：三月合計年增 +35.0%；營業利益條件待核對",
+        "價格描述：raw close proxy Z +2.39；未作正式四年訊號"
+      ],
+      "risks": [
+        "免費版未驗證核准調整價／公司行動",
+        "財務品質必要條件 unknown"
+      ],
+      "institutionNetShares10": -9546554.0,
+      "participation10": -0.050913791931429066,
+      "positiveDays10": 3,
+      "revenueGrowth3m": 0.34993317534771035,
+      "ttmOperatingProfitGrowth": null,
+      "sourceRefs": [
+        "FinMind:TaiwanStockInfo",
+        "FinMind:TaiwanStockPrice",
+        "FinMind:TaiwanStockInstitutionalInvestorsBuySell",
+        "FinMind:TaiwanStockMonthRevenue",
+        "FinMind:TaiwanStockFinancialStatements",
+        "FinMind:TaiwanStockBalanceSheet",
+        "FinMind:TaiwanStockCashFlowsStatement"
+      ]
+    }
+  ],
+  "rankings": {
+    "trust": [
+      {
+        "rank": 1,
+        "code": "2382",
+        "name": "廣達",
+        "sector": "電腦及週邊設備業",
+        "value": 4.233012427894138,
+        "valueLabel": "%",
+        "status": "pass",
+        "reason": "投信關注：十日淨買超 6,540,111 股，該股成交占比 4.23%"
+      },
+      {
+        "rank": 2,
+        "code": "3034",
+        "name": "聯詠",
+        "sector": "電子工業",
+        "value": 3.792720545617518,
+        "valueLabel": "%",
+        "status": "pass",
+        "reason": "投信關注：十日淨買超 1,262,535 股，該股成交占比 3.79%"
+      },
+      {
+        "rank": 3,
+        "code": "2881",
+        "name": "富邦金",
+        "sector": "金融保險",
+        "value": 3.513926737682127,
+        "valueLabel": "%",
+        "status": "pass",
+        "reason": "投信關注：十日淨買超 7,263,546 股，該股成交占比 3.51%"
+      },
+      {
+        "rank": 4,
+        "code": "2454",
+        "name": "聯發科",
+        "sector": "半導體業",
+        "value": 2.124004724992207,
+        "valueLabel": "%",
+        "status": "pass",
+        "reason": "投信關注：十日淨買超 2,062,639 股，該股成交占比 2.12%"
+      },
+      {
+        "rank": 5,
+        "code": "2317",
+        "name": "鴻海",
+        "sector": "電子工業",
+        "value": 0.6232161910809623,
+        "valueLabel": "%",
+        "status": "pass",
+        "reason": "投信關注：十日淨買超 2,188,611 股，該股成交占比 0.62%"
+      },
+      {
+        "rank": 6,
+        "code": "2303",
+        "name": "聯電",
+        "sector": "電子工業",
+        "value": 0.5004534284978733,
+        "valueLabel": "%",
+        "status": "pass",
+        "reason": "投信關注：十日淨買超 10,066,009 股，該股成交占比 0.50%"
+      }
+    ],
+    "growth": [
+      {
+        "rank": 1,
+        "code": "2382",
+        "name": "廣達",
+        "sector": "電腦及週邊設備業",
+        "value": 134.60935207840174,
+        "valueLabel": "%",
+        "status": "unknown",
+        "reason": "三月合計營收可計算；近四季營業利益與可得時間仍待核對"
+      },
+      {
+        "rank": 2,
+        "code": "2317",
+        "name": "鴻海",
+        "sector": "電子工業",
+        "value": 52.79000135255688,
+        "valueLabel": "%",
+        "status": "unknown",
+        "reason": "三月合計營收可計算；近四季營業利益與可得時間仍待核對"
+      },
+      {
+        "rank": 3,
+        "code": "2330",
+        "name": "台積電",
+        "sector": "電子工業",
+        "value": 46.269492690687194,
+        "valueLabel": "%",
+        "status": "unknown",
+        "reason": "三月合計營收可計算；近四季營業利益與可得時間仍待核對"
+      },
+      {
+        "rank": 4,
+        "code": "3711",
+        "name": "日月光投控",
+        "sector": "電子工業",
+        "value": 34.99331753477104,
+        "valueLabel": "%",
+        "status": "unknown",
+        "reason": "三月合計營收可計算；近四季營業利益與可得時間仍待核對"
+      },
+      {
+        "rank": 5,
+        "code": "2881",
+        "name": "富邦金",
+        "sector": "金融保險",
+        "value": 33.38365066358414,
+        "valueLabel": "%",
+        "status": "unknown",
+        "reason": "三月合計營收可計算；近四季營業利益與可得時間仍待核對"
+      },
+      {
+        "rank": 6,
+        "code": "2303",
+        "name": "聯電",
+        "sector": "電子工業",
+        "value": 24.1123841804969,
+        "valueLabel": "%",
+        "status": "unknown",
+        "reason": "三月合計營收可計算；近四季營業利益與可得時間仍待核對"
+      },
+      {
+        "rank": 7,
+        "code": "3034",
+        "name": "聯詠",
+        "sector": "電子工業",
+        "value": 23.970817253311548,
+        "valueLabel": "%",
+        "status": "unknown",
+        "reason": "三月合計營收可計算；近四季營業利益與可得時間仍待核對"
+      },
+      {
+        "rank": 8,
+        "code": "2454",
+        "name": "聯發科",
+        "sector": "半導體業",
+        "value": 6.273766165808597,
+        "valueLabel": "%",
+        "status": "unknown",
+        "reason": "三月合計營收可計算；近四季營業利益與可得時間仍待核對"
+      }
+    ],
+    "lowPosition": []
+  },
+  "research": {
+    "status": "not_evaluable",
+    "reason": "尚未完成 point-in-time 母體、公告可得時間、公司行動、成本與樣本外回測；不以示範績效填空。",
+    "cagr": null,
+    "maxDrawdown": null,
+    "periods": []
+  },
+  "inputHash": "5167b991c43bbf10fcef218266f5d8074af850c29a4dcf444b35345ae33def43",
+  "queue": []
+}

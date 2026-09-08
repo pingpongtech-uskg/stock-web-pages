@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schemaVersion", "strategyVersion", "formulaVersion", "runId", "marketDate", "generatedAt", "sourceRefs"],
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "strategyVersion": { "type": "string" },
+    "formulaVersion": { "type": "string" },
+    "runId": { "type": "string" },
+    "marketDate": { "type": ["string", "null"], "format": "date" },
+    "generatedAt": { "type": "string" },
+    "sourceRefs": { "type": "array", "items": { "type": "string" } }
+  }
+}

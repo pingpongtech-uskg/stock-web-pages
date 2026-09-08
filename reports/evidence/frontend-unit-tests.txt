@@ -1,0 +1,12 @@
+> taiwan-stock-screener@0.1.0 test:unit
+> vitest run
+
+
+ RUN  v3.7.3 /home/kushi/taiwan-stock-screener
+
+ ✓ src/domain/indicators.test.ts (6 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  06:58:04
+   Duration  546ms (transform 30ms, setup 0ms, collect 24ms, tests 3ms, environment 201ms, prepare 50ms)

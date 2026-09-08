@@ -1,0 +1,29 @@
+{
+  "allowlist": ["FinMind", "TWSE", "TPEx", "yfinance"],
+  "sources": {
+    "FinMind": {
+      "role": "按股歷史價量、法人、月營收、財報與公司行動",
+      "data_url": "https://api.finmindtrade.com/api/v4/data",
+      "usage_url": "https://api.web.finmindtrade.com/v2/user_info",
+      "token_header": "Authorization: Bearer <runtime secret>",
+      "public_policy": "欄位對外用途需逐項確認；本機 base 只發布已生成快照",
+      "free_plan_boundary": "不依賴付費 TaiwanStockPriceAdj；未驗證調整價不得產生正式訊號"
+    },
+    "TWSE": {
+      "role": "上市母體、行情、法人與批次資料",
+      "url": "https://openapi.twse.com.tw/",
+      "status": "adapter planned"
+    },
+    "TPEx": {
+      "role": "上櫃對應資料",
+      "url": "https://www.tpex.org.tw/openapi/",
+      "status": "adapter planned"
+    },
+    "yfinance": {
+      "role": "私有行情交叉核對",
+      "url": "https://github.com/ranaroussi/yfinance",
+      "status": "private check only; not published"
+    }
+  },
+  "forbidden_sources": ["財報狗", "TDCC", "新聞站", "公司官網爬蟲", "付費券商報告", "社群資料", "外部 AI 推論服務"]
+}

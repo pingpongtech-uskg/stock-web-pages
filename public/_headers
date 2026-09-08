@@ -1,0 +1,10 @@
+/* Latest pointer must revalidate; release objects can be cached by run id. */
+/data/latest.json
+  Cache-Control: no-cache, no-store, must-revalidate
+/data/releases/*/manifest.json
+  Cache-Control: public, max-age=300
+/data/releases/*/stocks/*
+  Cache-Control: public, max-age=300
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
