@@ -382,9 +382,9 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
     # Build active list — must pass ALL current screening criteria:
     #   (a) last_date within 30 days
     #   (a2) last confirmed within CONFIRMATION_GRACE calendar days of latest report
-    #   (b) Z <= -1  (recomputed live from yfinance)
+    #   (b) Z <= 0 (recomputed live from canonical log-price OLS)
     #   (c) 10-day net cumulative shares > 0
-    #   (d) G >= 80 and L >= 80
+    #   (d) G/L legacy scores are display-only; they do not determine Active eligibility
     # Latest report date for freshness check
     latest_report_date = max(
         datetime.strptime(r["date"], "%Y-%m-%d").date()
@@ -396,7 +396,6 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
     today_s = ref.strftime('%Y-%m-%d')
     kicked_z = 0
     kicked_net = 0
-    kicked_score = 0
     kicked_stale = 0
     for code, entry in latest_by_code.items():
         # Use screening_date (actual report date) for freshness — not last_date
@@ -422,9 +421,9 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
         if z_for_check is None:
             kicked_z += 1
             continue
-        if z_for_check > -1:
+        if z_for_check > 0:
             kicked_z += 1
-            continue  # Z above -1σ → kick
+            continue  # Z above 0σ → kick
 
         # (c) 10-day net cumulative shares must be > 0 (recalculated to TODAY)
         corrected_shares = calc_net_shares_10d(trust_cache, code, today_s)
@@ -432,14 +431,7 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             kicked_net += 1
             continue  # No longer net buying → kick
 
-        # (d) G >= 80 and L >= 80
-        gs = entry.get("g_score", 0)
-        ls = entry.get("l_score", 0)
-        if gs < 80 or ls < 80:
-            kicked_score += 1
-            continue  # Fundamental scores degraded → kick
-
-        # ── Passed all checks — keep in Active ──
+        # ── Passed all non-legacy checks — keep in Active ──
         # Update screening_date to latest scan date for UI display
         entry["screening_date"] = today_s
 
@@ -521,12 +513,11 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
 
         active.append(entry)
 
-    if kicked_z or kicked_net or kicked_score or kicked_stale:
+    if kicked_z or kicked_net or kicked_stale:
         parts = []
         if kicked_stale: parts.append(f"stale>{CONFIRMATION_GRACE_DAYS}d: {kicked_stale}")
-        if kicked_z: parts.append(f"Z>-1: {kicked_z}")
+        if kicked_z: parts.append(f"Z>canonical gate: {kicked_z}")
         if kicked_net: parts.append(f"net≤0: {kicked_net}")
-        if kicked_score: parts.append(f"G/L<80: {kicked_score}")
         print(f"  Kicked from Active: {', '.join(parts)}")
 
     # Sort active: by last_date DESC (newest first)

@@ -138,17 +138,17 @@ const lastUpdated = formatTaipei(generatedAt);
       </label>
 
       <div class="status-tabs" role="tablist" aria-label="Screening status">
-        <button class="status-tab active" type="button" data-status="active" role="tab" aria-selected="true">
+        <button class="status-tab" type="button" data-status="active" role="tab" aria-selected="false">
           Active <span data-count="active">{active.length}</span>
         </button>
-        <button class="status-tab" type="button" data-status="archive" role="tab" aria-selected="false">
+        <button class="status-tab active" type="button" data-status="archive" role="tab" aria-selected="true">
           Archive
         </button>
       </div>
     </section>
 
     <!-- Active Section -->
-    <section id="section-active" class="results-section" data-section="active">
+    <section id="section-active" class="results-section" data-section="active" style="display:none">
       <div class="results-head">
         <h2 id="results-title">Active</h2>
         <p><span id="visible-count-active">{active.length}</span> stocks — 依最新上榜日排序</p>
@@ -175,7 +175,7 @@ const lastUpdated = formatTaipei(generatedAt);
     </section>
 
     <!-- Archive Section -->
-    <section id="section-archive" class="results-section" data-section="archive" style="display:none">
+    <section id="section-archive" class="results-section" data-section="archive">
       <div class="results-head">
         <h2>Archive</h2>
         <p><span id="visible-count-archive">{totalArchiveEntries}</span> entries across {archiveDates.length} dates</p>
@@ -217,7 +217,7 @@ const lastUpdated = formatTaipei(generatedAt);
   </main>
 
   <footer class="page-footer">
-    <p>資料來源: TWSE · 篩選條件: 投信10日買超TOP100 → Z≤0 → G≥80 & L≥80 · 技術指標僅供參考 · 最後更新: {lastUpdated || "—"}</p>
+    <p>資料來源: TWSE · 篩選條件: 投信10日買超TOP100 · Z filter 可調整為 Z≤0 / Z≤1 / Z≤2 · G/L 僅作歷史顯示 · 最後更新: {lastUpdated || "—"}</p>
   </footer>
 </Layout>
 
@@ -234,7 +234,7 @@ const countActive = document.getElementById("visible-count-active");
 const countArchive = document.getElementById("visible-count-archive");
 const titleEl = document.getElementById("results-title");
 const params = new URLSearchParams(window.location.search);
-let selectedStatus = params.get("status") === "archive" ? "archive" : "active";
+let selectedStatus = params.get("status") === "active" ? "active" : "archive";
 let zMax = [0, 1, 2].includes(Number(params.get("z_max"))) ? Number(params.get("z_max")) : 0;
 let selectedCriteria = ["all", "pass50", "pass100"].includes(params.get("criteria") || "") ? params.get("criteria")! : "all";
 
