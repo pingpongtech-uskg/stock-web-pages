@@ -121,27 +121,26 @@ def load_batch_prices(data_dir: str, code: str) -> np.ndarray | None:
 
 def compute_z(prices: np.ndarray) -> float | None:
     """
-    樂活五線譜 3.5年 Z-score (raw prices, auto_adjust=False).
-    參數與籌碼K線 APP 一致。
-    
-    p: array of daily close prices (most recent last).
-    Returns Z = (P_now - trend_now) / sigma_residuals.
+    樂活五線譜 3.5 年 Z-score using log prices.
+
+    Requires a complete 882-trading-day window. Missing, non-finite,
+    non-positive, or zero-variance data returns None; callers must fail closed.
     """
-    if len(prices) < 100:
+    if len(prices) < 882:
         return None
-    # 3.5yr = 882 trading days
-    p = prices[-882:] if len(prices) >= 882 else prices
-    if len(p) < 100:
+    p = prices[-882:]
+    if not np.all(np.isfinite(p)) or np.any(p <= 0):
         return None
-    x = np.arange(len(p))
-    slope, intercept = np.polyfit(x, p, 1)
+    log_p = np.log(p)
+    x = np.arange(len(log_p))
+    slope, intercept = np.polyfit(x, log_p, 1)
     trend = slope * x + intercept
-    residuals = p - trend
+    residuals = log_p - trend
     sigma = np.std(residuals, ddof=0)
-    if sigma <= 0:
+    if not np.isfinite(sigma) or sigma <= 0:
         return None
-    z = (p[-1] - trend[-1]) / sigma
-    return round(float(z), 2)
+    z = (log_p[-1] - trend[-1]) / sigma
+    return round(float(z), 2) if np.isfinite(z) else None
 
 
 def calc_consecutive_buy(trust_cache: dict, code: str, as_of_date: str | None = None) -> int:
@@ -417,22 +416,13 @@ def consolidate(reports: list[dict], trust_cache: dict | None, reference_date: s
             kicked_stale += 1
             continue
 
-        # ── Re-validate current screening criteria ──
-        # (b) Z must still be <= -1 (backtested — better WR/return than <= 0)
-        # Use yfinance Z if available, otherwise fall back to report's Z
-        z_for_check = None
-        if code in z_cache and z_cache[code] is not None:
-            z_for_check = z_cache[code]
-        else:
-            # Fallback: use the report's original regression_z
-            report_z = entry.get("regression_z")
-            if report_z is not None:
-                try:
-                    z_for_check = float(report_z)
-                except (TypeError, ValueError):
-                    pass
-
-        if z_for_check is not None and z_for_check > -1:
+        # Z must be recomputed from the complete canonical price window.
+        # Missing live Z is fail-closed; never trust a report-stored fallback.
+        z_for_check = z_cache.get(code)
+        if z_for_check is None:
+            kicked_z += 1
+            continue
+        if z_for_check > -1:
             kicked_z += 1
             continue  # Z above -1σ → kick
 

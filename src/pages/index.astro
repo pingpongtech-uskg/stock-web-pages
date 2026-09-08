@@ -4,7 +4,9 @@
 // Archive: date-grouped collapsible sections
 import Layout from "../components/Layout.astro";
 import ScreeningRow from "../components/ScreeningRow.astro";
+import { criteriaMeta, type CriteriaGroups } from "../lib/criteria";
 import screenerData from "../data/screener_history.json";
+import statementdogReference from "../data/statementdog_health_reference.json";
 
 interface ScreeningEntry {
   code: string;
@@ -37,10 +39,17 @@ interface ScreeningEntry {
     avg_fill_days?: number | null;
     fill_rate?: number | null;
   } | null;
+  criteria_groups?: CriteriaGroups | null;
 }
 
-const active = (screenerData.active || []) as ScreeningEntry[];
-const archive = (screenerData.archive || {}) as Record<string, ScreeningEntry[]>;
+const referenceRecords = (statementdogReference as { records?: Record<string, { groups?: CriteriaGroups }> }).records ?? {};
+function decorateWithReference(entry: ScreeningEntry): ScreeningEntry {
+  const reference = referenceRecords[entry.code];
+  return reference?.groups ? { ...entry, criteria_groups: reference.groups } : entry;
+}
+const active = ((screenerData.active || []) as ScreeningEntry[]).map(decorateWithReference);
+const archiveRaw = (screenerData.archive || {}) as Record<string, ScreeningEntry[]>;
+const archive = Object.fromEntries(Object.entries(archiveRaw).map(([date, entries]) => [date, entries.map(decorateWithReference)]));
 
 // Sorted archive dates (descending)
 const archiveDates = Object.keys(archive).sort((a, b) => b.localeCompare(a));
@@ -108,6 +117,26 @@ const lastUpdated = formatTaipei(generatedAt);
         />
       </label>
 
+      <fieldset class="parameter-group">
+        <legend>Z filter</legend>
+        <div class="segmented-control" role="group" aria-label="Maximum Z score">
+          {[0, 1, 2].map((z) => (
+            <button class:list={["parameter-button", { selected: z === 0 }]} type="button" data-z-max={z} aria-pressed={z === 0}>
+              Z≤{z}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      <label class="parameter-select">
+        <span>Criteria</span>
+        <select id="criteria-filter" aria-label="Seven criteria filter">
+          <option value="all">全部紀錄</option>
+          <option value="pass50">7 類至少 50%</option>
+          <option value="pass100">7 類全部通過</option>
+        </select>
+      </label>
+
       <div class="status-tabs" role="tablist" aria-label="Screening status">
         <button class="status-tab active" type="button" data-status="active" role="tab" aria-selected="true">
           Active <span data-count="active">{active.length}</span>
@@ -133,6 +162,9 @@ const lastUpdated = formatTaipei(generatedAt);
               class="screening-item"
               data-status="active"
               data-search={searchText}
+              data-z={String(entry.regression_z)}
+              data-criteria-passed={criteriaMeta(entry).passed}
+              data-criteria-complete={String(criteriaMeta(entry).complete)}
             >
               <ScreeningRow entry={entry} variant="active" />
             </div>
@@ -167,6 +199,9 @@ const lastUpdated = formatTaipei(generatedAt);
                       data-status="archive"
                       data-search={searchText}
                       data-date={dateStr}
+                      data-z={String(entry.regression_z)}
+                      data-criteria-passed={criteriaMeta(entry).passed}
+                      data-criteria-complete={String(criteriaMeta(entry).complete)}
                     >
                       <ScreeningRow entry={entry} variant="archive" />
                     </div>
@@ -189,6 +224,8 @@ const lastUpdated = formatTaipei(generatedAt);
 <script>
 const search = document.getElementById("stock-search") as HTMLInputElement | null;
 const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>(".status-tab"));
+const zButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-z-max]"));
+const criteriaFilter = document.getElementById("criteria-filter") as HTMLSelectElement | null;
 const sectionActive = document.getElementById("section-active");
 const sectionArchive = document.getElementById("section-archive");
 const emptyActive = document.getElementById("empty-active");
@@ -196,48 +233,69 @@ const emptyArchive = document.getElementById("empty-archive");
 const countActive = document.getElementById("visible-count-active");
 const countArchive = document.getElementById("visible-count-archive");
 const titleEl = document.getElementById("results-title");
-let selectedStatus = "active";
+const params = new URLSearchParams(window.location.search);
+let selectedStatus = params.get("status") === "archive" ? "archive" : "active";
+let zMax = [0, 1, 2].includes(Number(params.get("z_max"))) ? Number(params.get("z_max")) : 0;
+let selectedCriteria = ["all", "pass50", "pass100"].includes(params.get("criteria") || "") ? params.get("criteria")! : "all";
+
+function updateUrl() {
+  const next = new URL(window.location.href);
+  next.searchParams.set("z_max", String(zMax));
+  next.searchParams.set("criteria", selectedCriteria);
+  next.searchParams.set("status", selectedStatus);
+  window.history.replaceState({}, "", next);
+}
+
+function matchesCriteria(el: HTMLElement): boolean {
+  if (selectedCriteria === "all") return true;
+  if (el.dataset.criteriaComplete !== "true") return false;
+  const passed = Number(el.dataset.criteriaPassed);
+  return selectedCriteria === "pass100" ? passed === 7 : passed >= 4;
+}
 
 function applyFilters() {
   const query = (search?.value || "").trim().toLowerCase();
-
-  // Show/hide sections
   if (sectionActive) sectionActive.style.display = selectedStatus === "active" ? "" : "none";
   if (sectionArchive) sectionArchive.style.display = selectedStatus === "archive" ? "" : "none";
 
-  // Filter items in the active section
   let visibleActive = 0;
-  const activeItems = document.querySelectorAll('#active-grid .screening-item');
+  const activeItems = document.querySelectorAll<HTMLElement>("#active-grid .screening-item");
   for (const item of activeItems) {
-    const el = item as HTMLElement;
-    const searchMatches = !query || (el.dataset.search || "").includes(query);
-    el.hidden = !searchMatches;
-    if (searchMatches) visibleActive++;
+    const searchMatches = !query || (item.dataset.search || "").includes(query);
+    const z = Number(item.dataset.z);
+    const zMatches = Number.isFinite(z) && z <= zMax;
+    const visible = searchMatches && zMatches && matchesCriteria(item);
+    item.hidden = !visible;
+    if (visible) visibleActive++;
   }
   if (emptyActive) emptyActive.hidden = visibleActive !== 0;
   if (countActive) countActive.textContent = String(visibleActive);
 
-  // Filter items in the archive section
   let visibleArchive = 0;
-  const archiveItems = document.querySelectorAll('#archive-grid .screening-item');
-  const archiveGroups = document.querySelectorAll('#archive-grid .archive-group');
+  const archiveGroups = document.querySelectorAll<HTMLDetailsElement>("#archive-grid .archive-group");
   for (const group of archiveGroups) {
-    const details = group as HTMLDetailsElement;
     let groupVisible = 0;
-    const items = details.querySelectorAll('.screening-item');
-    for (const item of items) {
-      const el = item as HTMLElement;
-      const searchMatches = !query || (el.dataset.search || "").includes(query);
-      el.hidden = !searchMatches;
-      if (searchMatches) groupVisible++;
+    for (const item of group.querySelectorAll<HTMLElement>(".screening-item")) {
+      const searchMatches = !query || (item.dataset.search || "").includes(query);
+      const z = Number(item.dataset.z);
+      const zMatches = Number.isFinite(z) && z <= zMax;
+      const visible = searchMatches && zMatches && matchesCriteria(item);
+      item.hidden = !visible;
+      if (visible) groupVisible++;
     }
-    details.hidden = groupVisible === 0;
+    group.hidden = groupVisible === 0;
     visibleArchive += groupVisible;
   }
   if (emptyArchive) emptyArchive.hidden = visibleArchive !== 0;
   if (countArchive) countArchive.textContent = String(visibleArchive);
-
   if (titleEl) titleEl.textContent = selectedStatus === "archive" ? "Archive" : "Active";
+
+  for (const button of zButtons) {
+    const selected = Number(button.dataset.zMax) === zMax;
+    button.classList.toggle("selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  }
+  if (criteriaFilter) criteriaFilter.value = selectedCriteria;
 }
 
 for (const tab of tabs) {
@@ -248,11 +306,30 @@ for (const tab of tabs) {
       current.classList.toggle("active", isActive);
       current.setAttribute("aria-selected", String(isActive));
     }
+    updateUrl();
     applyFilters();
   });
 }
 
+for (const button of zButtons) {
+  button.addEventListener("click", () => {
+    zMax = Number(button.dataset.zMax);
+    updateUrl();
+    applyFilters();
+  });
+}
+
+criteriaFilter?.addEventListener("change", () => {
+  selectedCriteria = criteriaFilter.value;
+  updateUrl();
+  applyFilters();
+});
 search?.addEventListener("input", applyFilters);
+for (const tab of tabs) {
+  const active = tab.dataset.status === selectedStatus;
+  tab.classList.toggle("active", active);
+  tab.setAttribute("aria-selected", String(active));
+}
 applyFilters();
 </script>
 
@@ -380,8 +457,8 @@ h1 {
 /* ═══ Controls ═══ */
 .controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
+  grid-template-columns: minmax(180px, 1fr) auto auto auto;
+  gap: 10px;
   align-items: center;
   margin: 8px 0 24px;
   padding: 10px;
@@ -390,6 +467,64 @@ h1 {
   top: 10px;
   z-index: 4;
 }
+.parameter-group,
+.parameter-select {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.parameter-group legend,
+.parameter-select span {
+  display: block;
+  margin: 0 0 4px 2px;
+  color: var(--color-text-muted);
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.segmented-control {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle);
+}
+.parameter-button {
+  min-height: 32px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.parameter-button:hover,
+.parameter-button.selected {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.parameter-button.selected {
+  color: var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+.parameter-select select {
+  min-height: 38px;
+  padding: 0 28px 0 9px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
 .search-wrap {
   min-width: 0;
   height: 44px;

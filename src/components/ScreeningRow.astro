@@ -1,6 +1,7 @@
 ---
 // ScreeningRow.astro — Table-style card for screening results
 // Preserves glass-morphism design tokens from Layout.astro.
+import { CRITERIA_GROUPS, criteriaMeta, groupResult, type CriteriaGroups } from "../lib/criteria";
 
 export interface ScreeningEntry {
   code: string;
@@ -32,6 +33,7 @@ export interface ScreeningEntry {
     avg_fill_days?: number | null;
     fill_rate?: number | null;
   } | null;
+  criteria_groups?: CriteriaGroups | null;
 }
 
 interface Props {
@@ -41,6 +43,8 @@ interface Props {
 
 const { entry, variant = "active" } = Astro.props;
 const isArchive = variant === "archive";
+const criteriaSummary = criteriaMeta(entry.criteria_groups);
+const criteriaSummaryLabel = criteriaSummary.complete ? `通過 ${criteriaSummary.passed}/7` : "7 類待完整資料";
 
 function fmtAmount(v: number): string {
   if (v >= 1e8) return (v / 1e8).toFixed(2) + " 億";
@@ -102,24 +106,27 @@ function formatDivDate(dateStr: string): string {
       </div>
     )}
 
-    <!-- 4 fundamental scores in one compact block -->
-    <div class="score-block">
-      <div class:list={["score-pill", { pass: entry.g_score >= 80 }]}>
-        <span class="pill-label">成長</span>
-        <span class="pill-value">{entry.g_score.toFixed(0)}</span>
-      </div>
-      <div class:list={["score-pill", { pass: entry.l_score >= 80 }]}>
-        <span class="pill-label">地雷</span>
-        <span class="pill-value">{entry.l_score.toFixed(0)}</span>
-      </div>
-      <div class:list={["score-pill", { pass: hasValue(entry.cheap_score) && entry.cheap_score! >= 80 }]}>
-        <span class="pill-label">便宜</span>
-        <span class="pill-value">{hasValue(entry.cheap_score) ? entry.cheap_score!.toFixed(0) : "—"}</span>
-      </div>
-      <div class:list={["score-pill", { pass: hasValue(entry.dividend_score) && entry.dividend_score! >= 80 }]}>
-        <span class="pill-label">定存</span>
-        <span class="pill-value">{hasValue(entry.dividend_score) ? entry.dividend_score!.toFixed(0) : "—"}</span>
-      </div>
+    <!-- Seven exact criteria groups. Missing snapshots stay UNKNOWN. -->
+    <div class="criteria-block" aria-label="Seven criteria status">
+      <span class="criteria-overall">{criteriaSummaryLabel}</span>
+      {CRITERIA_GROUPS.map((group) => {
+        const view = groupResult(group, entry.criteria_groups);
+        return (
+          <span class:list={["criteria-pill", `state-${view.state}`]} title={`${group.label}: ${view.detail === "—" ? "UNKNOWN" : view.detail}`}>
+            <span class="criteria-label">{group.label}</span>
+            <strong>{view.symbol}</strong>
+          </span>
+        );
+      })}
+    </div>
+
+    <!-- Legacy scores remain visible but are not treated as the 33-criterion result. -->
+    <div class="legacy-score-block" aria-label="Legacy display scores">
+      <span>舊分數</span>
+      <span>G {entry.g_score.toFixed(0)}</span>
+      <span>L {entry.l_score.toFixed(0)}</span>
+      <span>便宜 {hasValue(entry.cheap_score) ? entry.cheap_score!.toFixed(0) : "—"}</span>
+      <span>定存 {hasValue(entry.dividend_score) ? entry.dividend_score!.toFixed(0) : "—"}</span>
     </div>
 
     <div class="col col-price-block">
@@ -316,7 +323,77 @@ function formatDivDate(dateStr: string): string {
   font-weight: 400;
 }
 
-/* ── Score block (4 fundamental pills) ── */
+/* ── Seven-criteria status block ── */
+.criteria-block {
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 300px;
+}
+.criteria-overall {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 0.64rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.criteria-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 42px;
+  justify-content: center;
+  padding: 4px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  font-size: 0.64rem;
+  font-weight: 750;
+}
+.criteria-pill strong {
+  font-size: 0.78rem;
+  line-height: 1;
+}
+.criteria-pill.state-pass {
+  border-color: rgba(19, 143, 106, 0.28);
+  background: rgba(19, 143, 106, 0.08);
+  color: var(--color-down);
+}
+.criteria-pill.state-fail {
+  border-color: rgba(181, 51, 51, 0.25);
+  background: rgba(181, 51, 51, 0.07);
+  color: var(--color-up);
+}
+.criteria-pill.state-unknown {
+  border-style: dashed;
+  color: var(--color-text-muted);
+}
+.criteria-label {
+  letter-spacing: 0.01em;
+}
+.legacy-score-block {
+  display: inline-flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 3px 7px;
+  max-width: 190px;
+  color: var(--color-text-muted);
+  font-size: 0.62rem;
+  line-height: 1.3;
+}
+.legacy-score-block span:first-child {
+  width: 100%;
+  font-weight: 750;
+  color: var(--color-text-soft);
+}
+
+/* ── Legacy score block retained for backwards-compatible styling ── */
 .score-block {
   display: inline-flex;
   gap: 5px;
@@ -360,18 +437,25 @@ function formatDivDate(dateStr: string): string {
 
 @media (max-width: 960px) {
   .row-center { flex-wrap: wrap; gap: 8px; }
-  .score-block { order: 10; }
+  .criteria-block,
+  .legacy-score-block { order: 10; }
+  .criteria-block { max-width: none; }
 }
 @media (max-width: 700px) {
   .screening-row { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
   .row-left { flex: 0 0 100%; }
   .stock-identity { flex-direction: row; gap: 8px; align-items: baseline; }
-  .score-block {
+  .criteria-block {
     width: 100%;
-    justify-content: space-around;
+    justify-content: space-between;
   }
+  .criteria-pill { flex: 1 1 0; min-width: 0; }
+  .legacy-score-block { max-width: none; }
 }
 @media (max-width: 420px) {
+  .criteria-pill { padding: 3px 4px; }
+  .criteria-label { font-size: 0.56rem; }
+  .criteria-pill strong { font-size: 0.72rem; }
   .score-pill { min-width: 40px; padding: 3px 5px; }
   .pill-value { font-size: 0.8rem; }
 }
