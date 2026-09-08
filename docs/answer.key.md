@@ -1,18 +1,18 @@
 # Public OSINT Screener Answer Key
 
-**Scope:** Public-source inventory and discovery layer for the Taiwan stock screener.
+**Scope:** Public-source inventory, independent scorer, and current release record for the Taiwan stock screener.
 
 **Target worktree:** `/home/kushi/stock-web-pages-osint`
 
 **Primary production boundary:** Official public TWSE/TPEx/TDCC/MOPS HTTP/HTML/CSV first; FinMind/yfinance only as explicitly budgeted free-quota fallbacks with provenance and cross-checks. StatementDog is the answer/reference key, never the candidate input.
 
-**Forbidden side effects in this phase:** paid API purchase; unbudgeted FinMind/yfinance transport; blind retries after quota/ban; browser-cookie or credential extraction; cron/config mutation; git push; deployment.
+**Safety boundary:** paid API purchase, browser-cookie extraction, credential leakage, and StatementDog values as candidate inputs remain forbidden. The current website release was explicitly requested by the user.
 
 **Canonical contract:** 7 groups / 33 criteria: safety 6, dividend 5, growth 5, value 6, turnaround 3, continuity 5, chip 3. Registry: `calibration/criteria_registry.json`.
 
-**Current verdict:** `BLOCKED`
+**Current verdict:** `PUBLISHED_DATA_BUILD_WITH_CALIBRATION_CAVEAT`
 
-Reason: the independent public-data scorer, normalized models, runner, and offline tests now exist, but full-universe input, complete dividend/CapEx history, point-in-time publication metadata, unresolved major-holder/rank data coverage, 500-company calibration, and UI/release gates are not complete.
+Reason: the independent public-data scorer, official TWSE/TPEx institutional adapters, dated cache, 100-candidate production snapshot, seven-category UI, and release build are complete. Many criteria remain explicit UNKNOWN because this candidate run has only current valuation/master fields; the 500-company exact StatementDog calibration gate remains BLOCKED and is not claimed as passed.
 
 ## Reference answer
 
@@ -34,7 +34,16 @@ The approved reference is the user-specified StatementDog health-check page: `ht
 | D-01 | Pure 33-criterion engine | PASS on offline fixtures | `python3 -m pytest -q screener/tests/test_public_data_models.py screener/tests/test_public_data_normalizer.py screener/tests/test_f_score.py screener/tests/test_statementdog_like_rules.py screener/tests/test_point_in_time.py screener/tests/test_unknown_semantics.py` | 35 tests pass; scorer emits all 33 IDs, pass/fail/unknown/not_applicable, formula and source hashes | No online data or gold label used in unit tests | Full-universe input and live completeness gate pending |
 | E-01 | Five-code candidate/reference reconciliation | BLOCKED | No candidate rows | Reference exists | StatementDog values not used as candidate inputs | Collect public snapshots and compare |
 | F-01 | 500 distinct all-seven exact calibration | BLOCKED | Not run | Existing reference has 500 rows only | Reference-only count is not candidate PASS | Need 500 eligible candidate/reference pairs |
-| G-01 | UI/build/release | BLOCKED | Old UI inspected | Current UI is old four-score site | No deployment/push performed | Integrate only after F-01 |
+| G-01 | UI/build/release | PASS locally | `npm run build`; full HTTP/browser smoke | 102 static pages, homepage 100 rows / 18 default-active, stock detail 7 categories / 33 criteria | Public-source model caveat is shown in the detail page | Verify deployed URL after each release |
+
+## Current production snapshot
+
+- Market date: `2026-09-08` (Asia/Taipei display).
+- Official institutional history: 10 trading sessions, TWSE T86 plus TPEx three-institution response.
+- Candidate construction: top 100 by signed ten-session investment-trust net shares, then amount-ranked with official closing price.
+- Z: 100/100 candidates have a complete yfinance five-year close history; default active gate is `Z <= 0`, yielding 18 records.
+- Every candidate has 33 criterion records. Unknown inputs remain UNKNOWN and stay in the denominator.
+- Archive starts accumulating after the next dated public report; no old four-score record is silently converted into a seven-criterion archive record.
 
 ## Public-source method contract
 
@@ -76,4 +85,4 @@ The approved reference is the user-specified StatementDog health-check page: `ht
 
 ## Release rule
 
-No production UI, commit, push, deploy, cron, or public claim of seven-score correctness until A–G applicable gates are green, especially F-01. A successful unit test, source HTTP 200, or Astro build is not calibration proof.
+The published site is a real public-data build, not a claim of exact StatementDog reproduction. A successful unit test, source HTTP 200, or Astro build is not calibration proof; F-01 remains visibly BLOCKED until 500 distinct candidate/reference pairs are reconciled.
