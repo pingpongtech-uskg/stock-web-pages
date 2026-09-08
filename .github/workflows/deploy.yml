@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
+    if: ${{ vars.CLOUDFLARE_PAGES_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

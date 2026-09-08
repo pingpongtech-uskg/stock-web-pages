@@ -7,7 +7,9 @@
 - 402 或 429 立即停止 FinMind 補資料，保存待補 queue，不換 token、不繞過限制。
 - Authorization header 只在 server-side／CI；token 不進 `public/`、瀏覽器 network、log、Git 或 acceptance report。
 
-## 本機生成
+## 部署啟用
+
+Cloudflare workflow 預設不執行部署，避免未設定 secrets 時製造假失敗。設定 repository variable `CLOUDFLARE_PAGES_ENABLED=true` 後，才會讀取 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_PAGES_PROJECT` 三個 Actions secrets。
 
 ```bash
 FINMIND_TOKEN='由安全注入工具提供' python3 scripts/fetch_finmind.py \
