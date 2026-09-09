@@ -14,6 +14,8 @@
 | 董監、大股東、股東人數 | MOPS、TDCC 股權分散 | 公司 IR | `ownership_monthly` |
 | 四年價格與公司行動 | yfinance Adj Close（`auto_adjust=False`） | Yahoo chart adjusted close；FinMind raw close 僅作代理 | `daily_price` |
 
+上市公司第一批實作會直接使用 TWSE OpenAPI 的 `exchangeReport/BWIBBU_ALL`（PE/PB/殖利率）、`opendata/t187ap05_L`（月營收）、`opendata/t187ap06_L_ci`／`t187ap07_L_ci`（一般業損益與資產負債）及 `opendata/t187ap45_L`（股利）。上櫃公司改接 TPEx 對應 endpoint；現金流、股權分散與公告日缺口再由 MOPS XBRL、FinMind 或公司 IR 補齊。
+
 ## 33 項規則與實作狀態
 
 目前程式已固定七類門檻：績優 3/5、成長 4/5、籌碼 1/3、便宜 5/6、轉機 1/3、排除地雷 6/6、定存 5/5。`pipeline/health_checks.py` 是唯一的規則入口；`unknown` 不會計入通過。
@@ -26,4 +28,3 @@
 2. 由原始列計算 FCF、CFO/淨利、ROE、週轉天數、F-score、殖利率與五年百分位。
 3. 逐項執行 33 個條件，保存 `availableAt`、`period` 與 `sourceRefs`。
 4. 只有在該檔 33 項均有可比較資料後，才把「健診完成」納入榜單；資料仍不足的檔案仍可研究，但會列出具體缺口與回退來源。
-
