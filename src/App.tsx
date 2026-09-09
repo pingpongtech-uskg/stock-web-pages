@@ -327,7 +327,7 @@ function StockTable({
               <td className="reason-cell"><div className="reason-tags">{stock.entryReasons.slice(0, compact ? 1 : 2).map((reason) => <span className="reason-tag" key={reason}>{routeLabel(reason)}</span>)}</div><p>{stock.entryReasons[0] ?? '尚無足夠條件說明'}</p></td>
               <td><SignalState state={stock.signalState} /></td>
               <td className={stock.zScore != null && stock.zScore >= 0 ? 'market-up number-cell' : stock.zScore != null ? 'market-down number-cell' : 'number-cell'}>{stock.zScore == null ? '—' : stock.zScore.toFixed(2)}<small>{stock.fiveLineStatus === 'unknown' ? '待驗證' : '四年模型'}</small></td>
-              <td><StatusPill status={effectiveQualityStatus(stock)} label="品質代理" /></td>
+              <td><StatusPill status={effectiveQualityStatus(stock)} label={`品質代理 ${statusLabels[effectiveQualityStatus(stock)]}`} /></td>
               <td><span className="number-cell">{formatPct(stock.revenueGrowth3m)}</span><small className="table-sub">{statusLabels[stock.growthProxyStatus ?? stock.growthStatus]}{stock.growthProxyStatus ? '（營收代理）' : ''}</small></td>
               <td><span className="number-cell">{stock.participation10 == null ? '—' : formatPct(stock.participation10)}</span><small className="table-sub">{stock.positiveDays10 == null ? '—' : `${stock.positiveDays10}/10 正買超`}</small></td>
               <td><DataEvidence stock={stock} /></td>
