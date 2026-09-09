@@ -262,17 +262,40 @@ function routeLabel(reason: string) {
   return '研究'
 }
 
+function healthCategoryStatus(stock: StockSummary, key: HealthCategory['key']): MetricStatus | null {
+  return stock.healthCategories?.find((category) => category.key === key)?.status ?? null
+}
+
+function effectiveQualityStatus(stock: StockSummary): MetricStatus {
+  const proxyStatus = stock.qualityProxyStatus
+  if (proxyStatus && proxyStatus !== 'unknown') return proxyStatus
+  return healthCategoryStatus(stock, 'quality') ?? proxyStatus ?? stock.qualityStatus
+}
+
+function healthRiskSummary(stock: StockSummary) {
+  const score = stock.healthScore
+  const categories = stock.healthCategories ?? []
+  if (!score || !categories.length) return stock.risks[0] ?? '—'
+  const failed = categories.filter((category) => category.status === 'fail')
+  const failedText = failed.length
+    ? `；未通過 ${failed.slice(0, 2).map((category) => `${category.label} ${category.passCount}/${category.total}`).join('、')}`
+    : '；7 類目前全部通過'
+  return `7 類健診 ${score.passCount}/${score.total} 通過${failedText}`
+}
+
 function DataEvidence({ stock }: { stock: StockSummary }) {
   const priceLabel = stock.priceBasis === 'adjusted' ? 'yfinance Adj Close' : stock.priceBasis === 'raw_proxy' ? 'FinMind 未調整收盤代理' : '價格資料未知'
-  const qualityStatus = stock.qualityProxyStatus ?? stock.qualityStatus
-  const qualityReason = stock.qualityProxyReason ?? (qualityStatus === 'unknown' ? '正式三年財務條件仍未知' : `品質代理${statusLabels[qualityStatus]}`)
+  const qualityStatus = effectiveQualityStatus(stock)
+  const qualityReason = stock.qualityProxyReason && stock.qualityProxyStatus !== 'unknown'
+    ? stock.qualityProxyReason
+    : `品質代理${statusLabels[qualityStatus]}；7 類健診逐項結果已在個股頁展開`
   const growthReason = stock.growthProxyReason ?? (stock.revenueGrowth3m == null ? '三月營收年增未知' : `三月營收年增 ${formatPct(stock.revenueGrowth3m)}；門檻 15%`)
   return <div className="evidence-list">
     <span><strong>價格</strong>{priceLabel} → 四年回歸／Z</span>
     <span><strong>品質</strong>{qualityReason}</span>
     <span><strong>成長</strong>{growthReason}</span>
     <span><strong>投信</strong>十日淨買超＋成交占比 → 投信排序</span>
-    <span className="risk-text"><strong>風險</strong>{stock.risks[0] ?? '—'}</span>
+    <span className="risk-text"><strong>風險</strong>{healthRiskSummary(stock)}</span>
     <small className="table-sub">資料狀態：{statusLabels[stock.dataStatus]} · 數值只讀本次快照</small>
   </div>
 }
@@ -304,7 +327,7 @@ function StockTable({
               <td className="reason-cell"><div className="reason-tags">{stock.entryReasons.slice(0, compact ? 1 : 2).map((reason) => <span className="reason-tag" key={reason}>{routeLabel(reason)}</span>)}</div><p>{stock.entryReasons[0] ?? '尚無足夠條件說明'}</p></td>
               <td><SignalState state={stock.signalState} /></td>
               <td className={stock.zScore != null && stock.zScore >= 0 ? 'market-up number-cell' : stock.zScore != null ? 'market-down number-cell' : 'number-cell'}>{stock.zScore == null ? '—' : stock.zScore.toFixed(2)}<small>{stock.fiveLineStatus === 'unknown' ? '待驗證' : '四年模型'}</small></td>
-              <td><StatusPill status={stock.qualityProxyStatus ?? stock.qualityStatus} label={stock.qualityProxyStatus ? `代理 ${statusLabels[stock.qualityProxyStatus]}` : undefined} /></td>
+              <td><StatusPill status={effectiveQualityStatus(stock)} label="品質代理" /></td>
               <td><span className="number-cell">{formatPct(stock.revenueGrowth3m)}</span><small className="table-sub">{statusLabels[stock.growthProxyStatus ?? stock.growthStatus]}{stock.growthProxyStatus ? '（營收代理）' : ''}</small></td>
               <td><span className="number-cell">{stock.participation10 == null ? '—' : formatPct(stock.participation10)}</span><small className="table-sub">{stock.positiveDays10 == null ? '—' : `${stock.positiveDays10}/10 正買超`}</small></td>
               <td><DataEvidence stock={stock} /></td>
