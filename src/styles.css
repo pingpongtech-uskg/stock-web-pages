@@ -276,6 +276,14 @@ select, input, textarea { border: 1px solid var(--line); border-radius: 6px; bac
 .rule-detail { border-top: 1px solid var(--line); padding: 11px; }
 .rule-detail p { margin: 0 0 7px; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .rule-detail span { color: var(--faint); font-family: var(--mono); font-size: 9px; }
+.health-panel { display: grid; gap: 14px; }
+.health-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.health-card { border: 1px solid var(--line); border-radius: 8px; background: var(--card); overflow: hidden; }
+.health-card > summary { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 58px; padding: 10px 12px; cursor: pointer; list-style: none; }
+.health-card > summary::-webkit-details-marker { display: none; }
+.health-card > summary strong { display: block; font-size: 13px; }
+.health-card > summary span:not(.status-pill) { display: block; margin-top: 4px; color: var(--muted); font-family: var(--mono); font-size: 9px; }
+.health-card .rule-list { border-top: 1px solid var(--line); padding: 8px; }
 .mini-bars { margin-top: 21px; }
 .mini-bars-heading { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; }
 .mini-bars-heading span:last-child { color: var(--faint); font-family: var(--mono); font-size: 9px; }
@@ -423,7 +431,7 @@ select, input, textarea { border: 1px solid var(--line); border-radius: 6px; bac
   .page-title h1 { font-size: 29px; }
   .page-actions { margin-top: 15px; }
   .button { min-height: 44px; }
-  .stat-grid, .route-grid, .split-panels, .detail-grid, .journal-grid, .method-grid { grid-template-columns: 1fr; }
+  .stat-grid, .route-grid, .split-panels, .detail-grid, .journal-grid, .method-grid, .health-grid { grid-template-columns: 1fr; }
   .stat-card { min-height: 116px; }
   .panel { padding: 16px; }
   .section-heading { margin-bottom: 14px; }

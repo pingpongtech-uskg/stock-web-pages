@@ -23,6 +23,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from pipeline.finmind_client import BudgetExceeded, FinMindClient, FinMindError, SourceBlocked  # noqa: E402
+from pipeline.health_checks import empty_health_categories, health_totals  # noqa: E402
 from pipeline.indicators import linear_regression, revenue_growth, trust_metrics  # noqa: E402
 
 SCHEMA_VERSION = "1.0"
@@ -232,6 +233,11 @@ def make_stock(
         "財報日期不是天然公告時間；未完成 point-in-time 可得性認證。",
     ]
     quality_checks = unknown_quality_checks()
+    health_categories = empty_health_categories(
+        reason="已抓到部分公開資料，但尚未完成年度／季度、合併口徑與公告日的正規化；此項暫不判定。",
+        refs=["FinMind:TaiwanStockFinancialStatements", "FinMind:TaiwanStockBalanceSheet", "FinMind:TaiwanStockCashFlowsStatement", "TWSE OpenAPI", "TPEx OpenAPI"],
+    )
+    health_score = health_totals(health_categories)
     summary = {
         "code": code,
         "name": meta.get("name", code),
@@ -256,6 +262,8 @@ def make_stock(
         "revenueGrowth3m": revenue_growth_value,
         "ttmOperatingProfitGrowth": None,
         "sourceRefs": SOURCE_REFS,
+        "healthCategories": health_categories,
+        "healthScore": health_score,
     }
     bands = {str(k): None for k in [-2, -1, 0, 1, 2]}
     if regression.get("last_mid") is not None and regression.get("sigma") is not None:
@@ -288,6 +296,8 @@ def make_stock(
         "institutionalDaily": institution,
         "revenueMonthly": revenue,
         "qualityChecks": quality_checks,
+        "healthCategories": health_categories,
+        "healthScore": health_score,
         "historySnapshots": [],
         "notes": [],
         "detailLimitations": detail_limitations,

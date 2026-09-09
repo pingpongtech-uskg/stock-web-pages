@@ -45,6 +45,7 @@ from pipeline.enrichment import (  # noqa: E402
     proxy_pass_count,
     quality_proxy_checks,
 )
+from pipeline.health_checks import evaluate_snapshot_health, health_totals  # noqa: E402
 from pipeline.yahoo_client import (  # noqa: E402
     YAHOO_CHART_SOURCE,
     YFINANCE_FUNDAMENTAL_SOURCE,
@@ -359,6 +360,12 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False) -
         limitations.insert(0, "四年研究曲線目前使用 FinMind 未調整 close proxy；公司行動／股利調整待驗證。")
     limitations.append("品質代理只看最新可得期，不能替代三年 point-in-time 財報條件。")
     detail["detailLimitations"] = list(dict.fromkeys(limitations))
+    health_categories = evaluate_snapshot_health(
+        detail,
+        refs=merge_refs(detail.get("sourceRefs"), ["FinMind:TaiwanStockMonthRevenue", "TWSE OpenAPI", "TPEx OpenAPI"]),
+    )
+    detail["healthCategories"] = health_categories
+    detail["healthScore"] = health_totals(health_categories)
     detail["notes"] = list(dict.fromkeys([str(value) for value in detail.get("notes", []) if value] + [
         "正式進場觀察仍要求品質、公告可得時間、八週歷史低位與公司行動全部通過。",
     ]))

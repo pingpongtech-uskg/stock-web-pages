@@ -60,6 +60,8 @@ export interface StockSummary {
   revenueGrowth3m: number | null
   ttmOperatingProfitGrowth: number | null
   sourceRefs: string[]
+  healthCategories?: HealthCategory[]
+  healthScore?: { passCount: number; total: number; status: MetricStatus }
 }
 
 export interface RegressionSummary {
@@ -106,6 +108,18 @@ export interface RuleCheck {
   sourceRefs: string[]
 }
 
+export type HealthCategoryKey = 'quality' | 'growth' | 'chip' | 'cheap' | 'turnaround' | 'antiPitfall' | 'dividend'
+
+export interface HealthCategory {
+  key: HealthCategoryKey
+  label: string
+  passCount: number
+  total: number
+  threshold: number
+  status: MetricStatus
+  checks: RuleCheck[]
+}
+
 export interface HistorySnapshot {
   date: string
   z: number | null
@@ -119,6 +133,8 @@ export interface StockDetail extends StockSummary {
   institutionalDaily: InstitutionalPoint[]
   revenueMonthly: RevenuePoint[]
   qualityChecks: RuleCheck[]
+  healthCategories?: HealthCategory[]
+  healthScore?: { passCount: number; total: number; status: MetricStatus }
   /** Latest-period proxies; these never replace formal point-in-time checks. */
   qualityProxyChecks?: RuleCheck[]
   historySnapshots: HistorySnapshot[]
