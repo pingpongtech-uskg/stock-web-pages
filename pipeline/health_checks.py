@@ -61,6 +61,16 @@ CATEGORY_DEFINITIONS: tuple[tuple[str, str, int, tuple[str, ...]], ...] = (
     )),
 )
 
+ACQUISITION_PLANS = {
+    "quality": "取得 MOPS/TWSE/TPEx 五年年度損益、現金流與資產負債；以公告日對齊，計算 FCF 報酬率、三年營業利益與 ROE。估值排名由同日 PE/PB/殖利率重建。",
+    "growth": "取得 MOPS/TWSE/TPEx 最近四季損益與 FinMind 月營收；將合併／單季口徑正規化後計算毛利、營業利益、稅前與稅後淨利 YOY。",
+    "chip": "取得 TDCC 股權分散、MOPS 董監持股與大股東月資料；保存月份與公告日，逐月比較三個月或十二個月前。",
+    "cheap": "取得 TWSE/TPEx 每日 PE、PB、殖利率與五年股利；缺少估值日欄位時以 EPS、每股淨值與現金股利同日重建百分位。",
+    "turnaround": "取得同日 PB、資產負債與損益欄位；由現金流、負債、獲利能力計算 Piotroski F-score，再與同日 PB 排名合併。",
+    "antiPitfall": "取得五年 CFO、CapEx、淨利、應收帳款、存貨與營收；計算 FCF、CFO/淨利及應收／存貨週轉天數並與去年同期比較。",
+    "dividend": "取得公司股利公告與 TWSE/TPEx 股利資料；以除權息前價格、EPS 與現金股利重建五年殖利率及發放率序列。",
+}
+
 
 def _check(label: str, status: str, value: Any, period: str, explanation: str, refs: Iterable[str]) -> dict[str, Any]:
     return {
@@ -102,7 +112,7 @@ def empty_health_categories(*, reason: str = "尚未完成財報、估值、股�
     return [
         evaluate_category(
             key,
-            [unknown_check(label, period="最近可得期間", reason=reason, refs=refs) for label in labels],
+            [unknown_check(label, period="最近可得期間", reason=f"{reason} 取得計畫：{ACQUISITION_PLANS[key]}", refs=refs) for label in labels],
         )
         for key, _label, _threshold, labels in CATEGORY_DEFINITIONS
     ]

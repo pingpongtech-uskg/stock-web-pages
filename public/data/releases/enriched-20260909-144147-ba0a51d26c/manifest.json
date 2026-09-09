@@ -6596,5 +6596,14 @@
       "formalEntryCount": 0,
       "explanation": "代理候選只由已取得的價格、投信與營收證據排序；沒有 point-in-time 母體、成本、公司行動與樣本外回測，不宣稱策略績效。"
     }
+  },
+  "inputHash": "ba0a51d26ccbf023ea4ee42e12a4ec452c70a354070d25f3da5d475b62936b41",
+  "baselineRunId": "enriched-20260909-143312-ab2b1f2004",
+  "enrichment": {
+    "adjustedPriceSource": "yfinance Adj Close when available; Yahoo chart fallback is tagged",
+    "fundamentalSource": "yfinance:Ticker.financials/cashflow/balance_sheet",
+    "adjustedStocks": 8,
+    "trackedStocks": 8,
+    "errorsByCode": {}
   }
 }
