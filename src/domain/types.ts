@@ -63,6 +63,8 @@ export interface StockSummary {
   healthCategories?: HealthCategory[]
   healthScore?: { passCount: number; total: number; status: MetricStatus }
   healthInputSummary?: { valuationDate?: string | null; incomePeriods: number; balancePeriods: number; dividendRows: number; officialRevenueRows: number; source: string }
+  /** Bounded raw FinMind rows retained for the next normalization pass. */
+  financialInputs?: { incomeStatement: Array<Record<string, unknown>>; balanceSheet: Array<Record<string, unknown>>; cashFlow: Array<Record<string, unknown>> }
 }
 
 export interface RegressionSummary {
