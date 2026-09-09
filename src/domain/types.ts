@@ -40,8 +40,15 @@ export interface StockSummary {
   adjustedPriceStatus?: MetricStatus
   qualityStatus: MetricStatus
   qualityProxyStatus?: MetricStatus
+  qualityProxyPassCount?: number
+  qualityProxyReason?: string
   growthStatus: MetricStatus
   growthProxyStatus?: MetricStatus
+  growthProxyReason?: string
+  /** Low-base strategy is a transparent proxy route, separate from formal entry. */
+  lowBaseStatus?: MetricStatus
+  lowBaseReason?: string
+  lowBaseGates?: LowBaseGate[]
   liquidityStatus: MetricStatus
   dataStatus: MetricStatus
   signalState: '待補資料' | '值得研究' | '低位觀察' | '進場觀察' | '條件失效' | '資料不足'
@@ -128,6 +135,24 @@ export interface RankingRow {
   valueLabel: string
   status: MetricStatus
   reason: string
+  /** Rows from the low-base route are explicitly marked as proxy evidence. */
+  proxy?: boolean
+  gates?: LowBaseGate[]
+}
+
+export interface LowBaseGate {
+  key: string
+  label: string
+  status: MetricStatus
+  value: string
+  reason: string
+}
+
+export interface LowBaseGap {
+  candidateCount: number
+  trackedCount: number
+  explanation: string
+  missing: string[]
 }
 
 export interface Coverage {
@@ -176,18 +201,20 @@ export interface Release {
   summary: {
     watchCount: number
     lowPositionCount: number
-    candidateRouteCounts: { trust: number; growth: number; lowPosition: number }
+    candidateRouteCounts: { trust: number; growth: number; lowPosition: number; lowBase?: number }
     addedToday: number
     improvedToday: number
     removedToday: number
     formalEntryCount?: number
     proxyCandidateCount?: number
+    lowBaseGap?: LowBaseGap
   }
   stocks: StockSummary[]
   rankings: {
     trust: RankingRow[]
     growth: RankingRow[]
     lowPosition: RankingRow[]
+    lowBase: RankingRow[]
   }
   research: ResearchSummary
 }

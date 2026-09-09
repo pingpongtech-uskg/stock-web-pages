@@ -18,6 +18,9 @@ from pipeline.indicators import linear_regression
 BAND_KEYS = ("-2", "-1", "0", "1", "2")
 FOUR_YEAR_DAYS = 365 * 4
 MIN_FOUR_YEAR_OBSERVATIONS = 700
+LOW_POSITION_Z_MAX = 0.0
+LOW_BASE_Z_MAX = -1.0
+MIN_QUALITY_PROXY_PASSES = 4
 
 
 def finite(value: Any) -> float | None:
@@ -241,6 +244,164 @@ def proxy_status(checks: Iterable[dict[str, Any]]) -> str:
     return "pass" if all(status == "pass" for status in statuses) else "unknown"
 
 
+def proxy_status_reason(checks: Iterable[dict[str, Any]]) -> str:
+    """Explain the aggregate proxy status using the failed/unknown rows."""
+
+    rows = list(checks)
+    failed = [f"{row.get('label', '欄位')} {row.get('value', '未知')}" for row in rows if row.get("status") == "fail"]
+    unknown = [str(row.get("label", "欄位")) for row in rows if row.get("status") == "unknown"]
+    if failed:
+        return "未通過：" + "、".join(failed)
+    if unknown:
+        return "未知：" + "、".join(unknown)
+    return f"{len(rows)} 項最新年度代理皆通過"
+
+
+def proxy_pass_count(checks: Iterable[dict[str, Any]]) -> int:
+    """Count explicit passes so a 4/5 proxy gate can be shown honestly."""
+
+    return sum(1 for row in checks if row.get("status") == "pass")
+
+
+def quality_proxy_pass_count(checks: Iterable[dict[str, Any]]) -> tuple[int, int, int]:
+    """Return pass, fail, and unknown counts for the five proxy checks."""
+
+    rows = list(checks)
+    return (
+        sum(row.get("status") == "pass" for row in rows),
+        sum(row.get("status") == "fail" for row in rows),
+        sum(row.get("status") == "unknown" for row in rows),
+    )
+
+
+def low_position_candidate(z: Any, slope: Any) -> bool:
+    """Return whether a point belongs in the visible low-position ranking."""
+
+    z_value = finite(z)
+    slope_value = finite(slope)
+    return bool(
+        z_value is not None
+        and slope_value is not None
+        and z_value <= LOW_POSITION_Z_MAX
+        and slope_value > 0
+    )
+
+
+def low_base_strategy_gates(
+    *,
+    trust_rank: int | None,
+    z: Any,
+    growth: Any,
+    quality_checks: Iterable[dict[str, Any]],
+    growth_minimum: float = 0.15,
+    max_trust_rank: int = 100,
+    z_maximum: float = LOW_BASE_Z_MAX,
+    minimum_quality_passes: int = MIN_QUALITY_PROXY_PASSES,
+) -> dict[str, Any]:
+    """Evaluate the low-base proxy strategy without claiming formal validity.
+
+    The strategy requires the tracked-range institutional top 100 and Z <= -1.
+    Either the three-month revenue proxy or at least four of five latest-period
+    quality proxies can satisfy the final alternative gate.  Missing evidence is
+    kept as ``unknown`` so a failed data fetch cannot become a pass.
+    """
+
+    z_value = finite(z)
+    growth_value = finite(growth)
+    checks = list(quality_checks)
+    quality_passes, quality_fails, quality_unknowns = quality_proxy_pass_count(checks)
+    growth_status = growth_proxy_status(growth_value, minimum=growth_minimum)
+    quality_status = (
+        "pass"
+        if quality_passes >= minimum_quality_passes
+        else "unknown"
+        if quality_unknowns
+        else "fail"
+    )
+    trust_status = (
+        "pass"
+        if trust_rank is not None and trust_rank <= max_trust_rank
+        else "unknown"
+        if trust_rank is None
+        else "fail"
+    )
+    z_status = "pass" if z_value is not None and z_value <= z_maximum else "unknown" if z_value is None else "fail"
+    alternative_status = (
+        "pass"
+        if growth_status == "pass" or quality_status == "pass"
+        else "unknown"
+        if growth_status == "unknown" or quality_status == "unknown"
+        else "fail"
+    )
+    statuses = [trust_status, z_status, alternative_status]
+    overall = "fail" if "fail" in statuses else "unknown" if "unknown" in statuses else "pass"
+
+    trust_text = (
+        f"第 {trust_rank} 名"
+        if trust_rank is not None and trust_rank <= max_trust_rank
+        else "未進入前 100"
+        if trust_rank is not None
+        else "十日淨買超資料未知"
+    )
+    z_text = "未知" if z_value is None else f"Z {z_value:+.2f}"
+    growth_text = "未知" if growth_value is None else f"{growth_value * 100:+.1f}%"
+    quality_text = f"{quality_passes}/{len(checks)} 通過"
+    alternative_reason = (
+        f"成長代理 {growth_text} 通過"
+        if growth_status == "pass"
+        else f"品質代理 {quality_text} 通過"
+        if quality_status == "pass"
+        else f"成長代理 {growth_text}、品質代理 {quality_text}，尚未滿足任一替代條件"
+    )
+    gates = [
+        {
+            "key": "institutionalTop100",
+            "label": "投信十日淨買超前 100",
+            "status": trust_status,
+            "value": trust_text,
+            "reason": "依目前追蹤範圍內可取得的十日淨買超排序。",
+        },
+        {
+            "key": "lowZ",
+            "label": "四年 Z ≤ -1",
+            "status": z_status,
+            "value": z_text,
+            "reason": "使用調整後收盤價回歸摘要；缺值不視為通過。",
+        },
+        {
+            "key": "growthProxy",
+            "label": "成長代理 ≥ 15%",
+            "status": growth_status,
+            "value": growth_text,
+            "reason": "三月合計營收年增代理，不能替代正式營業利益成長。",
+        },
+        {
+            "key": "qualityProxy",
+            "label": "品質代理 ≥ 4/5",
+            "status": quality_status,
+            "value": quality_text,
+            "reason": "五項最新年度代理中至少四項通過；不能替代正式三年 point-in-time 條件。",
+        },
+        {
+            "key": "growthOrQuality",
+            "label": "成長代理或品質代理",
+            "status": alternative_status,
+            "value": "通過" if alternative_status == "pass" else "未知" if alternative_status == "unknown" else "未通過",
+            "reason": alternative_reason,
+        },
+    ]
+    missing = [gate["label"] for gate in gates[:2] + gates[4:] if gate["status"] != "pass"]
+    return {
+        "status": overall,
+        "gates": gates,
+        "qualityPasses": quality_passes,
+        "qualityFails": quality_fails,
+        "qualityUnknowns": quality_unknowns,
+        "reason": "；".join(f"{gate['label']}：{gate['status']}（{gate['value']}）" for gate in gates),
+        "missing": missing,
+    }
+
+
 def quality_proxy_checks(
     metrics: dict[str, Any] | None,
     *,
@@ -258,7 +419,7 @@ def quality_proxy_checks(
             refs,
             predicate=lambda value: value > 0,
             value_format=",.0f",
-            explanation="單一最新年度淨利為正；不能替代最近三個完整年度 point-in-time 檢查。",
+            explanation="判定規則：單一最新年度淨利 > 0；不能替代最近三個完整年度 point-in-time 檢查。",
         ),
         proxy_check(
             "最近可得年度營業現金流（代理）",
@@ -267,7 +428,7 @@ def quality_proxy_checks(
             refs,
             predicate=lambda value: value > 0,
             value_format=",.0f",
-            explanation="單一最新年度營業現金流為正；不能替代三年 CFO 條件。",
+            explanation="判定規則：單一最新年度營業現金流 > 0；不能替代三年 CFO 條件。",
         ),
         proxy_check(
             "最近可得年度營業利益率（代理）",
@@ -276,7 +437,7 @@ def quality_proxy_checks(
             refs,
             predicate=lambda value: value > 0,
             value_format=".1%",
-            explanation="營業利益率為正；此為目前可得營運品質線索。",
+            explanation="判定規則：最新年度營業利益率 > 0；此為目前可得營運品質線索。",
         ),
         proxy_check(
             "最新 ROE（代理）",
@@ -285,7 +446,7 @@ def quality_proxy_checks(
             refs,
             predicate=lambda value: value >= 0.12,
             value_format=".1%",
-            explanation="最新年度 ROE 達研究門檻；不代表三年中位數已通過。",
+            explanation="判定規則：最新年度 ROE ≥ 12%；不代表三年中位數已通過。",
         ),
         proxy_check(
             "淨負債／EBITDA（代理）",
@@ -294,7 +455,7 @@ def quality_proxy_checks(
             refs,
             predicate=lambda value: value < 2,
             value_format=".2f",
-            explanation="最新可得資產負債資料的槓桿代理；缺少完整租賃負債時不作正式放行。",
+            explanation="判定規則：最新淨負債／EBITDA < 2；缺少完整租賃負債時不作正式放行。",
         ),
     ]
     return checks
@@ -317,4 +478,3 @@ def derive_signal_state(
     if has_route_evidence or has_price:
         return "值得研究"
     return "資料不足"
-

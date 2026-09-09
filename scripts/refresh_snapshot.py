@@ -41,6 +41,8 @@ from pipeline.enrichment import (  # noqa: E402
     growth_proxy_status,
     merge_adjusted_prices,
     proxy_status,
+    proxy_status_reason,
+    proxy_pass_count,
     quality_proxy_checks,
 )
 from pipeline.yahoo_client import (  # noqa: E402
@@ -202,6 +204,7 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False) -
             errors.append(error)
     proxy_checks = quality_proxy_checks(metrics, source_ref=YFINANCE_FUNDAMENTAL_SOURCE)
     quality_proxy = proxy_status(proxy_checks)
+    quality_proxy_reason = proxy_status_reason(proxy_checks)
 
     revenue_growth = detail.get("revenueGrowth3m")
     try:
@@ -209,6 +212,12 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False) -
     except (TypeError, ValueError):
         revenue_growth = None
     growth_proxy = growth_proxy_status(revenue_growth, minimum=GROWTH_MIN)
+    if revenue_growth is None:
+        growth_proxy_reason = "未知：三月合計營收年增未取得"
+    elif growth_proxy == "pass":
+        growth_proxy_reason = f"通過：三月合計營收年增 {revenue_growth * 100:+.1f}% ≥ 15%"
+    else:
+        growth_proxy_reason = f"未通過：三月合計營收年增 {revenue_growth * 100:+.1f}% < 15%"
     operating_growth = detail.get("ttmOperatingProfitGrowth")
     try:
         operating_growth = float(operating_growth) if operating_growth is not None else None
@@ -316,8 +325,11 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False) -
             "adjustedPriceStatus": "pass" if regression.get("priceBasis") == "adjusted" else "unknown" if raw_values else "fail",
             "qualityStatus": old_formal_status,
             "qualityProxyStatus": quality_proxy,
+            "qualityProxyPassCount": proxy_pass_count(proxy_checks),
+            "qualityProxyReason": quality_proxy_reason,
             "growthStatus": formal_growth,
             "growthProxyStatus": growth_proxy,
+            "growthProxyReason": growth_proxy_reason,
             "dataStatus": data_status,
             "signalState": state,
             "entryReasons": reasons,
@@ -442,21 +454,19 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                 formal_entries += 1
             elif detail.get("signalState") in {"低位觀察", "值得研究"}:
                 proxy_candidates += 1
-            low_rows.append(
-                {
-                    "rank": 0,
-                    "code": code,
-                    "name": name,
-                    "sector": sector,
-                    "value": float(z),
-                    "valueLabel": "",
-                    "status": "pass" if low and detail.get("regression", {}).get("signalEligible") else "unknown",
-                    "reason": (
-                        f"Z {float(z):+.2f}、斜率 {float(slope):+.4f}；"
-                        + ("符合四年低位觀察條件" if low and detail.get("regression", {}).get("signalEligible") else "低位代理；調整價／完整歷史條件仍待驗證")
-                    ) if isinstance(slope, (int, float)) else f"Z {float(z):+.2f}；斜率未知",
-                }
-            )
+            if proxy_low:
+                low_rows.append(
+                    {
+                        "rank": 0,
+                        "code": code,
+                        "name": name,
+                        "sector": sector,
+                        "value": float(z),
+                        "valueLabel": "",
+                        "status": "pass" if low and detail.get("regression", {}).get("signalEligible") else "unknown",
+                        "reason": f"Z {float(z):+.2f} ≤ 0；正斜率低位代理，完整歷史條件仍待驗證",
+                    }
+                )
 
     trust_rank = rank_rows(trust_rows, reverse=True)
     growth_rank = rank_rows(growth_rows, reverse=True)
