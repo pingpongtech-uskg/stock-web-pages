@@ -49,6 +49,12 @@ export interface StockSummary {
   lowBaseStatus?: MetricStatus
   lowBaseReason?: string
   lowBaseGates?: LowBaseGate[]
+  lowBaseGrowthStatus?: MetricStatus
+  lowBaseGrowthReason?: string
+  lowBaseGrowthGates?: LowBaseGate[]
+  lowBaseQualityStatus?: MetricStatus
+  lowBaseQualityReason?: string
+  lowBaseQualityGates?: LowBaseGate[]
   liquidityStatus: MetricStatus
   dataStatus: MetricStatus
   signalState: '待補資料' | '值得研究' | '低位觀察' | '進場觀察' | '條件失效' | '資料不足'
@@ -157,6 +163,8 @@ export interface RankingRow {
   reason: string
   /** Rows from the low-base route are explicitly marked as proxy evidence. */
   proxy?: boolean
+  evidenceLevel?: 'proxy' | 'formal'
+  route?: 'lowBase' | 'lowBaseGrowth' | 'lowBaseQuality'
   gates?: LowBaseGate[]
 }
 
@@ -221,13 +229,22 @@ export interface Release {
   summary: {
     watchCount: number
     lowPositionCount: number
-    candidateRouteCounts: { trust: number; growth: number; lowPosition: number; lowBase?: number }
+    candidateRouteCounts: {
+      trust: number
+      growth: number
+      lowPosition: number
+      lowBase?: number
+      lowBaseGrowth?: number
+      lowBaseQuality?: number
+    }
     addedToday: number
     improvedToday: number
     removedToday: number
     formalEntryCount?: number
     proxyCandidateCount?: number
     lowBaseGap?: LowBaseGap
+    lowBaseGrowthGap?: LowBaseGap
+    lowBaseQualityGap?: LowBaseGap
   }
   stocks: StockSummary[]
   rankings: {
@@ -235,6 +252,8 @@ export interface Release {
     growth: RankingRow[]
     lowPosition: RankingRow[]
     lowBase: RankingRow[]
+    lowBaseGrowth: RankingRow[]
+    lowBaseQuality: RankingRow[]
   }
   research: ResearchSummary
 }
