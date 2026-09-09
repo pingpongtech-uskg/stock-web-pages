@@ -256,6 +256,7 @@ function SignalState({ state }: { state: StockSummary['signalState'] }) {
 function routeLabel(reason: string) {
   if (reason.startsWith('投信')) return '投信關注'
   if (reason.startsWith('成長')) return '成長改善'
+  if (reason.startsWith('低基期')) return '低基期策略'
   if (reason.startsWith('低位')) return '低位品質'
   if (reason.startsWith('營收')) return '營收線索'
   if (reason.startsWith('價格')) return '價格描述'
@@ -357,8 +358,6 @@ function TodayPage() {
     return [...release!.stocks].sort((a, b) => order[a.signalState] - order[b.signalState] || a.code.localeCompare(b.code)).slice(0, 10)
   }, [release])
   const routeCounts = release!.summary.candidateRouteCounts
-  const lowBaseGrowthCount = release!.stocks.filter((stock) => Number.isFinite(stock.zScore) && stock.zScore! <= -1 && Number.isFinite(stock.slope) && stock.slope! > 0 && stock.growthProxyStatus === 'pass').length
-  const lowBaseQualityCount = release!.stocks.filter((stock) => Number.isFinite(stock.zScore) && stock.zScore! <= -1 && Number.isFinite(stock.slope) && stock.slope! > 0 && (stock.qualityProxyPassCount ?? 0) >= 4).length
   return (
     <div className="page-stack">
       <PageTitle eyebrow={`DAILY RESEARCH / ${release!.marketDate ?? '—'}`} title="今天值得先研究" description="先看資料狀態，再看條件與缺口。每日篩選不等於每日交易。" actions={<Link className="button secondary" to="/screener">開啟選股器 <span>→</span></Link>} />
@@ -377,9 +376,8 @@ function TodayPage() {
 
       <section className="route-grid">
         <RouteCard title="投信關注" subtitle="十個市場交易日" value={routeCounts.trust} detail="以淨買超股數與該股成交占比排序" tone="red" link="/rankings?tab=trust" />
-        <RouteCard title="品質代理" subtitle="最新年度五項檢查" value={release!.stocks.filter((stock) => stock.qualityProxyPassCount != null).length} detail="4/5 以上可作研究入口，正式三年條件另列" tone="blue" link="/rankings?tab=quality" />
-        <RouteCard title="低基期成長" subtitle="Z ≤ -1 · 斜率為正" value={lowBaseGrowthCount} detail="營收年增代理通過，不要求投信先買" tone="green" link="/rankings?tab=lowBaseGrowth" />
-        <RouteCard title="低基期品質" subtitle="Z ≤ -1 · 斜率為正" value={lowBaseQualityCount} detail="品質代理至少 4/5，不要求投信先買" tone="blue" link="/rankings?tab=lowBaseQuality" />
+        <RouteCard title="低基期成長" subtitle="Z ≤ -1 · 正向 slope" value={routeCounts.lowBaseGrowth ?? 0} detail="營收年增代理通過；投信名次只作排序" tone="green" link="/rankings?tab=lowBaseGrowth" />
+        <RouteCard title="低基期品質" subtitle="Z ≤ -1 · 正向 slope" value={routeCounts.lowBaseQuality ?? 0} detail="品質代理至少 4/5；投信名次只作排序" tone="blue" link="/rankings?tab=lowBaseQuality" />
         <RouteCard title="成長改善" subtitle="三個月合計營收" value={routeCounts.growth} detail="營運改善證據，不是未來成長預測" tone="green" link="/rankings?tab=growth" />
       </section>
 
@@ -417,7 +415,11 @@ function ScreenerPage() {
     const list = release!.stocks.filter((stock) => {
       const matchesText = !text || `${stock.code} ${stock.name} ${stock.sector}`.toLowerCase().includes(text)
       const matchesMarket = market === 'all' || stock.market === market
-      const matchesEntry = entry === 'all' || stock.entryReasons.some((reason) => reason.startsWith(entry))
+      const matchesEntry = entry === 'all'
+        || (entry === 'lowBase' && stock.lowBaseStatus === 'pass')
+        || (entry === 'lowBaseGrowth' && stock.lowBaseGrowthStatus === 'pass')
+        || (entry === 'lowBaseQuality' && stock.lowBaseQualityStatus === 'pass')
+        || (!entry.startsWith('lowBase') && stock.entryReasons.some((reason) => reason.startsWith(entry)))
       // The formal three-year rule is intentionally still unknown for the
       // current seed universe.  Let the user filter the available latest-period
       // quality proxy instead of showing an empty "通過" view.
@@ -451,7 +453,7 @@ function ScreenerPage() {
   }
 
   return <div className="page-stack"><PageTitle eyebrow="SCREENER / STATIC SNAPSHOT" title="選股器" description="前端搜尋、篩選與排序只作用於同次發布的靜態資料，不改正式策略或歷史績效。" actions={<><button className="button secondary" onClick={exportCsv}>匯出 CSV</button><Link className={`button primary ${compareCodes.length < 2 ? 'disabled-button' : ''}`} to={compareCodes.length >= 2 ? `/compare?symbols=${compareCodes.join(',')}` : '/compare'}>比較 {compareCodes.length}/4</Link></>} />
-    <div className="filter-bar"><label className="filter-search"><span>⌕</span><input value={query} onChange={(event) => { setQuery(event.target.value); setFilter('q', event.target.value) }} placeholder="代碼、中文名、產業" /></label><FilterSelect label="市場" value={market} onChange={(value) => { setMarket(value); setFilter('market', value) }} options={[['all', '全部市場'], ['TWSE', '上市'], ['TPEx', '上櫃']]} /><FilterSelect label="入口" value={entry} onChange={(value) => { setEntry(value); setFilter('entry', value) }} options={[['all', '三路聯集'], ['投信', '投信關注'], ['成長', '成長改善'], ['低位', '低位品質']]} /><FilterSelect label="品質" value={quality} onChange={(value) => { setQuality(value); setFilter('quality', value) }} options={[['all', '全部狀態'], ['pass', '通過'], ['unknown', '未知'], ['fail', '未通過']]} /><FilterSelect label="資料" value={status} onChange={(value) => { setStatus(value); setFilter('status', value) }} options={[['all', '全部資料'], ['pass', '完整'], ['unknown', '待補／未知']]} /></div>
+    <div className="filter-bar"><label className="filter-search"><span>⌕</span><input value={query} onChange={(event) => { setQuery(event.target.value); setFilter('q', event.target.value) }} placeholder="代碼、中文名、產業" /></label><FilterSelect label="市場" value={market} onChange={(value) => { setMarket(value); setFilter('market', value) }} options={[['all', '全部市場'], ['TWSE', '上市'], ['TPEx', '上櫃']]} /><FilterSelect label="入口" value={entry} onChange={(value) => { setEntry(value); setFilter('entry', value) }} options={[['all', '全部入口'], ['投信', '投信關注'], ['成長', '成長改善'], ['低位', '低位觀察'], ['lowBase', '低基期策略'], ['lowBaseGrowth', '低基期成長'], ['lowBaseQuality', '低基期品質']]} /><FilterSelect label="品質" value={quality} onChange={(value) => { setQuality(value); setFilter('quality', value) }} options={[['all', '全部狀態'], ['pass', '通過'], ['unknown', '未知'], ['fail', '未通過']]} /><FilterSelect label="資料" value={status} onChange={(value) => { setStatus(value); setFilter('status', value) }} options={[['all', '全部資料'], ['pass', '完整'], ['unknown', '待補／未知']]} /></div>
     <div className="list-toolbar"><span>符合 {filtered.length} 檔</span><div className="toolbar-right"><span className="muted">排序</span><select value={sort} onChange={(event) => { const value = event.target.value as typeof sort; setSort(value); setFilter('sort', value) }}><option value="state">狀態優先</option><option value="z">Z 值由低到高</option><option value="growth">營收成長</option><option value="trust">投信成交占比</option></select><span className="muted">資料日 {release!.marketDate ?? '—'}</span></div></div>
     <section className="panel table-panel"><StockTable stocks={filtered} compareCodes={compareCodes} onCompare={toggleCompare} watchlist={watchlist} onWatch={toggle} /></section>
     <div className="disclaimer">缺值顯示 unknown，不轉成 0；「比較」最多 4 檔，只比較同口徑欄位。CSV 已加 BOM 並防止試算表公式注入。</div>
@@ -473,47 +475,37 @@ function RankingsPage() {
   const tabParam = params.get('tab')
   const tab = tabParam === 'growth' || tabParam === 'quality' || tabParam === 'lowPosition' || tabParam === 'lowBase' || tabParam === 'lowBaseGrowth' || tabParam === 'lowBaseQuality' ? tabParam : 'trust'
   const period = params.get('period') || '10'
-  const lowBaseEligible = (stock: StockSummary) => Number.isFinite(stock.zScore) && stock.zScore! <= -1 && Number.isFinite(stock.slope) && stock.slope! > 0
-  const qualityPasses = (stock: StockSummary) => stock.qualityProxyPassCount ?? 0
-  const qualityRows: RankingRow[] = [...release!.stocks]
+  const rows = tab === 'growth' ? release!.rankings.growth : tab === 'quality' ? qualityRowsFromRelease(release!.stocks) : tab === 'lowPosition' ? release!.rankings.lowPosition : tab === 'lowBaseGrowth' ? (release!.rankings.lowBaseGrowth ?? []) : tab === 'lowBaseQuality' ? (release!.rankings.lowBaseQuality ?? []) : tab === 'lowBase' ? (release!.rankings.lowBase ?? []) : release!.rankings.trust
+  const setTab = (value: string) => { const next = new URLSearchParams(params); next.set('tab', value); setParams(next) }
+  const setPeriod = (value: string) => { const next = new URLSearchParams(params); next.set('period', value); setParams(next) }
+  const heading = tab === 'trust' ? '投信關注' : tab === 'growth' ? '成長改善' : tab === 'quality' ? '品質代理' : tab === 'lowPosition' ? '低位觀察' : tab === 'lowBaseGrowth' ? '低基期成長' : tab === 'lowBaseQuality' ? '低基期品質' : '低基期策略'
+  const lowBaseTab = ['lowBase', 'lowBaseGrowth', 'lowBaseQuality'].includes(tab)
+  const gap = tab === 'lowBaseGrowth' ? release!.summary.lowBaseGrowthGap : tab === 'lowBaseQuality' ? release!.summary.lowBaseQualityGap : release!.summary.lowBaseGap
+  return <div className="page-stack"><PageTitle eyebrow="RANKINGS / TRACKED UNIVERSE" title="排行榜" description={`${release!.coverage.scopeLabel ?? '本次發布追蹤範圍'}。榜單是研究入口，不是下單訊號。`} actions={<Link className="button secondary" to="/screener">用選股器篩選</Link>} /><div className="tab-row" role="tablist">{[['trust', '投信關注'], ['growth', '成長改善'], ['quality', '品質代理'], ['lowPosition', '低位觀察'], ['lowBaseGrowth', '低基期成長'], ['lowBaseQuality', '低基期品質'], ['lowBase', '低基期聯集']].map(([value, label]) => <button key={value} className={tab === value ? 'tab active' : 'tab'} onClick={() => setTab(value)}>{label}</button>)}<span className="tab-spacer" />{['1', '5', '10', '20'].map((value) => <button key={value} className={period === value ? 'period-chip active' : 'period-chip'} onClick={() => setPeriod(value)}>{value}日</button>)}</div><section className="panel"><div className="section-heading"><div><span className="eyebrow">{lowBaseTab ? 'PROXY STRATEGY' : `${period} TRADING SESSIONS`}</span><h2>{heading} <span className="count-badge">{rows.length}</span></h2></div><span className="muted">可取得資料排名 · 資料日 {release!.marketDate ?? '—'}</span></div>{lowBaseTab && <div className="callout info"><span className="callout-icon">i</span><p>低基期共同門檻為合格價格、Z ≤ -1、正向 slope；成長與品質分開成榜，投信動向只用來排序，不阻擋未被法人買進的低基期公司。每列保留全部 gate 原因並標示代理證據。</p></div>}{lowBaseTab && !rows.length && gap && <div className="callout warning"><span className="callout-icon">!</span><p>{gap.explanation}</p></div>}{tab === 'quality' && <div className="callout info"><span className="callout-icon">i</span><p>品質代理以最新可得年度五項檢查排序；4/5 以上顯示為代理通過。正式三年 point-in-time 財報條件仍會保留為獨立狀態。</p></div>}{period !== '10' && tab === 'trust' && <div className="callout warning"><span className="callout-icon">!</span><p>目前發布的投信口徑保存十個市場交易日；其他期間切換只改介面篩選，沒有把較短資料冒充完整窗口。</p></div>}<RankingTable rows={rows} tab={tab} /></section><div className="disclaimer">投信榜顯示股數與該股十日成交占比；成長榜是三月營收代理；品質榜是最新年度代理；低位榜只列 Z ≤ 0 的正向回歸位置；低基期榜保留逐項代理 gate。正式條件與代理證據分開。</div></div>
+}
+
+function qualityRowsFromRelease(stocks: StockSummary[]): RankingRow[] {
+  return [...stocks]
     .filter((stock) => stock.qualityProxyPassCount != null)
-    .sort((a, b) => qualityPasses(b) - qualityPasses(a) || (b.revenueGrowth3m ?? Number.NEGATIVE_INFINITY) - (a.revenueGrowth3m ?? Number.NEGATIVE_INFINITY) || a.code.localeCompare(b.code))
+    .sort((a, b) => (b.qualityProxyPassCount ?? 0) - (a.qualityProxyPassCount ?? 0) || a.code.localeCompare(b.code))
     .map((stock, index) => ({
       rank: index + 1,
       code: stock.code,
       name: stock.name,
       sector: stock.sector,
-      value: qualityPasses(stock),
+      value: stock.qualityProxyPassCount ?? null,
       valueLabel: '/5',
-      status: qualityPasses(stock) >= 4 ? 'pass' : stock.qualityProxyStatus === 'unknown' ? 'unknown' : 'fail',
+      status: (stock.qualityProxyPassCount ?? 0) >= 4 ? 'pass' : stock.qualityProxyStatus === 'unknown' ? 'unknown' : 'fail',
       proxy: true,
+      evidenceLevel: 'proxy',
       reason: `${stock.qualityProxyReason ?? '品質代理尚未完成'}；正式三年品質條件仍需逐期財報驗證。`,
     }))
-  const lowBaseRows: RankingRow[] = [...release!.stocks]
-    .filter(lowBaseEligible)
-    .filter((stock) => stock.growthProxyStatus === 'pass' || qualityPasses(stock) >= 4)
-    .sort((a, b) => (b.participation10 ?? Number.NEGATIVE_INFINITY) - (a.participation10 ?? Number.NEGATIVE_INFINITY) || (a.zScore ?? Number.POSITIVE_INFINITY) - (b.zScore ?? Number.POSITIVE_INFINITY))
-    .map((stock, index) => ({ rank: index + 1, code: stock.code, name: stock.name, sector: stock.sector, value: stock.zScore, valueLabel: '', status: 'pass', proxy: true, reason: `Z ${stock.zScore?.toFixed(2)} ≤ -1、斜率為正；${stock.growthProxyStatus === 'pass' ? '成長代理通過' : `品質代理 ${qualityPasses(stock)}/5 通過`}。投信只作排序參考，不是硬門檻。` }))
-  const lowBaseGrowthRows: RankingRow[] = [...release!.stocks]
-    .filter(lowBaseEligible)
-    .filter((stock) => stock.growthProxyStatus === 'pass')
-    .sort((a, b) => (b.revenueGrowth3m ?? Number.NEGATIVE_INFINITY) - (a.revenueGrowth3m ?? Number.NEGATIVE_INFINITY) || (a.zScore ?? Number.POSITIVE_INFINITY) - (b.zScore ?? Number.POSITIVE_INFINITY))
-    .map((stock, index) => ({ rank: index + 1, code: stock.code, name: stock.name, sector: stock.sector, value: stock.zScore, valueLabel: '', status: 'pass', proxy: true, reason: `低基期成長：Z ${stock.zScore?.toFixed(2)} ≤ -1、斜率為正、三月合計營收年增 ${formatPct(stock.revenueGrowth3m)} ≥ 15%。` }))
-  const lowBaseQualityRows: RankingRow[] = [...release!.stocks]
-    .filter(lowBaseEligible)
-    .filter((stock) => qualityPasses(stock) >= 4)
-    .sort((a, b) => qualityPasses(b) - qualityPasses(a) || (a.zScore ?? Number.POSITIVE_INFINITY) - (b.zScore ?? Number.POSITIVE_INFINITY))
-    .map((stock, index) => ({ rank: index + 1, code: stock.code, name: stock.name, sector: stock.sector, value: stock.zScore, valueLabel: '', status: 'pass', proxy: true, reason: `低基期品質：Z ${stock.zScore?.toFixed(2)} ≤ -1、斜率為正、品質代理 ${qualityPasses(stock)}/5 通過。` }))
-  const rows = tab === 'growth' ? release!.rankings.growth : tab === 'quality' ? qualityRows : tab === 'lowPosition' ? release!.rankings.lowPosition : tab === 'lowBaseGrowth' ? lowBaseGrowthRows : tab === 'lowBaseQuality' ? lowBaseQualityRows : tab === 'lowBase' ? lowBaseRows : release!.rankings.trust
-  const setTab = (value: string) => { const next = new URLSearchParams(params); next.set('tab', value); setParams(next) }
-  const setPeriod = (value: string) => { const next = new URLSearchParams(params); next.set('period', value); setParams(next) }
-  const heading = tab === 'trust' ? '投信關注' : tab === 'growth' ? '成長改善' : tab === 'quality' ? '品質代理' : tab === 'lowPosition' ? '低位品質' : tab === 'lowBaseGrowth' ? '低基期成長' : tab === 'lowBaseQuality' ? '低基期品質' : '低基期策略'
-  return <div className="page-stack"><PageTitle eyebrow="RANKINGS / TRACKED UNIVERSE" title="排行榜" description={`${release!.coverage.scopeLabel ?? '本次發布追蹤範圍'}。榜單是研究入口，不是下單訊號。`} actions={<Link className="button secondary" to="/screener">用選股器篩選</Link>} /><div className="tab-row" role="tablist">{[['trust', '投信關注'], ['growth', '成長改善'], ['quality', '品質代理'], ['lowPosition', '低位品質'], ['lowBaseGrowth', '低基期成長'], ['lowBaseQuality', '低基期品質'], ['lowBase', '低基期聯集']].map(([value, label]) => <button key={value} className={tab === value ? 'tab active' : 'tab'} onClick={() => setTab(value)}>{label}</button>)}<span className="tab-spacer" />{['1', '5', '10', '20'].map((value) => <button key={value} className={period === value ? 'period-chip active' : 'period-chip'} onClick={() => setPeriod(value)}>{value}日</button>)}</div><section className="panel"><div className="section-heading"><div><span className="eyebrow">{period} TRADING SESSIONS</span><h2>{heading} <span className="count-badge">{rows.length}</span></h2></div><span className="muted">可取得資料排名 · 資料日 {release!.marketDate ?? '—'}</span></div>{['lowBase', 'lowBaseGrowth', 'lowBaseQuality'].includes(tab) && <div className="callout info"><span className="callout-icon">i</span><p>低基期入口要求四年 Z ≤ -1 且斜率為正；成長與品質分開成榜，投信動向只用來排序，不阻擋未被法人買進的低基期公司。代理只作研究入口，正式條件另行驗證。</p></div>}{tab === 'quality' && <div className="callout info"><span className="callout-icon">i</span><p>品質代理以最新可得年度五項檢查排序；4/5 以上顯示為代理通過。正式三年 point-in-time 財報條件仍會保留為獨立狀態。</p></div>}{period !== '10' && tab === 'trust' && <div className="callout warning"><span className="callout-icon">!</span><p>目前發布的投信口徑保存十個市場交易日；其他期間切換只改介面篩選，沒有把較短資料冒充完整窗口。</p></div>}<RankingTable rows={rows} tab={tab} /></section><div className="disclaimer">投信榜顯示股數與該股十日成交占比；成長榜是三月營收代理；品質榜是最新年度代理；低基期榜是價格回歸代理。正式條件與代理證據分開。</div></div>
 }
 
 function RankingTable({ rows, tab }: { rows: RankingRow[]; tab: string }) {
   if (!rows.length) return <EmptyState title="這個入口目前沒有可發布排行" body="可能是資料覆蓋不足或來源完整性閘門未通過。查看方法與資料頁，不把缺資料當成零名次。" />
-  return <div className="table-wrap"><table className="ranking-table"><thead><tr><th>排名</th><th>標的</th><th>產業</th><th>{tab === 'trust' ? '十日淨買超／成交占比' : tab === 'growth' ? '三月合計營收年增' : tab === 'quality' ? '品質代理' : '四年 Z'}</th><th>狀態</th><th>說明</th></tr></thead><tbody>{rows.map((row) => <tr key={row.code}><td><span className="rank-number">{String(row.rank).padStart(2, '0')}</span></td><td><Link className="stock-code" to={`/stocks/${row.code}`}>{row.code}</Link><strong className="ranking-name">{row.name}</strong></td><td>{row.sector || '—'}</td><td className="number-cell">{row.value == null ? '—' : `${formatNumber(row.value, tab === 'lowPosition' || tab === 'lowBase' || tab === 'lowBaseGrowth' || tab === 'lowBaseQuality' ? 2 : row.valueLabel.includes('%') ? 2 : 0)}${row.valueLabel}`}</td><td><StatusPill status={row.status} label={row.proxy ? `代理 ${statusLabels[row.status]}` : undefined} /></td><td className="reason-cell"><p>{row.reason}</p><Link className="table-sub text-link" to={`/stocks/${row.code}`}>查看逐項證據 →</Link></td></tr>)}</tbody></table></div>
+  const zRanking = ['lowPosition', 'lowBase', 'lowBaseGrowth', 'lowBaseQuality'].includes(tab)
+  return <div className="table-wrap"><table className="ranking-table"><thead><tr><th>排名</th><th>標的</th><th>產業</th><th>{tab === 'trust' ? '十日淨買超／成交占比' : tab === 'growth' ? '三月合計營收年增' : tab === 'quality' ? '品質代理' : '四年 Z'}</th><th>狀態</th><th>說明</th></tr></thead><tbody>{rows.map((row) => <tr key={`${row.code}-${row.route ?? tab}`}><td><span className="rank-number">{String(row.rank).padStart(2, '0')}</span></td><td><Link className="stock-code" to={`/stocks/${row.code}`}>{row.code}</Link><strong className="ranking-name">{row.name}</strong></td><td>{row.sector || '—'}</td><td className="number-cell">{row.value == null ? '—' : `${formatNumber(row.value, zRanking ? 2 : row.valueLabel.includes('%') ? 2 : 0)}${row.valueLabel}`}</td><td><StatusPill status={row.status} label={row.proxy ? `代理 ${statusLabels[row.status]}` : undefined} /></td><td className="reason-cell">{row.gates?.length ? <div className="low-base-gates">{row.gates.map((gate) => <div className={`low-base-gate gate-${gate.status}`} key={`${row.code}-${row.route ?? tab}-${gate.key}`}><div><strong>{gate.label}</strong><span>{gate.status === 'pass' ? '通過' : gate.status === 'fail' ? '未通過' : gate.status === 'not_applicable' ? '不適用' : '未知'} · {gate.value}</span></div><small>{gate.reason}</small></div>)}</div> : <p>{row.reason}</p>}<Link className="table-sub text-link" to={`/stocks/${row.code}`}>查看逐項證據 →</Link></td></tr>)}</tbody></table></div>
 }
 
 function StockPage() {
