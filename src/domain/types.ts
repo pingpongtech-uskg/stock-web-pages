@@ -62,6 +62,7 @@ export interface StockSummary {
   sourceRefs: string[]
   healthCategories?: HealthCategory[]
   healthScore?: { passCount: number; total: number; status: MetricStatus }
+  healthInputSummary?: { valuationDate?: string | null; incomePeriods: number; balancePeriods: number; dividendRows: number; officialRevenueRows: number; source: string }
 }
 
 export interface RegressionSummary {
@@ -135,6 +136,7 @@ export interface StockDetail extends StockSummary {
   qualityChecks: RuleCheck[]
   healthCategories?: HealthCategory[]
   healthScore?: { passCount: number; total: number; status: MetricStatus }
+  healthInputSummary?: { valuationDate?: string | null; incomePeriods: number; balancePeriods: number; dividendRows: number; officialRevenueRows: number; source: string }
   /** Latest-period proxies; these never replace formal point-in-time checks. */
   qualityProxyChecks?: RuleCheck[]
   historySnapshots: HistorySnapshot[]

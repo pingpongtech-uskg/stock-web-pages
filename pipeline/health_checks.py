@@ -9,6 +9,7 @@ used by the publisher and by tests without changing the UI semantics.
 from __future__ import annotations
 
 from typing import Any, Callable, Iterable
+from datetime import date
 
 
 CATEGORY_DEFINITIONS: tuple[tuple[str, str, int, tuple[str, ...]], ...] = (
@@ -133,6 +134,7 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
     the tracked snapshot.  Additional normalized fields can be added here
     without changing category thresholds or the browser contract.
     """
+    refs = list(refs)
     categories = empty_health_categories(refs=refs)
     by_key = {category["key"]: category for category in categories}
     revenue_rows = [row for row in detail.get("revenueMonthly", []) if isinstance(row, dict) and row.get("month") and row.get("revenue") is not None]
@@ -155,5 +157,59 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
                 "三個月逐月與去年同月比較。" if passed else "至少一個月未高於去年同月。",
                 refs,
             )
+            by_key["growth"] = evaluate_category("growth", growth_checks)
+
+    inputs = detail.get("healthInputs") if isinstance(detail.get("healthInputs"), dict) else {}
+    official_refs = list(dict.fromkeys([*refs, "TWSE OpenAPI"] if inputs else refs))
+    valuation = inputs.get("valuationCurrent") if isinstance(inputs.get("valuationCurrent"), dict) else {}
+    universe = inputs.get("valuationUniverse") if isinstance(inputs.get("valuationUniverse"), list) else []
+
+    def n(value: Any) -> float | None:
+        try:
+            number = float(value)
+            return number if number == number and abs(number) != float("inf") else None
+        except (TypeError, ValueError):
+            return None
+
+    def percentile(field: str, value: float | None) -> tuple[float | None, int]:
+        if value is None:
+            return None, 0
+        values = sorted(x for row in universe if isinstance(row, dict) for x in [n(row.get(field))] if x is not None and x >= 0)
+        if not values:
+            return None, 0
+        rank = sum(x <= value for x in values)
+        return rank / len(values) * 100, rank
+
+    pe, pb, dividend_yield = n(valuation.get("pe")), n(valuation.get("pb")), n(valuation.get("dividendYield"))
+    pe_pct, pe_rank = percentile("pe", pe)
+    pb_pct, pb_rank = percentile("pb", pb)
+    cheap_checks = by_key["cheap"]["checks"]
+    if pe_pct is not None:
+        cheap_checks[1] = _check("本益比低於 50% 公司", "pass" if pe_pct <= 50 else "fail", f"{pe:.2f}（市場百分位 {pe_pct:.1f}%）", "最新交易日", "當期本益比位於可取得市場資料的後 50% 以前；這是當期橫截面代理。" if pe_pct <= 50 else "當期本益比高於市場中位數；這是當期橫截面代理。", official_refs)
+    if pb_pct is not None:
+        cheap_checks[3] = _check("股價淨值比低於 50% 公司", "pass" if pb_pct <= 50 else "fail", f"{pb:.2f}（市場百分位 {pb_pct:.1f}%）", "最新交易日", "當期股價淨值比位於可取得市場資料的前 50% 低估區；這是當期橫截面代理。" if pb_pct <= 50 else "當期股價淨值比高於市場中位數；這是當期橫截面代理。", official_refs)
+    if dividend_yield is not None:
+        cheap_checks[4] = _check("近一年股息殖利率大於 6%", "pass" if dividend_yield > 6 else "fail", f"{dividend_yield:.2f}%", "最新交易日", "TWSE 當期殖利率高於 6%。" if dividend_yield > 6 else "TWSE 當期殖利率未高於 6%。", official_refs)
+        by_key["dividend"]["checks"][0] = cheap_checks[4].copy()
+    if pb is not None:
+        by_key["turnaround"]["checks"][0] = _check("股價淨值比小於 3 倍", "pass" if pb < 3 else "fail", f"{pb:.2f} 倍", "最新交易日", "當期 PB 小於 3 倍。" if pb < 3 else "當期 PB 不小於 3 倍。", official_refs)
+        if pb_rank:
+            by_key["turnaround"]["checks"][2] = _check("股價淨值比位於最低前 50 名", "pass" if pb_rank <= 50 else "fail", f"第 {pb_rank} 名／{len([r for r in universe if isinstance(r, dict) and n(r.get('pb')) is not None])} 檔", "最新交易日", "當期 PB 排名進入市場最低 50 名；這是橫截面代理。" if pb_rank <= 50 else "當期 PB 未進入市場最低 50 名；這是橫截面代理。", official_refs)
+
+    # Official quarterly endpoint may contain several periods.  Only compare
+    # like-for-like year/quarter rows; a single latest row remains unknown.
+    income = [row for row in inputs.get("incomeQuarterly", []) if isinstance(row, dict)]
+    latest = income[-1] if income else None
+    if latest:
+        year = str(latest.get("year") or "")
+        quarter = str(latest.get("quarter") or "")
+        prior = next((row for row in reversed(income[:-1]) if str(row.get("year")) == str(int(year) - 1) and str(row.get("quarter")) == quarter), None) if year.isdigit() else None
+        metric_labels = [("grossProfit", "近一季毛利年增率大於 0"), ("operatingProfit", "近一季營業利益年增率大於 0"), ("pretaxProfit", "近一季稅前淨利年增率大於 0"), ("netIncome", "近一季稅後淨利年增率大於 0")]
+        if prior:
+            growth_checks = by_key["growth"]["checks"]
+            for index, (field, label) in enumerate(metric_labels, start=1):
+                current, previous = n(latest.get(field)), n(prior.get(field))
+                rate = None if current is None or previous in (None, 0) else current / previous - 1
+                growth_checks[index] = _check(label, "pass" if rate is not None and rate > 0 else "fail" if rate is not None else "unknown", f"{rate:+.1%}" if rate is not None else None, f"{year} Q{quarter} vs {int(year)-1} Q{quarter}", "年增率大於 0。" if rate is not None and rate > 0 else "年增率未大於 0。" if rate is not None else "同口徑數值不足。", official_refs)
             by_key["growth"] = evaluate_category("growth", growth_checks)
     return [by_key[key] for key, _label, _threshold, _labels in CATEGORY_DEFINITIONS]

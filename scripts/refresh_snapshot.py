@@ -53,6 +53,7 @@ from pipeline.yahoo_client import (  # noqa: E402
     fetch_adjusted_history,
     fetch_fundamental_proxies,
 )
+from pipeline.twse_public import SOURCE as TWSE_SOURCE, build_health_inputs  # noqa: E402
 
 
 TAIPEI = ZoneInfo("Asia/Taipei")
@@ -172,7 +173,7 @@ def _proxy_metrics_from_existing(detail: dict[str, Any]) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
 
 
-def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False) -> tuple[dict[str, Any], list[str]]:
+def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, public_inputs: dict[str, Any] | None = None) -> tuple[dict[str, Any], list[str]]:
     code = str(detail.get("code") or "")
     market = str(detail.get("market") or "TWSE")
     errors: list[str] = []
@@ -348,6 +349,38 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False) -
             "sourceRefs": merge_refs(detail.get("sourceRefs"), source_refs),
         }
     )
+    if public_inputs:
+        detail["healthInputs"] = public_inputs
+        detail["healthInputSummary"] = {
+            "source": TWSE_SOURCE,
+            "valuationDate": (public_inputs.get("valuationCurrent") or {}).get("date"),
+            "incomePeriods": len(public_inputs.get("incomeQuarterly") or []),
+            "balancePeriods": len(public_inputs.get("balanceQuarterly") or []),
+            "dividendRows": len(public_inputs.get("dividends") or []),
+            "officialRevenueRows": len(public_inputs.get("monthlyRevenueOfficial") or []),
+        }
+    elif isinstance(detail.get("healthInputs"), dict) and not detail.get("healthInputSummary"):
+        existing = detail["healthInputs"]
+        detail["healthInputSummary"] = {
+            "source": existing.get("source", TWSE_SOURCE),
+            "valuationDate": (existing.get("valuationCurrent") or {}).get("date"),
+            "incomePeriods": len(existing.get("incomeQuarterly") or []),
+            "balancePeriods": len(existing.get("balanceQuarterly") or []),
+            "dividendRows": len(existing.get("dividends") or []),
+            "officialRevenueRows": len(existing.get("monthlyRevenueOfficial") or []),
+        }
+    if public_inputs:
+        detail["sourceRefs"] = merge_refs(detail.get("sourceRefs"), [TWSE_SOURCE])
+        # Keep the longer FinMind series for charting, but let the official
+        # monthly row fill a newly published month when it is not present.
+        official_months = public_inputs.get("monthlyRevenueOfficial") or []
+        known_months = {str(row.get("month"))[:7] for row in detail.get("revenueMonthly", []) if isinstance(row, dict)}
+        for row in official_months:
+            month = str(row.get("month") or "")[:7]
+            revenue = row.get("revenue")
+            if month and revenue is not None and month not in known_months:
+                detail.setdefault("revenueMonthly", []).append({"month": month, "revenue": revenue, "availableAt": row.get("availableAt"), "status": "pass", "source": TWSE_SOURCE})
+        detail["revenueMonthly"] = sorted(detail.get("revenueMonthly", []), key=lambda row: str(row.get("month") or ""))
     limitations = [
         str(value)
         for value in detail.get("detailLimitations", [])
@@ -399,8 +432,14 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     errors_by_code: dict[str, list[str]] = {}
     enriched: list[dict[str, Any]] = []
     used_sources: list[str] = []
+    public_inputs_by_code: dict[str, dict[str, Any]] = {}
+    public_errors: list[str] = []
+    if not offline:
+        public_inputs_by_code = build_health_inputs([str(detail.get("code")) for detail in details])
+        public_errors = [f"TWSE {code}: {key}" for code, value in public_inputs_by_code.items() for key in (value.get("errors") or {})]
     for detail in details:
-        next_detail, errors = enrich_detail(detail, end=end, offline=offline)
+        next_detail, errors = enrich_detail(detail, end=end, offline=offline, public_inputs=public_inputs_by_code.get(str(detail.get("code"))))
+        errors.extend(public_errors)
         enriched.append(next_detail)
         errors_by_code[str(next_detail.get("code"))] = errors
         used_sources = merge_refs(used_sources, next_detail.get("sourceRefs"))

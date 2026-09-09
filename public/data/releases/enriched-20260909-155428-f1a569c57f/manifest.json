@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 383992)
-... 487390 bytes omitted ...
+Warning: truncated output (original token count: 384094)
+... 487800 bytes omitted ...
 
 {
   "schemaVersion": "1.1",
@@ -5998,16 +5998,7 @@ Warning: truncated output (original token count: 383992)
           {
             "date": "1150908",
             "pe": 1140.0,
-    …182152 tokens truncated…        "FinMind:TaiwanStockBalanceSheet",
-                "FinMind:TaiwanStockCashFlowsStatement",
-                "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
-                "yfinance:Ticker.financials/cashflow/balance_sheet",
-                "TWSE OpenAPI",
-                "TPEx OpenAPI"
-              ]
-            },
-            {
-              "label": "股息發放率五年內有三年大於 50%",
+    …182152 tokens truncated…大於 50%",
               "status": "unknown",
               "value": "未知",
               "period": "最近可得期間",
@@ -12792,5 +12783,14 @@ Warning: truncated output (original token count: 383992)
       "formalEntryCount": 0,
       "explanation": "代理候選只由已取得的價格、投信與營收證據排序；沒有 point-in-time 母體、成本、公司行動與樣本外回測，不宣稱策略績效。"
     }
+  },
+  "inputHash": "f1a569c57fda268cac40bc9c6f22859a1c66bd3f0854311bb463978e17dd7840",
+  "baselineRunId": "enriched-20260909-155318-dd9ab01869",
+  "enrichment": {
+    "adjustedPriceSource": "yfinance Adj Close when available; Yahoo chart fallback is tagged",
+    "fundamentalSource": "yfinance:Ticker.financials/cashflow/balance_sheet",
+    "adjustedStocks": 8,
+    "trackedStocks": 8,
+    "errorsByCode": {}
   }
 }

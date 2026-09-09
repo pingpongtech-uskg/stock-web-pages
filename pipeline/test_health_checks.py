@@ -31,3 +31,16 @@ def test_monthly_revenue_rule_is_evaluated_from_snapshot():
     assert growth["checks"][0]["status"] == "pass"
     assert growth["passCount"] == 1
 
+
+def test_official_valuation_proxies_are_explicit():
+    categories = evaluate_snapshot_health({
+        "revenueMonthly": [],
+        "healthInputs": {
+            "valuationCurrent": {"pe": 10, "pb": 1.2, "dividendYield": 7.0},
+            "valuationUniverse": [{"pe": 8, "pb": 1}, {"pe": 12, "pb": 2}],
+        },
+    })
+    cheap = next(item for item in categories if item["key"] == "cheap")
+    assert cheap["checks"][1]["status"] == "pass"
+    assert "橫截面代理" in cheap["checks"][1]["explanation"]
+    assert next(item for item in categories if item["key"] == "turnaround")["checks"][0]["status"] == "pass"
