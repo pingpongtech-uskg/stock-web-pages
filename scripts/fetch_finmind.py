@@ -40,7 +40,23 @@ SOURCE_REFS = [
     "FinMind:TaiwanStockBalanceSheet",
     "FinMind:TaiwanStockCashFlowsStatement",
 ]
-DEFAULT_CODES = ["2330", "2454", "2303", "2317", "2382", "2881", "3034", "3711"]
+
+
+def load_tracked_codes() -> list[str]:
+    """Read the versioned tracked universe instead of duplicating it here."""
+
+    config_path = ROOT / "config" / "tracked_symbols.json"
+    try:
+        payload = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError):
+        return []
+    symbols = payload.get("symbols") if isinstance(payload, dict) else None
+    if not isinstance(symbols, list):
+        return []
+    return list(dict.fromkeys(str(code).strip() for code in symbols if str(code).strip()))
+
+
+DEFAULT_CODES = load_tracked_codes()
 
 
 def as_float(value: Any) -> float | None:
