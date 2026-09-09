@@ -287,118 +287,199 @@ def low_position_candidate(z: Any, slope: Any) -> bool:
     )
 
 
+def _status_text(status: str) -> str:
+    return {"pass": "通過", "fail": "未通過", "unknown": "未知", "not_applicable": "不適用"}.get(status, status)
+
+
+def _common_low_base_gates(
+    *,
+    z: Any,
+    slope: Any,
+    price_eligible: bool | None,
+    z_maximum: float = LOW_BASE_Z_MAX,
+) -> tuple[list[dict[str, Any]], str]:
+    """Build the three common low-base gates.
+
+    Institutional ranking is deliberately absent here.  It is a display sort
+    and context signal; it must never remove a technically eligible stock.
+    """
+
+    z_value = finite(z)
+    slope_value = finite(slope)
+    price_status = "pass" if price_eligible is True else "unknown" if price_eligible is None else "fail"
+    z_status = "pass" if z_value is not None and z_value <= z_maximum else "unknown" if z_value is None else "fail"
+    slope_status = "pass" if slope_value is not None and slope_value > 0 else "unknown" if slope_value is None else "fail"
+    gates = [
+        {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": price_status,
+            "value": "調整後價格回歸可用" if price_status == "pass" else "尚無合格回歸資料",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。",
+        },
+        {
+            "key": "lowZ",
+            "label": "四年 Z ≤ -1",
+            "status": z_status,
+            "value": "未知" if z_value is None else f"Z {z_value:+.2f}",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。",
+        },
+        {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": slope_status,
+            "value": "未知" if slope_value is None else f"{slope_value:+.4f} / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。",
+        },
+    ]
+    return gates, "；".join(f"{gate['label']}：{_status_text(gate['status'])}（{gate['value']}）" for gate in gates)
+
+
+def _overall_gate_status(gates: Iterable[dict[str, Any]]) -> str:
+    statuses = [str(gate.get("status")) for gate in gates]
+    if "fail" in statuses:
+        return "fail"
+    if "unknown" in statuses:
+        return "unknown"
+    return "pass"
+
+
+def low_base_growth_gates(
+    *,
+    z: Any,
+    slope: Any,
+    price_eligible: bool | None,
+    growth: Any,
+    operating_profit_growth: Any = None,
+    growth_minimum: float = 0.15,
+) -> dict[str, Any]:
+    """Evaluate the independent low-base growth proxy route."""
+
+    gates, _ = _common_low_base_gates(z=z, slope=slope, price_eligible=price_eligible)
+    growth_value = finite(growth)
+    growth_status = growth_proxy_status(growth_value, minimum=growth_minimum)
+    ttm_value = finite(operating_profit_growth)
+    # TTM operating profit is an optional refinement.  Known deterioration
+    # blocks the route; unavailable TTM data does not block the revenue route.
+    ttm_status = "not_applicable" if ttm_value is None else "pass" if ttm_value >= 0 else "fail"
+    gates.extend([
+        {
+            "key": "growthProxy",
+            "label": "三月營收年增 ≥ 15%",
+            "status": growth_status,
+            "value": "未知" if growth_value is None else f"{growth_value * 100:+.1f}%",
+            "reason": "三月合計營收年增代理；不能替代正式營業利益成長。",
+        },
+        {
+            "key": "ttmOperatingProfitNonNegative",
+            "label": "TTM 營業利益年增不負（可選）",
+            "status": ttm_status,
+            "value": "未提供" if ttm_value is None else f"{ttm_value * 100:+.1f}%",
+            "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。",
+        },
+    ])
+    required = gates[:3] + [gates[3]]
+    status = _overall_gate_status(required + [gates[4]] if ttm_status == "fail" else required)
+    reason = "；".join(f"{gate['label']}：{_status_text(gate['status'])}（{gate['value']}）" for gate in gates)
+    return {"status": status, "gates": gates, "reason": reason, "missing": [gate["label"] for gate in required if gate["status"] != "pass"]}
+
+
+def low_base_quality_gates(
+    *,
+    z: Any,
+    slope: Any,
+    price_eligible: bool | None,
+    quality_checks: Iterable[dict[str, Any]],
+    minimum_quality_passes: int = MIN_QUALITY_PROXY_PASSES,
+) -> dict[str, Any]:
+    """Evaluate the independent low-base quality proxy route.
+
+    Latest net income and operating cash flow are required anchors.  The five
+    checks still need at least four explicit passes; unknown anchors remain
+    unknown instead of being treated as a failed or passed value.
+    """
+
+    common, _ = _common_low_base_gates(z=z, slope=slope, price_eligible=price_eligible)
+    checks = list(quality_checks)
+    pass_count, fail_count, unknown_count = quality_proxy_pass_count(checks)
+    anchor_checks = checks[:2]
+    anchor_statuses = [str(check.get("status")) for check in anchor_checks]
+    anchor_status = "fail" if "fail" in anchor_statuses else "unknown" if len(anchor_checks) < 2 or "unknown" in anchor_statuses else "pass"
+    quality_status = (
+        "pass"
+        if len(checks) >= 5 and pass_count >= minimum_quality_passes
+        else "unknown"
+        if len(checks) < 5 or pass_count + unknown_count >= minimum_quality_passes
+        else "fail"
+    )
+    quality_gate = {
+        "key": "qualityProxy",
+        "label": "五項品質代理至少 4/5",
+        "status": quality_status,
+        "value": f"{pass_count}/{len(checks)} 通過",
+        "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。",
+    }
+    anchor_gate = {
+        "key": "qualityAnchors",
+        "label": "最新年度淨利與 CFO > 0",
+        "status": anchor_status,
+        "value": "兩項必要錨點通過" if anchor_status == "pass" else "必要錨點資料不足" if anchor_status == "unknown" else "至少一項錨點未通過",
+        "reason": "淨利與營業現金流是低基期品質路徑必要錨點；缺資料保持 unknown。",
+    }
+    gates = common + [anchor_gate, quality_gate]
+    status = _overall_gate_status(gates)
+    reason = "；".join(f"{gate['label']}：{_status_text(gate['status'])}（{gate['value']}）" for gate in gates)
+    return {
+        "status": status,
+        "gates": gates,
+        "qualityPasses": pass_count,
+        "qualityFails": fail_count,
+        "qualityUnknowns": unknown_count,
+        "reason": reason,
+        "missing": [gate["label"] for gate in gates if gate["status"] != "pass"],
+    }
+
+
 def low_base_strategy_gates(
     *,
     trust_rank: int | None,
     z: Any,
     growth: Any,
     quality_checks: Iterable[dict[str, Any]],
+    slope: Any = None,
+    price_eligible: bool | None = True,
     growth_minimum: float = 0.15,
     max_trust_rank: int = 100,
     z_maximum: float = LOW_BASE_Z_MAX,
     minimum_quality_passes: int = MIN_QUALITY_PROXY_PASSES,
 ) -> dict[str, Any]:
-    """Evaluate the low-base proxy strategy without claiming formal validity.
+    """Backward-compatible combined diagnostics for the two low-base routes.
 
-    The strategy requires the tracked-range institutional top 100 and Z <= -1.
-    Either the three-month revenue proxy or at least four of five latest-period
-    quality proxies can satisfy the final alternative gate.  Missing evidence is
-    kept as ``unknown`` so a failed data fetch cannot become a pass.
+    ``trust_rank`` is retained for older callers and shown as a sort context;
+    it is intentionally not a hard gate for either route.
     """
 
-    z_value = finite(z)
-    growth_value = finite(growth)
-    checks = list(quality_checks)
-    quality_passes, quality_fails, quality_unknowns = quality_proxy_pass_count(checks)
-    growth_status = growth_proxy_status(growth_value, minimum=growth_minimum)
-    quality_status = (
-        "pass"
-        if quality_passes >= minimum_quality_passes
-        else "unknown"
-        if quality_unknowns
-        else "fail"
+    growth_result = low_base_growth_gates(
+        z=z, slope=slope, price_eligible=price_eligible, growth=growth, growth_minimum=growth_minimum,
     )
-    trust_status = (
-        "pass"
-        if trust_rank is not None and trust_rank <= max_trust_rank
-        else "unknown"
-        if trust_rank is None
-        else "fail"
+    quality_result = low_base_quality_gates(
+        z=z, slope=slope, price_eligible=price_eligible, quality_checks=quality_checks,
+        minimum_quality_passes=minimum_quality_passes,
     )
-    z_status = "pass" if z_value is not None and z_value <= z_maximum else "unknown" if z_value is None else "fail"
-    alternative_status = (
-        "pass"
-        if growth_status == "pass" or quality_status == "pass"
-        else "unknown"
-        if growth_status == "unknown" or quality_status == "unknown"
-        else "fail"
-    )
-    statuses = [trust_status, z_status, alternative_status]
-    overall = "fail" if "fail" in statuses else "unknown" if "unknown" in statuses else "pass"
-
-    trust_text = (
-        f"第 {trust_rank} 名"
-        if trust_rank is not None and trust_rank <= max_trust_rank
-        else "未進入前 100"
-        if trust_rank is not None
-        else "十日淨買超資料未知"
-    )
-    z_text = "未知" if z_value is None else f"Z {z_value:+.2f}"
-    growth_text = "未知" if growth_value is None else f"{growth_value * 100:+.1f}%"
-    quality_text = f"{quality_passes}/{len(checks)} 通過"
-    alternative_reason = (
-        f"成長代理 {growth_text} 通過"
-        if growth_status == "pass"
-        else f"品質代理 {quality_text} 通過"
-        if quality_status == "pass"
-        else f"成長代理 {growth_text}、品質代理 {quality_text}，尚未滿足任一替代條件"
-    )
-    gates = [
-        {
-            "key": "institutionalTop100",
-            "label": "投信十日淨買超前 100",
-            "status": trust_status,
-            "value": trust_text,
-            "reason": "依目前追蹤範圍內可取得的十日淨買超排序。",
-        },
-        {
-            "key": "lowZ",
-            "label": "四年 Z ≤ -1",
-            "status": z_status,
-            "value": z_text,
-            "reason": "使用調整後收盤價回歸摘要；缺值不視為通過。",
-        },
-        {
-            "key": "growthProxy",
-            "label": "成長代理 ≥ 15%",
-            "status": growth_status,
-            "value": growth_text,
-            "reason": "三月合計營收年增代理，不能替代正式營業利益成長。",
-        },
-        {
-            "key": "qualityProxy",
-            "label": "品質代理 ≥ 4/5",
-            "status": quality_status,
-            "value": quality_text,
-            "reason": "五項最新年度代理中至少四項通過；不能替代正式三年 point-in-time 條件。",
-        },
-        {
-            "key": "growthOrQuality",
-            "label": "成長代理或品質代理",
-            "status": alternative_status,
-            "value": "通過" if alternative_status == "pass" else "未知" if alternative_status == "unknown" else "未通過",
-            "reason": alternative_reason,
-        },
-    ]
-    missing = [gate["label"] for gate in gates[:2] + gates[4:] if gate["status"] != "pass"]
+    trust_status = "pass" if trust_rank is not None and trust_rank <= max_trust_rank else "unknown" if trust_rank is None else "fail"
+    trust_gate = {
+        "key": "institutionalRank",
+        "label": "投信十日淨買超排序（只作排序）",
+        "status": trust_status,
+        "value": f"第 {trust_rank} 名" if trust_rank is not None else "未知",
+        "reason": "目前追蹤範圍內的投信十日淨買超名次只用於排序與說明，不是低基期硬門檻。",
+    }
     return {
-        "status": overall,
-        "gates": gates,
-        "qualityPasses": quality_passes,
-        "qualityFails": quality_fails,
-        "qualityUnknowns": quality_unknowns,
-        "reason": "；".join(f"{gate['label']}：{gate['status']}（{gate['value']}）" for gate in gates),
-        "missing": missing,
+        "status": "pass" if growth_result["status"] == "pass" or quality_result["status"] == "pass" else "unknown" if growth_result["status"] == "unknown" or quality_result["status"] == "unknown" else "fail",
+        "gates": [trust_gate],
+        "growth": growth_result,
+        "quality": quality_result,
+        "reason": f"投信排序：{trust_gate['value']}；成長路徑：{growth_result['status']}；品質路徑：{quality_result['status']}",
     }
 
 
