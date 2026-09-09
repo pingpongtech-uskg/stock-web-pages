@@ -16,7 +16,7 @@ export function DataStatus({ release, compact = false }: { release: Release; com
       <div className={`freshness-dot ${freshnessClass(release.freshness)}`} aria-hidden="true" />
       <div>
         <strong>{freshnessLabel(release.freshness)}</strong>
-        {!compact && <span>{release.statusMessage}</span>}
+        {!compact && <span>{release.statusMessage}{coverage.scopeLabel ? ` · ${coverage.scopeLabel}` : ''}</span>}
       </div>
       <div className="data-status-meta">
         <span>資料日 {release.marketDate ?? '—'}</span>
@@ -32,7 +32,7 @@ export function CoverageLine({ release }: { release: Release }) {
   return (
     <div className="coverage-line" aria-label="資料覆蓋狀態">
       <span>母體 {coverage.universeCount.toLocaleString('zh-TW')}</span>
-      <span>已建庫 {coverage.databaseCount.toLocaleString('zh-TW')}</span>
+      <span>已建庫 {coverage.databaseCount.toLocaleString('zh-TW')}（追蹤 {coverage.trackedCompleteCount ?? coverage.databaseCount}/{coverage.trackedCount ?? coverage.databaseCount}）</span>
       <span>待補 {coverage.pendingCount.toLocaleString('zh-TW')}</span>
       <span>財報完整 {coverage.financialCompleteCount.toLocaleString('zh-TW')}</span>
       <span>資料狀態：{coverage.queueStatus || statusLabels.unknown}</span>

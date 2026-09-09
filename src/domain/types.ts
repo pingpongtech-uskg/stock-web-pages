@@ -1,5 +1,6 @@
 export type MetricStatus = 'pass' | 'fail' | 'unknown' | 'not_applicable'
 export type Freshness = 'current' | 'stale' | 'degraded' | 'unavailable'
+export type PriceBasis = 'adjusted' | 'raw_proxy' | 'unknown'
 
 export interface MetricValue<T = number> {
   value: T | null
@@ -14,6 +15,8 @@ export interface MetricValue<T = number> {
 export interface PricePoint {
   date: string
   close: number | null
+  /** Adjusted close used for the research curve when available. */
+  adjustedClose?: number | null
   volume: number | null
   amount: number | null
   mid: number | null
@@ -28,11 +31,17 @@ export interface StockSummary {
   asOf: string | null
   lastPrice: number | null
   changePct: number | null
+  adjustedLastPrice?: number | null
+  adjustedChangePct?: number | null
   zScore: number | null
   slope: number | null
   fiveLineStatus: MetricStatus
+  priceBasis?: PriceBasis
+  adjustedPriceStatus?: MetricStatus
   qualityStatus: MetricStatus
+  qualityProxyStatus?: MetricStatus
   growthStatus: MetricStatus
+  growthProxyStatus?: MetricStatus
   liquidityStatus: MetricStatus
   dataStatus: MetricStatus
   signalState: '待補資料' | '值得研究' | '低位觀察' | '進場觀察' | '條件失效' | '資料不足'
@@ -60,6 +69,9 @@ export interface RegressionSummary {
   historyStart: string | null
   historyEnd: string | null
   signalEligible: boolean
+  priceBasis?: PriceBasis
+  observations?: number | null
+  expectedObservations?: number | null
   reason: string
   sourceRefs: string[]
 }
@@ -100,6 +112,8 @@ export interface StockDetail extends StockSummary {
   institutionalDaily: InstitutionalPoint[]
   revenueMonthly: RevenuePoint[]
   qualityChecks: RuleCheck[]
+  /** Latest-period proxies; these never replace formal point-in-time checks. */
+  qualityProxyChecks?: RuleCheck[]
   historySnapshots: HistorySnapshot[]
   notes: string[]
   detailLimitations: string[]
@@ -124,6 +138,11 @@ export interface Coverage {
   financialCompleteCount: number
   priceCompleteCount: number
   completenessPct: number | null
+  trackedCount?: number
+  trackedCompleteCount?: number
+  trackedCompletenessPct?: number | null
+  universeCoveragePct?: number | null
+  scopeLabel?: string
   finmindRequests: number | null
   queueStatus: string
 }
@@ -134,6 +153,12 @@ export interface ResearchSummary {
   cagr: number | null
   maxDrawdown: number | null
   periods: Array<{ label: string; status: string; cagr: number | null; maxDrawdown: number | null; trades: number | null }>
+  proxyReadiness?: {
+    label: string
+    candidateCount: number
+    formalEntryCount: number
+    explanation: string
+  }
 }
 
 export interface Release {
@@ -155,6 +180,8 @@ export interface Release {
     addedToday: number
     improvedToday: number
     removedToday: number
+    formalEntryCount?: number
+    proxyCandidateCount?: number
   }
   stocks: StockSummary[]
   rankings: {
