@@ -536,8 +536,8 @@ function InstitutionBars({ values }: { values: Array<number | null> }) {
   const max = Math.max(...usable.map((value) => Math.abs(value)), 1)
   const bars = (side: 'positive' | 'negative') => recent.map((value, index) => {
     const matches = value != null && Number.isFinite(value) && (side === 'positive' ? value >= 0 : value < 0)
-    const height = matches ? Math.max(4, Math.abs(value as number) / max * 100) : value == null ? 3 : 0
-    return <span key={`${side}-${index}-${value}`} className={`signed-bar ${matches ? side : value == null ? 'unknown' : 'empty'}`} style={{ height: `${height}%` }} title={value == null ? '資料未知' : `${value >= 0 ? '+' : ''}${formatNumber(value, 0)} 股`} />
+    const height = matches ? Math.max(4, Math.abs(value as number) / max * 100) : value == null && side === 'positive' ? 3 : 0
+    return <span key={`${side}-${index}-${value}`} className={`signed-bar ${matches ? side : value == null && side === 'positive' ? 'unknown' : 'empty'}`} style={{ height: `${height}%` }} title={value == null ? '資料未知' : `${value >= 0 ? '+' : ''}${formatNumber(value, 0)} 股`} />
   })
   return <div className="mini-bars institution-bars"><div className="mini-bars-heading"><span>投信淨買賣超（股）</span><span>{usable.length ? `最近 ${usable.length} 筆` : 'unknown'}</span></div><div className="signed-bars" aria-label="投信淨買賣超，買超向上、賣超向下"><div className="signed-half positive-half">{bars('positive')}</div><div className="signed-half negative-half">{bars('negative')}</div><span className="signed-zero-line" aria-hidden="true" /></div><div className="signed-legend"><span className="buy-legend">買超 ↑</span><span>0 淨買賣超基準線</span><span className="sell-legend">賣超 ↓</span></div></div>
 }
