@@ -1,5 +1,8 @@
 {
-  "symbols": ["2330", "2454", "2303", "2317", "2382", "2881", "3034", "3711"],
+  "symbols": ["2330", "2454", "2303", "2317", "2382", "2881", "3034", "3711", "1477"],
+  "metadata": {
+    "1477": { "name": "大立光", "market": "TWSE", "sector": "光電業" }
+  },
   "purpose": "batch priority only; no private holdings or quantities",
   "updated_at": "2026-09-09"
 }
