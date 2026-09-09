@@ -291,6 +291,20 @@ select, input, textarea { border: 1px solid var(--line); border-radius: 6px; bac
 .bar { display: block; width: 100%; min-width: 2px; background: var(--blue); opacity: .8; }
 .bar.positive { align-self: flex-end; border-radius: 2px 2px 0 0; }
 .bar.negative { align-self: flex-start; background: var(--green); border-radius: 0 0 2px 2px; }
+.institution-bars { margin-top: 21px; }
+.signed-bars { position: relative; display: grid; grid-template-rows: 1fr 1fr; height: 132px; margin-top: 7px; padding: 0 2px; }
+.signed-half { display: flex; min-height: 0; align-items: stretch; gap: 2px; }
+.positive-half { align-items: flex-end; }
+.negative-half { align-items: flex-start; }
+.signed-bar { display: block; flex: 1 1 0; min-width: 2px; border-radius: 2px; }
+.signed-bar.positive { background: var(--green); opacity: .84; }
+.signed-bar.negative { background: var(--red); opacity: .76; }
+.signed-bar.unknown { height: 3px !important; background: var(--line-strong); opacity: .75; }
+.signed-bar.empty { height: 0 !important; opacity: 0; }
+.signed-zero-line { position: absolute; z-index: 2; top: 50%; right: 0; left: 0; height: 1px; background: var(--text); opacity: .7; pointer-events: none; }
+.signed-legend { display: flex; justify-content: space-between; margin-top: 6px; color: var(--faint); font-family: var(--mono); font-size: 9px; }
+.signed-legend .buy-legend { color: var(--green); }
+.signed-legend .sell-legend { color: var(--red); }
 .history-row { display: flex; align-items: flex-start; gap: 22px; }
 .history-row label, .trade-form label, .scenario-form label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; }
 .history-row select { min-height: 40px; min-width: 190px; padding: 0 9px; font-size: 12px; }
