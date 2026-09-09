@@ -28,7 +28,9 @@ export function LineChart({ points, priceBasis }: { points: PricePoint[]; priceB
     const pad = Math.max((max - min) * 0.08, 1)
     const floor = min - pad
     const ceiling = max + pad
-    const x = (index: number) => 8 + (index / Math.max(1, plotted.length - 1)) * 84
+    // Use almost the full plot width.  The previous 8–92 range made the
+    // chart look like a narrow island with large empty gutters on both sides.
+    const x = (index: number) => 2 + (index / Math.max(1, plotted.length - 1)) * 96
     const y = (value: number) => 92 - ((value - floor) / (ceiling - floor)) * 84
     const make = (field: (point: PricePoint) => number | null) => plotted.flatMap((point, index) => {
       const value = field(point)
@@ -66,15 +68,15 @@ export function LineChart({ points, priceBasis }: { points: PricePoint[]; priceB
         }}
         onPointerLeave={() => setHoverIndex(null)}
       >
-        {[20, 44, 68, 92].map((y) => <line key={y} x1="8" x2="92" y1={y} y2={y} stroke={colors.grid} strokeWidth="0.35" />)}
-        <path d={pathFor(chart.plusTwo)} fill="none" stroke={colors.plusTwo} strokeWidth="0.8" strokeDasharray="1.4 1.8" />
-        <path d={pathFor(chart.plusOne)} fill="none" stroke={colors.plusOne} strokeWidth="0.8" strokeDasharray="1.2 1.5" />
-        <path d={pathFor(chart.mid)} fill="none" stroke={colors.mid} strokeWidth="1.1" />
-        <path d={pathFor(chart.minusOne)} fill="none" stroke={colors.minusOne} strokeWidth="0.8" strokeDasharray="1.2 1.5" />
-        <path d={pathFor(chart.minusTwo)} fill="none" stroke={colors.minusTwo} strokeWidth="0.8" strokeDasharray="1.4 1.8" />
-        <path d={pathFor(chart.price)} fill="none" stroke={colors.price} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-        <line x1={chart.x(currentIndex)} x2={chart.x(currentIndex)} y1="8" y2="92" stroke={colors.price} strokeOpacity="0.35" strokeWidth="0.5" />
-        <circle cx={chart.x(currentIndex)} cy={chart.y(observed(current) ?? chart.floor)} r="2.2" fill={colors.price} />
+        {[20, 44, 68, 92].map((y) => <line key={y} x1="2" x2="98" y1={y} y2={y} stroke={colors.grid} strokeWidth="0.25" />)}
+        <path d={pathFor(chart.plusTwo)} fill="none" stroke={colors.plusTwo} strokeWidth="0.35" strokeDasharray="1.4 1.8" />
+        <path d={pathFor(chart.plusOne)} fill="none" stroke={colors.plusOne} strokeWidth="0.35" strokeDasharray="1.2 1.5" />
+        <path d={pathFor(chart.mid)} fill="none" stroke={colors.mid} strokeWidth="0.5" />
+        <path d={pathFor(chart.minusOne)} fill="none" stroke={colors.minusOne} strokeWidth="0.35" strokeDasharray="1.2 1.5" />
+        <path d={pathFor(chart.minusTwo)} fill="none" stroke={colors.minusTwo} strokeWidth="0.35" strokeDasharray="1.4 1.8" />
+        <path d={pathFor(chart.price)} fill="none" stroke={colors.price} strokeWidth="0.65" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1={chart.x(currentIndex)} x2={chart.x(currentIndex)} y1="8" y2="92" stroke={colors.price} strokeOpacity="0.35" strokeWidth="0.3" />
+        <circle cx={chart.x(currentIndex)} cy={chart.y(observed(current) ?? chart.floor)} r="1.4" fill={colors.price} />
       </svg>
       <div className="chart-axis"><span>{plotted[0].date}</span><span>最新 {plotted[plotted.length - 1].date}</span></div>
       <p className="chart-caption">本期四年五線譜（中線、±1σ、±2σ；{usesAdjusted ? '調整後收盤價' : '未調整收盤代理'}）；回歸線為描述工具，中線不是合理價，σ 帶不是未來機率。游標可查看同日價格與 Z。</p>
