@@ -194,6 +194,7 @@ def make_stock(
     revenue: list[dict[str, Any]],
     revenue_growth_value: float | None,
     fetch_errors: list[str],
+    financial_inputs: dict[str, list[dict[str, Any]]] | None = None,
 ) -> dict[str, Any]:
     closes = [point["close"] for point in price]
     regression = linear_regression(closes)
@@ -296,6 +297,7 @@ def make_stock(
         "institutionalDaily": institution,
         "revenueMonthly": revenue,
         "qualityChecks": quality_checks,
+        "financialInputs": financial_inputs or {"incomeStatement": [], "balanceSheet": [], "cashFlow": []},
         "healthCategories": health_categories,
         "healthScore": health_score,
         "historySnapshots": [],
@@ -373,20 +375,29 @@ def build_snapshot(codes: list[str], output: Path, as_of: str | None = None) -> 
             revenue_rows, error = fetch_optional(client, "TaiwanStockMonthRevenue", data_id=code, start_date=revenue_start.isoformat(), end_date=end.isoformat())
             if error: errors.append(f"revenue:{error}")
             revenue, rev_growth = revenue_window(revenue_rows)
-            # These calls establish whether the free account returned the raw
-            # financial datasets. The current base keeps their rule status
-            # unknown until period/statement normalization is implemented.
-            for dataset in ("TaiwanStockFinancialStatements", "TaiwanStockBalanceSheet", "TaiwanStockCashFlowsStatement"):
-                _, error = fetch_optional(client, dataset, data_id=code, start_date=financial_start.isoformat(), end_date=end.isoformat())
+            # Keep the raw structured rows in the detail snapshot. They are
+            # public, bounded to the tracked symbols, and are the input needed
+            # for the later period/statement normalization that evaluates the
+            # 33 checks. Previously these successful responses were discarded,
+            # making every financial rule permanently unknown.
+            financial_inputs: dict[str, list[dict[str, Any]]] = {}
+            dataset_keys = {
+                "TaiwanStockFinancialStatements": "incomeStatement",
+                "TaiwanStockBalanceSheet": "balanceSheet",
+                "TaiwanStockCashFlowsStatement": "cashFlow",
+            }
+            for dataset, key in dataset_keys.items():
+                rows, error = fetch_optional(client, dataset, data_id=code, start_date=financial_start.isoformat(), end_date=end.isoformat())
+                financial_inputs[key] = rows
                 if error: errors.append(f"{dataset}:{error}")
-            details.append(make_stock(code, metadata.get(code, {"name": code, "market": "unknown", "sector": ""}), price, institution, trust, revenue, rev_growth, errors))
+            details.append(make_stock(code, metadata.get(code, {"name": code, "market": "unknown", "sector": ""}), price, institution, trust, revenue, rev_growth, errors, financial_inputs))
         except (SourceBlocked, BudgetExceeded) as exc:
             blocked_reason = str(exc)
             queue = codes[codes.index(code):]
             break
         except FinMindError as exc:
             errors.append(type(exc).__name__)
-            details.append(make_stock(code, metadata.get(code, {"name": code, "market": "unknown", "sector": ""}), [], [], {"status": "unknown", "net_shares_10": None, "positive_days_10": None, "participation_10": None}, [], None, errors))
+            details.append(make_stock(code, metadata.get(code, {"name": code, "market": "unknown", "sector": ""}), [], [], {"status": "unknown", "net_shares_10": None, "positive_days_10": None, "participation_10": None}, [], None, errors, {"incomeStatement": [], "balanceSheet": [], "cashFlow": []}))
 
     fetched_codes = {detail["code"] for detail in details}
     queue.extend(code for code in codes if code not in fetched_codes and code not in queue)
