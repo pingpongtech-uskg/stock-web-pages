@@ -32,6 +32,21 @@ def _code(row: dict[str, Any]) -> str:
     return str(row.get("公司代號") or row.get("Code") or row.get("證券代號") or "").strip()
 
 
+def _roc_date(value: Any) -> Any:
+    """Normalize TWSE ROC calendar dates while preserving unknown values."""
+    text = str(value or "")
+    digits = "".join(character for character in text if character.isdigit())
+    if len(digits) == 8 and int(digits[:4]) >= 1900:
+        return f"{digits[:4]}-{digits[4:6]}-{digits[6:8]}"
+    if len(digits) == 7 and digits[:3].isdigit():
+        return f"{int(digits[:3]) + 1911:04d}-{digits[3:5]}-{digits[5:7]}"
+    if len(digits) == 6 and int(digits[:4]) >= 1900:
+        return f"{digits[:4]}-{digits[4:6]}"
+    if len(digits) == 6 and digits[:3].isdigit():
+        return f"{int(digits[:3]) + 1911:04d}-{digits[3:5]}"
+    return value
+
+
 def fetch_endpoint(endpoint: str, *, timeout: int = 20) -> list[dict[str, Any]]:
     request = Request(f"{BASE}/{endpoint}", headers={"User-Agent": "stock-web-pages/1.0"})
     with urlopen(request, timeout=timeout) as response:
@@ -41,8 +56,8 @@ def fetch_endpoint(endpoint: str, *, timeout: int = 20) -> list[dict[str, Any]]:
 
 def _income(row: dict[str, Any]) -> dict[str, Any]:
     return {
-        "availableAt": row.get("出表日期"),
-        "year": row.get("年度"),
+        "availableAt": _roc_date(row.get("出表日期")),
+        "year": str(row.get("年度") or ""),
         "quarter": row.get("季別"),
         "revenue": _number(row.get("營業收入")),
         "grossProfit": _number(row.get("營業毛利（毛損）")),
@@ -56,8 +71,8 @@ def _income(row: dict[str, Any]) -> dict[str, Any]:
 
 def _balance(row: dict[str, Any]) -> dict[str, Any]:
     return {
-        "availableAt": row.get("出表日期"),
-        "year": row.get("年度"),
+        "availableAt": _roc_date(row.get("出表日期")),
+        "year": str(row.get("年度") or ""),
         "quarter": row.get("季別"),
         "assets": _number(row.get("資產總計")),
         "liabilities": _number(row.get("負債總計")),
@@ -72,30 +87,31 @@ def _balance(row: dict[str, Any]) -> dict[str, Any]:
 
 def _revenue(row: dict[str, Any]) -> dict[str, Any]:
     raw_month = str(row.get("資料年月") or "")
-    month = f"{raw_month[:4]}-{raw_month[4:6]}" if len(raw_month) >= 6 and raw_month[:6].isdigit() else raw_month[:7]
+    month_value = _roc_date(raw_month)
+    month = str(month_value)[:7] if month_value else raw_month[:7]
     return {
         "month": month,
         "revenue": _number(row.get("營業收入-當月營收")),
         "priorMonthRevenue": _number(row.get("營業收入-上月營收")),
         "priorYearRevenue": _number(row.get("營業收入-去年當月營收")),
-        "availableAt": row.get("出表日期"),
+        "availableAt": _roc_date(row.get("出表日期")),
     }
 
 
 def _dividend(row: dict[str, Any]) -> dict[str, Any]:
     return {
-        "year": row.get("股利年度"),
+        "year": str(row.get("股利年度") or ""),
         "period": row.get("股利所屬年(季)度"),
         "cashPerShare": _number(row.get("股東配發-盈餘分配之現金股利(元/股)")),
         "stockPerShare": _number(row.get("股東配發-盈餘轉增資配股(元/股)")),
-        "boardDate": row.get("董事會（擬議）股利分派日"),
-        "availableAt": row.get("出表日期"),
+        "boardDate": _roc_date(row.get("董事會（擬議）股利分派日")),
+        "availableAt": _roc_date(row.get("出表日期")),
     }
 
 
 def _valuation(row: dict[str, Any]) -> dict[str, Any]:
     return {
-        "date": row.get("Date"),
+        "date": _roc_date(row.get("Date")),
         "pe": _number(row.get("PEratio")),
         "pb": _number(row.get("PBratio")),
         "dividendYield": _number(row.get("DividendYield")),

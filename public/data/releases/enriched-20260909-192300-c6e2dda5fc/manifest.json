@@ -59158,8 +59158,8 @@
       "explanation": "代理候選只由已取得的價格、投信與營收證據排序；沒有 point-in-time 母體、成本、公司行動與樣本外回測，不宣稱策略績效。"
     }
   },
-  "inputHash": "8567db926fea2381381e96f477254b1258a6731ba83fb7e12eab0e3d016b9445",
-  "baselineRunId": "enriched-20260909-155428-f1a569c57f",
+  "inputHash": "c6e2dda5fcf580c677b0d44f235e0bbd502f2d64495cbc74f6089102d886f914",
+  "baselineRunId": "enriched-20260909-192028-8567db926f",
   "enrichment": {
     "adjustedPriceSource": "yfinance Adj Close when available; Yahoo chart fallback is tagged",
     "fundamentalSource": "yfinance:Ticker.financials/cashflow/balance_sheet",

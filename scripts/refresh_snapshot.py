@@ -350,14 +350,22 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
         }
     )
     if public_inputs:
-        detail["healthInputs"] = public_inputs
+        # A source outage must not erase the last successful structured
+        # snapshot. Merge non-empty endpoint results and keep prior rows when
+        # this run only returns an error or an empty list.
+        previous_inputs = detail.get("healthInputs") if isinstance(detail.get("healthInputs"), dict) else {}
+        merged_inputs = dict(previous_inputs)
+        for key, value in public_inputs.items():
+            if key in {"source", "fetchedAt", "errors"} or value not in (None, [], {}):
+                merged_inputs[key] = value
+        detail["healthInputs"] = merged_inputs
         detail["healthInputSummary"] = {
-            "source": TWSE_SOURCE,
-            "valuationDate": (public_inputs.get("valuationCurrent") or {}).get("date"),
-            "incomePeriods": len(public_inputs.get("incomeQuarterly") or []),
-            "balancePeriods": len(public_inputs.get("balanceQuarterly") or []),
-            "dividendRows": len(public_inputs.get("dividends") or []),
-            "officialRevenueRows": len(public_inputs.get("monthlyRevenueOfficial") or []),
+            "source": merged_inputs.get("source", TWSE_SOURCE),
+            "valuationDate": (merged_inputs.get("valuationCurrent") or {}).get("date"),
+            "incomePeriods": len(merged_inputs.get("incomeQuarterly") or []),
+            "balancePeriods": len(merged_inputs.get("balanceQuarterly") or []),
+            "dividendRows": len(merged_inputs.get("dividends") or []),
+            "officialRevenueRows": len(merged_inputs.get("monthlyRevenueOfficial") or []),
         }
     elif isinstance(detail.get("healthInputs"), dict) and not detail.get("healthInputSummary"):
         existing = detail["healthInputs"]
