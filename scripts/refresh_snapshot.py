@@ -11,7 +11,7 @@ visible, and every fallback is labelled in the published contract.
 Typical CI invocation::
 
     python -m pip install -r requirements.txt
-    python scripts/refresh_snapshot.py --codes 2330,2454,2303,2317,2382,2881,3034,3711 --output public/data
+    python scripts/refresh_snapshot.py --output public/data
 
 The browser never calls Yahoo or FinMind and no API token is written to the
 published files.
@@ -39,6 +39,8 @@ from pipeline.enrichment import (  # noqa: E402
     derive_signal_state,
     formal_growth_status,
     growth_proxy_status,
+    low_base_growth_gates,
+    low_base_quality_gates,
     merge_adjusted_prices,
     proxy_status,
     proxy_status_reason,
@@ -95,6 +97,7 @@ def parse_date(value: str | None, fallback: date) -> date:
 def baseline_details(data_dir: Path, release: dict[str, Any]) -> list[dict[str, Any]]:
     run_id = str(release.get("runId") or "")
     result: list[dict[str, Any]] = []
+    known_codes: set[str] = set()
     for summary in release.get("stocks", []):
         if not isinstance(summary, dict):
             continue
@@ -118,6 +121,63 @@ def baseline_details(data_dir: Path, release: dict[str, Any]) -> list[dict[str, 
         detail.setdefault("notes", [])
         detail.setdefault("detailLimitations", [])
         result.append(detail)
+        known_codes.add(code)
+
+    # Keep the checked-in snapshot aligned with the versioned tracked universe
+    # even when a newly added symbol has not completed its first API fetch.
+    # The placeholder is explicit unknown data and can never become a signal
+    # without a later source-backed enrichment.
+    config_path = data_dir.parent.parent / "config" / "tracked_symbols.json"
+    try:
+        config = load_json(config_path)
+    except (OSError, ValueError, json.JSONDecodeError):
+        config = {}
+    symbols = config.get("symbols") if isinstance(config, dict) else None
+    metadata = config.get("metadata") if isinstance(config, dict) and isinstance(config.get("metadata"), dict) else {}
+    if isinstance(symbols, list):
+        for raw_code in symbols:
+            code = str(raw_code).strip()
+            if not code or code in known_codes:
+                continue
+            info = metadata.get(code) if isinstance(metadata, dict) and isinstance(metadata.get(code), dict) else {}
+            placeholder = {
+                "code": code,
+                "name": str(info.get("name") or code),
+                "market": str(info.get("market") or "unknown"),
+                "sector": str(info.get("sector") or ""),
+                "asOf": None,
+                "lastPrice": None,
+                "changePct": None,
+                "zScore": None,
+                "slope": None,
+                "fiveLineStatus": "unknown",
+                "qualityStatus": "unknown",
+                "growthStatus": "unknown",
+                "liquidityStatus": "unknown",
+                "dataStatus": "unknown",
+                "signalState": "資料不足",
+                "entryReasons": ["尚未完成首次資料抓取；所有策略 gate 保持 unknown"],
+                "risks": ["新加入追蹤標的尚無可用來源資料"],
+                "institutionNetShares10": None,
+                "participation10": None,
+                "positiveDays10": None,
+                "revenueGrowth3m": None,
+                "ttmOperatingProfitGrowth": None,
+                "sourceRefs": [],
+            }
+            for key, value in (
+                ("priceSeries", []),
+                ("institutionalDaily", []),
+                ("revenueMonthly", []),
+                ("qualityChecks", []),
+                ("qualityProxyChecks", []),
+                ("historySnapshots", []),
+                ("notes", []),
+                ("detailLimitations", ["尚未完成首次資料抓取；不將缺值轉成 0。"]),
+            ):
+                placeholder[key] = value
+            result.append(placeholder)
+            known_codes.add(code)
     return result
 
 
@@ -421,6 +481,51 @@ def rank_rows(rows: list[dict[str, Any]], *, reverse: bool) -> list[dict[str, An
     return valid[:100]
 
 
+def rank_low_base_rows(rows: list[dict[str, Any]], institutional_rank_by_code: dict[str, int]) -> list[dict[str, Any]]:
+    """Rank eligible low-base rows by institutional context, without gating.
+
+    A missing institutional value is sorted after known values.  The route
+    remains eligible because this rank is presentation context only.
+    """
+
+    valid = [row for row in rows if row.get("value") is not None]
+    valid.sort(
+        key=lambda row: (
+            institutional_rank_by_code.get(str(row.get("code")), 10**9),
+            float(row["value"]),
+            str(row.get("code")),
+        )
+    )
+    for index, row in enumerate(valid[:100], start=1):
+        row["rank"] = index
+    return valid[:100]
+
+
+def low_base_gap(results: dict[str, dict[str, Any]], *, label: str, tracked_count: int) -> dict[str, Any]:
+    """Summarize why a low-base route has no qualified rows."""
+
+    candidate_count = sum(result.get("status") == "pass" for result in results.values())
+    blockers: list[str] = []
+    for result in results.values():
+        for gate in result.get("gates", []):
+            if gate.get("status") not in {"pass", "not_applicable"}:
+                status_label = {"pass": "通過", "fail": "未通過", "unknown": "未知", "not_applicable": "不適用"}.get(str(gate.get("status")), str(gate.get("status")))
+                text = f"{gate.get('label', '條件')}：{status_label}"
+                if text not in blockers:
+                    blockers.append(text)
+    if candidate_count:
+        explanation = f"目前追蹤 {tracked_count} 檔，{label}已有 {candidate_count} 檔符合。"
+    else:
+        detail = "、".join(blockers[:8]) if blockers else "尚無可用 gate 證據"
+        explanation = f"目前追蹤 {tracked_count} 檔，{label}暫無符合；缺口：{detail}。"
+    return {
+        "candidateCount": candidate_count,
+        "trackedCount": tracked_count,
+        "explanation": explanation,
+        "missing": blockers,
+    }
+
+
 def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool) -> dict[str, Any]:
     latest_path = data_dir / "latest.json"
     if not latest_path.exists():
@@ -455,10 +560,30 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     trust_rows: list[dict[str, Any]] = []
     growth_rows: list[dict[str, Any]] = []
     low_rows: list[dict[str, Any]] = []
+    low_base_growth_rows: list[dict[str, Any]] = []
+    low_base_quality_rows: list[dict[str, Any]] = []
     low_count = 0
     formal_entries = 0
     proxy_candidates = 0
     candidate_codes: set[str] = set()
+    low_base_growth_results: dict[str, dict[str, Any]] = {}
+    low_base_quality_results: dict[str, dict[str, Any]] = {}
+
+    # Rank every available ten-session net-share value within this tracked
+    # range.  The rank is useful context for low-base rows, but is never a
+    # qualification gate for either low-base path.
+    institutional_rank_by_code: dict[str, int] = {}
+    institutional_values = sorted(
+        (
+            (str(detail.get("code")), float(detail.get("institutionNetShares10")))
+            for detail in enriched
+            if isinstance(detail.get("institutionNetShares10"), (int, float))
+            and math.isfinite(float(detail.get("institutionNetShares10")))
+        ),
+        key=lambda item: (-item[1], item[0]),
+    )
+    for rank, (code, _value) in enumerate(institutional_values, start=1):
+        institutional_rank_by_code[code] = rank
     for detail in enriched:
         code = str(detail.get("code"))
         name = str(detail.get("name") or code)
@@ -518,13 +643,90 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                         "value": float(z),
                         "valueLabel": "",
                         "status": "pass" if low and detail.get("regression", {}).get("signalEligible") else "unknown",
-                        "reason": f"Z {float(z):+.2f} ≤ 0；正斜率低位代理，完整歷史條件仍待驗證",
+                        "reason": f"Z {float(z):+.2f} ≤ 0；低位代理，完整歷史條件仍待驗證",
+                    }
+                )
+
+        regression = detail.get("regression") if isinstance(detail.get("regression"), dict) else {}
+        price_eligible = (
+            None
+            if not regression or regression.get("priceBasis") in (None, "unknown")
+            else bool(regression.get("signalEligible"))
+        )
+        low_base_growth = low_base_growth_gates(
+            z=z,
+            slope=slope,
+            price_eligible=price_eligible,
+            growth=detail.get("revenueGrowth3m"),
+            operating_profit_growth=detail.get("ttmOperatingProfitGrowth"),
+        )
+        low_base_quality = low_base_quality_gates(
+            z=z,
+            slope=slope,
+            price_eligible=price_eligible,
+            quality_checks=detail.get("qualityProxyChecks", []),
+        )
+        low_base_growth_results[code] = low_base_growth
+        low_base_quality_results[code] = low_base_quality
+        # Keep the route evidence in the stock detail so the UI can show the
+        # exact backend decision without recalculating it in React.
+        detail.update(
+            {
+                "lowBaseGrowthStatus": low_base_growth["status"],
+                "lowBaseGrowthReason": low_base_growth["reason"],
+                "lowBaseGrowthGates": low_base_growth["gates"],
+                "lowBaseQualityStatus": low_base_quality["status"],
+                "lowBaseQualityReason": low_base_quality["reason"],
+                "lowBaseQualityGates": low_base_quality["gates"],
+                "lowBaseStatus": "pass" if low_base_growth["status"] == "pass" or low_base_quality["status"] == "pass" else "unknown" if low_base_growth["status"] == "unknown" or low_base_quality["status"] == "unknown" else "fail",
+                "lowBaseReason": f"成長路徑：{low_base_growth['status']}；品質路徑：{low_base_quality['status']}",
+                "lowBaseGates": low_base_growth["gates"] + low_base_quality["gates"],
+            }
+        )
+        trust_rank = institutional_rank_by_code.get(code)
+        sort_context = f"投信十日淨買超排序第 {trust_rank} 名（只作排序）" if trust_rank is not None else "投信十日淨買超排序未知（只作排序）"
+        for route, result, rows in (
+            ("lowBaseGrowth", low_base_growth, low_base_growth_rows),
+            ("lowBaseQuality", low_base_quality, low_base_quality_rows),
+        ):
+            if result["status"] == "pass":
+                candidate_codes.add(code)
+                rows.append(
+                    {
+                        "rank": 0,
+                        "code": code,
+                        "name": name,
+                        "sector": sector,
+                        "value": float(z) if isinstance(z, (int, float)) else None,
+                        "valueLabel": "",
+                        "status": "pass",
+                        "proxy": True,
+                        "evidenceLevel": "proxy",
+                        "route": route,
+                        "gates": result["gates"],
+                        "reason": f"{sort_context}；{result['reason']}",
                     }
                 )
 
     trust_rank = rank_rows(trust_rows, reverse=True)
     growth_rank = rank_rows(growth_rows, reverse=True)
     low_rank = rank_rows(low_rows, reverse=False)
+    low_base_growth_rank = rank_low_base_rows(low_base_growth_rows, institutional_rank_by_code)
+    low_base_quality_rank = rank_low_base_rows(low_base_quality_rows, institutional_rank_by_code)
+    low_base_by_code: dict[str, dict[str, Any]] = {}
+    for row in [*low_base_growth_rank, *low_base_quality_rank]:
+        code = str(row["code"])
+        current = low_base_by_code.get(code)
+        if current is None:
+            low_base_by_code[code] = {**row, "route": "lowBase"}
+            continue
+        known_gate_keys = {str(gate.get("key")) for gate in current.get("gates", [])}
+        current["gates"] = [
+            *current.get("gates", []),
+            *[gate for gate in row.get("gates", []) if str(gate.get("key")) not in known_gate_keys],
+        ]
+        current["reason"] = f"{current.get('reason', '')}；另一路徑亦通過"
+    low_base_rank = rank_low_base_rows(list(low_base_by_code.values()), institutional_rank_by_code)
     if formal_entries == 0:
         formal_entries = sum(1 for detail in enriched if detail.get("signalState") == "進場觀察")
     if proxy_candidates == 0:
@@ -533,6 +735,18 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     tracked_count = len(enriched)
     tracked_complete = sum(1 for detail in enriched if detail.get("dataStatus") == "pass")
     tracked_pct = tracked_complete / tracked_count * 100 if tracked_count else None
+    low_base_growth_gap = low_base_gap(low_base_growth_results, label="低基期成長路徑", tracked_count=tracked_count)
+    low_base_quality_gap = low_base_gap(low_base_quality_results, label="低基期品質路徑", tracked_count=tracked_count)
+    low_base_gap_summary = {
+        "candidateCount": len(low_base_rank),
+        "trackedCount": tracked_count,
+        "explanation": (
+            f"目前追蹤 {tracked_count} 檔，低基期策略共 {len(low_base_rank)} 檔符合；"
+            if low_base_rank
+            else f"目前追蹤 {tracked_count} 檔，低基期策略暫無符合；成長路徑：{low_base_growth_gap['explanation']} 品質路徑：{low_base_quality_gap['explanation']}"
+        ),
+        "missing": list(dict.fromkeys(low_base_growth_gap["missing"] + low_base_quality_gap["missing"])),
+    }
     universe = int((baseline.get("coverage") or {}).get("universeCount") or tracked_count)
     universe_pct = tracked_count / universe * 100 if universe else None
     market_dates = [str(detail.get("asOf")) for detail in enriched if detail.get("asOf")]
@@ -599,12 +813,25 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                 "trust": len(trust_rank),
                 "growth": sum(1 for row in growth_rank if row.get("status") == "pass"),
                 "lowPosition": low_count,
+                "lowBase": len(low_base_rank),
+                "lowBaseGrowth": len(low_base_growth_rank),
+                "lowBaseQuality": len(low_base_quality_rank),
             },
             "formalEntryCount": formal_entries,
             "proxyCandidateCount": proxy_candidates,
+            "lowBaseGap": low_base_gap_summary,
+            "lowBaseGrowthGap": low_base_growth_gap,
+            "lowBaseQualityGap": low_base_quality_gap,
         },
         "stocks": [_summary(detail) for detail in enriched],
-        "rankings": {"trust": trust_rank, "growth": growth_rank, "lowPosition": low_rank},
+        "rankings": {
+            "trust": trust_rank,
+            "growth": growth_rank,
+            "lowPosition": low_rank,
+            "lowBase": low_base_rank,
+            "lowBaseGrowth": low_base_growth_rank,
+            "lowBaseQuality": low_base_quality_rank,
+        },
         "research": {
             **(baseline.get("research") or {}),
             "proxyReadiness": {
