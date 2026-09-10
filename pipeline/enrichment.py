@@ -352,10 +352,12 @@ def low_base_growth_gates(
     growth: Any,
     operating_profit_growth: Any = None,
     growth_minimum: float = 0.15,
+    z_maximum: float = LOW_BASE_Z_MAX,
 ) -> dict[str, Any]:
     """Evaluate the independent low-base growth proxy route."""
 
-    gates, _ = _common_low_base_gates(z=z, slope=slope, price_eligible=price_eligible)
+    gates, _ = _common_low_base_gates(z=z, slope=slope, price_eligible=price_eligible, z_maximum=z_maximum)
+    gates[1]["label"] = f"四年 Z ≤ {z_maximum:g}"
     growth_value = finite(growth)
     growth_status = growth_proxy_status(growth_value, minimum=growth_minimum)
     ttm_value = finite(operating_profit_growth)
@@ -391,6 +393,7 @@ def low_base_quality_gates(
     price_eligible: bool | None,
     quality_checks: Iterable[dict[str, Any]],
     minimum_quality_passes: int = MIN_QUALITY_PROXY_PASSES,
+    z_maximum: float = LOW_BASE_Z_MAX,
 ) -> dict[str, Any]:
     """Evaluate the independent low-base quality proxy route.
 
@@ -399,7 +402,8 @@ def low_base_quality_gates(
     unknown instead of being treated as a failed or passed value.
     """
 
-    common, _ = _common_low_base_gates(z=z, slope=slope, price_eligible=price_eligible)
+    common, _ = _common_low_base_gates(z=z, slope=slope, price_eligible=price_eligible, z_maximum=z_maximum)
+    common[1]["label"] = f"四年 Z ≤ {z_maximum:g}"
     checks = list(quality_checks)
     pass_count, fail_count, unknown_count = quality_proxy_pass_count(checks)
     anchor_checks = checks[:2]
@@ -461,10 +465,12 @@ def low_base_strategy_gates(
 
     growth_result = low_base_growth_gates(
         z=z, slope=slope, price_eligible=price_eligible, growth=growth, growth_minimum=growth_minimum,
+        z_maximum=z_maximum,
     )
     quality_result = low_base_quality_gates(
         z=z, slope=slope, price_eligible=price_eligible, quality_checks=quality_checks,
         minimum_quality_passes=minimum_quality_passes,
+        z_maximum=z_maximum,
     )
     trust_status = "pass" if trust_rank is not None and trust_rank <= max_trust_rank else "unknown" if trust_rank is None else "fail"
     trust_gate = {
