@@ -357,7 +357,9 @@ function TodayPage() {
     const order: Record<StockSummary['signalState'], number> = { '進場觀察': 0, '低位觀察': 1, '值得研究': 2, '待補資料': 3, '資料不足': 4, '條件失效': 5 }
     return [...release!.stocks].sort((a, b) => order[a.signalState] - order[b.signalState] || a.code.localeCompare(b.code)).slice(0, 10)
   }, [release])
-  const routeCounts = release!.summary.candidateRouteCounts
+  const fallbackGrowth = lowBaseWatchRows(release!.stocks, release!.rankings.lowPosition, 'growth')
+  const fallbackQuality = lowBaseWatchRows(release!.stocks, release!.rankings.lowPosition, 'quality')
+  const routeCounts = { ...release!.summary.candidateRouteCounts, lowBaseGrowth: release!.summary.candidateRouteCounts.lowBaseGrowth || fallbackGrowth.length, lowBaseQuality: release!.summary.candidateRouteCounts.lowBaseQuality || fallbackQuality.length }
   return (
     <div className="page-stack">
       <PageTitle eyebrow={`DAILY RESEARCH / ${release!.marketDate ?? '—'}`} title="今天值得先研究" description="先看資料狀態，再看條件與缺口。每日篩選不等於每日交易。" actions={<Link className="button secondary" to="/screener">開啟選股器 <span>→</span></Link>} />
@@ -475,13 +477,36 @@ function RankingsPage() {
   const tabParam = params.get('tab')
   const tab = tabParam === 'growth' || tabParam === 'quality' || tabParam === 'lowPosition' || tabParam === 'lowBase' || tabParam === 'lowBaseGrowth' || tabParam === 'lowBaseQuality' ? tabParam : 'trust'
   const period = params.get('period') || '10'
-  const rows = tab === 'growth' ? release!.rankings.growth : tab === 'quality' ? qualityRowsFromRelease(release!.stocks) : tab === 'lowPosition' ? release!.rankings.lowPosition : tab === 'lowBaseGrowth' ? (release!.rankings.lowBaseGrowth ?? []) : tab === 'lowBaseQuality' ? (release!.rankings.lowBaseQuality ?? []) : tab === 'lowBase' ? (release!.rankings.lowBase ?? []) : release!.rankings.trust
+  const lowBaseGrowthRows = release!.rankings.lowBaseGrowth?.length ? release!.rankings.lowBaseGrowth : lowBaseWatchRows(release!.stocks, release!.rankings.lowPosition, 'growth')
+  const lowBaseQualityRows = release!.rankings.lowBaseQuality?.length ? release!.rankings.lowBaseQuality : lowBaseWatchRows(release!.stocks, release!.rankings.lowPosition, 'quality')
+  const rows = tab === 'growth' ? release!.rankings.growth : tab === 'quality' ? qualityRowsFromRelease(release!.stocks) : tab === 'lowPosition' ? release!.rankings.lowPosition : tab === 'lowBaseGrowth' ? lowBaseGrowthRows : tab === 'lowBaseQuality' ? lowBaseQualityRows : tab === 'lowBase' ? (release!.rankings.lowBase?.length ? release!.rankings.lowBase : [...lowBaseGrowthRows, ...lowBaseQualityRows].filter((row, index, list) => list.findIndex((item) => item.code === row.code) === index)) : release!.rankings.trust
   const setTab = (value: string) => { const next = new URLSearchParams(params); next.set('tab', value); setParams(next) }
   const setPeriod = (value: string) => { const next = new URLSearchParams(params); next.set('period', value); setParams(next) }
   const heading = tab === 'trust' ? '投信關注' : tab === 'growth' ? '成長改善' : tab === 'quality' ? '品質代理' : tab === 'lowPosition' ? '低位觀察' : tab === 'lowBaseGrowth' ? '低基期成長（低位代理）' : tab === 'lowBaseQuality' ? '低基期品質（低位代理）' : '低基期策略'
   const lowBaseTab = ['lowBase', 'lowBaseGrowth', 'lowBaseQuality'].includes(tab)
   const gap = tab === 'lowBaseGrowth' ? release!.summary.lowBaseGrowthGap : tab === 'lowBaseQuality' ? release!.summary.lowBaseQualityGap : release!.summary.lowBaseGap
   return <div className="page-stack"><PageTitle eyebrow="RANKINGS / TRACKED UNIVERSE" title="排行榜" description={`${release!.coverage.scopeLabel ?? '本次發布追蹤範圍'}。榜單是研究入口，不是下單訊號。`} actions={<Link className="button secondary" to="/screener">用選股器篩選</Link>} /><div className="tab-row" role="tablist">{[['trust', '投信關注'], ['growth', '成長改善'], ['quality', '品質代理'], ['lowPosition', '低位觀察'], ['lowBaseGrowth', '低基期成長'], ['lowBaseQuality', '低基期品質'], ['lowBase', '低基期聯集']].map(([value, label]) => <button key={value} className={tab === value ? 'tab active' : 'tab'} onClick={() => setTab(value)}>{label}</button>)}<span className="tab-spacer" />{['1', '5', '10', '20'].map((value) => <button key={value} className={period === value ? 'period-chip active' : 'period-chip'} onClick={() => setPeriod(value)}>{value}日</button>)}</div><section className="panel"><div className="section-heading"><div><span className="eyebrow">{lowBaseTab ? 'PROXY STRATEGY' : `${period} TRADING SESSIONS`}</span><h2>{heading} <span className="count-badge">{rows.length}</span></h2></div><span className="muted">可取得資料排名 · 資料日 {release!.marketDate ?? '—'}</span></div>{lowBaseTab && <div className="callout info"><span className="callout-icon">i</span><p>本榜先用「低位觀察」縮小研究範圍：合格價格、Z ≤ 0、正向 slope；再分別套用營收成長或品質代理。嚴格低基期仍以 Z ≤ -1 單獨記錄，投信動向只用來排序，不會阻擋候選；每列保留逐項 gate 與代理證據。</p></div>}{lowBaseTab && !rows.length && gap && <div className="callout warning"><span className="callout-icon">!</span><p>{gap.explanation}</p></div>}{tab === 'quality' && <div className="callout info"><span className="callout-icon">i</span><p>品質代理以最新可得年度五項檢查排序；4/5 以上顯示為代理通過。正式三年 point-in-time 財報條件仍會保留為獨立狀態。</p></div>}{period !== '10' && tab === 'trust' && <div className="callout warning"><span className="callout-icon">!</span><p>目前發布的投信口徑保存十個市場交易日；其他期間切換只改介面篩選，沒有把較短資料冒充完整窗口。</p></div>}<RankingTable rows={rows} tab={tab} /></section><div className="disclaimer">投信榜顯示股數與該股十日成交占比；成長榜是三月營收代理；品質榜是最新年度代理；低位榜與兩個低基期入口先用 Z ≤ 0 的正向回歸位置縮小範圍；嚴格 Z ≤ -1 數量在首頁另列。正式條件與代理證據分開。</div></div>
+}
+
+function lowBaseWatchRows(stocks: StockSummary[], lowPosition: RankingRow[], route: 'growth' | 'quality'): RankingRow[] {
+  const byCode = new Map(stocks.map((stock) => [stock.code, stock]))
+  return lowPosition.flatMap((position, index) => {
+    const stock = byCode.get(position.code)
+    if (!stock) return []
+    const growthEligible = (stock.revenueGrowth3m ?? Number.NEGATIVE_INFINITY) >= 0.15
+    const qualityEligible = (stock.qualityProxyPassCount ?? 0) >= 4
+    if (route === 'growth' && !growthEligible) return []
+    if (route === 'quality' && !qualityEligible) return []
+    return [{
+      ...position,
+      rank: index + 1,
+      route: route === 'growth' ? 'lowBaseGrowth' : 'lowBaseQuality',
+      status: route === 'growth' ? 'pass' : 'unknown',
+      proxy: true,
+      evidenceLevel: 'proxy',
+      reason: `由低位觀察（Z ≤ 0、正向 slope）縮小範圍；${route === 'growth' ? `三月營收年增 ${formatPct(stock.revenueGrowth3m)} 通過代理門檻` : `品質代理 ${stock.qualityProxyPassCount}/5；必要錨點仍需確認`}`,
+    } satisfies RankingRow]
+  })
 }
 
 function qualityRowsFromRelease(stocks: StockSummary[]): RankingRow[] {
