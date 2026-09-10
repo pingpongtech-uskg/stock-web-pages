@@ -41,6 +41,8 @@ from pipeline.enrichment import (  # noqa: E402
     growth_proxy_status,
     low_base_growth_gates,
     low_base_quality_gates,
+    LOW_POSITION_Z_MAX,
+    MIN_QUALITY_PROXY_PASSES,
     merge_adjusted_prices,
     proxy_status,
     proxy_status_reason,
@@ -560,14 +562,18 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     trust_rows: list[dict[str, Any]] = []
     growth_rows: list[dict[str, Any]] = []
     low_rows: list[dict[str, Any]] = []
-    low_base_growth_rows: list[dict[str, Any]] = []
-    low_base_quality_rows: list[dict[str, Any]] = []
+    strict_low_base_growth_rows: list[dict[str, Any]] = []
+    strict_low_base_quality_rows: list[dict[str, Any]] = []
+    low_base_growth_watch_rows: list[dict[str, Any]] = []
+    low_base_quality_watch_rows: list[dict[str, Any]] = []
     low_count = 0
     formal_entries = 0
     proxy_candidates = 0
     candidate_codes: set[str] = set()
     low_base_growth_results: dict[str, dict[str, Any]] = {}
     low_base_quality_results: dict[str, dict[str, Any]] = {}
+    low_base_growth_watch_results: dict[str, dict[str, Any]] = {}
+    low_base_quality_watch_results: dict[str, dict[str, Any]] = {}
 
     # Rank every available ten-session net-share value within this tracked
     # range.  The rank is useful context for low-base rows, but is never a
@@ -666,8 +672,25 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             price_eligible=price_eligible,
             quality_checks=detail.get("qualityProxyChecks", []),
         )
+        low_base_growth_watch = low_base_growth_gates(
+            z=z,
+            slope=slope,
+            price_eligible=price_eligible,
+            growth=detail.get("revenueGrowth3m"),
+            operating_profit_growth=detail.get("ttmOperatingProfitGrowth"),
+            z_maximum=LOW_POSITION_Z_MAX,
+        )
+        low_base_quality_watch = low_base_quality_gates(
+            z=z,
+            slope=slope,
+            price_eligible=price_eligible,
+            quality_checks=detail.get("qualityProxyChecks", []),
+            z_maximum=LOW_POSITION_Z_MAX,
+        )
         low_base_growth_results[code] = low_base_growth
         low_base_quality_results[code] = low_base_quality
+        low_base_growth_watch_results[code] = low_base_growth_watch
+        low_base_quality_watch_results[code] = low_base_quality_watch
         # Keep the route evidence in the stock detail so the UI can show the
         # exact backend decision without recalculating it in React.
         detail.update(
@@ -681,13 +704,15 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                 "lowBaseStatus": "pass" if low_base_growth["status"] == "pass" or low_base_quality["status"] == "pass" else "unknown" if low_base_growth["status"] == "unknown" or low_base_quality["status"] == "unknown" else "fail",
                 "lowBaseReason": f"成長路徑：{low_base_growth['status']}；品質路徑：{low_base_quality['status']}",
                 "lowBaseGates": low_base_growth["gates"] + low_base_quality["gates"],
+                "lowBaseGrowthWatchStatus": low_base_growth_watch["status"],
+                "lowBaseQualityWatchStatus": low_base_quality_watch["status"],
             }
         )
         trust_rank = institutional_rank_by_code.get(code)
         sort_context = f"投信十日淨買超排序第 {trust_rank} 名（只作排序）" if trust_rank is not None else "投信十日淨買超排序未知（只作排序）"
         for route, result, rows in (
-            ("lowBaseGrowth", low_base_growth, low_base_growth_rows),
-            ("lowBaseQuality", low_base_quality, low_base_quality_rows),
+            ("lowBaseGrowth", low_base_growth, strict_low_base_growth_rows),
+            ("lowBaseQuality", low_base_quality, strict_low_base_quality_rows),
         ):
             if result["status"] == "pass":
                 candidate_codes.add(code)
@@ -708,11 +733,45 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                     }
                 )
 
+        # The published low-base tabs use the low-position ranking (Z ≤ 0,
+        # positive slope) as a practical seed universe.  Strict Z ≤ -1
+        # results remain available in the summary as an audit count.  This
+        # keeps the dashboard useful without converting unavailable values to
+        # passes or pretending the relaxed proxy is the formal rule.
+        watch_common_growth = all(gate.get("status") == "pass" for gate in low_base_growth_watch["gates"][:3])
+        if watch_common_growth and low_base_growth_watch["status"] == "pass":
+            low_base_growth_watch_rows.append(
+                {
+                    "rank": 0, "code": code, "name": name, "sector": sector,
+                    "value": float(z) if isinstance(z, (int, float)) else None,
+                    "valueLabel": "", "status": "pass", "proxy": True,
+                    "evidenceLevel": "proxy", "route": "lowBaseGrowth",
+                    "gates": low_base_growth_watch["gates"],
+                    "reason": f"{sort_context}；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；{low_base_growth_watch['reason']}",
+                }
+            )
+        watch_common_quality = all(gate.get("status") == "pass" for gate in low_base_quality_watch["gates"][:3])
+        if watch_common_quality and low_base_quality_watch.get("qualityPasses", 0) >= MIN_QUALITY_PROXY_PASSES:
+            low_base_quality_watch_rows.append(
+                {
+                    "rank": 0, "code": code, "name": name, "sector": sector,
+                    "value": float(z) if isinstance(z, (int, float)) else None,
+                    "valueLabel": "", "status": "pass" if low_base_quality_watch["status"] == "pass" else "unknown",
+                    "proxy": True, "evidenceLevel": "proxy", "route": "lowBaseQuality",
+                    "gates": low_base_quality_watch["gates"],
+                    "reason": f"{sort_context}；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；{low_base_quality_watch['reason']}",
+                }
+            )
+
     trust_rank = rank_rows(trust_rows, reverse=True)
     growth_rank = rank_rows(growth_rows, reverse=True)
     low_rank = rank_rows(low_rows, reverse=False)
-    low_base_growth_rank = rank_low_base_rows(low_base_growth_rows, institutional_rank_by_code)
-    low_base_quality_rank = rank_low_base_rows(low_base_quality_rows, institutional_rank_by_code)
+    strict_low_base_growth_rank = rank_low_base_rows(strict_low_base_growth_rows, institutional_rank_by_code)
+    strict_low_base_quality_rank = rank_low_base_rows(strict_low_base_quality_rows, institutional_rank_by_code)
+    low_base_growth_watch_rank = rank_low_base_rows(low_base_growth_watch_rows, institutional_rank_by_code)
+    low_base_quality_watch_rank = rank_low_base_rows(low_base_quality_watch_rows, institutional_rank_by_code)
+    low_base_growth_rank = low_base_growth_watch_rank or strict_low_base_growth_rank
+    low_base_quality_rank = low_base_quality_watch_rank or strict_low_base_quality_rank
     low_base_by_code: dict[str, dict[str, Any]] = {}
     for row in [*low_base_growth_rank, *low_base_quality_rank]:
         code = str(row["code"])
@@ -735,13 +794,13 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     tracked_count = len(enriched)
     tracked_complete = sum(1 for detail in enriched if detail.get("dataStatus") == "pass")
     tracked_pct = tracked_complete / tracked_count * 100 if tracked_count else None
-    low_base_growth_gap = low_base_gap(low_base_growth_results, label="低基期成長路徑", tracked_count=tracked_count)
-    low_base_quality_gap = low_base_gap(low_base_quality_results, label="低基期品質路徑", tracked_count=tracked_count)
+    low_base_growth_gap = low_base_gap(low_base_growth_results, label="嚴格低基期成長路徑（Z ≤ -1）", tracked_count=tracked_count)
+    low_base_quality_gap = low_base_gap(low_base_quality_results, label="嚴格低基期品質路徑（Z ≤ -1）", tracked_count=tracked_count)
     low_base_gap_summary = {
         "candidateCount": len(low_base_rank),
         "trackedCount": tracked_count,
         "explanation": (
-            f"目前追蹤 {tracked_count} 檔，低基期策略共 {len(low_base_rank)} 檔符合；"
+            f"目前追蹤 {tracked_count} 檔，低位代理低基期策略共 {len(low_base_rank)} 檔；嚴格 Z ≤ -1 成長 {len(strict_low_base_growth_rank)} 檔、品質 {len(strict_low_base_quality_rank)} 檔。"
             if low_base_rank
             else f"目前追蹤 {tracked_count} 檔，低基期策略暫無符合；成長路徑：{low_base_growth_gap['explanation']} 品質路徑：{low_base_quality_gap['explanation']}"
         ),
@@ -816,6 +875,8 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                 "lowBase": len(low_base_rank),
                 "lowBaseGrowth": len(low_base_growth_rank),
                 "lowBaseQuality": len(low_base_quality_rank),
+                "lowBaseGrowthStrict": len(strict_low_base_growth_rank),
+                "lowBaseQualityStrict": len(strict_low_base_quality_rank),
             },
             "formalEntryCount": formal_entries,
             "proxyCandidateCount": proxy_candidates,
