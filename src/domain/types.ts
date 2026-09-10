@@ -55,6 +55,8 @@ export interface StockSummary {
   lowBaseQualityStatus?: MetricStatus
   lowBaseQualityReason?: string
   lowBaseQualityGates?: LowBaseGate[]
+  lowBaseGrowthWatchStatus?: MetricStatus
+  lowBaseQualityWatchStatus?: MetricStatus
   liquidityStatus: MetricStatus
   dataStatus: MetricStatus
   signalState: '待補資料' | '值得研究' | '低位觀察' | '進場觀察' | '條件失效' | '資料不足'
@@ -236,6 +238,8 @@ export interface Release {
       lowBase?: number
       lowBaseGrowth?: number
       lowBaseQuality?: number
+      lowBaseGrowthStrict?: number
+      lowBaseQualityStrict?: number
     }
     addedToday: number
     improvedToday: number
