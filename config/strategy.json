@@ -7,6 +7,12 @@
   "growth": { "months": 3, "revenue_growth_min": 0.15, "defensive_growth_min": 0.0 },
   "quality": { "positive_years": 3, "roe_median_min": 0.12, "net_debt_to_ebitda_max": 2.0 },
   "signal": { "z_low": -1.0, "z_current_max": 0.0, "weekly_ma_period": 10, "lookback_complete_weeks": 8 },
+  "low_base": {
+    "strict_z_max": -1.0,
+    "watch_z_max": 0.0,
+    "watch_universe": "low_position",
+    "watch_universe_definition": "四年回歸 Z ≤ 0 且 slope > 0；用來縮小免費資料研究範圍，不取代嚴格低基期審核"
+  },
   "risk": {
     "stop_loss_pct": 0.12,
     "initial_weight": 0.075,
