@@ -449,8 +449,11 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
     detail.update(
         {
             "asOf": detail.get("asOf") or (price[-1].get("date") if price else None),
-            "lastPrice": latest_raw if latest_raw is not None else _current_price(detail),
-            "changePct": change_pct if change_pct is not None else detail.get("changePct"),
+            # Some public rows expose only adjusted close.  It is still a
+            # usable latest quote, so keep the price column populated and
+            # label the research curve separately below.
+            "lastPrice": latest_raw if latest_raw is not None else (adjusted_latest if adjusted_latest is not None else _current_price(detail)),
+            "changePct": change_pct if change_pct is not None else (adjusted_change if adjusted_change is not None else detail.get("changePct")),
             "adjustedLastPrice": adjusted_latest,
             "adjustedChangePct": adjusted_change,
             "zScore": regression.get("z"),
