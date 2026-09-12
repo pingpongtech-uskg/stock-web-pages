@@ -357,6 +357,60 @@ def atomic_json(path: Path, payload: Any) -> None:
     os.replace(temp, path)
 
 
+def seed_snapshot(codes: list[str], output: Path, as_of: str | None = None) -> dict[str, Any]:
+    """Create a source-labelled A universe baseline without per-stock API calls.
+
+    The next enrichment step fills the baseline with Yahoo/TWSE public data.
+    This mode exists so expanding the universe from 9 symbols to the published
+    A top-100 never burns the FinMind free request budget before enrichment.
+    """
+    config_path = ROOT / "config" / "tracked_symbols.json"
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError):
+        config = {}
+    metadata = config.get("metadata") if isinstance(config, dict) and isinstance(config.get("metadata"), dict) else {}
+    source_url = ((config.get("universe") or {}).get("sourceUrl") if isinstance(config, dict) else None) or "https://stock.wearn.com/b50.asp"
+    generated = iso_now()
+    details: list[dict[str, Any]] = []
+    for code in codes:
+        meta = metadata.get(code) if isinstance(metadata.get(code), dict) else {}
+        details.append(make_stock(code, {"name": str(meta.get("name") or code), "market": str(meta.get("market") or "unknown"), "sector": str(meta.get("sector") or "")}, [], [], {"status": "unknown", "net_shares_10": None, "positive_days_10": None, "participation_10": None}, [], None, [], {"incomeStatement": [], "balanceSheet": [], "cashFlow": []}))
+    market_date = as_of or date.today().isoformat()
+    canonical = json.dumps({"codes": codes, "marketDate": market_date}, ensure_ascii=False, sort_keys=True).encode()
+    digest = hashlib.sha256(canonical).hexdigest()[:10]
+    run_id = f"seed-{datetime.now(TAIPEI).strftime('%Y%m%d-%H%M%S')}-{digest}"
+    release = {
+        "schemaVersion": SCHEMA_VERSION,
+        "strategyVersion": STRATEGY_VERSION,
+        "formulaVersion": FORMULA_VERSION,
+        "runId": run_id,
+        "marketDate": market_date,
+        "generatedAt": generated,
+        "nextExpectedUpdateAt": next_expected_update(),
+        "freshness": "degraded",
+        "statusMessage": f"已載入公開 A 母體 {len(codes)} 檔；下一步以 yfinance 與 TWSE/TPEx 公開資料補齊。",
+        "sourceRefs": [source_url, "FinMind:TaiwanStockInfo", "yfinance", "TWSE OpenAPI", "TPEx OpenAPI"],
+        "coverage": {
+            "universeCount": len(codes), "databaseCount": len(codes), "candidateCount": 0,
+            "pendingCount": 0, "financialCompleteCount": 0, "priceCompleteCount": 0,
+            "completenessPct": 0, "trackedCount": len(codes), "scopeLabel": f"A 母體：投信十日買超前100（{len(codes)} 檔）",
+            "queueStatus": "已建立 A 清單，等待公開資料補齊",
+        },
+        "summary": {"watchCount": 0, "lowPositionCount": 0, "candidateRouteCounts": {"trust": 0, "growth": 0, "lowPosition": 0}, "addedToday": 0, "improvedToday": 0, "removedToday": 0},
+        "stocks": [{key: stock[key] for key in stock if key not in {"priceSeries", "regression", "institutionalDaily", "revenueMonthly", "qualityChecks", "historySnapshots", "notes", "detailLimitations"}} for stock in details],
+        "rankings": {"trust": [], "growth": [], "lowPosition": []},
+        "research": {"status": "not_evaluable", "reason": "A 母體已鎖定；尚未完成公開資料 enrichment。", "cagr": None, "maxDrawdown": None, "periods": []},
+    }
+    output.mkdir(parents=True, exist_ok=True)
+    release_dir = output / "releases" / run_id
+    for detail in details:
+        atomic_json(release_dir / "stocks" / f"{detail['code']}.json", detail)
+    atomic_json(release_dir / "manifest.json", {**release, "inputHash": hashlib.sha256(canonical).hexdigest()})
+    atomic_json(output / "latest.json", release)
+    return {"run_id": run_id, "market_date": market_date, "stocks": len(details), "queued": 0, "requests": 0, "allowed_attempts": 0, "blocked": None}
+
+
 def fetch_optional(client: FinMindClient, label: str, **kwargs: str) -> tuple[list[dict[str, Any]], str | None]:
     try:
         return client.get(label, **kwargs), None
@@ -494,12 +548,13 @@ def main() -> int:
     parser.add_argument("--codes", default=",".join(DEFAULT_CODES), help="comma-separated stock codes")
     parser.add_argument("--as-of", default=None, help="optional query end date YYYY-MM-DD")
     parser.add_argument("--output", default=str(ROOT / "public" / "data"))
+    parser.add_argument("--seed-only", action="store_true", help="seed the A universe without calling FinMind")
     args = parser.parse_args()
     codes = list(dict.fromkeys(code.strip() for code in args.codes.split(",") if code.strip()))
     if not codes:
         parser.error("at least one code is required")
     try:
-        result = build_snapshot(codes, Path(args.output), args.as_of)
+        result = seed_snapshot(codes, Path(args.output), args.as_of) if args.seed_only else build_snapshot(codes, Path(args.output), args.as_of)
     except (FinMindError, ValueError) as exc:
         print(f"snapshot_failed={type(exc).__name__}: {exc}", file=sys.stderr)
         return 1
