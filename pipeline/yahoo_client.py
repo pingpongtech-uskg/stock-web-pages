@@ -191,21 +191,28 @@ def fetch_adjusted_history(
 ) -> tuple[list[dict[str, Any]], str | None, str | None]:
     """Return rows, source reference, and an optional human-readable error."""
 
-    try:
-        rows = _history_from_yfinance(code, market, start, end, timeout=timeout)
-        if rows:
-            return rows, YFINANCE_PRICE_SOURCE, None
-    except Exception as exc:  # best effort; publisher keeps the raw series
-        first_error = f"yfinance {type(exc).__name__}: {exc}"
-    else:
-        first_error = "yfinance returned no adjusted rows"
-    try:
-        rows = _history_from_chart(code, market, start, end, timeout=timeout)
-        if rows:
-            return rows, YAHOO_CHART_SOURCE, None
-    except Exception as exc:
-        return [], None, f"{first_error}; chart {type(exc).__name__}: {exc}"
-    return [], None, first_error
+    markets = [market] if market in {"TWSE", "TPEx"} else ["TWSE", "TPEx"]
+    errors: list[str] = []
+    # The chart endpoint is a single lightweight public request and is the
+    # normal path for a 100-symbol daily universe.  yfinance remains the
+    # fallback for environments where chart access is unavailable.
+    for candidate_market in markets:
+        try:
+            rows = _history_from_chart(code, candidate_market, start, end, timeout=timeout)
+            if rows:
+                return rows, YAHOO_CHART_SOURCE, None
+        except Exception as exc:
+            errors.append(f"{candidate_market} chart {type(exc).__name__}: {exc}")
+    for candidate_market in markets:
+        try:
+            rows = _history_from_yfinance(code, candidate_market, start, end, timeout=timeout)
+            if rows:
+                return rows, YFINANCE_PRICE_SOURCE, None
+        except Exception as exc:  # best effort; publisher keeps the raw series
+            errors.append(f"{candidate_market} yfinance {type(exc).__name__}: {exc}")
+        else:
+            errors.append(f"{candidate_market} yfinance returned no adjusted rows")
+    return [], None, "; ".join(errors)
 
 
 def _frame_value(frame: Any, aliases: tuple[str, ...], column: Any) -> float | None:
@@ -246,16 +253,27 @@ def fetch_fundamental_proxies(
     try:
         import yfinance as yf  # type: ignore[import-not-found]
 
-        ticker = yf.Ticker(yahoo_symbol(code, market))
-        income = getattr(ticker, "financials", None)
+        markets = [market] if market in {"TWSE", "TPEx"} else ["TWSE", "TPEx"]
+        errors: list[str] = []
+        income = cashflow = balance = None
+        for candidate_market in markets:
+            try:
+                ticker = yf.Ticker(yahoo_symbol(code, candidate_market))
+                income = getattr(ticker, "financials", None)
+                if income is None:
+                    income = ticker.get_income_stmt(freq="yearly")
+                cashflow = getattr(ticker, "cashflow", None)
+                if cashflow is None:
+                    cashflow = ticker.get_cash_flow(freq="yearly")
+                balance = getattr(ticker, "balance_sheet", None)
+                if balance is None:
+                    balance = ticker.get_balance_sheet(freq="yearly")
+                if income is not None and len(getattr(income, "columns", [])):
+                    break
+            except Exception as exc:
+                errors.append(f"{candidate_market} {type(exc).__name__}: {exc}")
         if income is None:
-            income = ticker.get_income_stmt(freq="yearly")
-        cashflow = getattr(ticker, "cashflow", None)
-        if cashflow is None:
-            cashflow = ticker.get_cash_flow(freq="yearly")
-        balance = getattr(ticker, "balance_sheet", None)
-        if balance is None:
-            balance = ticker.get_balance_sheet(freq="yearly")
+            return {}, YFINANCE_FUNDAMENTAL_SOURCE, "; ".join(errors) or "yfinance returned no income statement"
         columns = _latest_columns(income)
         if not columns:
             return {}, YFINANCE_FUNDAMENTAL_SOURCE, "yfinance returned no annual income statement"
@@ -283,4 +301,3 @@ def fetch_fundamental_proxies(
         return metrics, YFINANCE_FUNDAMENTAL_SOURCE, None
     except Exception as exc:
         return {}, None, f"yfinance fundamentals {type(exc).__name__}: {exc}"
-
