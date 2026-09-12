@@ -137,6 +137,12 @@ def baseline_details(data_dir: Path, release: dict[str, Any]) -> list[dict[str, 
     symbols = config.get("symbols") if isinstance(config, dict) else None
     metadata = config.get("metadata") if isinstance(config, dict) and isinstance(config.get("metadata"), dict) else {}
     if isinstance(symbols, list):
+        allowed_codes = {str(raw_code).strip() for raw_code in symbols if str(raw_code).strip()}
+        # The published A list is the complete research universe.  Drop
+        # symbols left over from older snapshots so every strategy and every
+        # coverage count describes the same 100-stock mother set.
+        result = [detail for detail in result if str(detail.get("code") or "") in allowed_codes]
+        known_codes = {str(detail.get("code") or "") for detail in result}
         for raw_code in symbols:
             code = str(raw_code).strip()
             if not code or code in known_codes:
@@ -235,9 +241,59 @@ def _proxy_metrics_from_existing(detail: dict[str, Any]) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
 
 
+def _metrics_from_public_inputs(public_inputs: dict[str, Any] | None) -> dict[str, Any]:
+    """Derive a small quality proxy from the official bulk snapshot."""
+    if not isinstance(public_inputs, dict):
+        return {}
+    income = [row for row in public_inputs.get("incomeQuarterly", []) if isinstance(row, dict)]
+    balance = [row for row in public_inputs.get("balanceQuarterly", []) if isinstance(row, dict)]
+    income.sort(key=lambda row: (str(row.get("availableAt") or ""), str(row.get("year") or ""), str(row.get("quarter") or "")), reverse=True)
+    balance.sort(key=lambda row: (str(row.get("availableAt") or ""), str(row.get("year") or ""), str(row.get("quarter") or "")), reverse=True)
+    latest = income[0] if income else {}
+    latest_balance = balance[0] if balance else {}
+    revenue = latest.get("revenue")
+    operating = latest.get("operatingProfit")
+    net_income = latest.get("parentNetIncome")
+    equity = latest_balance.get("equity")
+    margin = operating / revenue if isinstance(operating, (int, float)) and isinstance(revenue, (int, float)) and revenue > 0 else None
+    roe = net_income / equity if isinstance(net_income, (int, float)) and isinstance(equity, (int, float)) and equity > 0 else None
+    return {
+        "period": str(latest.get("availableAt") or latest.get("year") or "官方最新期")[:10],
+        "latestNetIncome": net_income,
+        "latestOperatingCashFlow": None,
+        "latestOperatingMargin": margin,
+        "latestRoe": roe,
+        "netDebtToEbitda": None,
+        "latestRevenue": revenue,
+    }
+
+
+def _revenue_growth_from_public_inputs(public_inputs: dict[str, Any] | None) -> float | None:
+    if not isinstance(public_inputs, dict):
+        return None
+    rows = [row for row in public_inputs.get("monthlyRevenueOfficial", []) if isinstance(row, dict)]
+    by_month = {str(row.get("month") or "")[:7]: row.get("revenue") for row in rows}
+    months = sorted(month for month, value in by_month.items() if month and isinstance(value, (int, float)))
+    if len(months) < 3:
+        return None
+    latest = months[-3:]
+    prior = [f"{int(month[:4]) - 1:04d}-{month[5:7]}" for month in latest]
+    if any(month not in by_month or not isinstance(by_month[month], (int, float)) for month in prior):
+        return None
+    current_total = sum(float(by_month[month]) for month in latest)
+    prior_total = sum(float(by_month[month]) for month in prior)
+    return (current_total - prior_total) / prior_total if prior_total else None
+
+
 def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, public_inputs: dict[str, Any] | None = None) -> tuple[dict[str, Any], list[str]]:
     code = str(detail.get("code") or "")
     market = str(detail.get("market") or "TWSE")
+    # Offline recalculation must keep using the last successful public-input
+    # payload.  Otherwise a refresh that only updates prices would turn all
+    # revenue and quality proxies back into unknown.
+    source_inputs = public_inputs if isinstance(public_inputs, dict) and public_inputs else (
+        detail.get("healthInputs") if isinstance(detail.get("healthInputs"), dict) else None
+    )
     errors: list[str] = []
     source_refs: list[str] = []
     raw_price = [dict(point) for point in detail.get("priceSeries", []) if isinstance(point, dict)]
@@ -258,7 +314,7 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
         source_refs.append("FinMind:TaiwanStockPrice")
 
     metrics = _proxy_metrics_from_existing(detail)
-    if not offline:
+    if not offline and os.environ.get("FAST_REFRESH") != "1":
         fresh_metrics, fundamentals_source, error = fetch_fundamental_proxies(code, market)
         if fresh_metrics:
             metrics = fresh_metrics
@@ -266,11 +322,22 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
             source_refs.append(fundamentals_source)
         if error:
             errors.append(error)
+    if not metrics:
+        metrics = _metrics_from_public_inputs(source_inputs)
     proxy_checks = quality_proxy_checks(metrics, source_ref=YFINANCE_FUNDAMENTAL_SOURCE)
     quality_proxy = proxy_status(proxy_checks)
     quality_proxy_reason = proxy_status_reason(proxy_checks)
 
-    revenue_growth = detail.get("revenueGrowth3m")
+    revenue_growth = detail.get("revenueGrowth3m") if detail.get("revenueGrowth3m") is not None else detail.get("revenueGrowthProxy")
+    if revenue_growth is None:
+        revenue_growth = _revenue_growth_from_public_inputs(source_inputs)
+    if revenue_growth is None and isinstance(source_inputs, dict):
+        latest_rows = [row for row in source_inputs.get("monthlyRevenueOfficial", []) if isinstance(row, dict)]
+        latest_row = latest_rows[-1] if latest_rows else {}
+        current = latest_row.get("revenue")
+        prior = latest_row.get("priorYearRevenue")
+        if isinstance(current, (int, float)) and isinstance(prior, (int, float)) and prior:
+            revenue_growth = (current - prior) / prior
     try:
         revenue_growth = float(revenue_growth) if revenue_growth is not None else None
     except (TypeError, ValueError):
@@ -394,6 +461,7 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
             "growthStatus": formal_growth,
             "growthProxyStatus": growth_proxy,
             "growthProxyReason": growth_proxy_reason,
+            "revenueGrowthProxy": revenue_growth if detail.get("revenueGrowth3m") is None else detail.get("revenueGrowthProxy"),
             "dataStatus": data_status,
             "signalState": state,
             "entryReasons": reasons,
@@ -559,6 +627,52 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         errors_by_code[str(next_detail.get("code"))] = errors
         used_sources = merge_refs(used_sources, next_detail.get("sourceRefs"))
 
+    # A is the source-published research universe.  Preserve its rank as an
+    # input label for every strategy; do not re-rank the already selected 100
+    # symbols and call that result the universe.
+    universe_rows: list[dict[str, Any]] = []
+    universe_source = ""
+    try:
+        config = load_json(data_dir.parent.parent / "config" / "tracked_symbols.json")
+        universe = config.get("universe") if isinstance(config.get("universe"), dict) else {}
+        universe_rows = [row for row in universe.get("rows", []) if isinstance(row, dict)]
+        universe_source = str(universe.get("sourceUrl") or "")
+    except (OSError, ValueError, json.JSONDecodeError):
+        universe_rows = []
+    detail_by_code = {str(detail.get("code")): detail for detail in enriched}
+    source_rank_rows: list[dict[str, Any]] = []
+    for row in universe_rows:
+        code = str(row.get("code") or "")
+        detail = detail_by_code.get(code)
+        if not detail:
+            continue
+        rank_value = row.get("rank")
+        try:
+            source_rank = int(rank_value)
+        except (TypeError, ValueError):
+            continue
+        detail["researchUniverseId"] = "A"
+        detail["researchUniverseLabel"] = "投信十日買超前100"
+        detail["researchUniverseRank"] = source_rank
+        detail["researchUniverseSource"] = universe_source or "https://stock.wearn.com/b50.asp"
+        detail["sourceRefs"] = merge_refs(detail.get("sourceRefs"), [detail["researchUniverseSource"]])
+        net_text = str(row.get("net") or "").replace(",", "")
+        try:
+            detail["sourceUniverseNetLots"] = float(net_text)
+        except ValueError:
+            detail["sourceUniverseNetLots"] = None
+        source_rank_rows.append({
+            "rank": source_rank,
+            "code": code,
+            "name": str(row.get("name") or detail.get("name") or code),
+            "sector": str(detail.get("sector") or ""),
+            "value": detail.get("sourceUniverseNetLots"),
+            "valueLabel": "張",
+            "status": "pass",
+            "reason": f"來源 A 投信十日買超前100，第 {source_rank} 名；此名次是母體，不是子集合重算。",
+            "source": detail["researchUniverseSource"],
+        })
+
     trust_rows: list[dict[str, Any]] = []
     growth_rows: list[dict[str, Any]] = []
     low_rows: list[dict[str, Any]] = []
@@ -611,6 +725,8 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                 }
             )
         growth = detail.get("revenueGrowth3m")
+        if growth is None:
+            growth = detail.get("revenueGrowthProxy")
         if isinstance(growth, (int, float)) and math.isfinite(float(growth)):
             growth_status = str(detail.get("growthProxyStatus") or growth_proxy_status(float(growth)))
             if growth_status == "pass":
@@ -663,7 +779,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             z=z,
             slope=slope,
             price_eligible=price_eligible,
-            growth=detail.get("revenueGrowth3m"),
+            growth=detail.get("revenueGrowth3m") if detail.get("revenueGrowth3m") is not None else detail.get("revenueGrowthProxy"),
             operating_profit_growth=detail.get("ttmOperatingProfitGrowth"),
         )
         low_base_quality = low_base_quality_gates(
@@ -676,7 +792,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             z=z,
             slope=slope,
             price_eligible=price_eligible,
-            growth=detail.get("revenueGrowth3m"),
+            growth=detail.get("revenueGrowth3m") if detail.get("revenueGrowth3m") is not None else detail.get("revenueGrowthProxy"),
             operating_profit_growth=detail.get("ttmOperatingProfitGrowth"),
             z_maximum=LOW_POSITION_Z_MAX,
         )
@@ -686,6 +802,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             price_eligible=price_eligible,
             quality_checks=detail.get("qualityProxyChecks", []),
             z_maximum=LOW_POSITION_Z_MAX,
+            minimum_quality_passes=3,
         )
         low_base_growth_results[code] = low_base_growth
         low_base_quality_results[code] = low_base_quality
@@ -751,7 +868,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                 }
             )
         watch_common_quality = all(gate.get("status") == "pass" for gate in low_base_quality_watch["gates"][:3])
-        if watch_common_quality and low_base_quality_watch.get("qualityPasses", 0) >= MIN_QUALITY_PROXY_PASSES:
+        if watch_common_quality and low_base_quality_watch.get("qualityPasses", 0) >= 3:
             low_base_quality_watch_rows.append(
                 {
                     "rank": 0, "code": code, "name": name, "sector": sector,
@@ -763,7 +880,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                 }
             )
 
-    trust_rank = rank_rows(trust_rows, reverse=True)
+    trust_rank = sorted(source_rank_rows, key=lambda row: (int(row.get("rank") or 10**9), str(row.get("code")))) if source_rank_rows else rank_rows(trust_rows, reverse=True)
     growth_rank = rank_rows(growth_rows, reverse=True)
     low_rank = rank_rows(low_rows, reverse=False)
     strict_low_base_growth_rank = rank_low_base_rows(strict_low_base_growth_rows, institutional_rank_by_code)
@@ -806,7 +923,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         ),
         "missing": list(dict.fromkeys(low_base_growth_gap["missing"] + low_base_quality_gap["missing"])),
     }
-    universe = int((baseline.get("coverage") or {}).get("universeCount") or tracked_count)
+    universe = len(universe_rows) or int((baseline.get("coverage") or {}).get("universeCount") or tracked_count)
     universe_pct = tracked_count / universe * 100 if universe else None
     market_dates = [str(detail.get("asOf")) for detail in enriched if detail.get("asOf")]
     market_date = max(market_dates) if market_dates else baseline.get("marketDate")
@@ -849,8 +966,11 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         "trackedCompleteCount": tracked_complete,
         "trackedCompletenessPct": tracked_pct,
         "universeCoveragePct": universe_pct,
-        "scopeLabel": f"明確追蹤 {tracked_count} 檔（非全市場）",
-        "queueStatus": f"研究範圍 {tracked_count}/{tracked_count}；市場母體 {universe:,} 檔，未覆蓋 {max(0, universe - tracked_count):,} 檔",
+        "scopeLabel": f"A 母體：投信十日買超前100（{tracked_count} 檔）",
+        "universeId": "A",
+        "universeLabel": "投信十日買超前100",
+        "universeSource": universe_source or "https://stock.wearn.com/b50.asp",
+        "queueStatus": f"A 母體 {tracked_count}/{universe} 檔；所有策略共用此初始篩選",
     }
     source_refs = merge_refs(baseline.get("sourceRefs"), used_sources)
     release = {
