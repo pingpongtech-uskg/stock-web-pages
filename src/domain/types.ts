@@ -66,6 +66,8 @@ export interface StockSummary {
   participation10: number | null
   positiveDays10: number | null
   revenueGrowth3m: number | null
+  /** Official monthly YoY fallback when a complete three-month window is unavailable. */
+  revenueGrowthProxy?: number | null
   ttmOperatingProfitGrowth: number | null
   sourceRefs: string[]
   healthCategories?: HealthCategory[]
