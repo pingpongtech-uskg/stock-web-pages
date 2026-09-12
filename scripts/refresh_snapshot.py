@@ -221,6 +221,10 @@ def _summary(detail: dict[str, Any]) -> dict[str, Any]:
         "historySnapshots",
         "notes",
         "detailLimitations",
+        # Full raw public inputs stay on the per-stock evidence endpoint; the
+        # ranking payload only needs compact health summaries.
+        "healthInputs",
+        "financialInputs",
     }
     return {key: value for key, value in detail.items() if key not in hidden}
 
