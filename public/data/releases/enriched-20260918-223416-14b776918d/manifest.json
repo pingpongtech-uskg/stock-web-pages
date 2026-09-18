@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.1",
   "strategyVersion": "quality-growth-v1",
-  "formulaVersion": "lohas-linear-3.5y-research-v1",
-  "runId": "enriched-20260919-010230-015cd5cc48",
+  "formulaVersion": "lohas-linear-4y-research-v2",
+  "runId": "enriched-20260918-223416-14b776918d",
   "marketDate": "2026-09-11",
-  "generatedAt": "2026-09-18T17:02:30+00:00",
+  "generatedAt": "2026-09-18T14:34:16+00:00",
   "nextExpectedUpdateAt": "2026-09-13T15:17:00+00:00",
   "freshness": "degraded",
   "statusMessage": "離線重算 100 檔；沿用已發布的 7 檔調整價與財務代理，未呼叫外部來源。",
@@ -26,7 +26,7 @@
   "coverage": {
     "universeCount": 100,
     "databaseCount": 100,
-    "candidateCount": 52,
+    "candidateCount": 53,
     "pendingCount": 0,
     "financialCompleteCount": 0,
     "priceCompleteCount": 7,
@@ -43,14 +43,14 @@
   },
   "summary": {
     "watchCount": 0,
-    "lowPositionCount": 3,
+    "lowPositionCount": 7,
     "candidateRouteCounts": {
       "trust": 5,
       "growth": 5,
-      "lowPosition": 3,
-      "lowBase": 2,
-      "lowBaseGrowth": 2,
-      "lowBaseQuality": 0,
+      "lowPosition": 7,
+      "lowBase": 5,
+      "lowBaseGrowth": 5,
+      "lowBaseQuality": 1,
       "lowBaseGrowthStrict": 1,
       "lowBaseQualityStrict": 0
     },
@@ -60,9 +60,9 @@
     "formalEntryCount": 0,
     "proxyCandidateCount": 7,
     "lowBaseGap": {
-      "candidateCount": 2,
+      "candidateCount": 5,
       "trackedCount": 100,
-      "explanation": "目前追蹤 100 檔，低位代理低基期策略共 2 檔；嚴格 Z ≤ -1 成長 1 檔、品質 0 檔。",
+      "explanation": "目前追蹤 100 檔，低位代理低基期策略共 5 檔；嚴格 Z ≤ -1 成長 1 檔、品質 0 檔。",
       "missing": [
         "價格資料合格：未知",
         "3.5年 Z ≤ -1：未知",
@@ -70,7 +70,6 @@
         "三月營收年增 ≥ 15%：未知",
         "三月營收年增 ≥ 15%：未通過",
         "3.5年 Z ≤ -1：未通過",
-        "正向回歸 slope：未通過",
         "最新年度淨利與 CFO > 0：未知",
         "五項品質代理至少 4/5：未知",
         "最新年度淨利與 CFO > 0：未通過",
@@ -87,8 +86,7 @@
         "正向回歸 slope：未知",
         "三月營收年增 ≥ 15%：未知",
         "三月營收年增 ≥ 15%：未通過",
-        "3.5年 Z ≤ -1：未通過",
-        "正向回歸 slope：未通過"
+        "3.5年 Z ≤ -1：未通過"
       ]
     },
     "lowBaseQualityGap": {
@@ -103,8 +101,7 @@
         "五項品質代理至少 4/5：未知",
         "3.5年 Z ≤ -1：未通過",
         "最新年度淨利與 CFO > 0：未通過",
-        "五項品質代理至少 4/5：未通過",
-        "正向回歸 slope：未通過"
+        "五項品質代理至少 4/5：未通過"
       ]
     }
   },
@@ -18128,18 +18125,18 @@
       "asOf": "2026-09-11",
       "lastPrice": 336.5,
       "changePct": 0.001488095238095238,
-      "zScore": 0.16181952576995356,
-      "slope": 0.21201584048158692,
+      "zScore": -0.23715269959985064,
+      "slope": 0.26198379933007065,
       "fiveLineStatus": "pass",
       "qualityStatus": "unknown",
       "growthStatus": "unknown",
       "liquidityStatus": "unknown",
       "dataStatus": "pass",
-      "signalState": "值得研究",
+      "signalState": "低位觀察",
       "entryReasons": [
         "尚無足夠條件形成正式候選理由",
         "成長代理：三月合計營收年增 +177.5%；正式營業利益成長仍待核對",
-        "價格描述：Adj Close 3.5 年 Z +0.16；未形成低位條件"
+        "低位代理：Adj Close 四年 Z -0.24、斜率 +0.2620；正式八週與品質條件仍待核對"
       ],
       "risks": [
         "尚無可用報價",
@@ -18177,7 +18174,7 @@
             {
               "label": "公司上市超過三年",
               "status": "pass",
-              "value": "853 筆價格觀察",
+              "value": "971 筆價格觀察",
               "period": "最新可得代理",
               "explanation": "追蹤標的已有至少三年公開日線觀察，作上市年限代理。",
               "sourceRefs": [
@@ -18967,7 +18964,7 @@
       "researchUniverseSource": "https://stock.wearn.com/b50.asp",
       "sourceUniverseNetLots": 957.0,
       "lowBaseGrowthStatus": "fail",
-      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z +0.16）；正向回歸 slope：通過（+0.2120 / 日）；三月營收年增 ≥ 15%：通過（+177.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.24）；正向回歸 slope：通過（+0.2620 / 日）；三月營收年增 ≥ 15%：通過（+177.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
       "lowBaseGrowthGates": [
         {
           "key": "priceEligible",
@@ -18980,14 +18977,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.16",
+          "value": "Z -0.24",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.2120 / 日",
+          "value": "+0.2620 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -19006,7 +19003,7 @@
         }
       ],
       "lowBaseQualityStatus": "fail",
-      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z +0.16）；正向回歸 slope：通過（+0.2120 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（3/5 通過）",
+      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.24）；正向回歸 slope：通過（+0.2620 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（3/5 通過）",
       "lowBaseQualityGates": [
         {
           "key": "priceEligible",
@@ -19019,14 +19016,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.16",
+          "value": "Z -0.24",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.2120 / 日",
+          "value": "+0.2620 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -19058,14 +19055,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.16",
+          "value": "Z -0.24",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.2120 / 日",
+          "value": "+0.2620 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -19093,14 +19090,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.16",
+          "value": "Z -0.24",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.2120 / 日",
+          "value": "+0.2620 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -19118,8 +19115,8 @@
           "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。"
         }
       ],
-      "lowBaseGrowthWatchStatus": "fail",
-      "lowBaseQualityWatchStatus": "fail",
+      "lowBaseGrowthWatchStatus": "pass",
+      "lowBaseQualityWatchStatus": "unknown",
       "revenueGrowthProxy": 1.77453640698528,
       "valuation": {
         "method": "zulu-peg",
@@ -39170,18 +39167,18 @@
       "asOf": "2026-09-11",
       "lastPrice": 20.399999618530273,
       "changePct": 0.009900933071139003,
-      "zScore": 0.046324001869129786,
-      "slope": 0.0006795236062970296,
+      "zScore": -0.2411567686777826,
+      "slope": 0.002559408793036095,
       "fiveLineStatus": "pass",
       "qualityStatus": "unknown",
       "growthStatus": "unknown",
       "liquidityStatus": "unknown",
       "dataStatus": "pass",
-      "signalState": "值得研究",
+      "signalState": "低位觀察",
       "entryReasons": [
         "尚無足夠條件形成正式候選理由",
         "成長代理：三月合計營收年增 +27.2%；正式營業利益成長仍待核對",
-        "價格描述：Adj Close 3.5 年 Z +0.05；未形成低位條件"
+        "低位代理：Adj Close 四年 Z -0.24、斜率 +0.0026；正式八週與品質條件仍待核對"
       ],
       "risks": [
         "尚無可用報價",
@@ -39219,7 +39216,7 @@
             {
               "label": "公司上市超過三年",
               "status": "pass",
-              "value": "853 筆價格觀察",
+              "value": "971 筆價格觀察",
               "period": "最新可得代理",
               "explanation": "追蹤標的已有至少三年公開日線觀察，作上市年限代理。",
               "sourceRefs": [
@@ -40009,7 +40006,7 @@
       "researchUniverseSource": "https://stock.wearn.com/b50.asp",
       "sourceUniverseNetLots": 325.0,
       "lowBaseGrowthStatus": "fail",
-      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z +0.05）；正向回歸 slope：通過（+0.0007 / 日）；三月營收年增 ≥ 15%：通過（+27.2%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.24）；正向回歸 slope：通過（+0.0026 / 日）；三月營收年增 ≥ 15%：通過（+27.2%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
       "lowBaseGrowthGates": [
         {
           "key": "priceEligible",
@@ -40022,14 +40019,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.05",
+          "value": "Z -0.24",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0007 / 日",
+          "value": "+0.0026 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -40048,7 +40045,7 @@
         }
       ],
       "lowBaseQualityStatus": "fail",
-      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z +0.05）；正向回歸 slope：通過（+0.0007 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（2/5 通過）",
+      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.24）；正向回歸 slope：通過（+0.0026 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（2/5 通過）",
       "lowBaseQualityGates": [
         {
           "key": "priceEligible",
@@ -40061,14 +40058,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.05",
+          "value": "Z -0.24",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0007 / 日",
+          "value": "+0.0026 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -40100,14 +40097,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.05",
+          "value": "Z -0.24",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0007 / 日",
+          "value": "+0.0026 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -40135,14 +40132,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.05",
+          "value": "Z -0.24",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0007 / 日",
+          "value": "+0.0026 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -40160,8 +40157,8 @@
           "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。"
         }
       ],
-      "lowBaseGrowthWatchStatus": "fail",
-      "lowBaseQualityWatchStatus": "fail",
+      "lowBaseGrowthWatchStatus": "pass",
+      "lowBaseQualityWatchStatus": "unknown",
       "revenueGrowthProxy": 0.2722342415074881,
       "valuation": {
         "method": "zulu-peg",
@@ -51201,18 +51198,18 @@
       "asOf": "2026-09-11",
       "lastPrice": 31.100000381469727,
       "changePct": -0.012698400588262649,
-      "zScore": 0.1281333530349779,
-      "slope": -0.00609210364191637,
+      "zScore": -0.3584356830024697,
+      "slope": 0.004403751068606632,
       "fiveLineStatus": "pass",
       "qualityStatus": "unknown",
       "growthStatus": "unknown",
       "liquidityStatus": "unknown",
       "dataStatus": "pass",
-      "signalState": "值得研究",
+      "signalState": "低位觀察",
       "entryReasons": [
         "尚無足夠條件形成正式候選理由",
         "成長代理：三月合計營收年增 +38.4%；正式營業利益成長仍待核對",
-        "價格描述：Adj Close 3.5 年 Z +0.13；未形成低位條件"
+        "低位代理：Adj Close 四年 Z -0.36、斜率 +0.0044；正式八週與品質條件仍待核對"
       ],
       "risks": [
         "尚無可用報價",
@@ -51250,7 +51247,7 @@
             {
               "label": "公司上市超過三年",
               "status": "pass",
-              "value": "853 筆價格觀察",
+              "value": "971 筆價格觀察",
               "period": "最新可得代理",
               "explanation": "追蹤標的已有至少三年公開日線觀察，作上市年限代理。",
               "sourceRefs": [
@@ -52040,7 +52037,7 @@
       "researchUniverseSource": "https://stock.wearn.com/b50.asp",
       "sourceUniverseNetLots": 240.0,
       "lowBaseGrowthStatus": "fail",
-      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z +0.13）；正向回歸 slope：未通過（-0.0061 / 日）；三月營收年增 ≥ 15%：通過（+38.4%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.36）；正向回歸 slope：通過（+0.0044 / 日）；三月營收年增 ≥ 15%：通過（+38.4%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
       "lowBaseGrowthGates": [
         {
           "key": "priceEligible",
@@ -52053,14 +52050,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.13",
+          "value": "Z -0.36",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
-          "status": "fail",
-          "value": "-0.0061 / 日",
+          "status": "pass",
+          "value": "+0.0044 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -52079,7 +52076,7 @@
         }
       ],
       "lowBaseQualityStatus": "fail",
-      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z +0.13）；正向回歸 slope：未通過（-0.0061 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（2/5 通過）",
+      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.36）；正向回歸 slope：通過（+0.0044 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（2/5 通過）",
       "lowBaseQualityGates": [
         {
           "key": "priceEligible",
@@ -52092,14 +52089,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.13",
+          "value": "Z -0.36",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
-          "status": "fail",
-          "value": "-0.0061 / 日",
+          "status": "pass",
+          "value": "+0.0044 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -52131,14 +52128,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.13",
+          "value": "Z -0.36",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
-          "status": "fail",
-          "value": "-0.0061 / 日",
+          "status": "pass",
+          "value": "+0.0044 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -52166,14 +52163,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z +0.13",
+          "value": "Z -0.36",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
-          "status": "fail",
-          "value": "-0.0061 / 日",
+          "status": "pass",
+          "value": "+0.0044 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -52191,8 +52188,8 @@
           "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。"
         }
       ],
-      "lowBaseGrowthWatchStatus": "fail",
-      "lowBaseQualityWatchStatus": "fail",
+      "lowBaseGrowthWatchStatus": "pass",
+      "lowBaseQualityWatchStatus": "unknown",
       "revenueGrowthProxy": 0.38414931414684217,
       "valuation": {
         "method": "zulu-peg",
@@ -65237,8 +65234,8 @@
       "asOf": "2026-09-11",
       "lastPrice": 279.5,
       "changePct": -0.014109347442680775,
-      "zScore": -1.6199449614706827,
-      "slope": 0.18989109848894836,
+      "zScore": -1.760737033848314,
+      "slope": 0.1952511248279184,
       "fiveLineStatus": "pass",
       "qualityStatus": "unknown",
       "growthStatus": "unknown",
@@ -65248,7 +65245,7 @@
       "entryReasons": [
         "尚無足夠條件形成正式候選理由",
         "成長代理：三月合計營收年增 +23.5%；正式營業利益成長仍待核對",
-        "低位代理：Adj Close 3.5 年 Z -1.62、斜率 +0.1899；正式八週與品質條件仍待核對"
+        "低位代理：Adj Close 四年 Z -1.76、斜率 +0.1953；正式八週與品質條件仍待核對"
       ],
       "risks": [
         "尚無可用報價",
@@ -65286,7 +65283,7 @@
             {
               "label": "公司上市超過三年",
               "status": "pass",
-              "value": "853 筆價格觀察",
+              "value": "971 筆價格觀察",
               "period": "最新可得代理",
               "explanation": "追蹤標的已有至少三年公開日線觀察，作上市年限代理。",
               "sourceRefs": [
@@ -66076,7 +66073,7 @@
       "researchUniverseSource": "https://stock.wearn.com/b50.asp",
       "sourceUniverseNetLots": 122.0,
       "lowBaseGrowthStatus": "pass",
-      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：通過（Z -1.62）；正向回歸 slope：通過（+0.1899 / 日）；三月營收年增 ≥ 15%：通過（+23.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：通過（Z -1.76）；正向回歸 slope：通過（+0.1953 / 日）；三月營收年增 ≥ 15%：通過（+23.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
       "lowBaseGrowthGates": [
         {
           "key": "priceEligible",
@@ -66089,14 +66086,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "pass",
-          "value": "Z -1.62",
+          "value": "Z -1.76",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.1899 / 日",
+          "value": "+0.1953 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -66115,7 +66112,7 @@
         }
       ],
       "lowBaseQualityStatus": "unknown",
-      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：通過（Z -1.62）；正向回歸 slope：通過（+0.1899 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（2/5 通過）",
+      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：通過（Z -1.76）；正向回歸 slope：通過（+0.1953 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（2/5 通過）",
       "lowBaseQualityGates": [
         {
           "key": "priceEligible",
@@ -66128,14 +66125,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "pass",
-          "value": "Z -1.62",
+          "value": "Z -1.76",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.1899 / 日",
+          "value": "+0.1953 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -66167,14 +66164,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "pass",
-          "value": "Z -1.62",
+          "value": "Z -1.76",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.1899 / 日",
+          "value": "+0.1953 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -66202,14 +66199,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "pass",
-          "value": "Z -1.62",
+          "value": "Z -1.76",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.1899 / 日",
+          "value": "+0.1953 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -71267,8 +71264,8 @@
       "asOf": "2026-09-11",
       "lastPrice": 59.400001525878906,
       "changePct": 0.02413795734273976,
-      "zScore": -0.14099279279216573,
-      "slope": 0.0231902539207424,
+      "zScore": -0.18666605047677395,
+      "slope": 0.02420282190177216,
       "fiveLineStatus": "pass",
       "qualityStatus": "unknown",
       "growthStatus": "unknown",
@@ -71278,7 +71275,7 @@
       "entryReasons": [
         "尚無足夠條件形成正式候選理由",
         "成長代理：三月合計營收年增 +56.2%；正式營業利益成長仍待核對",
-        "低位代理：Adj Close 3.5 年 Z -0.14、斜率 +0.0232；正式八週與品質條件仍待核對"
+        "低位代理：Adj Close 四年 Z -0.19、斜率 +0.0242；正式八週與品質條件仍待核對"
       ],
       "risks": [
         "尚無可用報價",
@@ -71316,7 +71313,7 @@
             {
               "label": "公司上市超過三年",
               "status": "pass",
-              "value": "853 筆價格觀察",
+              "value": "971 筆價格觀察",
               "period": "最新可得代理",
               "explanation": "追蹤標的已有至少三年公開日線觀察，作上市年限代理。",
               "sourceRefs": [
@@ -72106,7 +72103,7 @@
       "researchUniverseSource": "https://stock.wearn.com/b50.asp",
       "sourceUniverseNetLots": 102.0,
       "lowBaseGrowthStatus": "fail",
-      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.14）；正向回歸 slope：通過（+0.0232 / 日）；三月營收年增 ≥ 15%：通過（+56.2%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.19）；正向回歸 slope：通過（+0.0242 / 日）；三月營收年增 ≥ 15%：通過（+56.2%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
       "lowBaseGrowthGates": [
         {
           "key": "priceEligible",
@@ -72119,14 +72116,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z -0.14",
+          "value": "Z -0.19",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0232 / 日",
+          "value": "+0.0242 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -72145,7 +72142,7 @@
         }
       ],
       "lowBaseQualityStatus": "fail",
-      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.14）；正向回歸 slope：通過（+0.0232 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（2/5 通過）",
+      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.19）；正向回歸 slope：通過（+0.0242 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（2/5 通過）",
       "lowBaseQualityGates": [
         {
           "key": "priceEligible",
@@ -72158,14 +72155,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z -0.14",
+          "value": "Z -0.19",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0232 / 日",
+          "value": "+0.0242 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -72197,14 +72194,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z -0.14",
+          "value": "Z -0.19",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0232 / 日",
+          "value": "+0.0242 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -72232,14 +72229,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z -0.14",
+          "value": "Z -0.19",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0232 / 日",
+          "value": "+0.0242 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -73293,8 +73290,8 @@
       "asOf": "2026-09-11",
       "lastPrice": 69.5,
       "changePct": -0.015580715267639923,
-      "zScore": -0.5409101854576115,
-      "slope": 0.04797267240193979,
+      "zScore": -0.6920559185411623,
+      "slope": 0.05269973165411687,
       "fiveLineStatus": "pass",
       "qualityStatus": "unknown",
       "growthStatus": "unknown",
@@ -73304,7 +73301,7 @@
       "entryReasons": [
         "尚無足夠條件形成正式候選理由",
         "成長代理：三月合計營收年增 +16.8%；正式營業利益成長仍待核對",
-        "低位代理：Adj Close 3.5 年 Z -0.54、斜率 +0.0480；正式八週與品質條件仍待核對"
+        "低位代理：Adj Close 四年 Z -0.69、斜率 +0.0527；正式八週與品質條件仍待核對"
       ],
       "risks": [
         "尚無可用報價",
@@ -73342,7 +73339,7 @@
             {
               "label": "公司上市超過三年",
               "status": "pass",
-              "value": "853 筆價格觀察",
+              "value": "971 筆價格觀察",
               "period": "最新可得代理",
               "explanation": "追蹤標的已有至少三年公開日線觀察，作上市年限代理。",
               "sourceRefs": [
@@ -74132,7 +74129,7 @@
       "researchUniverseSource": "https://stock.wearn.com/b50.asp",
       "sourceUniverseNetLots": 101.0,
       "lowBaseGrowthStatus": "fail",
-      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.54）；正向回歸 slope：通過（+0.0480 / 日）；三月營收年增 ≥ 15%：通過（+16.8%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.69）；正向回歸 slope：通過（+0.0527 / 日）；三月營收年增 ≥ 15%：通過（+16.8%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
       "lowBaseGrowthGates": [
         {
           "key": "priceEligible",
@@ -74145,14 +74142,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z -0.54",
+          "value": "Z -0.69",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0480 / 日",
+          "value": "+0.0527 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -74171,7 +74168,7 @@
         }
       ],
       "lowBaseQualityStatus": "fail",
-      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.54）；正向回歸 slope：通過（+0.0480 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（2/5 通過）",
+      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：未通過（Z -0.69）；正向回歸 slope：通過（+0.0527 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（2/5 通過）",
       "lowBaseQualityGates": [
         {
           "key": "priceEligible",
@@ -74184,14 +74181,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z -0.54",
+          "value": "Z -0.69",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0480 / 日",
+          "value": "+0.0527 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -74223,14 +74220,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z -0.54",
+          "value": "Z -0.69",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0480 / 日",
+          "value": "+0.0527 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -74258,14 +74255,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "fail",
-          "value": "Z -0.54",
+          "value": "Z -0.69",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
           "status": "pass",
-          "value": "+0.0480 / 日",
+          "value": "+0.0527 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -82326,18 +82323,18 @@
       "asOf": "2026-09-11",
       "lastPrice": 196.5,
       "changePct": -0.005063291139240506,
-      "zScore": -1.2633826074035033,
-      "slope": -0.03181085682237959,
+      "zScore": -1.5254661236650418,
+      "slope": 0.04713297568587048,
       "fiveLineStatus": "pass",
       "qualityStatus": "unknown",
       "growthStatus": "unknown",
       "liquidityStatus": "unknown",
       "dataStatus": "pass",
-      "signalState": "值得研究",
+      "signalState": "低位觀察",
       "entryReasons": [
         "尚無足夠條件形成正式候選理由",
         "營收觀察：三月合計營收年增 -5.1%；正式營業利益成長仍待核對",
-        "價格描述：Adj Close 3.5 年 Z -1.26；未形成低位條件"
+        "低位代理：Adj Close 四年 Z -1.53、斜率 +0.0471；正式八週與品質條件仍待核對"
       ],
       "risks": [
         "尚無可用報價",
@@ -82375,7 +82372,7 @@
             {
               "label": "公司上市超過三年",
               "status": "pass",
-              "value": "853 筆價格觀察",
+              "value": "971 筆價格觀察",
               "period": "最新可得代理",
               "explanation": "追蹤標的已有至少三年公開日線觀察，作上市年限代理。",
               "sourceRefs": [
@@ -83165,7 +83162,7 @@
       "researchUniverseSource": "https://stock.wearn.com/b50.asp",
       "sourceUniverseNetLots": 70.0,
       "lowBaseGrowthStatus": "fail",
-      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：通過（Z -1.26）；正向回歸 slope：未通過（-0.0318 / 日）；三月營收年增 ≥ 15%：未通過（-5.1%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+      "lowBaseGrowthReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：通過（Z -1.53）；正向回歸 slope：通過（+0.0471 / 日）；三月營收年增 ≥ 15%：未通過（-5.1%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
       "lowBaseGrowthGates": [
         {
           "key": "priceEligible",
@@ -83178,14 +83175,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "pass",
-          "value": "Z -1.26",
+          "value": "Z -1.53",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
-          "status": "fail",
-          "value": "-0.0318 / 日",
+          "status": "pass",
+          "value": "+0.0471 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -83203,8 +83200,8 @@
           "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
         }
       ],
-      "lowBaseQualityStatus": "fail",
-      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：通過（Z -1.26）；正向回歸 slope：未通過（-0.0318 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（3/5 通過）",
+      "lowBaseQualityStatus": "unknown",
+      "lowBaseQualityReason": "價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ -1：通過（Z -1.53）；正向回歸 slope：通過（+0.0471 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：未知（3/5 通過）",
       "lowBaseQualityGates": [
         {
           "key": "priceEligible",
@@ -83217,14 +83214,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "pass",
-          "value": "Z -1.26",
+          "value": "Z -1.53",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
-          "status": "fail",
-          "value": "-0.0318 / 日",
+          "status": "pass",
+          "value": "+0.0471 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -83242,8 +83239,8 @@
           "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。"
         }
       ],
-      "lowBaseStatus": "fail",
-      "lowBaseReason": "成長路徑：fail；品質路徑：fail",
+      "lowBaseStatus": "unknown",
+      "lowBaseReason": "成長路徑：fail；品質路徑：unknown",
       "lowBaseGates": [
         {
           "key": "priceEligible",
@@ -83256,14 +83253,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "pass",
-          "value": "Z -1.26",
+          "value": "Z -1.53",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
-          "status": "fail",
-          "value": "-0.0318 / 日",
+          "status": "pass",
+          "value": "+0.0471 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -83291,14 +83288,14 @@
           "key": "lowZ",
           "label": "3.5年 Z ≤ -1",
           "status": "pass",
-          "value": "Z -1.26",
+          "value": "Z -1.53",
           "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
         },
         {
           "key": "positiveSlope",
           "label": "正向回歸 slope",
-          "status": "fail",
-          "value": "-0.0318 / 日",
+          "status": "pass",
+          "value": "+0.0471 / 日",
           "reason": "回歸斜率需大於 0；這是策略計算條件。"
         },
         {
@@ -83317,7 +83314,7 @@
         }
       ],
       "lowBaseGrowthWatchStatus": "fail",
-      "lowBaseQualityWatchStatus": "fail",
+      "lowBaseQualityWatchStatus": "unknown",
       "revenueGrowthProxy": -0.05116268514859944
     },
     {
@@ -99458,23 +99455,12 @@
         "valuePrice075": 8475.936677072259,
         "valuePrice066": 7458.824275823587,
         "currentPeg": 0.08261312612292664,
-        "currentPe": 14.66,
-        "currentEps": 22.95361527967258,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 1.77453640698528,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": true,
-        "priceBasis": "adjusted",
-        "zScore": 0.16181952576995356,
-        "slope": 0.21201584048158692,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
         "rank": 41,
@@ -99491,23 +99477,12 @@
         "valuePrice075": 56.13442239816068,
         "valuePrice066": 49.3982917103814,
         "currentPeg": 0.3467601998825097,
-        "currentPe": 9.44,
-        "currentEps": 2.1610169087426137,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.2722342415074881,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": true,
-        "priceBasis": "adjusted",
-        "zScore": 0.046324001869129786,
-        "slope": 0.0006795236062970296,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
         "rank": 53,
@@ -99524,23 +99499,12 @@
         "valuePrice075": 67.00361630754455,
         "valuePrice066": 58.9631823506392,
         "currentPeg": 0.4818438903401114,
-        "currentPe": 18.51,
-        "currentEps": 1.6801729001334265,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.38414931414684217,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
-        "priceBasis": "adjusted",
-        "zScore": 0.1281333530349779,
-        "slope": -0.00609210364191637,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
         "rank": 69,
@@ -99557,23 +99521,12 @@
         "valuePrice075": 437.9739539693368,
         "valuePrice066": 385.4170794930164,
         "currentPeg": 0.5912991466792359,
-        "currentPe": 13.92,
-        "currentEps": 20.07902298850575,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.23541383541943842,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
-        "priceBasis": "adjusted",
-        "zScore": -1.6199449614706827,
-        "slope": 0.18989109848894836,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
         "rank": 76,
@@ -99590,23 +99543,12 @@
         "valuePrice075": 292.0800360681618,
         "valuePrice066": 257.0304317399824,
         "currentPeg": 0.23820212648257752,
-        "currentPe": 13.38,
-        "currentEps": 4.439461997449843,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.5617078318139462,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": true,
-        "priceBasis": "adjusted",
-        "zScore": -0.14099279279216573,
-        "slope": 0.0231902539207424,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       }
     ],
     "growth": [
@@ -99624,23 +99566,12 @@
         "valuePrice075": 8475.936677072259,
         "valuePrice066": 7458.824275823587,
         "currentPeg": 0.08261312612292664,
-        "currentPe": 14.66,
-        "currentEps": 22.95361527967258,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 1.77453640698528,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": true,
-        "priceBasis": "adjusted",
-        "zScore": 0.16181952576995356,
-        "slope": 0.21201584048158692,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
         "rank": 17,
@@ -99656,23 +99587,12 @@
         "valuePrice075": 292.0800360681618,
         "valuePrice066": 257.0304317399824,
         "currentPeg": 0.23820212648257752,
-        "currentPe": 13.38,
-        "currentEps": 4.439461997449843,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.5617078318139462,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": true,
-        "priceBasis": "adjusted",
-        "zScore": -0.14099279279216573,
-        "slope": 0.0231902539207424,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
         "rank": 34,
@@ -99688,23 +99608,12 @@
         "valuePrice075": 67.00361630754455,
         "valuePrice066": 58.9631823506392,
         "currentPeg": 0.4818438903401114,
-        "currentPe": 18.51,
-        "currentEps": 1.6801729001334265,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.38414931414684217,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
-        "priceBasis": "adjusted",
-        "zScore": 0.1281333530349779,
-        "slope": -0.00609210364191637,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
         "rank": 45,
@@ -99720,23 +99629,12 @@
         "valuePrice075": 56.13442239816068,
         "valuePrice066": 49.3982917103814,
         "currentPeg": 0.3467601998825097,
-        "currentPe": 9.44,
-        "currentEps": 2.1610169087426137,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.2722342415074881,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": true,
-        "priceBasis": "adjusted",
-        "zScore": 0.046324001869129786,
-        "slope": 0.0006795236062970296,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
         "rank": 49,
@@ -99752,23 +99650,12 @@
         "valuePrice075": 437.9739539693368,
         "valuePrice066": 385.4170794930164,
         "currentPeg": 0.5912991466792359,
-        "currentPe": 13.92,
-        "currentEps": 20.07902298850575,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.23541383541943842,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
-        "priceBasis": "adjusted",
-        "zScore": -1.6199449614706827,
-        "slope": 0.18989109848894836,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       }
     ],
     "lowPosition": [
@@ -99777,64 +99664,105 @@
         "code": "3413",
         "name": "京鼎",
         "sector": "",
-        "value": -1.6199449614706827,
+        "value": -1.760737033848314,
         "valueLabel": "",
         "status": "pass",
-        "reason": "Z -1.62 ≤ 0；低位代理，完整歷史條件仍待驗證",
+        "reason": "Z -1.76 ≤ 0；低位代理，完整歷史條件仍待驗證",
         "currentPrice": 279.5,
         "fairPrice": 583.9652719591157,
         "valuePrice075": 437.9739539693368,
         "valuePrice066": 385.4170794930164,
         "currentPeg": 0.5912991466792359,
-        "currentPe": 13.92,
-        "currentEps": 20.07902298850575,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.23541383541943842,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
-        "priceBasis": "adjusted",
-        "zScore": -1.6199449614706827,
-        "slope": 0.18989109848894836,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
-        "rank": 3,
+        "rank": 4,
+        "code": "2353",
+        "name": "宏碁",
+        "sector": "",
+        "value": -0.3584356830024697,
+        "valueLabel": "",
+        "status": "unknown",
+        "reason": "Z -0.36 ≤ 0；低位代理，完整歷史條件仍待驗證",
+        "currentPrice": 31.100000381469727,
+        "fairPrice": 89.33815507672605,
+        "valuePrice075": 67.00361630754455,
+        "valuePrice066": 58.9631823506392,
+        "currentPeg": 0.4818438903401114,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.38414931414684217,
+        "valuationGrowthMethod": "three_month_revenue_proxy",
+        "valuationGrowthMethodLabel": "三月營收成長代理",
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
+      },
+      {
+        "rank": 5,
+        "code": "2610",
+        "name": "華航",
+        "sector": "",
+        "value": -0.2411567686777826,
+        "valueLabel": "",
+        "status": "unknown",
+        "reason": "Z -0.24 ≤ 0；低位代理，完整歷史條件仍待驗證",
+        "currentPrice": 20.399999618530273,
+        "fairPrice": 74.8458965308809,
+        "valuePrice075": 56.13442239816068,
+        "valuePrice066": 49.3982917103814,
+        "currentPeg": 0.3467601998825097,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.2722342415074881,
+        "valuationGrowthMethod": "three_month_revenue_proxy",
+        "valuationGrowthMethodLabel": "三月營收成長代理",
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
+      },
+      {
+        "rank": 6,
+        "code": "2382",
+        "name": "廣達",
+        "sector": "",
+        "value": -0.23715269959985064,
+        "valueLabel": "",
+        "status": "unknown",
+        "reason": "Z -0.24 ≤ 0；低位代理，完整歷史條件仍待驗證",
+        "currentPrice": 336.5,
+        "fairPrice": 11301.24890276301,
+        "valuePrice075": 8475.936677072259,
+        "valuePrice066": 7458.824275823587,
+        "currentPeg": 0.08261312612292664,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 1.77453640698528,
+        "valuationGrowthMethod": "three_month_revenue_proxy",
+        "valuationGrowthMethodLabel": "三月營收成長代理",
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
+      },
+      {
+        "rank": 7,
         "code": "2609",
         "name": "陽明",
         "sector": "",
-        "value": -0.14099279279216573,
+        "value": -0.18666605047677395,
         "valueLabel": "",
         "status": "unknown",
-        "reason": "Z -0.14 ≤ 0；低位代理，完整歷史條件仍待驗證",
+        "reason": "Z -0.19 ≤ 0；低位代理，完整歷史條件仍待驗證",
         "currentPrice": 59.400001525878906,
         "fairPrice": 389.44004809088244,
         "valuePrice075": 292.0800360681618,
         "valuePrice066": 257.0304317399824,
         "currentPeg": 0.23820212648257752,
-        "currentPe": 13.38,
-        "currentEps": 4.439461997449843,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.5617078318139462,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": true,
-        "priceBasis": "adjusted",
-        "zScore": -0.14099279279216573,
-        "slope": 0.0231902539207424,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       }
     ],
     "lowBase": [
@@ -99843,7 +99771,7 @@
         "code": "3413",
         "name": "京鼎",
         "sector": "",
-        "value": -1.6199449614706827,
+        "value": -1.760737033848314,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -99861,14 +99789,14 @@
             "key": "lowZ",
             "label": "3.5年 Z ≤ 0",
             "status": "pass",
-            "value": "Z -1.62",
+            "value": "Z -1.76",
             "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
           },
           {
             "key": "positiveSlope",
             "label": "正向回歸 slope",
             "status": "pass",
-            "value": "+0.1899 / 日",
+            "value": "+0.1953 / 日",
             "reason": "回歸斜率需大於 0；這是策略計算條件。"
           },
           {
@@ -99886,36 +99814,25 @@
             "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
           }
         ],
-        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -1.62）；正向回歸 slope：通過（+0.1899 / 日）；三月營收年增 ≥ 15%：通過（+23.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -1.76）；正向回歸 slope：通過（+0.1953 / 日）；三月營收年增 ≥ 15%：通過（+23.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
         "currentPrice": 279.5,
         "fairPrice": 583.9652719591157,
         "valuePrice075": 437.9739539693368,
         "valuePrice066": 385.4170794930164,
         "currentPeg": 0.5912991466792359,
-        "currentPe": 13.92,
-        "currentEps": 20.07902298850575,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.23541383541943842,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
-        "priceBasis": "adjusted",
-        "zScore": -1.6199449614706827,
-        "slope": 0.18989109848894836,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
-        "rank": 3,
-        "code": "2609",
-        "name": "陽明",
+        "rank": 4,
+        "code": "2353",
+        "name": "宏碁",
         "sector": "",
-        "value": -0.14099279279216573,
+        "value": -0.3584356830024697,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -99933,14 +99850,211 @@
             "key": "lowZ",
             "label": "3.5年 Z ≤ 0",
             "status": "pass",
-            "value": "Z -0.14",
+            "value": "Z -0.36",
             "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
           },
           {
             "key": "positiveSlope",
             "label": "正向回歸 slope",
             "status": "pass",
-            "value": "+0.0232 / 日",
+            "value": "+0.0044 / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。"
+          },
+          {
+            "key": "growthProxy",
+            "label": "三月營收年增 ≥ 15%",
+            "status": "pass",
+            "value": "+38.4%",
+            "reason": "三月合計營收年增代理；不能替代正式營業利益成長。"
+          },
+          {
+            "key": "ttmOperatingProfitNonNegative",
+            "label": "TTM 營業利益年增不負（可選）",
+            "status": "not_applicable",
+            "value": "未提供",
+            "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
+          }
+        ],
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.36）；正向回歸 slope：通過（+0.0044 / 日）；三月營收年增 ≥ 15%：通過（+38.4%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "currentPrice": 31.100000381469727,
+        "fairPrice": 89.33815507672605,
+        "valuePrice075": 67.00361630754455,
+        "valuePrice066": 58.9631823506392,
+        "currentPeg": 0.4818438903401114,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.38414931414684217,
+        "valuationGrowthMethod": "three_month_revenue_proxy",
+        "valuationGrowthMethodLabel": "三月營收成長代理",
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
+      },
+      {
+        "rank": 5,
+        "code": "2610",
+        "name": "華航",
+        "sector": "",
+        "value": -0.2411567686777826,
+        "valueLabel": "",
+        "status": "pass",
+        "proxy": true,
+        "evidenceLevel": "proxy",
+        "route": "lowBase",
+        "gates": [
+          {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": "pass",
+            "value": "調整後價格回歸可用",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。"
+          },
+          {
+            "key": "lowZ",
+            "label": "3.5年 Z ≤ 0",
+            "status": "pass",
+            "value": "Z -0.24",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
+          },
+          {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": "pass",
+            "value": "+0.0026 / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。"
+          },
+          {
+            "key": "growthProxy",
+            "label": "三月營收年增 ≥ 15%",
+            "status": "pass",
+            "value": "+27.2%",
+            "reason": "三月合計營收年增代理；不能替代正式營業利益成長。"
+          },
+          {
+            "key": "ttmOperatingProfitNonNegative",
+            "label": "TTM 營業利益年增不負（可選）",
+            "status": "not_applicable",
+            "value": "未提供",
+            "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
+          }
+        ],
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.24）；正向回歸 slope：通過（+0.0026 / 日）；三月營收年增 ≥ 15%：通過（+27.2%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "currentPrice": 20.399999618530273,
+        "fairPrice": 74.8458965308809,
+        "valuePrice075": 56.13442239816068,
+        "valuePrice066": 49.3982917103814,
+        "currentPeg": 0.3467601998825097,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.2722342415074881,
+        "valuationGrowthMethod": "three_month_revenue_proxy",
+        "valuationGrowthMethodLabel": "三月營收成長代理",
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
+      },
+      {
+        "rank": 6,
+        "code": "2382",
+        "name": "廣達",
+        "sector": "",
+        "value": -0.23715269959985064,
+        "valueLabel": "",
+        "status": "pass",
+        "proxy": true,
+        "evidenceLevel": "proxy",
+        "route": "lowBase",
+        "gates": [
+          {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": "pass",
+            "value": "調整後價格回歸可用",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。"
+          },
+          {
+            "key": "lowZ",
+            "label": "3.5年 Z ≤ 0",
+            "status": "pass",
+            "value": "Z -0.24",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
+          },
+          {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": "pass",
+            "value": "+0.2620 / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。"
+          },
+          {
+            "key": "growthProxy",
+            "label": "三月營收年增 ≥ 15%",
+            "status": "pass",
+            "value": "+177.5%",
+            "reason": "三月合計營收年增代理；不能替代正式營業利益成長。"
+          },
+          {
+            "key": "ttmOperatingProfitNonNegative",
+            "label": "TTM 營業利益年增不負（可選）",
+            "status": "not_applicable",
+            "value": "未提供",
+            "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
+          },
+          {
+            "key": "qualityAnchors",
+            "label": "最新年度淨利與 CFO > 0",
+            "status": "unknown",
+            "value": "必要錨點資料不足",
+            "reason": "淨利與營業現金流是低基期品質路徑必要錨點；缺資料保持 unknown。"
+          },
+          {
+            "key": "qualityProxy",
+            "label": "五項品質代理至少 4/5",
+            "status": "pass",
+            "value": "3/5 通過",
+            "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。"
+          }
+        ],
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.24）；正向回歸 slope：通過（+0.2620 / 日）；三月營收年增 ≥ 15%：通過（+177.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）；另一路徑亦通過",
+        "currentPrice": 336.5,
+        "fairPrice": 11301.24890276301,
+        "valuePrice075": 8475.936677072259,
+        "valuePrice066": 7458.824275823587,
+        "currentPeg": 0.08261312612292664,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 1.77453640698528,
+        "valuationGrowthMethod": "three_month_revenue_proxy",
+        "valuationGrowthMethodLabel": "三月營收成長代理",
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
+      },
+      {
+        "rank": 7,
+        "code": "2609",
+        "name": "陽明",
+        "sector": "",
+        "value": -0.18666605047677395,
+        "valueLabel": "",
+        "status": "pass",
+        "proxy": true,
+        "evidenceLevel": "proxy",
+        "route": "lowBase",
+        "gates": [
+          {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": "pass",
+            "value": "調整後價格回歸可用",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。"
+          },
+          {
+            "key": "lowZ",
+            "label": "3.5年 Z ≤ 0",
+            "status": "pass",
+            "value": "Z -0.19",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
+          },
+          {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": "pass",
+            "value": "+0.0242 / 日",
             "reason": "回歸斜率需大於 0；這是策略計算條件。"
           },
           {
@@ -99958,29 +100072,18 @@
             "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
           }
         ],
-        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.14）；正向回歸 slope：通過（+0.0232 / 日）；三月營收年增 ≥ 15%：通過（+56.2%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.19）；正向回歸 slope：通過（+0.0242 / 日）；三月營收年增 ≥ 15%：通過（+56.2%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
         "currentPrice": 59.400001525878906,
         "fairPrice": 389.44004809088244,
         "valuePrice075": 292.0800360681618,
         "valuePrice066": 257.0304317399824,
         "currentPeg": 0.23820212648257752,
-        "currentPe": 13.38,
-        "currentEps": 4.439461997449843,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.5617078318139462,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": true,
-        "priceBasis": "adjusted",
-        "zScore": -0.14099279279216573,
-        "slope": 0.0231902539207424,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       }
     ],
     "lowBaseGrowth": [
@@ -99989,7 +100092,7 @@
         "code": "3413",
         "name": "京鼎",
         "sector": "",
-        "value": -1.6199449614706827,
+        "value": -1.760737033848314,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -100007,14 +100110,14 @@
             "key": "lowZ",
             "label": "3.5年 Z ≤ 0",
             "status": "pass",
-            "value": "Z -1.62",
+            "value": "Z -1.76",
             "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
           },
           {
             "key": "positiveSlope",
             "label": "正向回歸 slope",
             "status": "pass",
-            "value": "+0.1899 / 日",
+            "value": "+0.1953 / 日",
             "reason": "回歸斜率需大於 0；這是策略計算條件。"
           },
           {
@@ -100032,36 +100135,25 @@
             "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
           }
         ],
-        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -1.62）；正向回歸 slope：通過（+0.1899 / 日）；三月營收年增 ≥ 15%：通過（+23.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -1.76）；正向回歸 slope：通過（+0.1953 / 日）；三月營收年增 ≥ 15%：通過（+23.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
         "currentPrice": 279.5,
         "fairPrice": 583.9652719591157,
         "valuePrice075": 437.9739539693368,
         "valuePrice066": 385.4170794930164,
         "currentPeg": 0.5912991466792359,
-        "currentPe": 13.92,
-        "currentEps": 20.07902298850575,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.23541383541943842,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
-        "priceBasis": "adjusted",
-        "zScore": -1.6199449614706827,
-        "slope": 0.18989109848894836,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       },
       {
         "rank": 3,
-        "code": "2609",
-        "name": "陽明",
+        "code": "2353",
+        "name": "宏碁",
         "sector": "",
-        "value": -0.14099279279216573,
+        "value": -0.3584356830024697,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -100079,14 +100171,197 @@
             "key": "lowZ",
             "label": "3.5年 Z ≤ 0",
             "status": "pass",
-            "value": "Z -0.14",
+            "value": "Z -0.36",
             "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
           },
           {
             "key": "positiveSlope",
             "label": "正向回歸 slope",
             "status": "pass",
-            "value": "+0.0232 / 日",
+            "value": "+0.0044 / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。"
+          },
+          {
+            "key": "growthProxy",
+            "label": "三月營收年增 ≥ 15%",
+            "status": "pass",
+            "value": "+38.4%",
+            "reason": "三月合計營收年增代理；不能替代正式營業利益成長。"
+          },
+          {
+            "key": "ttmOperatingProfitNonNegative",
+            "label": "TTM 營業利益年增不負（可選）",
+            "status": "not_applicable",
+            "value": "未提供",
+            "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
+          }
+        ],
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.36）；正向回歸 slope：通過（+0.0044 / 日）；三月營收年增 ≥ 15%：通過（+38.4%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "currentPrice": 31.100000381469727,
+        "fairPrice": 89.33815507672605,
+        "valuePrice075": 67.00361630754455,
+        "valuePrice066": 58.9631823506392,
+        "currentPeg": 0.4818438903401114,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.38414931414684217,
+        "valuationGrowthMethod": "three_month_revenue_proxy",
+        "valuationGrowthMethodLabel": "三月營收成長代理",
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
+      },
+      {
+        "rank": 4,
+        "code": "2610",
+        "name": "華航",
+        "sector": "",
+        "value": -0.2411567686777826,
+        "valueLabel": "",
+        "status": "pass",
+        "proxy": true,
+        "evidenceLevel": "proxy",
+        "route": "lowBaseGrowth",
+        "gates": [
+          {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": "pass",
+            "value": "調整後價格回歸可用",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。"
+          },
+          {
+            "key": "lowZ",
+            "label": "3.5年 Z ≤ 0",
+            "status": "pass",
+            "value": "Z -0.24",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
+          },
+          {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": "pass",
+            "value": "+0.0026 / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。"
+          },
+          {
+            "key": "growthProxy",
+            "label": "三月營收年增 ≥ 15%",
+            "status": "pass",
+            "value": "+27.2%",
+            "reason": "三月合計營收年增代理；不能替代正式營業利益成長。"
+          },
+          {
+            "key": "ttmOperatingProfitNonNegative",
+            "label": "TTM 營業利益年增不負（可選）",
+            "status": "not_applicable",
+            "value": "未提供",
+            "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
+          }
+        ],
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.24）；正向回歸 slope：通過（+0.0026 / 日）；三月營收年增 ≥ 15%：通過（+27.2%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "currentPrice": 20.399999618530273,
+        "fairPrice": 74.8458965308809,
+        "valuePrice075": 56.13442239816068,
+        "valuePrice066": 49.3982917103814,
+        "currentPeg": 0.3467601998825097,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.2722342415074881,
+        "valuationGrowthMethod": "three_month_revenue_proxy",
+        "valuationGrowthMethodLabel": "三月營收成長代理",
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
+      },
+      {
+        "rank": 5,
+        "code": "2382",
+        "name": "廣達",
+        "sector": "",
+        "value": -0.23715269959985064,
+        "valueLabel": "",
+        "status": "pass",
+        "proxy": true,
+        "evidenceLevel": "proxy",
+        "route": "lowBaseGrowth",
+        "gates": [
+          {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": "pass",
+            "value": "調整後價格回歸可用",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。"
+          },
+          {
+            "key": "lowZ",
+            "label": "3.5年 Z ≤ 0",
+            "status": "pass",
+            "value": "Z -0.24",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
+          },
+          {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": "pass",
+            "value": "+0.2620 / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。"
+          },
+          {
+            "key": "growthProxy",
+            "label": "三月營收年增 ≥ 15%",
+            "status": "pass",
+            "value": "+177.5%",
+            "reason": "三月合計營收年增代理；不能替代正式營業利益成長。"
+          },
+          {
+            "key": "ttmOperatingProfitNonNegative",
+            "label": "TTM 營業利益年增不負（可選）",
+            "status": "not_applicable",
+            "value": "未提供",
+            "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
+          }
+        ],
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.24）；正向回歸 slope：通過（+0.2620 / 日）；三月營收年增 ≥ 15%：通過（+177.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "currentPrice": 336.5,
+        "fairPrice": 11301.24890276301,
+        "valuePrice075": 8475.936677072259,
+        "valuePrice066": 7458.824275823587,
+        "currentPeg": 0.08261312612292664,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 1.77453640698528,
+        "valuationGrowthMethod": "three_month_revenue_proxy",
+        "valuationGrowthMethodLabel": "三月營收成長代理",
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
+      },
+      {
+        "rank": 6,
+        "code": "2609",
+        "name": "陽明",
+        "sector": "",
+        "value": -0.18666605047677395,
+        "valueLabel": "",
+        "status": "pass",
+        "proxy": true,
+        "evidenceLevel": "proxy",
+        "route": "lowBaseGrowth",
+        "gates": [
+          {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": "pass",
+            "value": "調整後價格回歸可用",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。"
+          },
+          {
+            "key": "lowZ",
+            "label": "3.5年 Z ≤ 0",
+            "status": "pass",
+            "value": "Z -0.19",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
+          },
+          {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": "pass",
+            "value": "+0.0242 / 日",
             "reason": "回歸斜率需大於 0；這是策略計算條件。"
           },
           {
@@ -100104,32 +100379,83 @@
             "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
           }
         ],
-        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.14）；正向回歸 slope：通過（+0.0232 / 日）；三月營收年增 ≥ 15%：通過（+56.2%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.19）；正向回歸 slope：通過（+0.0242 / 日）；三月營收年增 ≥ 15%：通過（+56.2%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
         "currentPrice": 59.400001525878906,
         "fairPrice": 389.44004809088244,
         "valuePrice075": 292.0800360681618,
         "valuePrice066": 257.0304317399824,
         "currentPeg": 0.23820212648257752,
-        "currentPe": 13.38,
-        "currentEps": 4.439461997449843,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
         "valuationGrowthInput": 0.5617078318139462,
         "valuationGrowthMethod": "three_month_revenue_proxy",
         "valuationGrowthMethodLabel": "三月營收成長代理",
-        "valuationEvidenceLevel": "proxy",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": true,
-        "priceBasis": "adjusted",
-        "zScore": -0.14099279279216573,
-        "slope": 0.0231902539207424,
-        "regressionStart": "2023-03-13",
-        "regressionEnd": "2026-09-11",
-        "regressionObservations": 853,
-        "regressionExpectedObservations": 853
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
       }
     ],
-    "lowBaseQuality": []
+    "lowBaseQuality": [
+      {
+        "rank": 2,
+        "code": "2382",
+        "name": "廣達",
+        "sector": "",
+        "value": -0.23715269959985064,
+        "valueLabel": "",
+        "status": "unknown",
+        "proxy": true,
+        "evidenceLevel": "proxy",
+        "route": "lowBaseQuality",
+        "gates": [
+          {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": "pass",
+            "value": "調整後價格回歸可用",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。"
+          },
+          {
+            "key": "lowZ",
+            "label": "3.5年 Z ≤ 0",
+            "status": "pass",
+            "value": "Z -0.24",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
+          },
+          {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": "pass",
+            "value": "+0.2620 / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。"
+          },
+          {
+            "key": "qualityAnchors",
+            "label": "最新年度淨利與 CFO > 0",
+            "status": "unknown",
+            "value": "必要錨點資料不足",
+            "reason": "淨利與營業現金流是低基期品質路徑必要錨點；缺資料保持 unknown。"
+          },
+          {
+            "key": "qualityProxy",
+            "label": "五項品質代理至少 4/5",
+            "status": "pass",
+            "value": "3/5 通過",
+            "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。"
+          }
+        ],
+        "reason": "投信十日淨買超排序未知（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.24）；正向回歸 slope：通過（+0.2620 / 日）；最新年度淨利與 CFO > 0：未知（必要錨點資料不足）；五項品質代理至少 4/5：通過（3/5 通過）",
+        "currentPrice": 336.5,
+        "fairPrice": 11301.24890276301,
+        "valuePrice075": 8475.936677072259,
+        "valuePrice066": 7458.824275823587,
+        "currentPeg": 0.08261312612292664,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 1.77453640698528,
+        "valuationGrowthMethod": "three_month_revenue_proxy",
+        "valuationGrowthMethodLabel": "三月營收成長代理",
+        "valuationFormulaVersion": "zulu-peg-eps-growth-v2"
+      }
+    ]
   },
   "research": {
     "status": "not_evaluable",
@@ -100139,25 +100465,18 @@
     "periods": [],
     "proxyReadiness": {
       "label": "研究代理可用，正式績效不可評估",
-      "candidateCount": 52,
+      "candidateCount": 53,
       "formalEntryCount": 0,
       "explanation": "代理候選只由已取得的價格、投信與營收證據排序；沒有 point-in-time 母體、成本、公司行動與樣本外回測，不宣稱策略績效。"
     }
   },
-  "funnel": {
-    "version": "funnel-v1",
-    "universe": 100,
-    "priceComplete": 7,
-    "valuationComplete": 6,
-    "pegCandidates": 5,
-    "strategyCandidates": {
-      "trust": 5,
-      "growth": 5,
-      "lowPosition": 2
-    },
-    "formalValuations": 0,
-    "proxyValuations": 6,
-    "instrumentPolicy": "peg-strategies-exclude-non-common-codes-v1",
-    "instrumentExcluded": 4
+  "inputHash": "14b776918d0cfc7298ca7fed9aa023a00ac52796177109dc3c0f3e9fa1679c3f",
+  "baselineRunId": "enriched-20260918-220726-cd45582658",
+  "enrichment": {
+    "adjustedPriceSource": "yfinance Adj Close when available; Yahoo chart fallback is tagged",
+    "fundamentalSource": "yfinance:Ticker.financials/cashflow/balance_sheet",
+    "adjustedStocks": 7,
+    "trackedStocks": 100,
+    "errorsByCode": {}
   }
 }
