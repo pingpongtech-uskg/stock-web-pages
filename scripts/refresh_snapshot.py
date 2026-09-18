@@ -58,6 +58,7 @@ from pipeline.yahoo_client import (  # noqa: E402
     fetch_fundamental_proxies,
 )
 from pipeline.twse_public import SOURCE as TWSE_SOURCE, build_health_inputs  # noqa: E402
+from pipeline.valuation import calculate_zulu_valuation  # noqa: E402
 
 
 TAIPEI = ZoneInfo("Asia/Taipei")
@@ -208,6 +209,40 @@ def _current_adjusted(detail: dict[str, Any]) -> float | None:
         if math.isfinite(number) and number > 0:
             return number
     return None
+
+
+def _valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
+    """Build the same Zulu valuation from known published inputs."""
+    health_inputs = detail.get("healthInputs")
+    valuation_current = health_inputs.get("valuationCurrent") if isinstance(health_inputs, dict) else None
+    if not isinstance(valuation_current, dict):
+        valuation_current = {}
+    revenue_growth = detail.get("revenueGrowth3m")
+    if revenue_growth is None:
+        revenue_growth = detail.get("revenueGrowthProxy")
+    return calculate_zulu_valuation(
+        current_price=_current_price(detail),
+        current_pe=valuation_current.get("pe"),
+        dividend_yield_pct=valuation_current.get("dividendYield"),
+        revenue_growth=revenue_growth,
+    )
+
+
+def _attach_valuation(rows: list[dict[str, Any]], detail_by_code: dict[str, dict[str, Any]]) -> None:
+    for row in rows:
+        valuation = detail_by_code.get(str(row.get("code")), {}).get("valuation")
+        if not isinstance(valuation, dict):
+            continue
+        row.update(
+            {
+                "currentPrice": valuation.get("current_price"),
+                "fairPrice": valuation.get("fair_price"),
+                "valuationMethod": valuation.get("method"),
+                "valuationGrowthInput": valuation.get("growth_input"),
+                "valuationDividendYieldPct": valuation.get("dividend_yield_pct"),
+                "valuationFormulaVersion": valuation.get("formula_version"),
+            }
+        )
 
 
 def _summary(detail: dict[str, Any]) -> dict[str, Any]:
@@ -634,6 +669,13 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         errors_by_code[str(next_detail.get("code"))] = errors
         used_sources = merge_refs(used_sources, next_detail.get("sourceRefs"))
 
+    for detail in enriched:
+        valuation = _valuation_from_detail(detail)
+        if valuation is None:
+            detail.pop("valuation", None)
+        else:
+            detail["valuation"] = valuation
+
     # A is the source-published research universe.  Preserve its rank as an
     # input label for every strategy; do not re-rank the already selected 100
     # symbols and call that result the universe.
@@ -910,6 +952,17 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         ]
         current["reason"] = f"{current.get('reason', '')}；另一路徑亦通過"
     low_base_rank = rank_low_base_rows(list(low_base_by_code.values()), institutional_rank_by_code)
+    for ranking in (
+        trust_rank,
+        growth_rank,
+        low_rank,
+        strict_low_base_growth_rank,
+        strict_low_base_quality_rank,
+        low_base_growth_rank,
+        low_base_quality_rank,
+        low_base_rank,
+    ):
+        _attach_valuation(ranking, detail_by_code)
     if formal_entries == 0:
         formal_entries = sum(1 for detail in enriched if detail.get("signalState") == "進場觀察")
     if proxy_candidates == 0:

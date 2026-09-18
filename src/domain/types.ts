@@ -23,6 +23,21 @@ export interface PricePoint {
   bands: Record<'-2' | '-1' | '0' | '1' | '2', number | null>
 }
 
+export interface ValuationSummary {
+  method: 'zulu'
+  current_price: number
+  fair_price: number
+  current_pe: number
+  growth_input: number
+  growth_input_kind: 'eps' | 'revenue_proxy'
+  dividend_yield_pct: number
+  conservative_growth: number
+  fair_pe: number
+  forward_eps: number
+  total_return_pe: number
+  formula_version: string
+}
+
 export interface StockSummary {
   code: string
   name: string
@@ -70,6 +85,7 @@ export interface StockSummary {
   revenueGrowthProxy?: number | null
   ttmOperatingProfitGrowth: number | null
   sourceRefs: string[]
+  valuation?: ValuationSummary
   healthCategories?: HealthCategory[]
   healthScore?: { passCount: number; total: number; status: MetricStatus }
   healthInputSummary?: { valuationDate?: string | null; incomePeriods: number; balancePeriods: number; dividendRows: number; officialRevenueRows: number; source: string }
@@ -170,6 +186,12 @@ export interface RankingRow {
   evidenceLevel?: 'proxy' | 'formal'
   route?: 'lowBase' | 'lowBaseGrowth' | 'lowBaseQuality'
   gates?: LowBaseGate[]
+  currentPrice?: number
+  fairPrice?: number
+  valuationMethod?: 'zulu'
+  valuationGrowthInput?: number
+  valuationDividendYieldPct?: number
+  valuationFormulaVersion?: string
 }
 
 export interface LowBaseGate {
