@@ -24,6 +24,7 @@ import hashlib
 import json
 import math
 import os
+import subprocess
 import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -36,6 +37,7 @@ if str(ROOT) not in sys.path:
 
 from pipeline.enrichment import (  # noqa: E402
     apply_regression,
+    clip_price_window,
     derive_signal_state,
     formal_growth_status,
     growth_proxy_status,
@@ -58,6 +60,12 @@ from pipeline.yahoo_client import (  # noqa: E402
     fetch_fundamental_proxies,
 )
 from pipeline.twse_public import SOURCE as TWSE_SOURCE, build_health_inputs  # noqa: E402
+from pipeline.earnings_proxy import derive_ltm_eps_proxy  # noqa: E402
+from pipeline.release_contract import (  # noqa: E402
+    FORMULA_VERSIONS,
+    compute_funnel,
+    is_common_stock_code,
+)
 from pipeline.valuation import calculate_zulu_valuation  # noqa: E402
 
 
@@ -95,6 +103,24 @@ def parse_date(value: str | None, fallback: date) -> date:
         return date.fromisoformat(str(value)[:10])
     except (TypeError, ValueError):
         return fallback
+
+
+def _git_head() -> str | None:
+    """Record the code commit that produced a release, when git is available."""
+
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    value = completed.stdout.strip()
+    return value or None
 
 
 def baseline_details(data_dir: Path, release: dict[str, Any]) -> list[dict[str, Any]]:
@@ -211,38 +237,146 @@ def _current_adjusted(detail: dict[str, Any]) -> float | None:
     return None
 
 
+def _shares_from_detail(detail: dict[str, Any]) -> float | None:
+    for key in ("sharesOutstanding", "shares", "shareCount"):
+        value = detail.get(key)
+        if isinstance(value, (int, float)) and math.isfinite(float(value)) and float(value) > 0:
+            return float(value)
+    health_inputs = detail.get("healthInputs")
+    if not isinstance(health_inputs, dict):
+        return None
+    balances = [row for row in health_inputs.get("balanceQuarterly", []) if isinstance(row, dict)]
+    for row in reversed(balances):
+        equity = row.get("equity")
+        book_value = row.get("bookValuePerShare")
+        if isinstance(equity, (int, float)) and isinstance(book_value, (int, float)) and float(equity) > 0 and float(book_value) > 0:
+            return float(equity) / float(book_value)
+    return None
+
+
+def _ltm_revenue_growth(detail: dict[str, Any]) -> float | None:
+    health_inputs = detail.get("healthInputs")
+    rows = health_inputs.get("monthlyRevenueOfficial", []) if isinstance(health_inputs, dict) else []
+    if not rows:
+        rows = detail.get("revenueMonthly", [])
+    by_month: dict[str, float] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        month = str(row.get("month") or "")[:7]
+        value = row.get("revenue")
+        if len(month) == 7 and month[4] == "-" and isinstance(value, (int, float)) and math.isfinite(float(value)):
+            by_month[month] = float(value)
+    months = sorted(by_month)
+    if len(months) < 24:
+        return None
+    current = months[-12:]
+    prior = [f"{int(month[:4]) - 1:04d}-{month[5:7]}" for month in current]
+    if any(month not in by_month for month in prior):
+        return None
+    current_total = sum(by_month[month] for month in current)
+    prior_total = sum(by_month[month] for month in prior)
+    if prior_total <= 0:
+        return None
+    return current_total / prior_total - 1.0
+
+
+def _earnings_proxy_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
+    health_inputs = detail.get("healthInputs")
+    rows = health_inputs.get("incomeQuarterly", []) if isinstance(health_inputs, dict) else []
+    proxy = derive_ltm_eps_proxy([row for row in rows if isinstance(row, dict)], shares=_shares_from_detail(detail))
+    if proxy.get("growth") is not None:
+        return proxy
+    ltm_revenue_growth = _ltm_revenue_growth(detail)
+    if ltm_revenue_growth is not None:
+        return {"method": "ltm_revenue_proxy", "method_label": "LTM 營收成長代理", "growth": ltm_revenue_growth, "current_eps": None, "prior_eps": None}
+    fallback = detail.get("revenueGrowth3m")
+    if fallback is None:
+        fallback = detail.get("revenueGrowthProxy")
+    if isinstance(fallback, (int, float)) and math.isfinite(float(fallback)) and float(fallback) > 0:
+        return {"method": "three_month_revenue_proxy", "method_label": "三月營收成長代理", "growth": float(fallback), "current_eps": None, "prior_eps": None}
+    return {"method": "no_growth_input", "method_label": "可用營收與財務資料不足", "growth": None, "current_eps": None, "prior_eps": None}
+
+
 def _valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
-    """Build the same Zulu valuation from known published inputs."""
+    """Build Zulu PEG from the best known earnings-growth proxy."""
     health_inputs = detail.get("healthInputs")
     valuation_current = health_inputs.get("valuationCurrent") if isinstance(health_inputs, dict) else None
     if not isinstance(valuation_current, dict):
         valuation_current = {}
-    revenue_growth = detail.get("revenueGrowth3m")
-    if revenue_growth is None:
-        revenue_growth = detail.get("revenueGrowthProxy")
-    return calculate_zulu_valuation(
+    proxy = _earnings_proxy_from_detail(detail)
+    valuation = calculate_zulu_valuation(
         current_price=_current_price(detail),
         current_pe=valuation_current.get("pe"),
-        dividend_yield_pct=valuation_current.get("dividendYield"),
-        revenue_growth=revenue_growth,
+        eps_growth=proxy.get("growth"),
+        growth_method=str(proxy.get("method") or "eps_growth"),
+        growth_method_label=str(proxy.get("method_label") or "EPS 成長"),
     )
+    if valuation is not None:
+        valuation["proxy_current_eps"] = proxy.get("current_eps")
+        valuation["proxy_prior_eps"] = proxy.get("prior_eps")
+    return valuation
 
 
-def _attach_valuation(rows: list[dict[str, Any]], detail_by_code: dict[str, dict[str, Any]]) -> None:
+def _attach_valuation(rows: list[dict[str, Any]], detail_by_code: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    visible: list[dict[str, Any]] = []
     for row in rows:
-        valuation = detail_by_code.get(str(row.get("code")), {}).get("valuation")
-        if not isinstance(valuation, dict):
+        code = str(row.get("code"))
+        # PEG 股票策略只服務普通股；ETF／ETN／權證類代碼在此排除，
+        # 排除數另由 funnel.instrumentExcluded 誠實揭露。
+        if not is_common_stock_code(code):
             continue
+        detail = detail_by_code.get(code, {})
+        valuation = detail.get("valuation")
+        if not isinstance(valuation, dict) or not valuation.get("below_075"):
+            continue
+        growth_method = str(valuation.get("growth_method") or "")
+        growth_method_label = str(valuation.get("growth_method_label") or "")
+        is_proxy = "proxy" in growth_method or "代理" in growth_method_label
+        growth_input = valuation.get("eps_growth")
+        fair_price = valuation.get("fair_price")
+        current_price = valuation.get("current_price")
+        extreme = False
+        if is_proxy and isinstance(growth_input, (int, float)) and math.isfinite(float(growth_input)):
+            ratio = None
+            if (
+                isinstance(fair_price, (int, float))
+                and isinstance(current_price, (int, float))
+                and float(current_price) > 0
+            ):
+                ratio = float(fair_price) / float(current_price)
+            extreme = float(growth_input) > 1.0 or (ratio is not None and ratio > 3.0)
+        regression = detail.get("regression")
+        if not isinstance(regression, dict):
+            regression = {}
         row.update(
             {
                 "currentPrice": valuation.get("current_price"),
                 "fairPrice": valuation.get("fair_price"),
+                "valuePrice075": valuation.get("value_price_075"),
+                "valuePrice066": valuation.get("value_price_066"),
+                "currentPeg": valuation.get("current_peg"),
+                "currentPe": valuation.get("current_pe"),
+                "currentEps": valuation.get("current_eps"),
+                "pegBand": "strict" if valuation.get("below_066") else "acceptable",
                 "valuationMethod": valuation.get("method"),
-                "valuationGrowthInput": valuation.get("growth_input"),
-                "valuationDividendYieldPct": valuation.get("dividend_yield_pct"),
+                "valuationGrowthInput": valuation.get("eps_growth"),
+                "valuationGrowthMethod": growth_method,
+                "valuationGrowthMethodLabel": growth_method_label,
+                "valuationEvidenceLevel": "proxy" if is_proxy else "formal",
                 "valuationFormulaVersion": valuation.get("formula_version"),
+                "extremeExtrapolation": extreme,
+                "priceBasis": detail.get("priceBasis"),
+                "zScore": detail.get("zScore"),
+                "slope": detail.get("slope"),
+                "regressionStart": regression.get("historyStart"),
+                "regressionEnd": regression.get("historyEnd"),
+                "regressionObservations": regression.get("observations"),
+                "regressionExpectedObservations": regression.get("expectedObservations"),
             }
         )
+        visible.append(row)
+    return visible
 
 
 def _summary(detail: dict[str, Any]) -> dict[str, Any]:
@@ -336,7 +470,7 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
     errors: list[str] = []
     source_refs: list[str] = []
     raw_price = [dict(point) for point in detail.get("priceSeries", []) if isinstance(point, dict)]
-    start = end.replace(year=end.year - 4) if end.month != 2 or end.day != 29 else end.replace(year=end.year - 4, day=28)
+    start = end - timedelta(days=round(365 * 3.5))
 
     adjusted_rows: list[dict[str, Any]] = []
     if not offline:
@@ -346,6 +480,10 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
         if error:
             errors.append(error)
     price = merge_adjusted_prices(raw_price, adjusted_rows)
+    # The 3.5-year label is a fixed window, not a minimum: merged rows that
+    # fall before the window start must be dropped so an older fetch's longer
+    # history can never widen the published regression back to four years.
+    price = clip_price_window(price, start=start, end=end)
     price, regression = apply_regression(price, prefer_adjusted=True)
     if regression["priceBasis"] == "adjusted":
         source_refs.append(YFINANCE_PRICE_SOURCE if any(row.get("source") == YFINANCE_PRICE_SOURCE for row in adjusted_rows) else YAHOO_CHART_SOURCE)
@@ -449,11 +587,11 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
         basis_label = "Adj Close" if regression.get("priceBasis") == "adjusted" else "未調整收盤"
         if low_position_proxy:
             reasons.append(
-                f"低位代理：{basis_label} 四年 Z {float(regression_z):+.2f}、斜率 {float(regression_slope):+.4f}；"
+                f"低位代理：{basis_label} 3.5 年 Z {float(regression_z):+.2f}、斜率 {float(regression_slope):+.4f}；"
                 + ("正式八週與品質條件仍待核對" if not formal_entry else "正式條件已通過")
             )
         else:
-            reasons.append(f"價格描述：{basis_label} 四年 Z {float(regression_z):+.2f}；未形成低位條件")
+            reasons.append(f"價格描述：{basis_label} 3.5 年 Z {float(regression_z):+.2f}；未形成低位條件")
     if not reasons:
         reasons.append("尚無足夠條件形成研究理由")
 
@@ -567,10 +705,10 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
         if value and "raw close proxy" not in str(value) and "調整價" not in str(value)
     ]
     if regression.get("priceBasis") == "adjusted":
-        limitations.insert(0, "四年研究曲線使用 yfinance Adj Close；原始 FinMind close 仍保留作報價參考。")
+        limitations.insert(0, "3.5 年研究曲線使用 yfinance Adj Close；原始 FinMind close 仍保留作報價參考。")
         limitations.insert(1, "yfinance 非交易所官方資料；此頁供個人研究，來源與處理版本隨快照保存。")
     elif raw_values:
-        limitations.insert(0, "四年研究曲線目前使用 FinMind 未調整 close proxy；公司行動／股利調整待驗證。")
+        limitations.insert(0, "3.5 年研究曲線目前使用 FinMind 未調整 close proxy；公司行動／股利調整待驗證。")
     limitations.append("品質代理只看最新可得期，不能替代三年 point-in-time 財報條件。")
     detail["detailLimitations"] = list(dict.fromkeys(limitations))
     health_categories = evaluate_snapshot_health(
@@ -952,17 +1090,14 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         ]
         current["reason"] = f"{current.get('reason', '')}；另一路徑亦通過"
     low_base_rank = rank_low_base_rows(list(low_base_by_code.values()), institutional_rank_by_code)
-    for ranking in (
-        trust_rank,
-        growth_rank,
-        low_rank,
-        strict_low_base_growth_rank,
-        strict_low_base_quality_rank,
-        low_base_growth_rank,
-        low_base_quality_rank,
-        low_base_rank,
-    ):
-        _attach_valuation(ranking, detail_by_code)
+    trust_rank = _attach_valuation(trust_rank, detail_by_code)
+    growth_rank = _attach_valuation(growth_rank, detail_by_code)
+    low_rank = _attach_valuation(low_rank, detail_by_code)
+    strict_low_base_growth_rank = _attach_valuation(strict_low_base_growth_rank, detail_by_code)
+    strict_low_base_quality_rank = _attach_valuation(strict_low_base_quality_rank, detail_by_code)
+    low_base_growth_rank = _attach_valuation(low_base_growth_rank, detail_by_code)
+    low_base_quality_rank = _attach_valuation(low_base_quality_rank, detail_by_code)
+    low_base_rank = _attach_valuation(low_base_rank, detail_by_code)
     if formal_entries == 0:
         formal_entries = sum(1 for detail in enriched if detail.get("signalState") == "進場觀察")
     if proxy_candidates == 0:
@@ -985,6 +1120,20 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     }
     universe = len(universe_rows) or int((baseline.get("coverage") or {}).get("universeCount") or tracked_count)
     universe_pct = tracked_count / universe * 100 if universe else None
+    # Funnel stage counts are published by the producer from the full enriched
+    # universe (never reconstructed from the already-filtered rankings).
+    valuation_dicts: list[dict[str, Any]] = []
+    for detail in enriched:
+        value = detail.get("valuation")
+        if isinstance(value, dict):
+            valuation_dicts.append(value)
+    funnel = compute_funnel(
+        universe=universe,
+        price_complete=sum(1 for detail in enriched if detail.get("dataStatus") == "pass"),
+        instrument_excluded=sum(1 for detail in enriched if not is_common_stock_code(str(detail.get("code")))),
+        valuations=valuation_dicts,
+        strategy_counts={"trust": len(trust_rank), "growth": len(growth_rank), "lowPosition": len(low_rank)},
+    )
     market_dates = [str(detail.get("asOf")) for detail in enriched if detail.get("asOf")]
     market_date = max(market_dates) if market_dates else baseline.get("marketDate")
     generated = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -1008,10 +1157,10 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         status_message = "已保留官方觀察值；yfinance 調整價本次不可用，價格仍明示為未調整代理。"
     elif adjusted_count < tracked_count or all_errors:
         freshness = "degraded"
-        status_message = f"已更新 {adjusted_count}/{tracked_count} 檔調整價；其餘沿用可得 raw close，代理與正式條件分開標示。"
+        status_message = f"已更新 {adjusted_count}/{tracked_count} 檔調整價；其餘沿用可得 raw close，代理與正式條件分開標示。3.5 年回歸資料需看 evidence level。"
     else:
         freshness = "current"
-        status_message = f"已更新 {tracked_count} 檔追蹤研究；四年曲線使用 yfinance Adj Close，財務品質仍依可得期間標示。"
+        status_message = f"已更新 {tracked_count} 檔追蹤研究；3.5 年曲線使用 yfinance Adj Close，財務品質仍依可得期間標示。"
     base_coverage = baseline.get("coverage") if isinstance(baseline.get("coverage"), dict) else {}
     coverage = {
         **base_coverage,
@@ -1033,10 +1182,21 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         "queueStatus": f"A 母體 {tracked_count}/{universe} 檔；所有策略共用此初始篩選",
     }
     source_refs = merge_refs(baseline.get("sourceRefs"), used_sources)
+    rankings_payload = {
+        "trust": trust_rank,
+        "growth": growth_rank,
+        "lowPosition": low_rank,
+        "lowBase": low_base_rank,
+        "lowBaseGrowth": low_base_growth_rank,
+        "lowBaseQuality": low_base_quality_rank,
+    }
+    rankings_hash = hashlib.sha256(
+        json.dumps(rankings_payload, ensure_ascii=False, sort_keys=True).encode()
+    ).hexdigest()
     release = {
         **baseline,
         "schemaVersion": "1.1",
-        "formulaVersion": "lohas-linear-4y-research-v2",
+        "formulaVersion": "lohas-linear-3.5y-research-v1",
         "runId": run_id,
         "marketDate": market_date,
         "generatedAt": generated,
@@ -1065,14 +1225,8 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             "lowBaseQualityGap": low_base_quality_gap,
         },
         "stocks": [_summary(detail) for detail in enriched],
-        "rankings": {
-            "trust": trust_rank,
-            "growth": growth_rank,
-            "lowPosition": low_rank,
-            "lowBase": low_base_rank,
-            "lowBaseGrowth": low_base_growth_rank,
-            "lowBaseQuality": low_base_quality_rank,
-        },
+        "funnel": funnel,
+        "rankings": rankings_payload,
         "research": {
             **(baseline.get("research") or {}),
             "proxyReadiness": {
@@ -1089,6 +1243,9 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     manifest = {
         **release,
         "inputHash": hashlib.sha256(canonical).hexdigest(),
+        "codeCommit": _git_head(),
+        "formulaVersions": FORMULA_VERSIONS,
+        "rankingsHash": rankings_hash,
         "baselineRunId": baseline.get("runId"),
         "enrichment": {
             "adjustedPriceSource": "yfinance Adj Close when available; Yahoo chart fallback is tagged",

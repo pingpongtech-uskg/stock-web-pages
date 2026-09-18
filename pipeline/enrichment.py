@@ -9,15 +9,15 @@ value into a fabricated formal pass.
 from __future__ import annotations
 
 import math
-from datetime import date
+from datetime import date, timedelta
 from typing import Any, Iterable
 
 from pipeline.indicators import linear_regression
 
 
 BAND_KEYS = ("-2", "-1", "0", "1", "2")
-FOUR_YEAR_DAYS = 365 * 4
-MIN_FOUR_YEAR_OBSERVATIONS = 700
+REGRESSION_DAYS = round(365 * 3.5)
+MIN_REGRESSION_OBSERVATIONS = 700
 LOW_POSITION_Z_MAX = 0.0
 LOW_BASE_Z_MAX = -1.0
 MIN_QUALITY_PROXY_PASSES = 4
@@ -63,6 +63,37 @@ def merge_adjusted_prices(
     return [by_date[day] for day in sorted(by_date)]
 
 
+def regression_window(end: date, *, days: int = REGRESSION_DAYS) -> tuple[date, date]:
+    """Return the fixed research window that ends on the market date."""
+
+    return end - timedelta(days=days), end
+
+
+def clip_price_window(
+    price_points: Iterable[dict[str, Any]],
+    *,
+    start: date,
+    end: date,
+) -> list[dict[str, Any]]:
+    """Keep only points inside the fixed ``[start, end]`` research window.
+
+    The 3.5-year label is a fixed frame, not a minimum: merged rows from an
+    older fetch that fall before ``start`` must be excluded so the regression
+    can never silently widen to four years again.  Points without a parseable
+    date cannot be placed inside the window and are dropped.
+    """
+
+    clipped: list[dict[str, Any]] = []
+    for point in price_points:
+        try:
+            day = date.fromisoformat(str(point.get("date"))[:10])
+        except (TypeError, ValueError):
+            continue
+        if start <= day <= end:
+            clipped.append(point)
+    return clipped
+
+
 def _day_span(points: list[dict[str, Any]]) -> int:
     days = []
     for point in points:
@@ -78,7 +109,7 @@ def apply_regression(
     *,
     prefer_adjusted: bool = True,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Calculate the current four-year curve and annotate every point.
+    """Calculate the current 3.5-year curve and annotate every point.
 
     ``adjusted`` means an adjusted close was actually supplied.  If it is not
     available, raw close is still calculated as a visible research proxy, but
@@ -102,11 +133,11 @@ def apply_regression(
     observations = len(clean_values)
     coverage = observations / expected * 100 if expected else None
     span_days = _day_span(selected)
-    enough_history = span_days >= FOUR_YEAR_DAYS - 14
+    enough_history = span_days >= REGRESSION_DAYS - 14
     eligible = bool(
         use_adjusted
         and result.get("reason") == "ok"
-        and observations >= MIN_FOUR_YEAR_OBSERVATIONS
+        and observations >= MIN_REGRESSION_OBSERVATIONS
         and coverage is not None
         and coverage >= 95
         and enough_history
@@ -143,14 +174,14 @@ def apply_regression(
         label = "FinMind close（未調整 raw close proxy）"
         reason = (
             "已取得未調整收盤價，僅作行情與研究代理；"
-            "公司行動／股利調整價尚未驗證，因此不產生正式四年訊號。"
+            "公司行動／股利調整價尚未驗證，因此不產生正式 3.5 年訊號。"
         )
     else:
         label = "尚無可用價格"
         reason = "沒有足夠價格資料計算回歸。"
     regression = {
         "status": "pass" if basis == "adjusted" and result.get("reason") == "ok" else "unknown",
-        "method": "lohas-linear-4y-research-v2",
+        "method": "lohas-linear-3.5y-research-v1",
         "label": label,
         "intercept": result.get("intercept"),
         "slope": result.get("slope"),
@@ -319,7 +350,7 @@ def _common_low_base_gates(
         },
         {
             "key": "lowZ",
-            "label": "四年 Z ≤ -1",
+            "label": "3.5年 Z ≤ -1",
             "status": z_status,
             "value": "未知" if z_value is None else f"Z {z_value:+.2f}",
             "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。",
@@ -357,7 +388,7 @@ def low_base_growth_gates(
     """Evaluate the independent low-base growth proxy route."""
 
     gates, _ = _common_low_base_gates(z=z, slope=slope, price_eligible=price_eligible, z_maximum=z_maximum)
-    gates[1]["label"] = f"四年 Z ≤ {z_maximum:g}"
+    gates[1]["label"] = f"3.5年 Z ≤ {z_maximum:g}"
     growth_value = finite(growth)
     growth_status = growth_proxy_status(growth_value, minimum=growth_minimum)
     ttm_value = finite(operating_profit_growth)
@@ -403,7 +434,7 @@ def low_base_quality_gates(
     """
 
     common, _ = _common_low_base_gates(z=z, slope=slope, price_eligible=price_eligible, z_maximum=z_maximum)
-    common[1]["label"] = f"四年 Z ≤ {z_maximum:g}"
+    common[1]["label"] = f"3.5年 Z ≤ {z_maximum:g}"
     checks = list(quality_checks)
     pass_count, fail_count, unknown_count = quality_proxy_pass_count(checks)
     anchor_checks = checks[:2]

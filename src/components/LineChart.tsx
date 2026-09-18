@@ -128,7 +128,7 @@ export function LineChart({ points, priceBasis }: { points: PricePoint[]; priceB
         <span><i className="legend-swatch two" />±2σ</span>
       </div>
       <div className="chart-axis"><span>{plotted[0].date}</span><span>最新 {plotted[plotted.length - 1].date}</span></div>
-      <p className="chart-caption">本期四年回歸（{usesAdjusted ? '調整後收盤價' : '未調整收盤代理'}）；中線與 ±1σ／±2σ 是描述工具，不是合理價或未來機率。移動游標可查看同日價格與 Z=(價格−中線)／σ。</p>
+      <p className="chart-caption">本期 3.5 年回歸（{usesAdjusted ? '調整後收盤價' : '未調整收盤代理'}）；中線與 ±1σ／±2σ 是描述工具，不是合理價或未來機率。移動游標可查看同日價格與 Z=(價格−中線)／σ。</p>
     </div>
   )
 }

@@ -1,4 +1,6 @@
-from pipeline.enrichment import low_base_growth_gates, low_base_quality_gates
+from datetime import date, timedelta
+
+from pipeline.enrichment import clip_price_window, low_base_growth_gates, low_base_quality_gates
 
 
 def proxy_checks(statuses: list[str]) -> list[dict[str, str]]:
@@ -55,3 +57,30 @@ def test_low_base_quality_does_not_promote_unknown_anchor():
 
     assert result["status"] == "unknown"
     assert any(gate["key"] == "qualityAnchors" and gate["status"] == "unknown" for gate in result["gates"])
+
+
+def test_clip_price_window_keeps_only_the_fixed_3_5_year_frame():
+    points = [
+        {"date": "2022-09-12"},  # four-year history from an older fetch
+        {"date": "2023-03-12"},
+        {"date": "2023-03-13"},
+        {"date": "2026-09-11"},
+        {"date": "2026-09-14"},
+        {"date": "not-a-date"},
+    ]
+
+    clipped = clip_price_window(points, start=date(2023, 3, 13), end=date(2026, 9, 11))
+
+    assert [point["date"] for point in clipped] == ["2023-03-13", "2026-09-11"]
+
+
+def test_clip_price_window_anchors_on_market_end():
+    end = date(2026, 9, 11)
+    start = end - timedelta(days=1278)
+    points = [{"date": (start + timedelta(days=offset)).isoformat()} for offset in range(0, 1500)]
+
+    clipped = clip_price_window(points, start=start, end=end)
+
+    assert clipped[0]["date"] == start.isoformat()
+    assert clipped[-1]["date"] == end.isoformat()
+    assert len(clipped) == 1279

@@ -1,16 +1,22 @@
-"""One consistent Zulu-style known-input valuation for all strategy tabs.
+"""Zulu / PEG valuation using the article's known-input method.
 
-The Zulu Principle is an investment selection framework, not a separate fair
-value equation. This project uses its narrow-universe/growth discipline and a
-single transparent scenario: known revenue growth proxy, current PE, dividend
-yield, and current price. Rows without every input are not published in the
-stock lists.
+The Zulu Principle uses expected EPS growth as the denominator of PEG:
+
+    PEG = forward P/E / expected EPS growth percentage
+
+A PEG below 0.75 is an acceptable screen and below 0.66 is the stricter
+value band. The benchmark reasonable price uses PEG 1.00; the two lower bands
+are shown separately. Dividend yield is not mixed into this calculation.
 """
 
 from __future__ import annotations
 
 import math
 from typing import Any
+
+PEG_ACCEPTABLE_MAX = 0.75
+PEG_STRICT_MAX = 0.66
+PEG_REASONABLE = 1.0
 
 
 def _finite(value: Any) -> float | None:
@@ -27,56 +33,59 @@ def calculate_zulu_valuation(
     *,
     current_price: float | int | None,
     current_pe: float | int | None,
-    dividend_yield_pct: float | int | None,
-    revenue_growth: float | int | None,
-    forecast_haircut: float = 0.80,
+    eps_growth: float | int | None,
+    growth_method: str = "eps_growth",
+    growth_method_label: str = "EPS 成長",
 ) -> dict[str, Any] | None:
-    """Calculate the same Zulu-style scenario for every strategy.
+    """Calculate PEG, reasonable price, and the 0.75 / 0.66 value bands.
 
-    Inputs: revenue growth as decimal (0.20 = 20%), dividend yield as
-    percentage points (5 = 5%), current price, and current PE.
-
-    conservative growth = revenue growth × 0.8
-    fair PE = (conservative growth + dividend yield) × 100
-    forward EPS = current price / PE × (1 + conservative growth)
-    fair price = forward EPS × fair PE
+    ``eps_growth`` is decimal form: 0.30 means 30% EPS growth. The article's
+    quick estimate uses expected EPS after growth and assigns a PE equal to
+    the growth percentage for the PEG=1.00 benchmark price.
     """
     price = _finite(current_price)
     pe = _finite(current_pe)
-    dividend = _finite(dividend_yield_pct)
-    growth = _finite(revenue_growth)
+    growth = _finite(eps_growth)
     if (
         price is None
         or pe is None
-        or dividend is None
         or growth is None
         or price <= 0
         or pe <= 0
-        or dividend < 0
-        or growth < 0
-        or forecast_haircut < 0
+        or growth <= 0
     ):
         return None
 
-    conservative_growth = growth * forecast_haircut
-    dividend_decimal = dividend / 100.0
-    fair_pe = (conservative_growth + dividend_decimal) * 100.0
-    ttm_eps = price / pe
-    forward_eps = ttm_eps * (1.0 + conservative_growth)
-    fair_price = forward_eps * fair_pe
-    if not math.isfinite(fair_price) or fair_price <= 0:
+    growth_pct = growth * 100.0
+    current_eps = price / pe
+    forward_eps = current_eps * (1.0 + growth)
+    current_peg = pe / growth_pct
+    reasonable_pe = growth_pct * PEG_REASONABLE
+    fair_price = forward_eps * reasonable_pe
+    value_price_075 = forward_eps * growth_pct * PEG_ACCEPTABLE_MAX
+    value_price_066 = forward_eps * growth_pct * PEG_STRICT_MAX
+    values = (current_peg, forward_eps, fair_price, value_price_075, value_price_066)
+    if not all(math.isfinite(value) and value > 0 for value in values):
         return None
+
     return {
-        "method": "zulu",
+        "method": "zulu-peg",
         "current_price": price,
-        "fair_price": fair_price,
         "current_pe": pe,
-        "growth_input": growth,
-        "growth_input_kind": "revenue_proxy",
-        "dividend_yield_pct": dividend,
-        "conservative_growth": conservative_growth,
-        "fair_pe": fair_pe,
+        "current_eps": current_eps,
+        "eps_growth": growth,
+        "eps_growth_pct": growth_pct,
         "forward_eps": forward_eps,
-        "total_return_pe": fair_pe / pe,
-        "formula_version": "zulu-known-growth-price-v1",
+        "current_peg": current_peg,
+        "reasonable_pe": reasonable_pe,
+        "fair_price": fair_price,
+        "value_price_075": value_price_075,
+        "value_price_066": value_price_066,
+        "peg_acceptable_max": PEG_ACCEPTABLE_MAX,
+        "peg_strict_max": PEG_STRICT_MAX,
+        "below_075": current_peg < PEG_ACCEPTABLE_MAX,
+        "below_066": current_peg < PEG_STRICT_MAX,
+        "growth_method": growth_method,
+        "growth_method_label": growth_method_label,
+        "formula_version": "zulu-peg-eps-growth-v2",
     }

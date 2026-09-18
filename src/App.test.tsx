@@ -13,7 +13,11 @@ const row: RankingRow = {
   reason: '測試理由',
   currentPrice: 1000,
   fairPrice: 1450,
-  valuationMethod: 'zulu',
+  valuePrice075: 1087.5,
+  valuePrice066: 957,
+  currentPeg: 0.52,
+  pegBand: 'strict',
+  valuationMethod: 'zulu-peg',
 }
 
 describe('dashboardStrategyRows', () => {

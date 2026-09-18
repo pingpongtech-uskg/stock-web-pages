@@ -1,6 +1,6 @@
 {
   "strategy_version": "quality-growth-v1",
-  "formula_version": "lohas-linear-4y-v1",
+  "formula_version": "lohas-linear-3.5y-research-v1",
   "currency": "TWD",
   "liquidity": { "window_market_sessions": 20, "min_average_trading_money": 20000000 },
   "trust": { "window_market_sessions": 10, "top_n_net_shares": 100, "top_n_participation": 100 },
@@ -10,8 +10,8 @@
   "low_base": {
     "strict_z_max": -1.0,
     "watch_z_max": 0.0,
-    "watch_universe": "low_position",
-    "watch_universe_definition": "四年回歸 Z ≤ 0 且 slope > 0；用來縮小免費資料研究範圍，不取代嚴格低基期審核"
+    "watch_universe": "trust_top100",
+    "watch_universe_definition": "投信十日買超前100作共同 A 母體；低位條件另以 3.5 年回歸 Z ≤ 0 且 slope > 0 判定，不把投信排名當低位條件"
   },
   "risk": {
     "stop_loss_pct": 0.12,

@@ -24,17 +24,24 @@ export interface PricePoint {
 }
 
 export interface ValuationSummary {
-  method: 'zulu'
+  method: 'zulu-peg'
   current_price: number
-  fair_price: number
   current_pe: number
-  growth_input: number
-  growth_input_kind: 'eps' | 'revenue_proxy'
-  dividend_yield_pct: number
-  conservative_growth: number
-  fair_pe: number
+  current_eps: number | null
+  eps_growth: number
+  eps_growth_pct: number
   forward_eps: number
-  total_return_pe: number
+  current_peg: number
+  reasonable_pe: number
+  fair_price: number
+  value_price_075: number
+  value_price_066: number
+  peg_acceptable_max: number
+  peg_strict_max: number
+  below_075: boolean
+  below_066: boolean
+  growth_method: string
+  growth_method_label: string
   formula_version: string
 }
 
@@ -188,10 +195,28 @@ export interface RankingRow {
   gates?: LowBaseGate[]
   currentPrice?: number
   fairPrice?: number
-  valuationMethod?: 'zulu'
+  valuePrice075?: number
+  valuePrice066?: number
+  currentPeg?: number
+  currentPe?: number | null
+  currentEps?: number | null
+  pegBand?: 'strict' | 'acceptable'
+  valuationMethod?: 'zulu-peg'
   valuationGrowthInput?: number
-  valuationDividendYieldPct?: number
+  valuationGrowthMethod?: string
+  valuationGrowthMethodLabel?: string
+  valuationEvidenceLevel?: 'formal' | 'proxy'
   valuationFormulaVersion?: string
+  /** Proxy growth beyond 100% (or a scenario price >3× current) needs an
+   *  explicit "do not extrapolate" warning next to the scenario prices. */
+  extremeExtrapolation?: boolean
+  priceBasis?: PriceBasis
+  zScore?: number
+  slope?: number
+  regressionStart?: string | null
+  regressionEnd?: string | null
+  regressionObservations?: number | null
+  regressionExpectedObservations?: number | null
 }
 
 export interface LowBaseGate {
@@ -240,6 +265,19 @@ export interface ResearchSummary {
   }
 }
 
+export interface ReleaseFunnel {
+  version: string
+  universe: number
+  priceComplete: number
+  valuationComplete: number
+  pegCandidates: number
+  strategyCandidates: { trust: number; growth: number; lowPosition: number }
+  formalValuations: number
+  proxyValuations: number
+  instrumentPolicy: string
+  instrumentExcluded: number
+}
+
 export interface Release {
   schemaVersion: string
   strategyVersion: string
@@ -252,6 +290,8 @@ export interface Release {
   statusMessage: string
   sourceRefs: string[]
   coverage: Coverage
+  /** Producer-published funnel stage counts; never derived from rankings. */
+  funnel: ReleaseFunnel
   summary: {
     watchCount: number
     lowPositionCount: number

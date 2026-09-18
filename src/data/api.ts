@@ -1,6 +1,148 @@
-import type { Release, StockDetail } from '../domain/types'
+import type { RankingRow, Release, StockSummary } from '../domain/types'
 
 const DATA_ROOT = '/data'
+const FRESHNESS_VALUES = new Set(['current', 'stale', 'degraded', 'unavailable'])
+const STATUS_VALUES = new Set(['pass', 'fail', 'unknown', 'not_applicable'])
+const RANKING_KEYS = ['trust', 'growth', 'lowPosition', 'lowBase', 'lowBaseGrowth', 'lowBaseQuality'] as const
+const FUNNEL_STRATEGY_KEYS = ['trust', 'growth', 'lowPosition'] as const
+const ROW_NULLABLE_NUMBERS = [
+  'currentPrice', 'fairPrice', 'valuePrice075', 'valuePrice066', 'currentPeg',
+  'currentPe', 'currentEps', 'valuationGrowthInput', 'zScore', 'slope',
+  'regressionObservations', 'regressionExpectedObservations',
+] as const
+
+type UnknownRecord = Record<string, unknown>
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function invalidRelease(): never {
+  throw new Error('發布快照格式錯誤，拒絕顯示不完整資料')
+}
+
+function expect(condition: boolean): void {
+  if (!condition) invalidRelease()
+}
+
+function requireRecord(value: unknown): UnknownRecord {
+  if (!isRecord(value)) invalidRelease()
+  return value
+}
+
+function requireArray(value: unknown): unknown[] {
+  if (!Array.isArray(value)) invalidRelease()
+  return value
+}
+
+function requireString(value: unknown): string {
+  if (typeof value !== 'string') invalidRelease()
+  return value
+}
+
+function requireFiniteNumber(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) invalidRelease()
+  return value
+}
+
+function requireNullableNumber(value: unknown): number | null {
+  if (value === null) return null
+  if (typeof value !== 'number' || !Number.isFinite(value)) invalidRelease()
+  return value
+}
+
+function requireNullableString(value: unknown): string | null {
+  if (value === null) return null
+  if (typeof value !== 'string') invalidRelease()
+  return value
+}
+
+function validateRankingRow(value: unknown): void {
+  const row = requireRecord(value)
+  requireFiniteNumber(row.rank)
+  expect(requireString(row.code).length > 0)
+  requireString(row.name)
+  requireString(row.sector)
+  expect(STATUS_VALUES.has(requireString(row.status)))
+  requireString(row.reason)
+  requireNullableNumber(row.value)
+  requireString(row.valueLabel)
+  for (const key of ROW_NULLABLE_NUMBERS) {
+    if (row[key] !== undefined) requireNullableNumber(row[key])
+  }
+  if (row.pegBand !== undefined) expect(row.pegBand === 'strict' || row.pegBand === 'acceptable')
+  if (row.valuationEvidenceLevel !== undefined) expect(row.valuationEvidenceLevel === 'formal' || row.valuationEvidenceLevel === 'proxy')
+  if (row.extremeExtrapolation !== undefined) expect(typeof row.extremeExtrapolation === 'boolean')
+  if (row.valuationGrowthMethod !== undefined) requireString(row.valuationGrowthMethod)
+  if (row.valuationGrowthMethodLabel !== undefined) requireString(row.valuationGrowthMethodLabel)
+  if (row.valuationFormulaVersion !== undefined) requireString(row.valuationFormulaVersion)
+  if (row.priceBasis !== undefined) expect(row.priceBasis === 'adjusted' || row.priceBasis === 'raw_proxy' || row.priceBasis === 'unknown')
+  if (row.regressionStart !== undefined) requireNullableString(row.regressionStart)
+  if (row.regressionEnd !== undefined) requireNullableString(row.regressionEnd)
+}
+
+function validateStockSummary(value: unknown): void {
+  const stock = requireRecord(value)
+  expect(requireString(stock.code).length > 0)
+  requireString(stock.name)
+  if (stock.slope !== undefined) requireNullableNumber(stock.slope)
+  if (stock.zScore !== undefined) requireNullableNumber(stock.zScore)
+  if (stock.lastPrice !== undefined) requireNullableNumber(stock.lastPrice)
+  if (stock.sourceRefs !== undefined) expect(requireArray(stock.sourceRefs).every((ref) => typeof ref === 'string'))
+}
+
+export function validateRelease(payload: unknown): Release {
+  const p = requireRecord(payload)
+  expect(requireString(p.runId).length > 0)
+  requireString(p.schemaVersion)
+  requireString(p.strategyVersion)
+  requireString(p.formulaVersion)
+  requireString(p.generatedAt)
+  requireNullableString(p.marketDate)
+  if (p.nextExpectedUpdateAt !== undefined) requireNullableString(p.nextExpectedUpdateAt)
+  expect(FRESHNESS_VALUES.has(requireString(p.freshness)))
+  requireString(p.statusMessage)
+  expect(requireArray(p.sourceRefs).every((ref) => typeof ref === 'string'))
+
+  // coverage: every field the UI reads is fail-closed validated.  A stringy
+  // completenessPct must reach the ErrorScreen, never crash inside .toFixed.
+  const coverage = requireRecord(p.coverage)
+  for (const key of ['universeCount', 'databaseCount', 'candidateCount', 'pendingCount', 'financialCompleteCount', 'priceCompleteCount']) {
+    requireFiniteNumber(coverage[key])
+  }
+  if (coverage.completenessPct !== undefined) requireNullableNumber(coverage.completenessPct)
+  if (coverage.scopeLabel !== undefined) requireString(coverage.scopeLabel)
+  requireString(coverage.queueStatus)
+  if (coverage.trackedCount !== undefined) requireFiniteNumber(coverage.trackedCount)
+  if (coverage.trackedCompleteCount !== undefined) requireFiniteNumber(coverage.trackedCompleteCount)
+
+  // funnel: producer-published stage counts that must conserve.
+  const funnel = requireRecord(p.funnel)
+  expect(requireString(funnel.version).length > 0)
+  const funnelUniverse = requireFiniteNumber(funnel.universe)
+  const funnelPrice = requireFiniteNumber(funnel.priceComplete)
+  const funnelValuation = requireFiniteNumber(funnel.valuationComplete)
+  const funnelPeg = requireFiniteNumber(funnel.pegCandidates)
+  const funnelFormal = requireFiniteNumber(funnel.formalValuations)
+  const funnelProxy = requireFiniteNumber(funnel.proxyValuations)
+  requireFiniteNumber(funnel.instrumentExcluded)
+  requireString(funnel.instrumentPolicy)
+  const strategyCounts = requireRecord(funnel.strategyCandidates)
+  const counts = FUNNEL_STRATEGY_KEYS.map((key) => requireFiniteNumber(strategyCounts[key]))
+  expect(funnelPeg <= funnelValuation)
+  expect(funnelFormal + funnelProxy === funnelValuation)
+  expect(funnelUniverse >= 0 && funnelPrice >= 0)
+  expect(counts.every((count) => count <= funnelPeg))
+
+  const rankings = requireRecord(p.rankings)
+  for (const key of RANKING_KEYS) {
+    for (const row of requireArray(rankings[key])) validateRankingRow(row)
+  }
+  for (const stock of requireArray(p.stocks)) validateStockSummary(stock)
+  requireRecord(p.summary)
+  requireRecord(p.research)
+  return payload as unknown as Release
+}
 
 async function getJson<T>(url: string): Promise<T> {
   const response = await fetch(url, { headers: { Accept: 'application/json' } })
@@ -11,17 +153,14 @@ async function getJson<T>(url: string): Promise<T> {
 }
 
 export async function loadLatestRelease(): Promise<Release> {
-  const release = await getJson<Release>(`${DATA_ROOT}/latest.json`)
-  if (!release.runId || !release.schemaVersion) {
-    throw new Error('發布快照缺少版本識別，拒絕混用資料')
-  }
+  const release = validateRelease(await getJson<unknown>(`${DATA_ROOT}/latest.json`))
   return release
 }
 
-export async function loadStockDetail(runId: string, code: string): Promise<StockDetail> {
+export async function loadStockDetail(runId: string, code: string): Promise<StockSummary> {
   const safeCode = encodeURIComponent(code)
   try {
-    const detail = await getJson<StockDetail>(`${DATA_ROOT}/releases/${encodeURIComponent(runId)}/stocks/${safeCode}.json`)
+    const detail = await getJson<StockSummary>(`${DATA_ROOT}/releases/${encodeURIComponent(runId)}/stocks/${safeCode}.json`)
     if (detail.code !== code) {
       throw new Error('個股資料代碼與請求不一致')
     }
@@ -34,17 +173,6 @@ export async function loadStockDetail(runId: string, code: string): Promise<Stoc
     const release = await loadLatestRelease()
     const summary = release.stocks.find((stock) => stock.code === code)
     if (!summary) throw error
-    return {
-      ...summary,
-      priceSeries: [],
-      regression: {
-        status: 'unknown', method: 'pending-detail-sync', label: '明細同步中',
-        intercept: null, slope: summary.slope, lastMid: null, sigma: null, z: summary.zScore,
-        bands: { '-2': null, '-1': null, '0': null, '1': null, '2': null }, coveragePct: null,
-        historyStart: null, historyEnd: null, signalEligible: false, reason: '排行榜快照可用，個股明細尚未同步。', sourceRefs: summary.sourceRefs,
-      },
-      institutionalDaily: [], revenueMonthly: [], qualityChecks: [], historySnapshots: [], notes: [],
-      detailLimitations: ['個股明細尚未同步；排行榜數值仍來自同一發布快照。'],
-    }
+    return summary
   }
 }
