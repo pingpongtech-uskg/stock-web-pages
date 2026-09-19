@@ -25,8 +25,8 @@ export interface TrustResult {
 }
 
 /**
- * lohas-linear-4y-v1 OLS over already validated, date-sorted prices.
- * The caller is responsible for enforcing the four-calendar-year window
+ * lohas-linear-3.5y-research-v1 OLS over already validated, date-sorted prices.
+ * The caller is responsible for enforcing the fixed 3.5-year window
  * and 95% coverage rule before treating this as a formal signal.
  */
 export function linearRegression(prices: number[]): RegressionResult {

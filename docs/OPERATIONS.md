@@ -15,9 +15,11 @@ Cloudflare workflow 預設不執行部署，避免未設定 secrets 時製造假
 FINMIND_TOKEN='由安全注入工具提供' python3 scripts/fetch_finmind.py \
   --codes 2330,2454,2303,2317,2382,2881,3034,3711 \
   --output public/data
+python3 scripts/refresh_snapshot.py --output public/data
+python3 scripts/verify_snapshot.py
 ```
 
-若要從 Infisical 使用，先由外部安全注入步驟取得 `Finmind_1`，再以 process environment 傳給腳本；不要把 token 寫入 `.env` 或命令列字面值。GitHub Actions 用 `FINMIND_TOKEN` secret，不能在 PR workflow 暴露。
+`fetch_finmind.py` 是 seed 階段；不可把它的中間輸出直接部署。`refresh_snapshot.py` 產生 3.5 年 release，`verify_snapshot.py` 必須通過才可 build/deploy。若要從 Infisical 使用，先由外部安全注入步驟取得 `Finmind_1`，再以 process environment 傳給腳本；不要把 token 寫入 `.env` 或命令列字面值。GitHub Actions 用 `FINMIND_TOKEN` secret，不能在 PR workflow 暴露。
 
 ## 發布一致性
 

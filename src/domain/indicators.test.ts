@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { linearRegression, trustMetrics, revenueGrowth } from './indicators'
 
-describe('lohas-linear-4y-v1 math', () => {
+describe('lohas-linear-3.5y-research-v1 math', () => {
   it('matches the golden OLS fixture with population residual variance', () => {
     const result = linearRegression([10, 12, 11, 15])
 

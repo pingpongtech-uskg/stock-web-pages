@@ -28,7 +28,7 @@ from pipeline.indicators import linear_regression, revenue_growth, trust_metrics
 
 SCHEMA_VERSION = "1.0"
 STRATEGY_VERSION = "quality-growth-v1"
-FORMULA_VERSION = "lohas-linear-4y-v1"
+FORMULA_VERSION = "lohas-linear-3.5y-seed-v1"
 TAIPEI = ZoneInfo("Asia/Taipei")
 DATA_REF = "https://api.finmindtrade.com/api/v4/data"
 SOURCE_REFS = [
@@ -232,7 +232,7 @@ def make_stock(
     if revenue_growth_value is not None:
         entry_reasons.append(f"營收線索：三月合計年增 {revenue_growth_value * 100:+.1f}%；營業利益條件待核對")
     if regression.get("z") is not None:
-        entry_reasons.append(f"價格描述：raw close proxy Z {float(regression['z']):+.2f}；未作正式四年訊號")
+        entry_reasons.append(f"價格描述：raw close proxy Z {float(regression['z']):+.2f}；未作正式 3.5 年訊號")
     if not entry_reasons:
         entry_reasons.append("尚無足夠條件形成正式候選理由")
     risks = [
@@ -246,7 +246,7 @@ def make_stock(
     state = "值得研究" if trust.get("status") == "pass" and (trust.get("net_shares_10") or 0) > 0 and liquidity_status == "pass" else "待補資料" if price else "資料不足"
     detail_limitations = [
         "TaiwanStockPrice 是未調整行情；免費快照未使用付費 TaiwanStockPriceAdj。",
-        "因此四年回歸數值只作 raw close proxy，signalEligible=false。",
+        "因此 3.5 年回歸數值只作 raw close proxy，signalEligible=false。",
         "財報日期不是天然公告時間；未完成 point-in-time 可得性認證。",
     ]
     quality_checks = unknown_quality_checks()
@@ -307,7 +307,7 @@ def make_stock(
             "historyStart": price[0]["date"] if price else None,
             "historyEnd": price[-1]["date"] if price else None,
             "signalEligible": False,
-            "reason": "免費 FinMind 快照只取得 TaiwanStockPrice 未調整收盤價；圖表可研究行情，正式四年訊號待調整價與公司行動驗證。",
+            "reason": "免費 FinMind 快照只取得 TaiwanStockPrice 未調整收盤價；圖表可研究行情，正式 3.5 年訊號待調整價與公司行動驗證。",
             "sourceRefs": ["FinMind:TaiwanStockPrice"],
         },
         "institutionalDaily": institution,
@@ -425,7 +425,7 @@ def build_snapshot(codes: list[str], output: Path, as_of: str | None = None) -> 
     info_rows = client.get("TaiwanStockInfo")
     metadata = info_map(info_rows)
     end = date.fromisoformat(as_of) if as_of else date.today()
-    start = subtract_years(end, 4)
+    start = end - timedelta(days=round(365 * 3.5))
     institution_start = end - timedelta(days=70)
     revenue_start = end - timedelta(days=620)
     financial_start = subtract_years(end, 4)

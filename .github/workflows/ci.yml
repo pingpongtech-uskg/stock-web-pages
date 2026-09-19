@@ -21,6 +21,6 @@ jobs:
       - run: npm run test:unit
       - run: npm run typecheck
       - run: npm run build
-      - run: python -m pip install pytest
-      - run: python -m pytest pipeline -q
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pytest pipeline scripts -q
       - run: python scripts/verify_snapshot.py

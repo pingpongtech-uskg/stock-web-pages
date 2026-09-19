@@ -398,6 +398,17 @@ def _summary(detail: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in detail.items() if key not in hidden}
 
 
+def clean_detail_limitations(values: list[Any]) -> list[str]:
+    """Drop stale baseline wording before publishing the current contract."""
+
+    stale_markers = ("raw close proxy", "調整價", "四年", "4y", "4-year")
+    return [
+        str(value)
+        for value in values
+        if value and not any(marker in str(value) for marker in stale_markers)
+    ]
+
+
 def _reason_without_old_price(detail: dict[str, Any]) -> list[str]:
     return [
         str(reason)
@@ -699,11 +710,7 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
             if month and revenue is not None and month not in known_months:
                 detail.setdefault("revenueMonthly", []).append({"month": month, "revenue": revenue, "availableAt": row.get("availableAt"), "status": "pass", "source": TWSE_SOURCE})
         detail["revenueMonthly"] = sorted(detail.get("revenueMonthly", []), key=lambda row: str(row.get("month") or ""))
-    limitations = [
-        str(value)
-        for value in detail.get("detailLimitations", [])
-        if value and "raw close proxy" not in str(value) and "調整價" not in str(value)
-    ]
+    limitations = clean_detail_limitations(detail.get("detailLimitations", []))
     if regression.get("priceBasis") == "adjusted":
         limitations.insert(0, "3.5 年研究曲線使用 yfinance Adj Close；原始 FinMind close 仍保留作報價參考。")
         limitations.insert(1, "yfinance 非交易所官方資料；此頁供個人研究，來源與處理版本隨快照保存。")
@@ -1198,6 +1205,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         "schemaVersion": "1.1",
         "formulaVersion": "lohas-linear-3.5y-research-v1",
         "runId": run_id,
+        "inputCodes": list(codes),
         "marketDate": market_date,
         "generatedAt": generated,
         "freshness": freshness,

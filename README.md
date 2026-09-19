@@ -54,9 +54,11 @@ npm run dev
 
 ```bash
 FINMIND_TOKEN='(由安全注入工具提供)' python3 scripts/fetch_finmind.py --output public/data
+python3 scripts/refresh_snapshot.py --output public/data
+python3 scripts/verify_snapshot.py
 ```
 
-上面只是介面示意；不要把真實 token 寫進 shell history、repo 或聊天。腳本只使用 `https://api.finmindtrade.com/api/v4/data`，另以 `https://api.web.finmindtrade.com/v2/user_info` 讀取配額資訊。不能取得配額時會 fail closed，不以未知額度冒險抓取。
+`fetch_finmind.py` 只建立來源 seed；`refresh_snapshot.py` 才發布 3.5 年 enrichment release；`verify_snapshot.py` 不通過就不可 build/deploy。上面只是介面示意；不要把真實 token 寫進 shell history、repo 或聊天。腳本只使用 `https://api.finmindtrade.com/api/v4/data`，另以 `https://api.web.finmindtrade.com/v2/user_info` 讀取配額資訊。不能取得配額時會 fail closed，不以未知額度冒險抓取。
 
 ## 資料與研究邊界
 

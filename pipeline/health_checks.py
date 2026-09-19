@@ -248,7 +248,7 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
                     status, value = ("pass" if (value_num > 0 if positive else value_num <= 0) else "fail"), f"{value_num:,.0f}"
             return status, value
 
-        # Quality: latest annual/yfinance proxies, with the available four-year
+        # Quality: latest annual/yfinance proxies, with the available 3.5-year
         # price history proving the listing-age gate for the tracked universe.
         span = len([row for row in detail.get("priceSeries", []) if isinstance(row, dict)])
         set_check("quality", 0, "公司上市超過三年", "pass" if span >= 500 else "fail", f"{span} 筆價格觀察", "追蹤標的已有至少三年公開日線觀察，作上市年限代理。" if span >= 500 else "價格觀察不足三年，上市年限代理未通過。")

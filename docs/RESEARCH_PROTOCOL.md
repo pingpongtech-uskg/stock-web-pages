@@ -9,7 +9,7 @@
 
 本發布範圍固定追蹤 `config/tracked_symbols.json` 的 A 母體：公開投信十日買超前 100。`scripts/fetch_research_universe.py` 每日保存來源排行與原始名次，所有策略都在這 100 檔上執行，投信排行不會再從子集合重算。yfinance 在發布器端提供 `auto_adjust=False` 的 `Adj Close` 與最新年度財報欄位；TWSE/TPEx OpenAPI 提供全市場公開財務快照。瀏覽器只讀靜態快照，不接觸 token 或外部金融 API。
 
-五線譜使用四年日資料的 OLS 中線與 ±1/±2 個殘差標準差；調整價可取得時，Z 與圖表以 yfinance Adj Close 計算並標示來源。Yahoo 失敗時仍計算未調整 close proxy，供行情研究，但 `signalEligible=false`。
+五線譜使用固定 3.5 年日資料窗的 OLS 中線與 ±1/±2 個殘差標準差；調整價可取得時，Z 與圖表以 yfinance Adj Close 計算並標示來源。Yahoo 失敗時仍計算未調整 close proxy，供行情研究，但 `signalEligible=false`。
 
 正式品質條件（三年獲利、CFO、ROE 中位數、槓桿）需要 point-in-time 與公告日，目前保留 `unknown`。為了讓研究入口有用，個股頁另列最新年度淨利、營業現金流、營業利益率、ROE、淨負債／EBITDA 五項代理，逐項顯示數值、期間、來源和通過／未通過；代理不能升級正式進場訊號。
 

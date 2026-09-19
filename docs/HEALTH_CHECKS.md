@@ -12,7 +12,7 @@
 | 現金流與資本支出 | MOPS XBRL、TWSE/TPEx | FinMind TaiwanStockCashFlowsStatement、公司 IR | `cashflow` |
 | 股利、殖利率、本益比、股價淨值比 | TWSE/TPEx OpenAPI、公司股利公告 | FinMind、yfinance 價格與已發布股利 | `valuation` / `dividend` |
 | 董監、大股東、股東人數 | MOPS、TDCC 股權分散 | 公司 IR | `ownership_monthly` |
-| 四年價格與公司行動 | yfinance Adj Close（`auto_adjust=False`） | Yahoo chart adjusted close；FinMind raw close 僅作代理 | `daily_price` |
+| 3.5 年價格與公司行動 | yfinance Adj Close（`auto_adjust=False`） | Yahoo chart adjusted close；FinMind raw close 僅作代理 | `daily_price` |
 
 上市公司第一批實作會直接使用 TWSE OpenAPI 的 `exchangeReport/BWIBBU_ALL`（PE/PB/殖利率）、`opendata/t187ap05_L`（月營收）、`opendata/t187ap06_L_ci`／`t187ap07_L_ci`（一般業損益與資產負債）及 `opendata/t187ap45_L`（股利）。上櫃公司改接 TPEx 對應 endpoint；現金流、股權分散與公告日缺口再由 MOPS XBRL、FinMind 或公司 IR 補齊。
 

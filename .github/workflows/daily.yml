@@ -22,11 +22,13 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
-      - run: python -m pip install pytest
+      - run: python -m pip install -r requirements.txt
       - run: python scripts/fetch_finmind.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output public/data
         env:
           FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
-      - run: python -m pytest pipeline -q
+      - run: python scripts/refresh_snapshot.py --output public/data
+      - run: python scripts/verify_snapshot.py
+      - run: python -m pytest pipeline scripts -q
       - run: npm run build
       - uses: actions/upload-artifact@v4
         with:
