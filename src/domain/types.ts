@@ -196,11 +196,11 @@ export interface RankingRow {
   evidenceLevel?: 'proxy' | 'formal'
   route?: 'lowBase' | 'lowBaseGrowth' | 'lowBaseQuality'
   gates?: LowBaseGate[]
-  currentPrice?: number
-  fairPrice?: number
-  valuePrice075?: number
-  valuePrice066?: number
-  currentPeg?: number
+  currentPrice?: number | null
+  fairPrice?: number | null
+  valuePrice075?: number | null
+  valuePrice066?: number | null
+  currentPeg?: number | null
   currentPe?: number | null
   currentEps?: number | null
   pegBand?: 'strict' | 'acceptable'
@@ -208,7 +208,7 @@ export interface RankingRow {
   valuationGrowthInput?: number
   valuationGrowthMethod?: string
   valuationGrowthMethodLabel?: string
-  valuationEvidenceLevel?: 'formal' | 'proxy'
+  valuationEvidenceLevel?: 'formal' | 'proxy' | 'unavailable'
   valuationFormulaVersion?: string
   /** Proxy growth beyond 100% (or a scenario price >3× current) needs an
    *  explicit "do not extrapolate" warning next to the scenario prices. */
@@ -220,6 +220,20 @@ export interface RankingRow {
   regressionEnd?: string | null
   regressionObservations?: number | null
   regressionExpectedObservations?: number | null
+  /** Producer-approved growth health evidence, when supplied by the release. */
+  growthHealth?: {
+    status: MetricStatus
+    passCount: number
+    total: number
+    reason: string
+    evidenceLevel?: 'proxy' | 'formal' | 'unavailable'
+  }
+  /** Low-position detail summary; unknown is deliberately not a pass. */
+  lowPositionEvidence?: {
+    growthHealthStatus?: MetricStatus
+    growthHealthReason?: string
+    evidenceLevel?: 'proxy' | 'formal' | 'unavailable'
+  }
 }
 
 export interface LowBaseGate {

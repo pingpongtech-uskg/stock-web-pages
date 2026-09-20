@@ -59,6 +59,23 @@ describe('validateRelease', () => {
     expect(validateRelease(release)).toBe(release)
   })
 
+  it('accepts official and low-position rows without PEG while constraining only growth', () => {
+    const release = validRelease() as unknown as Record<string, unknown>
+    ;(release.funnel as Record<string, unknown>).strategyCandidates = { trust: 10, growth: 0, lowPosition: 8 }
+    ;(release.rankings as Record<string, unknown>).trust = [{
+      rank: 1, code: '2330', name: '聯電', sector: '', value: 1, valueLabel: '股',
+      status: 'pass', reason: 'official', valuationEvidenceLevel: 'unavailable',
+      currentPeg: null, currentPrice: null, fairPrice: null, valuePrice075: null, valuePrice066: null,
+    }]
+    ;(release.rankings as Record<string, unknown>).lowPosition = [{
+      rank: 1, code: '2330', name: '聯電', sector: '', value: -1, valueLabel: '',
+      status: 'unknown', reason: 'price observation', valuationEvidenceLevel: 'unavailable',
+      currentPeg: null, currentPrice: null, fairPrice: null, valuePrice075: null, valuePrice066: null,
+      zScore: -1, slope: 0.1,
+    }]
+    expect(validateRelease(release)).toBe(release)
+  })
+
   it('rejects a payload without ranking arrays instead of allowing a white screen', () => {
     const invalid = validRelease() as unknown as Record<string, unknown>
     invalid.rankings = { trust: [] }

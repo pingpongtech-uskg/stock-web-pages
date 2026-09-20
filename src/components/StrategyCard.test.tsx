@@ -54,15 +54,54 @@ describe('StrategyCard', () => {
     expect(markup).not.toContain('未知')
   })
 
-  it('does not render rows without known valuation inputs', () => {
+  it('renders an official trust row when valuation is unavailable', () => {
+    const officialUnavailable: RankingRow = {
+      ...knownRow,
+      code: '9999',
+      name: '估值不足股',
+      currentPrice: null,
+      fairPrice: null,
+      valuePrice075: null,
+      valuePrice066: null,
+      currentPeg: null,
+      valuationEvidenceLevel: undefined,
+      entryStatus: 'retained',
+    }
     const markup = renderToStaticMarkup(
-      <StrategyCard presentation={strategyPresentations[1]} rows={[knownRow, unavailableRow]} />,
+      <StrategyCard presentation={strategyPresentations[0]} rows={[knownRow, officialUnavailable]} />,
     )
 
-    expect(markup).toContain('1 檔')
+    expect(markup).toContain('2 檔')
     expect(markup).toContain('2330')
-    expect(markup).not.toContain('9999')
-    expect(markup).not.toContain('未知')
+    expect(markup).toContain('9999')
+    expect(markup).toContain('PEG 不可用')
+    expect(markup).toContain('估值資料不足')
+    expect(markup).toContain('現在價格')
+    expect(markup).toContain('<strong>—</strong>')
+    expect(markup).not.toContain('<strong>0.00</strong>')
+  })
+
+  it('labels growth proxy evidence and never fabricates unavailable prices', () => {
+    const row: RankingRow = { ...knownRow, code: '2888', name: '營收代理股', currentPrice: 80, fairPrice: null, valuePrice075: null, valuePrice066: null, currentPeg: null, valuationEvidenceLevel: 'proxy', valuationGrowthMethodLabel: '營收成長代理', growthHealth: { status: 'pass', passCount: 3, total: 4, reason: '成長健康證據' } }
+    const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[1]} rows={[row]} />)
+    expect(markup).toContain('營收成長僅為代理，不等同 EPS 成長')
+    expect(markup).toContain('正式／代理證據：代理')
+    expect(markup).toContain('估值資料不足')
+    expect(markup).toContain('PEG 不可用')
+    expect(markup).not.toContain('<strong>0.00</strong>')
+  })
+
+  it('renders low-position observations without PEG and treats unknown health as unassessed', () => {
+    const row: RankingRow = { ...knownRow, code: '1777', name: '低位觀察股', currentPrice: 50, fairPrice: null, valuePrice075: null, valuePrice066: null, currentPeg: null, zScore: -1.2, slope: 0.03, regressionStart: '2023-01-01', regressionEnd: '2026-06-30', priceBasis: 'adjusted', lowPositionEvidence: { growthHealthStatus: 'unknown', growthHealthReason: '必要資料不足' } }
+    const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[2]} rows={[row]} />)
+    expect(markup).toContain('價格／回歸觀察')
+    expect(markup).toContain('成長健康：未知／未評估')
+    expect(markup).toContain('Z -1.20')
+    expect(markup).toContain('slope 0.030')
+    expect(markup).toContain('現在價格')
+    expect(markup).toContain('目前 PEG')
+    expect(markup).toContain('PEG 不可用')
+    expect(markup).not.toContain('通過')
   })
 
   it('marks a trust top10 newcomer without changing PEG display', () => {
@@ -84,17 +123,19 @@ describe('StrategyCard', () => {
       reason: 'Z -0.35 ≤ 0；低位代理，完整歷史條件仍待驗證',
       valuationGrowthMethod: 'three_month_revenue_proxy',
       valuationGrowthMethodLabel: '三月營收成長代理',
+      zScore: -0.35,
+      slope: 0.03,
     }
     const markup = renderToStaticMarkup(
       <StrategyCard presentation={strategyPresentations[2]} rows={[observationRow]} />,
     )
     expect(markup).toContain('1 檔')
     expect(markup).toContain('3413')
-    expect(markup).toContain('觀察候選')
-    expect(markup).toContain('PEG &lt; 0.66（代理）')
+    expect(markup).toContain('價格／回歸觀察')
     expect(markup).toContain('三月營收成長代理')
     expect(markup).not.toContain('unknown')
-    expect(markup).not.toContain('未知')
+    expect(markup).toContain('目前 PEG')
+    expect(markup).toContain('0.52')
   })
 
   it('renders a useful empty state when no known rows remain', () => {

@@ -61,6 +61,18 @@ def test_partial_numeric_valuation_fields_are_rejected() -> None:
     assert ranking_valuation_error({"code": "2330", "fairPrice": 100}, "trust") == "ranking_row_valuation_partial:trust"
 
 
+def test_price_observation_without_peg_is_allowed() -> None:
+    row = {
+        "code": "4915",
+        "currentPrice": 65.5,
+        "currentPeg": None,
+        "fairPrice": None,
+        "valuePrice075": None,
+        "valuePrice066": None,
+    }
+    assert ranking_valuation_error(row, "lowPosition") is None
+
+
 def test_stale_four_year_limitations_are_removed() -> None:
     values = [
         "四年研究曲線使用 yfinance Adj Close；...",

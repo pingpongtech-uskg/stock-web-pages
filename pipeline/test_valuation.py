@@ -42,10 +42,17 @@ def test_zulu_valuation_rejects_invalid_inputs():
     ) is None
 
 
-def test_revenue_only_growth_is_not_formal_valuation():
-    assert calculate_zulu_valuation(
+def test_revenue_only_growth_is_explicit_proxy_valuation():
+    result = calculate_zulu_valuation(
         current_price=100,
         current_pe=10,
         eps_growth=0.30,
         growth_method="ltm_revenue_proxy",
-    ) is None
+        growth_method_label="LTM 營收成長代理",
+    )
+
+    assert result is not None
+    assert result["method"] == "zulu-peg"
+    assert result["growth_method"] == "ltm_revenue_proxy"
+    assert result["growth_method_label"] == "LTM 營收成長代理"
+    assert math.isclose(result["current_peg"], 10 / 30)

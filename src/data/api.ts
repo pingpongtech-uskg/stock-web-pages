@@ -71,7 +71,7 @@ function validateRankingRow(value: unknown): void {
     if (row[key] !== undefined) requireNullableNumber(row[key])
   }
   if (row.pegBand !== undefined) expect(row.pegBand === 'strict' || row.pegBand === 'acceptable')
-  if (row.valuationEvidenceLevel !== undefined) expect(row.valuationEvidenceLevel === 'formal' || row.valuationEvidenceLevel === 'proxy')
+  if (row.valuationEvidenceLevel !== undefined) expect(row.valuationEvidenceLevel === 'formal' || row.valuationEvidenceLevel === 'proxy' || row.valuationEvidenceLevel === 'unavailable')
   if (row.extremeExtrapolation !== undefined) expect(typeof row.extremeExtrapolation === 'boolean')
   if (row.valuationGrowthMethod !== undefined) requireString(row.valuationGrowthMethod)
   if (row.valuationGrowthMethodLabel !== undefined) requireString(row.valuationGrowthMethodLabel)
@@ -132,7 +132,9 @@ export function validateRelease(payload: unknown): Release {
   expect(funnelPeg <= funnelValuation)
   expect(funnelFormal + funnelProxy === funnelValuation)
   expect(funnelUniverse >= 0 && funnelPrice >= 0)
-  expect(counts.every((count) => count <= funnelPeg))
+  // Official trust flow and low-position price observations do not require
+  // a PEG value. Only the growth route is bounded by the PEG pool.
+  expect(counts[1] <= funnelPeg)
 
   const rankings = requireRecord(p.rankings)
   for (const key of RANKING_KEYS) {

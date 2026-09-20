@@ -339,6 +339,7 @@ def _attach_valuation(
     detail_by_code: dict[str, dict[str, Any]],
     *,
     require_peg_below_075: bool = True,
+    exclude_extreme: bool = True,
 ) -> list[dict[str, Any]]:
     visible: list[dict[str, Any]] = []
     for row in rows:
@@ -348,16 +349,30 @@ def _attach_valuation(
         if not is_common_stock_code(code):
             continue
         detail = detail_by_code.get(code, {})
+        regression = detail.get("regression")
+        if not isinstance(regression, dict):
+            regression = {}
         valuation = detail.get("valuation")
         if not isinstance(valuation, dict):
             if require_peg_below_075:
                 continue
-            row.setdefault("valuationEvidenceLevel", "unavailable")
-            row.setdefault("currentPeg", None)
-            row.setdefault("fairPrice", None)
-            row.setdefault("valuePrice075", None)
-            row.setdefault("valuePrice066", None)
-            row.setdefault("currentPrice", None)
+            row.update(
+                {
+                    "valuationEvidenceLevel": "unavailable",
+                    "currentPeg": None,
+                    "fairPrice": None,
+                    "valuePrice075": None,
+                    "valuePrice066": None,
+                    "currentPrice": _current_price(detail),
+                    "priceBasis": detail.get("priceBasis") or regression.get("priceBasis"),
+                    "zScore": detail.get("zScore", regression.get("z")),
+                    "slope": detail.get("slope", regression.get("slope")),
+                    "regressionStart": regression.get("historyStart"),
+                    "regressionEnd": regression.get("historyEnd"),
+                    "regressionObservations": regression.get("observations"),
+                    "regressionExpectedObservations": regression.get("expectedObservations"),
+                }
+            )
             visible.append(row)
             continue
         if require_peg_below_075 and not valuation.get("below_075"):
@@ -378,11 +393,8 @@ def _attach_valuation(
             ):
                 ratio = float(fair_price) / float(current_price)
             extreme = float(growth_input) > 1.0 or (ratio is not None and ratio > 3.0)
-        if extreme:
+        if extreme and exclude_extreme:
             continue
-        regression = detail.get("regression")
-        if not isinstance(regression, dict):
-            regression = {}
         row.update(
             {
                 "currentPrice": valuation.get("current_price"),
@@ -1015,6 +1027,19 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             price_eligible=price_eligible,
             growth_health=growth_health,
         )
+        growth_category = next(
+            (category for category in health_categories if isinstance(category, dict) and category.get("key") == "growth"),
+            None,
+        )
+        existing_growth_gate = low_position_health.get("growthHealth")
+        if isinstance(growth_category, dict) and isinstance(existing_growth_gate, dict):
+            low_position_health["growthHealth"] = {
+                **existing_growth_gate,
+                "passCount": int(growth_category.get("passCount") or 0),
+                "total": int(growth_category.get("total") or 5),
+                "reason": "五項成長健康檢查已逐項保留 pass／fail／unknown。",
+                "evidenceLevel": "formal",
+            }
         detail["growthHealthStatus"] = growth_health
         detail["lowPositionEvidence"] = low_position_health
         if isinstance(z, (int, float)) and math.isfinite(float(z)):
@@ -1190,9 +1215,12 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         ]
         current["reason"] = f"{current.get('reason', '')}；另一路徑亦通過"
     low_base_rank = rank_low_base_rows(list(low_base_by_code.values()), institutional_rank_by_code)
-    trust_rank = _attach_valuation(trust_rank, detail_by_code, require_peg_below_075=False)
+    trust_rank = _attach_valuation(trust_rank, detail_by_code, require_peg_below_075=False, exclude_extreme=False)
     growth_rank = _attach_valuation(growth_rank, detail_by_code)
-    low_rank = _attach_valuation(low_rank, detail_by_code)
+    # Low-position is a price/recovery observation.  Keep rows without PEG and
+    # extreme proxy rows so the price signal remains visible; warn in the row
+    # instead of letting valuation evidence delete the observation.
+    low_rank = _attach_valuation(low_rank, detail_by_code, require_peg_below_075=False, exclude_extreme=False)
     strict_low_base_growth_rank = _attach_valuation(strict_low_base_growth_rank, detail_by_code)
     strict_low_base_quality_rank = _attach_valuation(strict_low_base_quality_rank, detail_by_code)
     low_base_growth_rank = _attach_valuation(low_base_growth_rank, detail_by_code)
@@ -1324,7 +1352,12 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             "proxyCandidateCount": proxy_candidates,
             "trustSignalCount": trust_signal_count,
             "trustNewEntryCount": trust_new_entry_count,
-            "trustValuationVisibleCount": len(trust_rank),
+            "trustValuationVisibleCount": sum(
+                1
+                for row in trust_rank
+                if isinstance(row.get("currentPeg"), (int, float))
+                and math.isfinite(float(row["currentPeg"]))
+            ),
             "lowBaseGap": low_base_gap_summary,
             "lowBaseGrowthGap": low_base_growth_gap,
             "lowBaseQualityGap": low_base_quality_gap,

@@ -165,6 +165,13 @@ def ranking_valuation_error(row: object, key: str) -> str | None:
     fields = ("currentPeg", "currentPrice", "fairPrice", "valuePrice075", "valuePrice066")
     if not any(row.get(field) is not None for field in fields):
         return None
+    # A price/recovery observation may carry only the current price while PEG
+    # evidence is unavailable.  Fair/value-band numbers without PEG remain a
+    # partial valuation and must fail closed.
+    if row.get("currentPeg") is None:
+        if any(row.get(field) is not None for field in ("fairPrice", "valuePrice075", "valuePrice066")):
+            return "ranking_row_valuation_partial:" + key
+        return None
     if any(not is_number(row.get(field)) for field in ("currentPeg", "currentPrice", "fairPrice")):
         return "ranking_row_valuation_partial:" + key
     return None
