@@ -138,6 +138,12 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
     categories = empty_health_categories(refs=refs)
     by_key = {category["key"]: category for category in categories}
     revenue_rows = [row for row in detail.get("revenueMonthly", []) if isinstance(row, dict) and row.get("month") and row.get("revenue") is not None]
+    health_inputs_value = detail.get("healthInputs")
+    health_inputs = health_inputs_value if isinstance(health_inputs_value, dict) else {}
+    raw_official_revenue_rows = health_inputs.get("monthlyRevenueOfficial")
+    official_revenue_rows = raw_official_revenue_rows if isinstance(raw_official_revenue_rows, list) else []
+    if len(revenue_rows) < 3 and official_revenue_rows:
+        revenue_rows = [row for row in official_revenue_rows if isinstance(row, dict) and row.get("month") and row.get("revenue") is not None]
     revenue_by_month = {str(row["month"])[:7]: float(row["revenue"]) for row in revenue_rows}
     months = sorted(revenue_by_month)
     if len(months) >= 3:

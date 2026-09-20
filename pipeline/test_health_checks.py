@@ -16,6 +16,16 @@ def test_unknown_is_not_counted_as_pass():
     assert health_totals([result])["status"] == "unknown"
 
 
+def test_four_of_five_growth_checks_meets_threshold_but_unknown_does_not():
+    four_pass = [{"status": "pass"}] * 4 + [{"status": "fail"}]
+    assert evaluate_category("growth", four_pass)["passCount"] == 4
+    assert evaluate_category("growth", four_pass)["status"] == "pass"
+
+    one_unknown = [{"status": "pass"}] * 4 + [{"status": "unknown"}]
+    assert evaluate_category("growth", one_unknown)["passCount"] == 4
+    assert evaluate_category("growth", one_unknown)["status"] == "unknown"
+
+
 def test_known_failure_can_fail_without_all_fields():
     checks = [{"status": "fail"}, {"status": "fail"}, {"status": "unknown"}, {"status": "unknown"}, {"status": "unknown"}]
     assert evaluate_category("growth", checks)["status"] == "fail"

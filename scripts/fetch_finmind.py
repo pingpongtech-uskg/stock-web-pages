@@ -23,6 +23,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from pipeline.finmind_client import BudgetExceeded, FinMindClient, FinMindError, SourceBlocked  # noqa: E402
+from pipeline.health_inputs import normalize_finmind_health_inputs  # noqa: E402
 from pipeline.health_checks import empty_health_categories, health_totals  # noqa: E402
 from pipeline.indicators import linear_regression, revenue_growth, trust_metrics  # noqa: E402
 
@@ -250,6 +251,7 @@ def make_stock(
         "財報日期不是天然公告時間；未完成 point-in-time 可得性認證。",
     ]
     quality_checks = unknown_quality_checks()
+    health_inputs = normalize_finmind_health_inputs(financial_inputs, revenue, fetched_at=iso_now())
     health_categories = empty_health_categories(
         reason="已抓到部分公開資料，但尚未完成年度／季度、合併口徑與公告日的正規化；此項暫不判定。",
         refs=["FinMind:TaiwanStockFinancialStatements", "FinMind:TaiwanStockBalanceSheet", "FinMind:TaiwanStockCashFlowsStatement", "TWSE OpenAPI", "TPEx OpenAPI"],
@@ -314,6 +316,7 @@ def make_stock(
         "revenueMonthly": revenue,
         "qualityChecks": quality_checks,
         "financialInputs": financial_inputs or {"incomeStatement": [], "balanceSheet": [], "cashFlow": []},
+        "healthInputs": health_inputs,
         "healthCategories": health_categories,
         "healthScore": health_score,
         "historySnapshots": [],

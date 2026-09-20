@@ -12,6 +12,8 @@ describe('strategy presentation', () => {
     expect(ZULU_VALUATION_FORMULA).toContain('祖魯基準價（PEG=1）')
     expect(ZULU_VALUATION_FORMULA).toContain('營收成長僅為觀察代理')
     expect(ZULU_VALUATION_FORMULA).toContain('估算／代理 PEG')
+    expect(strategyPresentations.find((item) => item.key === 'growth')?.condition).toContain('4/5')
+    expect(strategyPresentations.find((item) => item.key === 'lowPosition')?.condition).toContain('4/5')
     expect(strategyPresentations.find((item) => item.key === 'lowPosition')?.valuationNote).toContain('PEG 不可用')
   })
 })

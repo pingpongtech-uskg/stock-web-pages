@@ -1,5 +1,12 @@
 from scripts.refresh_snapshot import next_expected_update_for_market_date
 from scripts.refresh_snapshot import _attach_valuation
+from scripts.refresh_snapshot import growth_health_qualifies
+
+
+def test_growth_health_requires_four_known_passes():
+    assert growth_health_qualifies({"status": "pass", "passCount": 4, "total": 5}) is True
+    assert growth_health_qualifies({"status": "unknown", "passCount": 4, "total": 5}) is False
+    assert growth_health_qualifies({"status": "pass", "passCount": 3, "total": 5}) is False
 
 
 def test_next_expected_update_skips_weekend_after_friday_market_date():

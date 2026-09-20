@@ -53,6 +53,7 @@ from pipeline.enrichment import (  # noqa: E402
     quality_proxy_checks,
 )
 from pipeline.health_checks import evaluate_snapshot_health, health_totals  # noqa: E402
+from pipeline.health_inputs import merge_health_inputs, normalize_finmind_health_inputs  # noqa: E402
 from pipeline.yahoo_client import (  # noqa: E402
     YAHOO_CHART_SOURCE,
     YFINANCE_FUNDAMENTAL_SOURCE,
@@ -230,6 +231,21 @@ def baseline_details(data_dir: Path, release: dict[str, Any]) -> list[dict[str, 
             result.append(placeholder)
             known_codes.add(code)
     return result
+
+
+GROWTH_HEALTH_REQUIRED_PASS = 4
+
+
+def growth_health_qualifies(category: object) -> bool:
+    """Return true only for a fully-known five-check result meeting 4/5."""
+    if not isinstance(category, dict):
+        return False
+    try:
+        passed = int(category.get("passCount") or 0)
+        total = int(category.get("total") or 0)
+    except (TypeError, ValueError):
+        return False
+    return category.get("status") == "pass" and total == 5 and passed >= GROWTH_HEALTH_REQUIRED_PASS
 
 
 def _current_price(detail: dict[str, Any]) -> float | None:
@@ -515,15 +531,30 @@ def _revenue_growth_from_public_inputs(public_inputs: dict[str, Any] | None) -> 
     return (current_total - prior_total) / prior_total if prior_total else None
 
 
+def _health_inputs_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
+    existing = detail.get("healthInputs")
+    if isinstance(existing, dict) and (existing.get("incomeQuarterly") or existing.get("monthlyRevenueOfficial")):
+        return existing
+    financial_inputs = detail.get("financialInputs") if isinstance(detail.get("financialInputs"), dict) else {}
+    revenue_rows = detail.get("revenueMonthly") if isinstance(detail.get("revenueMonthly"), list) else []
+    return normalize_finmind_health_inputs(financial_inputs, revenue_rows)
+
+
 def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, public_inputs: dict[str, Any] | None = None) -> tuple[dict[str, Any], list[str]]:
     code = str(detail.get("code") or "")
     market = str(detail.get("market") or "TWSE")
-    # Offline recalculation must keep using the last successful public-input
-    # payload.  Otherwise a refresh that only updates prices would turn all
-    # revenue and quality proxies back into unknown.
-    source_inputs = public_inputs if isinstance(public_inputs, dict) and public_inputs else (
-        detail.get("healthInputs") if isinstance(detail.get("healthInputs"), dict) else None
-    )
+    # Offline recalculation and FinMind-first CI runs keep historical health
+    # rows; newer TWSE inputs overlay only matching/latest periods.
+    existing_health_inputs = _health_inputs_from_detail(detail)
+    source_inputs = merge_health_inputs(existing_health_inputs, public_inputs)
+    if source_inputs:
+        detail["healthInputs"] = source_inputs
+        detail["healthInputSummary"] = {
+            "source": source_inputs.get("source", "public financial inputs"),
+            "incomePeriods": len(source_inputs.get("incomeQuarterly") or []),
+            "officialRevenueRows": len(source_inputs.get("monthlyRevenueOfficial") or []),
+            "valuationDate": (source_inputs.get("valuationCurrent") or {}).get("date"),
+        }
     errors: list[str] = []
     source_refs: list[str] = []
     raw_price = [dict(point) for point in detail.get("priceSeries", []) if isinstance(point, dict)]
@@ -992,22 +1023,9 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         growth = detail.get("revenueGrowth3m")
         if growth is None:
             growth = detail.get("revenueGrowthProxy")
+        growth_status = "unknown"
         if isinstance(growth, (int, float)) and math.isfinite(float(growth)):
             growth_status = str(detail.get("growthProxyStatus") or growth_proxy_status(float(growth)))
-            if growth_status == "pass":
-                candidate_codes.add(code)
-            growth_rows.append(
-                {
-                    "rank": 0,
-                    "code": code,
-                    "name": name,
-                    "sector": sector,
-                    "value": float(growth) * 100,
-                    "valueLabel": "%",
-                    "status": growth_status,
-                    "reason": f"三月合計營收年增 {float(growth) * 100:+.1f}%；這是營收代理，正式營業利益成長為 {detail.get('growthStatus', 'unknown')}",
-                }
-            )
         z = detail.get("zScore")
         slope = detail.get("slope")
         regression = detail.get("regression") if isinstance(detail.get("regression"), dict) else {}
@@ -1040,19 +1058,40 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                 "reason": "五項成長健康檢查已逐項保留 pass／fail／unknown。",
                 "evidenceLevel": "formal",
             }
+        growth_health_qualified = growth_health_qualifies(growth_category)
+        growth_pass_count = int(growth_category.get("passCount") or 0) if isinstance(growth_category, dict) else 0
+        growth_total = int(growth_category.get("total") or 5) if isinstance(growth_category, dict) else 5
         detail["growthHealthStatus"] = growth_health
+        detail["growthHealthPassCount"] = growth_pass_count
+        detail["growthHealthTotal"] = growth_total
+        detail["growthHealthEligible"] = growth_health_qualified
         detail["lowPositionEvidence"] = low_position_health
+        if growth_health_qualified and growth_status == "pass" and isinstance(growth, (int, float)) and math.isfinite(float(growth)):
+            candidate_codes.add(code)
+            growth_rows.append(
+                {
+                    "rank": 0,
+                    "code": code,
+                    "name": name,
+                    "sector": sector,
+                    "value": float(growth) * 100,
+                    "valueLabel": "%",
+                    "status": "pass",
+                    "growthHealth": growth_category,
+                    "reason": f"三月合計營收年增 {float(growth) * 100:+.1f}%；五項成長健康 {growth_pass_count}/{growth_total}，達 4/5 門檻。",
+                }
+            )
         if isinstance(z, (int, float)) and math.isfinite(float(z)):
             low = float(z) <= -1 and isinstance(slope, (int, float)) and float(slope) > 0
             proxy_low = float(z) <= 0 and isinstance(slope, (int, float)) and float(slope) > 0
-            if proxy_low:
+            if proxy_low and growth_health_qualified:
                 low_count += 1
                 candidate_codes.add(code)
             if detail.get("signalState") == "進場觀察":
                 formal_entries += 1
             elif detail.get("signalState") in {"低位觀察", "值得研究"}:
                 proxy_candidates += 1
-            if proxy_low:
+            if proxy_low and growth_health_qualified:
                 low_rows.append(
                     {
                         "rank": 0,
