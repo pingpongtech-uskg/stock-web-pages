@@ -23,6 +23,8 @@ jobs:
           python-version: '3.12'
       - run: npm ci
       - run: python -m pip install -r requirements.txt
+      - name: Fetch official institutional universe
+        run: python scripts/fetch_research_universe.py --source official --config config/tracked_symbols.json --output public/data/institutional_universe.json
       - run: python scripts/fetch_finmind.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output public/data
         env:
           FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}

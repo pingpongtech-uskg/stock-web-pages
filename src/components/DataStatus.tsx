@@ -40,6 +40,9 @@ export function DataStatus({ release, compact = false, now = Date.now() }: { rel
   const statusMessage = staleFromCurrent
     ? `發布快照已逾期${overdue ? `（${overdue}）` : ''}`
     : release.statusMessage
+  const trustSignalSummary = !compact && typeof release.summary.trustSignalCount === 'number'
+    ? ` · 投信 Top10 ${formatCount(release.summary.trustSignalCount)} 檔／新進榜 ${formatCount(release.summary.trustNewEntryCount)} 檔／PEG 可顯示 ${formatCount(release.summary.trustValuationVisibleCount ?? release.summary.candidateRouteCounts.trust)} 檔`
+    : ''
   // Data quality (degraded/stale) and time freshness are separate dimensions:
   // a degraded release that is also past its expected update still shows how
   // long ago the market data should have been refreshed.
@@ -58,7 +61,7 @@ export function DataStatus({ release, compact = false, now = Date.now() }: { rel
           <span>
             {statusMessage}
             {showOverdue && <em className="overdue-note">（{overdue}）</em>}
-            {coverage.scopeLabel ? ` · ${coverage.scopeLabel}` : ''}
+            {coverage.scopeLabel ? ` · ${coverage.scopeLabel}` : ''}{trustSignalSummary}
           </span>
         )}
       </div>

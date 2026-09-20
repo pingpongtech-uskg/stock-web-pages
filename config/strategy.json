@@ -3,7 +3,7 @@
   "formula_version": "lohas-linear-3.5y-research-v1",
   "currency": "TWD",
   "liquidity": { "window_market_sessions": 20, "min_average_trading_money": 20000000 },
-  "trust": { "window_market_sessions": 10, "top_n_net_shares": 100, "top_n_participation": 100 },
+  "trust": { "window_market_sessions": 10, "top_n_net_shares": 10, "top_n_universe": 100, "compare_previous_market_day": true, "exclude_non_common": true },
   "growth": { "months": 3, "revenue_growth_min": 0.15, "defensive_growth_min": 0.0 },
   "quality": { "positive_years": 3, "roe_median_min": 0.12, "net_debt_to_ebitda_max": 2.0 },
   "signal": { "z_low": -1.0, "z_current_max": 0.0, "weekly_ma_period": 10, "lookback_complete_weeks": 8 },

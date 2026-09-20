@@ -66,6 +66,7 @@ from pipeline.release_contract import (  # noqa: E402
     compute_funnel,
     is_common_stock_code,
 )
+from pipeline.institutional_ranking import annotate_top_n_entries  # noqa: E402
 from pipeline.valuation import calculate_zulu_valuation  # noqa: E402
 
 
@@ -318,7 +319,12 @@ def _valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
     return valuation
 
 
-def _attach_valuation(rows: list[dict[str, Any]], detail_by_code: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+def _attach_valuation(
+    rows: list[dict[str, Any]],
+    detail_by_code: dict[str, dict[str, Any]],
+    *,
+    require_peg_below_075: bool = True,
+) -> list[dict[str, Any]]:
     visible: list[dict[str, Any]] = []
     for row in rows:
         code = str(row.get("code"))
@@ -328,7 +334,9 @@ def _attach_valuation(rows: list[dict[str, Any]], detail_by_code: dict[str, dict
             continue
         detail = detail_by_code.get(code, {})
         valuation = detail.get("valuation")
-        if not isinstance(valuation, dict) or not valuation.get("below_075"):
+        if not isinstance(valuation, dict):
+            continue
+        if require_peg_below_075 and not valuation.get("below_075"):
             continue
         growth_method = str(valuation.get("growth_method") or "")
         growth_method_label = str(valuation.get("growth_method_label") or "")
@@ -826,11 +834,16 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     # symbols and call that result the universe.
     universe_rows: list[dict[str, Any]] = []
     universe_source = ""
+    universe_label = "投信十日買超前100"
+    previous_universe_rows: list[dict[str, Any]] = []
     try:
         config = load_json(data_dir.parent.parent / "config" / "tracked_symbols.json")
-        universe = config.get("universe") if isinstance(config.get("universe"), dict) else {}
+        raw_universe = config.get("universe")
+        universe = raw_universe if isinstance(raw_universe, dict) else {}
         universe_rows = [row for row in universe.get("rows", []) if isinstance(row, dict)]
         universe_source = str(universe.get("sourceUrl") or "")
+        universe_label = str(universe.get("label") or universe_label)
+        previous_universe_rows = [row for row in universe.get("previousRows", []) if isinstance(row, dict)]
     except (OSError, ValueError, json.JSONDecodeError):
         universe_rows = []
     detail_by_code = {str(detail.get("code")): detail for detail in enriched}
@@ -846,24 +859,30 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         except (TypeError, ValueError):
             continue
         detail["researchUniverseId"] = "A"
-        detail["researchUniverseLabel"] = "投信十日買超前100"
+        detail["researchUniverseLabel"] = universe_label
         detail["researchUniverseRank"] = source_rank
         detail["researchUniverseSource"] = universe_source or "https://stock.wearn.com/b50.asp"
         detail["sourceRefs"] = merge_refs(detail.get("sourceRefs"), [detail["researchUniverseSource"]])
-        net_text = str(row.get("net") or "").replace(",", "")
-        try:
-            detail["sourceUniverseNetLots"] = float(net_text)
-        except ValueError:
-            detail["sourceUniverseNetLots"] = None
+        net_value = row.get("netShares")
+        if not isinstance(net_value, (int, float)):
+            net_text = str(row.get("net") or "").replace(",", "")
+            try:
+                net_value = float(net_text)
+            except ValueError:
+                net_value = None
+        detail["sourceUniverseNetShares"] = float(net_value) if isinstance(net_value, (int, float)) else None
         source_rank_rows.append({
             "rank": source_rank,
             "code": code,
             "name": str(row.get("name") or detail.get("name") or code),
             "sector": str(detail.get("sector") or ""),
-            "value": detail.get("sourceUniverseNetLots"),
-            "valueLabel": "張",
+            "value": detail.get("sourceUniverseNetShares"),
+            "valueLabel": "股",
             "status": "pass",
-            "reason": f"來源 A 投信十日買超前100，第 {source_rank} 名；此名次是母體，不是子集合重算。",
+            "sourceRank": source_rank,
+            "previousRank": row.get("previousRank"),
+            "entryStatus": row.get("entryStatus", "not_applicable"),
+            "reason": f"{universe_label}，第 {source_rank} 名；此名次是完整來源排行，不是子集合重算。",
             "source": detail["researchUniverseSource"],
         })
 
@@ -1074,7 +1093,27 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                 }
             )
 
-    trust_rank = sorted(source_rank_rows, key=lambda row: (int(row.get("rank") or 10**9), str(row.get("code")))) if source_rank_rows else rank_rows(trust_rows, reverse=True)
+    if not previous_universe_rows:
+        previous_universe_rows = [
+            {
+                "rank": stock.get("researchUniverseRank"),
+                "code": stock.get("code"),
+            }
+            for stock in baseline.get("stocks", [])
+            if isinstance(stock, dict) and stock.get("researchUniverseRank") is not None
+        ]
+    trust_signal_rank = annotate_top_n_entries(source_rank_rows, previous_universe_rows, limit=10) if source_rank_rows else []
+    for row in trust_signal_rank:
+        entry_status = str(row.get("entryStatus") or "unknown")
+        if entry_status == "new":
+            row["reason"] = f"{universe_label} Top10 新進榜，第 {row['rank']} 名；前期名次 {row.get('previousRank') or '未入榜'}。"
+        elif entry_status == "retained":
+            row["reason"] = f"{universe_label} Top10，第 {row['rank']} 名；前期第 {row.get('previousRank')} 名。"
+        else:
+            row["reason"] = f"{universe_label} Top10，第 {row['rank']} 名；前期排行資料不足，暫不判定新進榜。"
+    trust_signal_count = len(trust_signal_rank)
+    trust_new_entry_count = sum(1 for row in trust_signal_rank if row.get("entryStatus") == "new")
+    trust_rank = trust_signal_rank
     growth_rank = rank_rows(growth_rows, reverse=True)
     low_rank = rank_rows(low_rows, reverse=False)
     strict_low_base_growth_rank = rank_low_base_rows(strict_low_base_growth_rows, institutional_rank_by_code)
@@ -1097,7 +1136,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         ]
         current["reason"] = f"{current.get('reason', '')}；另一路徑亦通過"
     low_base_rank = rank_low_base_rows(list(low_base_by_code.values()), institutional_rank_by_code)
-    trust_rank = _attach_valuation(trust_rank, detail_by_code)
+    trust_rank = _attach_valuation(trust_rank, detail_by_code, require_peg_below_075=False)
     growth_rank = _attach_valuation(growth_rank, detail_by_code)
     low_rank = _attach_valuation(low_rank, detail_by_code)
     strict_low_base_growth_rank = _attach_valuation(strict_low_base_growth_rank, detail_by_code)
@@ -1182,9 +1221,9 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         "trackedCompleteCount": tracked_complete,
         "trackedCompletenessPct": tracked_pct,
         "universeCoveragePct": universe_pct,
-        "scopeLabel": f"A 母體：投信十日買超前100（{tracked_count} 檔）",
+        "scopeLabel": f"A 母體：{universe_label}（{tracked_count} 檔）",
         "universeId": "A",
-        "universeLabel": "投信十日買超前100",
+        "universeLabel": universe_label,
         "universeSource": universe_source or "https://stock.wearn.com/b50.asp",
         "queueStatus": f"A 母體 {tracked_count}/{universe} 檔；所有策略共用此初始篩選",
     }
@@ -1228,6 +1267,9 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             },
             "formalEntryCount": formal_entries,
             "proxyCandidateCount": proxy_candidates,
+            "trustSignalCount": trust_signal_count,
+            "trustNewEntryCount": trust_new_entry_count,
+            "trustValuationVisibleCount": len(trust_rank),
             "lowBaseGap": low_base_gap_summary,
             "lowBaseGrowthGap": low_base_growth_gap,
             "lowBaseQualityGap": low_base_quality_gap,

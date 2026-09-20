@@ -1,4 +1,4 @@
-from scripts.fetch_research_universe import parse_rankings
+from scripts.fetch_research_universe import parse_rankings, update_official_tracked_config
 
 
 def test_parse_public_rank_table_keeps_rank_order_and_codes():
@@ -13,4 +13,28 @@ def test_parse_public_rank_table_keeps_rank_order_and_codes():
     rows = parse_rankings(document, limit=2)
     assert [row["code"] for row in rows] == ["2892", "00980A"]
     assert rows[0]["name"] == "第一金"
+
+
+def test_official_config_persists_adjacent_window_and_top10_entry_status(tmp_path):
+    snapshots = []
+    for index in range(11):
+        rows = [
+            {"code": "A", "name": "甲", "market": "TWSE", "netShares": 100},
+            {"code": "B", "name": "乙", "market": "TWSE", "netShares": 90},
+        ]
+        if index == 0:
+            rows.append({"code": "NEW", "name": "新", "market": "TWSE", "netShares": 1000})
+            rows.append({"code": "OLD", "name": "舊", "market": "TWSE", "netShares": 50})
+        else:
+            rows.append({"code": "OLD", "name": "舊", "market": "TWSE", "netShares": 1000})
+        snapshots.append({"date": f"2026-09-{18 - index:02d}", "rows": rows})
+
+    payload = update_official_tracked_config(snapshots, tmp_path / "tracked.json")
+
+    assert payload["universe"]["label"] == "官方投信十日買超前100"
+    assert payload["universe"]["marketDates"] == [f"2026-09-{18 - index:02d}" for index in range(10)]
+    top10 = {row["code"]: row for row in payload["universe"]["top10"]}
+    assert top10["NEW"]["entryStatus"] == "new"
+    assert top10["OLD"]["entryStatus"] == "retained"
+    assert payload["universe"]["previousRows"]
 

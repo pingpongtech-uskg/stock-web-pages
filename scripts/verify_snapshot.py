@@ -211,7 +211,9 @@ def main(root: Path | None = None) -> int:
         return fail('funnel_strategy_counts')
     if funnel['pegCandidates'] > funnel['valuationComplete']:
         return fail('funnel_conservation_peg')
-    if any(counts[key] > funnel['pegCandidates'] for key in STRATEGY_FUNNEL_KEYS):
+    if counts["trust"] > funnel["valuationComplete"]:
+        return fail('funnel_conservation_trust')
+    if any(counts[key] > funnel['pegCandidates'] for key in ('growth', 'lowPosition')):
         return fail('funnel_conservation_strategy')
     if funnel['formalValuations'] + funnel['proxyValuations'] != funnel['valuationComplete']:
         return fail('funnel_conservation_evidence')

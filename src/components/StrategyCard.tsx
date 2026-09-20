@@ -109,6 +109,8 @@ function StockRow({ row, metricLabel, strategy }: { row: KnownRow; metricLabel: 
         <span className="stock-evidence">
           <em className={observation ? 'evidence-badge observation' : 'evidence-badge'}>{observation ? '觀察候選' : '策略條件'}</em>
           <em className={proxy ? 'evidence-badge proxy' : 'evidence-badge formal'}>{proxy ? '估算 PEG' : '正式 EPS PEG'}</em>
+          {strategy === 'trust' && row.entryStatus === 'new' && <em className="evidence-badge new-entry">新進榜</em>}
+          {strategy === 'trust' && row.entryStatus === 'unknown' && <em className="evidence-badge observation">前日排行待補</em>}
         </span>
         <span className="stock-reason">{knownReason(row.reason, row.valuationGrowthMethodLabel, row.status)}</span>
       </span>

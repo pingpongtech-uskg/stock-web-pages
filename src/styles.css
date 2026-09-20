@@ -95,6 +95,7 @@ button { cursor: pointer; }
 .evidence-badge { width: max-content; border-radius: 4px; background: var(--blue-soft); color: var(--blue); padding: 2px 5px; font-size: 10px; font-style: normal; font-weight: 800; white-space: nowrap; }
 .evidence-badge.formal { background: var(--green-soft); color: var(--green); }
 .evidence-badge.proxy, .evidence-badge.observation { background: var(--amber-soft); color: var(--amber); }
+.evidence-badge.new-entry { background: var(--red-soft); color: var(--red); }
 .stock-reason { display: -webkit-box; margin-top: 5px; overflow: hidden; color: var(--muted); font-size: 10px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .stock-metric { min-width: 78px; text-align: right; }
 .stock-metric small, .stock-metric strong { display: block; }

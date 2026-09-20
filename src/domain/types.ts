@@ -181,6 +181,9 @@ export interface StockDetail extends StockSummary {
 
 export interface RankingRow {
   rank: number
+  sourceRank?: number
+  previousRank?: number | null
+  entryStatus?: 'new' | 'retained' | 'unknown' | 'not_applicable'
   code: string
   name: string
   sector: string
@@ -310,6 +313,9 @@ export interface Release {
     removedToday: number
     formalEntryCount?: number
     proxyCandidateCount?: number
+    trustSignalCount?: number
+    trustNewEntryCount?: number
+    trustValuationVisibleCount?: number
     lowBaseGap?: LowBaseGap
     lowBaseGrowthGap?: LowBaseGap
     lowBaseQualityGap?: LowBaseGap

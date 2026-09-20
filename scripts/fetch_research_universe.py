@@ -12,6 +12,7 @@ import argparse
 import html
 import json
 import re
+import sys
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -20,6 +21,19 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from pipeline.institutional_ranking import annotate_top_n_entries  # noqa: E402
+from pipeline.official_institutional import (  # noqa: E402
+    TPEX_SOURCE,
+    TWSE_SOURCE,
+    aggregate_window,
+    fetch_recent_complete_days,
+    rank_adjacent_windows,
+    OfficialInstitutionalError,
+)
+
 SOURCE_URL = "https://stock.wearn.com/b50.asp"
 USER_AGENT = "taiwan-stock-screener/0.1 (public ranking universe)"
 CODE_RE = re.compile(r"^[0-9A-Z]{4,6}$")
@@ -142,23 +156,128 @@ def update_tracked_config(rows: list[dict[str, Any]], path: Path, source_url: st
     return payload
 
 
+def update_official_tracked_config(
+    snapshots: list[dict[str, Any]],
+    path: Path,
+    *,
+    limit: int = 100,
+) -> dict[str, Any]:
+    """Persist the official cross-market ten-session institutional universe."""
+
+    current, previous = rank_adjacent_windows(snapshots, window=10)
+    current_rows = annotate_top_n_entries(current, previous, limit=limit)
+    current_top10 = annotate_top_n_entries(current, previous, limit=10)
+    top10_by_code = {str(row["code"]): row for row in current_top10}
+
+    previous_config: dict[str, Any] = {}
+    if path.exists():
+        try:
+            loaded = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                previous_config = loaded
+        except (OSError, ValueError, json.JSONDecodeError):
+            previous_config = {}
+    raw_metadata = previous_config.get("metadata")
+    previous_metadata: dict[str, dict[str, Any]] = {
+        str(key): value
+        for key, value in raw_metadata.items()
+        if isinstance(value, dict)
+    } if isinstance(raw_metadata, dict) else {}
+
+    rows: list[dict[str, Any]] = []
+    metadata: dict[str, dict[str, Any]] = {}
+    for row in current_rows:
+        code = str(row["code"])
+        old_meta = previous_metadata.get(code, {})
+        name = str(row.get("name") or old_meta.get("name") or code)
+        metadata[code] = {**old_meta, "name": name, "market": row.get("market", old_meta.get("market", "unknown"))}
+        top10_row = top10_by_code.get(code)
+        previous_rank = top10_row.get("previousRank") if top10_row is not None else row.get("previousRank")
+        entry_status = top10_row.get("entryStatus", "not_applicable") if top10_row is not None else "not_applicable"
+        rows.append(
+            {
+                "rank": int(row["rank"]),
+                "sourceRank": int(row.get("sourceRank") or row["rank"]),
+                "code": code,
+                "name": name,
+                "market": str(row.get("market") or old_meta.get("market") or "unknown"),
+                "netShares": int(row["netShares"]),
+                # Compatibility field for older readers; it is still shares,
+                # never mislabeled as lots.
+                "net": str(int(row["netShares"])),
+                "previousRank": previous_rank,
+                "entryStatus": entry_status,
+            }
+        )
+
+    market_dates = [str(snapshot["date"]) for snapshot in snapshots[:10]]
+    previous_market_dates = [str(snapshot["date"]) for snapshot in snapshots[1:11]]
+    payload = {
+        "symbols": [row["code"] for row in rows],
+        "metadata": {code: metadata[code] for code in [row["code"] for row in rows]},
+        "purpose": "A：TWSE＋TPEx 官方投信十日買賣超前100；所有策略共用此研究母體",
+        "universe": {
+            "id": "A",
+            "label": "官方投信十日買超前100",
+            "sourceUrl": "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
+            "sourceUrls": [TWSE_SOURCE, TPEX_SOURCE],
+            "sourceMethod": "兩市場每日投信買進／賣出；TPEx 張數轉股；最近10個市場日累積；不在子集合內重算",
+            "asOfFetchedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+            "marketDates": market_dates,
+            "previousMarketDates": previous_market_dates,
+            "rows": rows,
+            "previousRows": previous[:limit],
+            "top10": current_top10,
+            "previousTop10": previous[:10],
+        },
+        "updated_at": market_dates[0] if market_dates else datetime.now(timezone.utc).date().isoformat(),
+    }
+    atomic_json(path, payload)
+    return payload
+
+
+def fetch_official_universe(*, limit: int = 100) -> dict[str, Any]:
+    snapshots = fetch_recent_complete_days(sessions=11, lookback_days=35)
+    return {
+        "snapshots": snapshots,
+        "current": aggregate_window([snapshot["rows"] for snapshot in snapshots[:10]])[:limit],
+        "previous": aggregate_window([snapshot["rows"] for snapshot in snapshots[1:11]])[:limit],
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--source", choices=("official", "legacy"), default="official")
     parser.add_argument("--url", default=SOURCE_URL)
     parser.add_argument("--config", default=str(ROOT / "config" / "tracked_symbols.json"))
     parser.add_argument("--output", default="")
     parser.add_argument("--print-codes", action="store_true")
+    parser.add_argument("--sessions", type=int, default=11, help="complete sessions to fetch; 11 supports adjacent 10-session windows")
+    parser.add_argument("--lookback-days", type=int, default=35)
     args = parser.parse_args()
     try:
-        rows = parse_rankings(fetch_document(args.url))
-        payload = update_tracked_config(rows, Path(args.config), args.url)
+        if args.source == "official":
+            snapshots = fetch_recent_complete_days(sessions=args.sessions, lookback_days=args.lookback_days)
+            payload = update_official_tracked_config(snapshots, Path(args.config))
+        else:
+            rows = parse_rankings(fetch_document(args.url))
+            payload = update_tracked_config(rows, Path(args.config), args.url)
         if args.output:
             atomic_json(Path(args.output), payload)
-    except (OSError, ValueError, urllib.error.URLError) as exc:
+    except (OSError, ValueError, urllib.error.URLError, OfficialInstitutionalError) as exc:
         print(f"research_universe_failed={type(exc).__name__}: {exc}")
         return 1
     if args.print_codes:
         print(",".join(payload["symbols"]))
+    elif args.source == "official":
+        print(json.dumps({
+            "universe": "A",
+            "label": payload["universe"]["label"],
+            "count": len(payload["symbols"]),
+            "marketDates": payload["universe"]["marketDates"],
+            "top10": payload["universe"]["top10"],
+            "source": payload["universe"]["sourceUrls"],
+        }, ensure_ascii=False, sort_keys=True))
     else:
         print(json.dumps({"universe": "A", "label": "投信十日買超前100", "count": len(payload["symbols"]), "source": args.url}, ensure_ascii=False, sort_keys=True))
     return 0

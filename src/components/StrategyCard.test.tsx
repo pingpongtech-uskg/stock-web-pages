@@ -65,6 +65,16 @@ describe('StrategyCard', () => {
     expect(markup).not.toContain('未知')
   })
 
+  it('marks a trust top10 newcomer without changing PEG display', () => {
+    const markup = renderToStaticMarkup(
+      <StrategyCard presentation={strategyPresentations[0]} rows={[{ ...knownRow, entryStatus: 'new' }]} />,
+    )
+
+    expect(markup).toContain('新進榜')
+    expect(markup).toContain('目前 PEG')
+    expect(markup).toContain('0.52')
+  })
+
   it('keeps a complete-value observation row visible without exposing machine unknown', () => {
     const observationRow: RankingRow = {
       ...knownRow,

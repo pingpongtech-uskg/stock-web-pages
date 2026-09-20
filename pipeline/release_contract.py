@@ -56,10 +56,15 @@ def compute_funnel(
     peg_count = sum(1 for value in values if value.get("below_075"))
     proxy_count = sum(1 for value in values if is_proxy_valuation(value))
     counts = {str(key): int(value) for key, value in strategy_counts.items()}
-    if peg_count > len(values) or proxy_count > len(values) or any(
-        count > peg_count for count in counts.values()
-    ):
+    if peg_count > len(values) or proxy_count > len(values):
         raise ValueError("funnel stage counts do not conserve")
+    if counts.get("trust", 0) > len(values):
+        raise ValueError("trust route exceeds valuation-complete pool")
+    if any(
+        counts.get(key, 0) > peg_count
+        for key in ("growth", "lowPosition")
+    ):
+        raise ValueError("strategy route exceeds peg pool")
     return {
         "version": FUNNEL_VERSION,
         "universe": int(universe),

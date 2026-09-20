@@ -32,14 +32,28 @@ def test_compute_funnel_counts_are_conserving():
     assert funnel["instrumentPolicy"] == "peg-strategies-exclude-non-common-codes-v1"
 
 
-def test_compute_funnel_rejects_a_strategy_count_beyond_the_peg_pool():
+def test_compute_funnel_allows_trust_route_above_peg_threshold():
+    funnel = compute_funnel(
+        universe=10,
+        price_complete=2,
+        instrument_excluded=0,
+        valuations=[valuation(), valuation(below=False)],
+        strategy_counts={"trust": 2, "growth": 1, "lowPosition": 1},
+    )
+
+    assert funnel["valuationComplete"] == 2
+    assert funnel["pegCandidates"] == 1
+    assert funnel["strategyCandidates"]["trust"] == 2
+
+
+def test_compute_funnel_rejects_a_growth_count_beyond_the_peg_pool():
     with pytest.raises(ValueError):
         compute_funnel(
             universe=100,
             price_complete=7,
             instrument_excluded=0,
             valuations=[valuation()],
-            strategy_counts={"trust": 2},
+            strategy_counts={"growth": 2},
         )
 
 
