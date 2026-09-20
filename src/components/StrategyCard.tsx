@@ -90,12 +90,23 @@ function formatZ(value: number | null | undefined): string {
   return Number.isFinite(value) ? `Z ${Number(value).toFixed(2)}` : 'Z —'
 }
 
-function healthLabel(row: RankingRow): string | null {
-  const status = row.lowPositionEvidence?.growthHealthStatus ?? row.growthHealth?.status
-  if (!status || status === 'unknown') return '成長健康：未知／未評估'
+function growthHealthStatus(row: RankingRow): string {
+  return row.lowPositionEvidence?.growthHealthStatus ?? row.growthHealth?.status ?? 'unknown'
+}
+
+function healthLabel(row: RankingRow): string {
+  const status = growthHealthStatus(row)
+  if (status === 'unknown') return '成長健康：未知／未評估'
   if (status === 'pass') return `成長健康：通過${row.growthHealth ? ` ${row.growthHealth.passCount}/${row.growthHealth.total}` : ''}`
   if (status === 'fail') return '成長健康：未通過'
   return '成長健康：不適用'
+}
+
+function healthBadgeClass(row: RankingRow): string {
+  const status = growthHealthStatus(row)
+  if (status === 'pass') return 'evidence-badge formal'
+  if (status === 'fail') return 'evidence-badge fail'
+  return 'evidence-badge observation'
 }
 
 function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel: string; strategy: StrategyKey }) {
@@ -128,7 +139,7 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
           {strategy === 'trust' && row.entryStatus === 'new' && <em className="evidence-badge new-entry">新進榜</em>}
           {strategy === 'trust' && row.entryStatus === 'retained' && <em className="evidence-badge">續留</em>}
           {strategy === 'trust' && row.entryStatus === 'unknown' && <em className="evidence-badge observation">前日排行待補</em>}
-          {lowPosition && <em className="evidence-badge observation">{healthLabel(row)}</em>}
+          {lowPosition && <em className={healthBadgeClass(row)}>{healthLabel(row)}</em>}
         </span>
         <span className="stock-reason">{reason}</span>
       </span>

@@ -91,6 +91,32 @@ describe('StrategyCard', () => {
     expect(markup).not.toContain('<strong>0.00</strong>')
   })
 
+  it('renders passed growth health with a positive badge semantic', () => {
+    const row: RankingRow = {
+      ...knownRow,
+      code: '1504',
+      name: '通過股',
+      currentPrice: 69.5,
+      currentPeg: null,
+      fairPrice: null,
+      valuePrice075: null,
+      valuePrice066: null,
+      zScore: -0.54,
+      slope: 0.048,
+      regressionStart: '2023-03-20',
+      regressionEnd: '2026-09-18',
+      priceBasis: 'adjusted',
+      growthHealth: { status: 'pass', passCount: 5, total: 5, reason: '五項成長健康檢查已通過' },
+      lowPositionEvidence: { growthHealthStatus: 'pass', growthHealthReason: '五項成長健康檢查已通過' },
+    }
+    const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[2]} rows={[row]} />)
+
+    expect(markup).toContain('成長健康：通過 5/5')
+    expect(markup).toContain('class="evidence-badge formal">成長健康：通過 5/5')
+    expect(markup).not.toContain('class="evidence-badge observation">成長健康：通過 5/5')
+  })
+
+
   it('renders low-position observations without PEG and treats unknown health as unassessed', () => {
     const row: RankingRow = { ...knownRow, code: '1777', name: '低位觀察股', currentPrice: 50, fairPrice: null, valuePrice075: null, valuePrice066: null, currentPeg: null, zScore: -1.2, slope: 0.03, regressionStart: '2023-01-01', regressionEnd: '2026-06-30', priceBasis: 'adjusted', lowPositionEvidence: { growthHealthStatus: 'unknown', growthHealthReason: '必要資料不足' } }
     const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[2]} rows={[row]} />)
