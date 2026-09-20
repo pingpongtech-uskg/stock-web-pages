@@ -44,3 +44,13 @@ def test_official_valuation_proxies_are_explicit():
     assert cheap["checks"][1]["status"] == "pass"
     assert "橫截面代理" in cheap["checks"][1]["explanation"]
     assert next(item for item in categories if item["key"] == "turnaround")["checks"][0]["status"] == "pass"
+
+
+def test_quarterly_growth_without_prior_period_stays_unknown():
+    categories = evaluate_snapshot_health({
+        "healthInputs": {
+            "incomeQuarterly": [{"year": 2026, "quarter": 1, "grossProfit": 10, "operatingProfit": 5, "pretaxProfit": 4, "netIncome": 3}],
+        },
+    })
+    growth = next(item for item in categories if item["key"] == "growth")
+    assert all(check["status"] == "unknown" for check in growth["checks"][1:])

@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from typing import Any, Iterable
 
-FUNNEL_VERSION = "funnel-v1"
+FUNNEL_VERSION = "funnel-v2-independent-trust-low-position"
 INSTRUMENT_POLICY = "peg-strategies-exclude-non-common-codes-v1"
 
 # Common shares never carry a leading zero block; ETF / ETN / warrant codes
@@ -58,13 +58,8 @@ def compute_funnel(
     counts = {str(key): int(value) for key, value in strategy_counts.items()}
     if peg_count > len(values) or proxy_count > len(values):
         raise ValueError("funnel stage counts do not conserve")
-    if counts.get("trust", 0) > len(values):
-        raise ValueError("trust route exceeds valuation-complete pool")
-    if any(
-        counts.get(key, 0) > peg_count
-        for key in ("growth", "lowPosition")
-    ):
-        raise ValueError("strategy route exceeds peg pool")
+    if counts.get("growth", 0) > peg_count:
+        raise ValueError("growth route exceeds peg pool")
     return {
         "version": FUNNEL_VERSION,
         "universe": int(universe),

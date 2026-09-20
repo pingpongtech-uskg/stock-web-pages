@@ -9,6 +9,7 @@ from scripts.verify_snapshot import (
     first_non_finite_path,
     input_hash_error,
     is_number,
+    ranking_valuation_error,
     regression_contract_error,
 )
 
@@ -54,6 +55,10 @@ def test_adjusted_regression_requires_complete_observation_contract() -> None:
 
 def test_missing_regression_object_is_rejected() -> None:
     assert regression_contract_error(None, "2330", date(2026, 9, 11)) == "regression_missing:2330"
+
+
+def test_partial_numeric_valuation_fields_are_rejected() -> None:
+    assert ranking_valuation_error({"code": "2330", "fairPrice": 100}, "trust") == "ranking_row_valuation_partial:trust"
 
 
 def test_stale_four_year_limitations_are_removed() -> None:

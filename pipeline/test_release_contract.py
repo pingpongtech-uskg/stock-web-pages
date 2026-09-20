@@ -22,7 +22,7 @@ def test_compute_funnel_counts_are_conserving():
         strategy_counts={"trust": 5, "growth": 5, "lowPosition": 2},
     )
 
-    assert funnel["version"] == "funnel-v1"
+    assert funnel["version"] == "funnel-v2-independent-trust-low-position"
     assert funnel["valuationComplete"] == 6
     assert funnel["pegCandidates"] == 5
     assert funnel["proxyValuations"] == 4
@@ -44,6 +44,17 @@ def test_compute_funnel_allows_trust_route_above_peg_threshold():
     assert funnel["valuationComplete"] == 2
     assert funnel["pegCandidates"] == 1
     assert funnel["strategyCandidates"]["trust"] == 2
+
+
+def test_compute_funnel_keeps_trust_and_low_position_independent_of_peg_pool():
+    funnel = compute_funnel(
+        universe=10,
+        price_complete=10,
+        instrument_excluded=0,
+        valuations=[valuation(below=False)],
+        strategy_counts={"trust": 10, "growth": 0, "lowPosition": 4},
+    )
+    assert funnel["strategyCandidates"] == {"trust": 10, "growth": 0, "lowPosition": 4}
 
 
 def test_compute_funnel_rejects_a_growth_count_beyond_the_peg_pool():

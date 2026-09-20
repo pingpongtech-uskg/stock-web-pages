@@ -214,7 +214,12 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
             if rate is not None:
                 growth_checks[index] = _check(label, "pass" if rate > 0 else "fail", f"{rate:+.1%}", f"{year} Q{quarter} vs {int(year)-1} Q{quarter}", "同口徑年增率大於 0。" if rate > 0 else "同口徑年增率未大於 0。", official_refs)
             elif current is not None:
-                growth_checks[index] = _check(label, "pass" if current > 0 else "fail", f"{current:,.0f}", f"{year} Q{quarter}（單期代理）", "最新單期數值為正，作為年增率的公開資料代理；待歷史同季資料補齊再升級為正式判定。" if current > 0 else "最新單期數值未為正，代理未通過。", official_refs)
+                growth_checks[index] = unknown_check(
+                    label,
+                    period=f"{year} Q{quarter}",
+                    reason="缺少去年同季可比資料；單期為正不能推論年增率通過。",
+                    refs=official_refs,
+                )
         by_key["growth"] = evaluate_category("growth", growth_checks)
 
     # The public snapshot is intentionally scoped to the tracked symbols.  For
@@ -314,7 +319,7 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
         # with the missing field visible in the row explanation.
         for key, category in list(by_key.items()):
             for check in category["checks"]:
-                if check.get("status") == "unknown":
+                if check.get("status") == "unknown" and key != "growth":
                     check.update({"status": "fail", "value": "未取得", "explanation": "目前追蹤快照沒有可比欄位；保守列為未通過，待補資料只會提升證據，不會默認通過。"})
             by_key[key] = evaluate_category(key, category["checks"])
     return [by_key[key] for key, _label, _threshold, _labels in CATEGORY_DEFINITIONS]

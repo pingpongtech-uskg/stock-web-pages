@@ -43,6 +43,7 @@ from pipeline.enrichment import (  # noqa: E402
     growth_proxy_status,
     low_base_growth_gates,
     low_base_quality_gates,
+    low_position_gates,
     LOW_POSITION_Z_MAX,
     MIN_QUALITY_PROXY_PASSES,
     merge_adjusted_prices,
@@ -349,6 +350,15 @@ def _attach_valuation(
         detail = detail_by_code.get(code, {})
         valuation = detail.get("valuation")
         if not isinstance(valuation, dict):
+            if require_peg_below_075:
+                continue
+            row.setdefault("valuationEvidenceLevel", "unavailable")
+            row.setdefault("currentPeg", None)
+            row.setdefault("fairPrice", None)
+            row.setdefault("valuePrice075", None)
+            row.setdefault("valuePrice066", None)
+            row.setdefault("currentPrice", None)
+            visible.append(row)
             continue
         if require_peg_below_075 and not valuation.get("below_075"):
             continue
@@ -368,6 +378,8 @@ def _attach_valuation(
             ):
                 ratio = float(fair_price) / float(current_price)
             extreme = float(growth_input) > 1.0 or (ratio is not None and ratio > 3.0)
+        if extreme:
+            continue
         regression = detail.get("regression")
         if not isinstance(regression, dict):
             regression = {}
@@ -582,6 +594,17 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
         and float(regression_slope) > 0
     )
     formal_quality = detail.get("qualityStatus") == "pass"
+    health_categories = detail.get("healthCategories") if isinstance(detail.get("healthCategories"), list) else []
+    growth_health = next(
+        (str(category.get("status")) for category in health_categories if isinstance(category, dict) and category.get("key") == "growth"),
+        "unknown",
+    )
+    low_position_health = low_position_gates(
+        z=regression_z,
+        slope=regression_slope,
+        price_eligible=bool(regression.get("signalEligible")) if regression.get("priceBasis") == "adjusted" else None,
+        growth_health=growth_health,
+    )
     # Historical eight-week evidence is not reconstructed from today's curve.
     historical_low_evidence = bool(detail.get("historySnapshots")) and any(
         isinstance(item, dict) and isinstance(item.get("z"), (int, float)) and float(item["z"]) <= -1
@@ -591,6 +614,7 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
         regression.get("signalEligible")
         and formal_quality
         and formal_growth == "pass"
+        and growth_health == "pass"
         and historical_low_evidence
         and regression_z is not None
         and float(regression_z) <= 0
@@ -677,6 +701,8 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
             "revenueGrowthProxy": revenue_growth if detail.get("revenueGrowth3m") is None else detail.get("revenueGrowthProxy"),
             "dataStatus": data_status,
             "signalState": state,
+            "growthHealthStatus": growth_health,
+            "lowPositionEvidence": low_position_health,
             "entryReasons": reasons,
             "risks": list(dict.fromkeys(risks)),
             "priceSeries": price,
@@ -972,6 +998,25 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             )
         z = detail.get("zScore")
         slope = detail.get("slope")
+        regression = detail.get("regression") if isinstance(detail.get("regression"), dict) else {}
+        price_eligible = (
+            None
+            if not regression or regression.get("priceBasis") in (None, "unknown")
+            else bool(regression.get("signalEligible"))
+        )
+        health_categories = detail.get("healthCategories") if isinstance(detail.get("healthCategories"), list) else []
+        growth_health = next(
+            (str(category.get("status")) for category in health_categories if isinstance(category, dict) and category.get("key") == "growth"),
+            "unknown",
+        )
+        low_position_health = low_position_gates(
+            z=z,
+            slope=slope,
+            price_eligible=price_eligible,
+            growth_health=growth_health,
+        )
+        detail["growthHealthStatus"] = growth_health
+        detail["lowPositionEvidence"] = low_position_health
         if isinstance(z, (int, float)) and math.isfinite(float(z)):
             low = float(z) <= -1 and isinstance(slope, (int, float)) and float(slope) > 0
             proxy_low = float(z) <= 0 and isinstance(slope, (int, float)) and float(slope) > 0
@@ -991,17 +1036,12 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                         "sector": sector,
                         "value": float(z),
                         "valueLabel": "",
-                        "status": "pass" if low and detail.get("regression", {}).get("signalEligible") else "unknown",
-                        "reason": f"Z {float(z):+.2f} ≤ 0；低位代理，完整歷史條件仍待驗證",
+                        "status": low_position_health["status"],
+                        "growthHealth": low_position_health["growthHealth"],
+                        "reason": f"Z {float(z):+.2f} ≤ 0；價格觀察與成長健康分開，成長健康為 {growth_health}",
                     }
                 )
 
-        regression = detail.get("regression") if isinstance(detail.get("regression"), dict) else {}
-        price_eligible = (
-            None
-            if not regression or regression.get("priceBasis") in (None, "unknown")
-            else bool(regression.get("signalEligible"))
-        )
         low_base_growth = low_base_growth_gates(
             z=z,
             slope=slope,

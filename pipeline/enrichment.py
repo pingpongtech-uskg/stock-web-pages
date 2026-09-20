@@ -318,6 +318,37 @@ def low_position_candidate(z: Any, slope: Any) -> bool:
     )
 
 
+def low_position_gates(
+    *,
+    z: Any,
+    slope: Any,
+    price_eligible: bool | None,
+    growth_health: str | None,
+) -> dict[str, Any]:
+    """Keep price-position observation separate from growth health."""
+
+    z_value = finite(z)
+    slope_value = finite(slope)
+    statuses = [
+        "pass" if price_eligible is True else "unknown" if price_eligible is None else "fail",
+        "pass" if z_value is not None and z_value <= LOW_POSITION_Z_MAX else "unknown" if z_value is None else "fail",
+        "pass" if slope_value is not None and slope_value > 0 else "unknown" if slope_value is None else "fail",
+    ]
+    health_status = str(growth_health or "unknown")
+    if health_status not in {"pass", "fail", "unknown"}:
+        health_status = "unknown"
+    growth_gate = {"key": "growthHealth", "label": "五項成長健康檢查", "status": health_status}
+    all_statuses = [*statuses, health_status]
+    overall = "fail" if "fail" in all_statuses else "unknown" if "unknown" in all_statuses else "pass"
+    gates = [
+        {"key": "priceEligible", "label": "3.5年調整後價格合格", "status": statuses[0]},
+        {"key": "lowZ", "label": "Z ≤ 0", "status": statuses[1]},
+        {"key": "positiveSlope", "label": "正向回歸 slope", "status": statuses[2]},
+        growth_gate,
+    ]
+    return {"status": overall, "gates": gates, "growthHealth": growth_gate, "formal": overall == "pass"}
+
+
 def _status_text(status: str) -> str:
     return {"pass": "通過", "fail": "未通過", "unknown": "未知", "not_applicable": "不適用"}.get(status, status)
 

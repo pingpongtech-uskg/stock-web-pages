@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from pipeline.enrichment import clip_price_window, low_base_growth_gates, low_base_quality_gates
+from pipeline.enrichment import clip_price_window, low_base_growth_gates, low_base_quality_gates, low_position_gates
 
 
 def proxy_checks(statuses: list[str]) -> list[dict[str, str]]:
@@ -57,6 +57,17 @@ def test_low_base_quality_does_not_promote_unknown_anchor():
 
     assert result["status"] == "unknown"
     assert any(gate["key"] == "qualityAnchors" and gate["status"] == "unknown" for gate in result["gates"])
+
+
+def test_low_position_price_only_row_keeps_growth_health_unknown():
+    result = low_position_gates(z=-0.5, slope=0.2, price_eligible=True, growth_health="unknown")
+    assert result["status"] == "unknown"
+    assert result["growthHealth"]["status"] == "unknown"
+
+
+def test_low_position_formal_row_requires_growth_health():
+    result = low_position_gates(z=-0.5, slope=0.2, price_eligible=True, growth_health="pass")
+    assert result["status"] == "pass"
 
 
 def test_clip_price_window_keeps_only_the_fixed_3_5_year_frame():

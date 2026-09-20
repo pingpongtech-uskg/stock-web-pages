@@ -158,6 +158,18 @@ def regression_contract_error(
     return None
 
 
+def ranking_valuation_error(row: object, key: str) -> str | None:
+    """Reject partial numeric valuation payloads without a valuation object."""
+    if not isinstance(row, dict):
+        return "ranking_row:" + key
+    fields = ("currentPeg", "currentPrice", "fairPrice", "valuePrice075", "valuePrice066")
+    if not any(row.get(field) is not None for field in fields):
+        return None
+    if any(not is_number(row.get(field)) for field in ("currentPeg", "currentPrice", "fairPrice")):
+        return "ranking_row_valuation_partial:" + key
+    return None
+
+
 def main(root: Path | None = None) -> int:
     root = root or Path(__file__).resolve().parents[1]
     data = root / 'public' / 'data'
@@ -187,6 +199,9 @@ def main(root: Path | None = None) -> int:
             for field in ('currentPeg', 'currentPrice', 'fairPrice', 'valuePrice075', 'valuePrice066'):
                 if field in row and row[field] is not None and not is_number(row[field]):
                     return fail(f'ranking_row_{field}:{key}')
+            valuation_error = ranking_valuation_error(row, key)
+            if valuation_error:
+                return fail(valuation_error)
             if 'currentPeg' in row and is_number(row['currentPeg']):
                 if not is_number(row.get('fairPrice')) or not is_number(row.get('currentPrice')):
                     return fail('ranking_row_valuation_missing:' + key)
@@ -211,10 +226,8 @@ def main(root: Path | None = None) -> int:
         return fail('funnel_strategy_counts')
     if funnel['pegCandidates'] > funnel['valuationComplete']:
         return fail('funnel_conservation_peg')
-    if counts["trust"] > funnel["valuationComplete"]:
-        return fail('funnel_conservation_trust')
-    if any(counts[key] > funnel['pegCandidates'] for key in ('growth', 'lowPosition')):
-        return fail('funnel_conservation_strategy')
+    if counts["growth"] > funnel['pegCandidates']:
+        return fail('funnel_conservation_growth')
     if funnel['formalValuations'] + funnel['proxyValuations'] != funnel['valuationComplete']:
         return fail('funnel_conservation_evidence')
     if funnel['universe'] != coverage.get('universeCount') or funnel['priceComplete'] != coverage.get('priceCompleteCount'):
