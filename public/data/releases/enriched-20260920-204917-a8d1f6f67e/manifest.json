@@ -97362,5 +97362,22 @@
     "instrumentPolicy": "peg-strategies-exclude-non-common-codes-v1",
     "instrumentExcluded": 0
   },
-  "inputCodes": []
+  "inputCodes": [],
+  "inputHash": "a8d1f6f67e0e79d0567076a302dfc3a9c78e793a811ea4d7454b09bf6a859a3d",
+  "codeCommit": "115cd44a9a73dcfa43e643e4065c76a60ea9d75e",
+  "formulaVersions": {
+    "regression": "lohas-linear-3.5y-research-v1",
+    "valuation": "zulu-peg-eps-growth-v2",
+    "growthFallback": "growth-proxy-chain-v1",
+    "ranking": "three-strategy-tabs-v1"
+  },
+  "rankingsHash": "c423846167dd7ef7099ffbc189e52023401506ce54f0b5cf109f0157cd52de21",
+  "baselineRunId": "enriched-20260920-204428-d823d311a9",
+  "enrichment": {
+    "adjustedPriceSource": "yfinance Adj Close when available; Yahoo chart fallback is tagged",
+    "fundamentalSource": "yfinance:Ticker.financials/cashflow/balance_sheet",
+    "adjustedStocks": 100,
+    "trackedStocks": 100,
+    "errorsByCode": {}
+  }
 }

@@ -106,6 +106,20 @@ def parse_date(value: str | None, fallback: date) -> date:
         return fallback
 
 
+def next_expected_update_for_market_date(value: str | None) -> str:
+    """Return the next weekday 23:17 Asia/Taipei update window in UTC."""
+
+    try:
+        market_day = date.fromisoformat(str(value)[:10])
+    except (TypeError, ValueError):
+        market_day = datetime.now(TAIPEI).date()
+    next_day = market_day + timedelta(days=1)
+    while next_day.weekday() >= 5:
+        next_day += timedelta(days=1)
+    candidate = datetime(next_day.year, next_day.month, next_day.day, 23, 17, tzinfo=TAIPEI)
+    return candidate.astimezone(timezone.utc).replace(microsecond=0).isoformat()
+
+
 def _git_head() -> str | None:
     """Record the code commit that produced a release, when git is available."""
 
@@ -1247,6 +1261,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         "inputCodes": list(codes),
         "marketDate": market_date,
         "generatedAt": generated,
+        "nextExpectedUpdateAt": next_expected_update_for_market_date(market_date),
         "freshness": freshness,
         "statusMessage": status_message,
         "sourceRefs": source_refs,
