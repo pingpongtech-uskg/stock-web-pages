@@ -40,3 +40,12 @@ def test_zulu_valuation_rejects_invalid_inputs():
         current_pe=10,
         eps_growth=-0.10,
     ) is None
+
+
+def test_revenue_only_growth_is_not_formal_valuation():
+    assert calculate_zulu_valuation(
+        current_price=100,
+        current_pe=10,
+        eps_growth=0.30,
+        growth_method="ltm_revenue_proxy",
+    ) is None

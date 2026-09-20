@@ -56,3 +56,4 @@ def test_uses_revenue_proxy_without_calling_it_unknown():
     result = derive_ltm_eps_proxy(rows, shares=None)
     assert result["method"] == "ltm_revenue_proxy"
     assert abs(result["growth"] - 0.2) < 1e-9
+    assert result["method_label"] == "LTM 營收成長代理"

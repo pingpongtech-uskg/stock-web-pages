@@ -43,6 +43,10 @@ def calculate_zulu_valuation(
     quick estimate uses expected EPS after growth and assigns a PE equal to
     the growth percentage for the PEG=1.00 benchmark price.
     """
+    # Revenue growth is useful evidence, but it is not an earnings-growth
+    # denominator for a formal PEG/fair-price calculation.
+    if "revenue" in str(growth_method).lower() or "營收" in growth_method_label:
+        return None
     price = _finite(current_price)
     pe = _finite(current_pe)
     growth = _finite(eps_growth)
