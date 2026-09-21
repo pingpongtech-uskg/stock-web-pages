@@ -6,6 +6,7 @@ dist/
 private/
 __pycache__/
 .pytest_cache/
+.cache/
 *.pyc
 *.tsbuildinfo
 vite.config.js
