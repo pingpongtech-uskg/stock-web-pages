@@ -25,6 +25,14 @@ def test_parse_tdcc_csv_uses_class_15_and_ignores_adjustment_class_16():
     assert rows[0]["asOf"] == "2026-08-28"
 
 
+def test_parse_tdcc_history_maps_class_16_total_to_official_class_17():
+    html = "<table><tr><th>序</th><th>持股/單位數分級</th><th>人數</th><th>股數/單位數</th><th>占集保庫存數比例 (%)</th></tr><tr><td>15</td><td>1,000,001以上</td><td>405</td><td>3,941,992,568</td><td>52.39</td></tr><tr><td>16</td><td>合 計</td><td>508,051</td><td>7,523,181,742</td><td>100.00</td></tr></table>"
+    rows = parse_tdcc_history_html(html, code="1101", as_of="2026-08-28")
+    assert rows[-1]["持股分級"] == "17"
+    normalized = parse_tdcc_csv("資料日期,證券代號,持股分級,人數,股數,占集保庫存數比例%\n2026-08-28,1101,15,405,3941992568,52.39\n2026-08-28,1101,17,508051,7523181742,100.00\n")
+    assert normalized[0]["shareholderCount"] == 508051
+
+
 def test_parse_mops_payload_keeps_only_approved_titles_and_refuses_aggregate_as_denominator():
     payload = {"parentCompany": {"data": [
         ["董事長本人", "甲", "120", "100", "x"],

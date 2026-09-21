@@ -68,9 +68,17 @@ def parse_tdcc_history_html(document: str, *, code: str, as_of: str) -> list[dic
         sequence = values[sequence_i].strip()
         if not sequence.isdigit() or not 1 <= int(sequence) <= 17:
             continue
-        # TDCC's HTML band column is a display label.  The stable class ID is
-        # the first `序` column, which is what the CSV normalizer consumes.
-        result.append({"資料日期": as_of, "證券代號": code, "持股分級": sequence, "人數": values[count_i], "股數": values[shares_i], "占集保庫存數比例%": values[pct_i]})
+        # TDCC's HTML band column is a display label.  Some issuers omit the
+        # adjustment row, so `合計` is sequence 16 rather than 17.  Normalize
+        # semantic labels to the stable CSV class IDs.
+        label = values[band_i]
+        if "合" in label:
+            band = "17"
+        elif "差異" in label:
+            band = "16"
+        else:
+            band = sequence
+        result.append({"資料日期": as_of, "證券代號": code, "持股分級": band, "人數": values[count_i], "股數": values[shares_i], "占集保庫存數比例%": values[pct_i]})
     return result
 
 def fetch_tdcc_historical(code: str, months: list[str], *, timeout: float = 20.0) -> list[dict[str, Any]]:
