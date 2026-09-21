@@ -57,6 +57,33 @@ function requireNullableString(value: unknown): string | null {
   return value
 }
 
+function validateChipReference(value: unknown): void {
+  const chip = requireRecord(value)
+  expect(requireString(chip.schemaVersion) === 'chip-reference-v1')
+  expect(chip.displayOnly === true)
+  expect(requireString(chip.formulaVersion) === 'chip-reference-v1')
+  expect(['pass', 'fail', 'unknown'].includes(requireString(chip.status)))
+  expect(['current', 'stale', 'unavailable'].includes(requireString(chip.dataFreshness)))
+  expect(requireArray(chip.sourceRefs).every((ref) => typeof ref === 'string'))
+  requireNullableString(chip.availableAt)
+  for (const key of ['largeHolderTrend', 'directorSupervisor12m', 'shareholderCountTrend']) {
+    const indicator = requireRecord(chip[key])
+    expect(['pass', 'fail', 'unknown'].includes(requireString(indicator.status)))
+    requireString(indicator.value)
+    requireString(indicator.period)
+    expect(requireArray(indicator.sourceRefs).every((ref) => typeof ref === 'string'))
+    if (indicator.rawValues !== undefined) {
+      if (key === 'directorSupervisor12m') {
+        const raw = requireRecord(indicator.rawValues)
+        requireFiniteNumber(raw.latest)
+        requireFiniteNumber(raw.prior12m)
+      } else {
+        expect(requireArray(indicator.rawValues).every((raw) => typeof raw === 'number' && Number.isFinite(raw)))
+      }
+    }
+  }
+}
+
 function validateRankingRow(value: unknown): void {
   const row = requireRecord(value)
   requireFiniteNumber(row.rank)
@@ -79,6 +106,7 @@ function validateRankingRow(value: unknown): void {
   if (row.priceBasis !== undefined) expect(row.priceBasis === 'adjusted' || row.priceBasis === 'raw_proxy' || row.priceBasis === 'unknown')
   if (row.regressionStart !== undefined) requireNullableString(row.regressionStart)
   if (row.regressionEnd !== undefined) requireNullableString(row.regressionEnd)
+  if (row.chipReference !== undefined) validateChipReference(row.chipReference)
 }
 
 function validateStockSummary(value: unknown): void {
@@ -89,6 +117,7 @@ function validateStockSummary(value: unknown): void {
   if (stock.zScore !== undefined) requireNullableNumber(stock.zScore)
   if (stock.lastPrice !== undefined) requireNullableNumber(stock.lastPrice)
   if (stock.sourceRefs !== undefined) expect(requireArray(stock.sourceRefs).every((ref) => typeof ref === 'string'))
+  if (stock.chipReference !== undefined) validateChipReference(stock.chipReference)
 }
 
 export function validateRelease(payload: unknown): Release {

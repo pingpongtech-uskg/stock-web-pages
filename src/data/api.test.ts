@@ -59,6 +59,30 @@ describe('validateRelease', () => {
     expect(validateRelease(release)).toBe(release)
   })
 
+  it('accepts a display-only chip reference with optional raw values', () => {
+    const release = validRelease() as unknown as Record<string, unknown>
+    ;(release.rankings as Record<string, unknown>).trust = [{
+      rank: 1, code: '2330', name: '聯電', sector: '', value: 1, valueLabel: '%', status: 'pass', reason: 'official',
+      chipReference: {
+        schemaVersion: 'chip-reference-v1', status: 'pass', displayOnly: true, formulaVersion: 'chip-reference-v1', dataFreshness: 'current',
+        largeHolderTrend: { status: 'pass', value: '1 → 2 → 3', period: '2026-06..2026-08', rawValues: [1, 2, 3], sourceRefs: ['TDCC'] },
+        directorSupervisor12m: { status: 'pass', value: '2 vs 1', period: '2026-08 vs 2025-08', rawValues: { latest: 2, prior12m: 1 }, sourceRefs: ['TWSE'] },
+        shareholderCountTrend: { status: 'fail', value: '3 → 2 → 1', period: '2026-06..2026-08', sourceRefs: ['TDCC'] },
+        sourceRefs: ['TDCC', 'TWSE'], availableAt: '2026-09-04',
+      },
+    }]
+    expect(validateRelease(release)).toBe(release)
+  })
+
+  it('rejects a chip reference that is not explicitly display-only', () => {
+    const release = validRelease() as unknown as Record<string, unknown>
+    ;(release.rankings as Record<string, unknown>).trust = [{
+      rank: 1, code: '2330', name: '聯電', sector: '', value: 1, valueLabel: '%', status: 'pass', reason: 'official',
+      chipReference: { displayOnly: false },
+    }]
+    expect(() => validateRelease(release)).toThrow('發布快照格式錯誤')
+  })
+
   it('accepts official and low-position rows without PEG while constraining only growth', () => {
     const release = validRelease() as unknown as Record<string, unknown>
     ;(release.funnel as Record<string, unknown>).strategyCandidates = { trust: 10, growth: 0, lowPosition: 8 }

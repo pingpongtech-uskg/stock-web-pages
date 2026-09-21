@@ -92,6 +92,7 @@ export interface StockSummary {
   revenueGrowthProxy?: number | null
   ttmOperatingProfitGrowth: number | null
   sourceRefs: string[]
+  chipReference?: ChipReference
   valuation?: ValuationSummary
   healthCategories?: HealthCategory[]
   healthScore?: { passCount: number; total: number; status: MetricStatus }
@@ -144,6 +145,30 @@ export interface RuleCheck {
   sourceRefs: string[]
 }
 
+export type ChipReferenceStatus = 'pass' | 'fail' | 'unknown'
+export type ChipReferenceFreshness = 'current' | 'stale' | 'unavailable'
+
+export interface ChipReferenceIndicator<TRaw = unknown> {
+  status: ChipReferenceStatus
+  value: string
+  period: string
+  sourceRefs: string[]
+  rawValues?: TRaw
+}
+
+export interface ChipReference {
+  schemaVersion: 'chip-reference-v1'
+  status: ChipReferenceStatus
+  displayOnly: true
+  formulaVersion: 'chip-reference-v1'
+  dataFreshness: ChipReferenceFreshness
+  largeHolderTrend: ChipReferenceIndicator<number[]>
+  directorSupervisor12m: ChipReferenceIndicator<{ latest: number; prior12m: number }>
+  shareholderCountTrend: ChipReferenceIndicator<number[]>
+  sourceRefs: string[]
+  availableAt: string | null
+}
+
 export type HealthCategoryKey = 'quality' | 'growth' | 'chip' | 'cheap' | 'turnaround' | 'antiPitfall' | 'dividend'
 
 export interface HealthCategory {
@@ -191,6 +216,7 @@ export interface RankingRow {
   valueLabel: string
   status: MetricStatus
   reason: string
+  chipReference?: ChipReference
   /** Rows from the low-base route are explicitly marked as proxy evidence. */
   proxy?: boolean
   evidenceLevel?: 'proxy' | 'formal'

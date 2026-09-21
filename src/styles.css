@@ -116,6 +116,10 @@ button { cursor: pointer; }
 .stock-window, .stock-valuation-inputs { flex: 1 1 100%; color: var(--muted); font-family: var(--mono); font-size: 10px; line-height: 1.4; white-space: normal; }
 .overdue-note { color: var(--amber); font-style: normal; font-weight: 700; }
 .health-link-label { color: var(--blue); font-size: 10px; font-weight: 800; white-space: nowrap; }
+.chip-reference { grid-column: 2 / -1; display: grid; gap: 3px; border-left: 2px solid var(--blue); background: var(--blue-soft); padding: 7px 9px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.chip-reference strong { color: var(--text); font-size: 10px; }
+.chip-reference span { display: block; }
+.chip-reference small { color: var(--faint); font-family: var(--mono); font-size: 9px; }
 
 .status-pill { display: inline-block; min-width: 34px; border-radius: 4px; padding: 4px 6px; font-size: 10px; font-weight: 700; text-align: center; white-space: nowrap; }
 .status-pass { background: var(--blue-soft); color: var(--blue); }

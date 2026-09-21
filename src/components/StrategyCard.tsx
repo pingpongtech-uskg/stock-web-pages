@@ -1,4 +1,4 @@
-import type { RankingRow, MetricStatus } from '../domain/types'
+import type { ChipReference, RankingRow, MetricStatus } from '../domain/types'
 import { statementDogHealthCheckUrl } from '../domain/statementDog'
 import type { StrategyKey, StrategyPresentation } from '../domain/strategyPresentation'
 import { trackEvent } from '../domain/events'
@@ -109,8 +109,33 @@ function healthBadgeClass(row: RankingRow): string {
   return 'evidence-badge observation'
 }
 
+function chipStatusLabel(status: ChipReference['status'], passLabel: string): string {
+  if (status === 'pass') return passLabel
+  if (status === 'fail') return '未通過'
+  return '未知／待補資料'
+}
+
+function freshnessLabel(freshness: ChipReference['dataFreshness']): string {
+  if (freshness === 'current') return '目前'
+  if (freshness === 'stale') return '資料較舊'
+  return '資料不可用'
+}
+
+export function ChipReferenceSummary({ chip }: { chip: ChipReference }) {
+  return (
+    <aside className="chip-reference" aria-label="籌碼參考（不影響策略篩選）">
+      <strong>籌碼參考（不影響策略篩選）</strong>
+      <span>大股東：{chipStatusLabel(chip.largeHolderTrend.status, '連續三月上升')}（{chip.largeHolderTrend.value}）</span>
+      <span>董監：較12月前{chipStatusLabel(chip.directorSupervisor12m.status, '上升')}（{chip.directorSupervisor12m.value}）</span>
+      <span>股東人數：{chipStatusLabel(chip.shareholderCountTrend.status, '連續三月下降')}（{chip.shareholderCountTrend.value}）</span>
+      <small>資料期別：{chip.largeHolderTrend.period} · 資料新鮮度：{freshnessLabel(chip.dataFreshness)}{chip.availableAt ? ` · 可用於 ${chip.availableAt}` : ''}{chip.sourceRefs.length ? ` · 來源：${chip.sourceRefs.join('／')}` : ''}</small>
+    </aside>
+  )
+}
+
 function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel: string; strategy: StrategyKey }) {
   const href = statementDogHealthCheckUrl(row.code)
+  const chipReference = row.chipReference
   const proxy = isProxyValuation(row)
   const observation = row.status !== 'pass'
   const lowPosition = strategy === 'lowPosition'
@@ -165,6 +190,7 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
         {windowLabel && <small className="stock-window">{windowLabel}</small>}
         {inputsLabel && <small className="stock-valuation-inputs">{inputsLabel}</small>}
       </span>
+      {chipReference && <ChipReferenceSummary chip={chipReference} />}
       <span className="health-link-label">財報狗健檢 ↗</span>
     </>
   )

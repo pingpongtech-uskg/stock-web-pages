@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import type { RankingRow } from '../domain/types'
+import type { ChipReference, RankingRow } from '../domain/types'
 import { strategyPresentations } from '../domain/strategyPresentation'
 import { StrategyCard } from './StrategyCard'
 
@@ -34,6 +34,42 @@ const unavailableRow: RankingRow = {
 }
 
 describe('StrategyCard', () => {
+  it('renders the same display-only chip reference summary in all three strategy tabs', () => {
+    const chipReference: ChipReference = {
+      schemaVersion: 'chip-reference-v1', status: 'pass' as const, displayOnly: true as const, formulaVersion: 'chip-reference-v1', dataFreshness: 'current' as const,
+      largeHolderTrend: { status: 'pass' as const, value: '42.1% → 42.5% → 42.8%', period: '2026-06..2026-08', rawValues: [42.1, 42.5, 42.8], sourceRefs: ['TDCC'] },
+      directorSupervisor12m: { status: 'fail' as const, value: '18.3% vs 17.9%', period: '2026-08 vs 2025-08', rawValues: { latest: 18.3, prior12m: 17.9 }, sourceRefs: ['TWSE OpenAPI'] },
+      shareholderCountTrend: { status: 'unknown' as const, value: '未知', period: '2026-06..2026-08', sourceRefs: ['TDCC'] },
+      sourceRefs: ['TDCC', 'TWSE OpenAPI'], availableAt: '2026-09-04',
+    }
+    const row: RankingRow = { ...knownRow, zScore: -0.4, slope: 0.1, chipReference }
+    const markups = strategyPresentations.slice(0, 3).map((presentation) => renderToStaticMarkup(<StrategyCard presentation={presentation} rows={[row]} />))
+    for (const markup of markups) {
+      expect(markup).toContain('籌碼參考（不影響策略篩選）')
+      expect(markup).toContain('大股東：連續三月上升')
+      expect(markup).toContain('董監：較12月前未通過')
+      expect(markup).toContain('股東人數：未知／待補資料')
+      expect(markup).toContain('資料期別：2026-06..2026-08')
+      expect(markup).toContain('資料新鮮度：目前')
+    }
+  })
+
+  it('makes stale chip data explicit without changing row rendering', () => {
+    const row: RankingRow = {
+      ...knownRow,
+      chipReference: {
+        schemaVersion: 'chip-reference-v1', status: 'unknown', displayOnly: true, formulaVersion: 'chip-reference-v1', dataFreshness: 'stale',
+        largeHolderTrend: { status: 'unknown', value: '—', period: '2025-01..2025-03', sourceRefs: [] },
+        directorSupervisor12m: { status: 'unknown', value: '—', period: '—', sourceRefs: [] },
+        shareholderCountTrend: { status: 'unknown', value: '—', period: '2025-01..2025-03', sourceRefs: [] },
+        sourceRefs: [], availableAt: '2025-04-01',
+      },
+    }
+    const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[0]} rows={[row]} />)
+    expect(markup).toContain('資料較舊')
+    expect(markup).toContain('1 檔')
+  })
+
   it('renders one consistent Zulu valuation and current price', () => {
     const markup = renderToStaticMarkup(
       <StrategyCard presentation={strategyPresentations[0]} rows={[knownRow]} />,
