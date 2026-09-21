@@ -11,7 +11,7 @@
 | 資產負債（現金、應收、存貨、權益、有息負債） | MOPS XBRL、TWSE/TPEx | FinMind TaiwanStockBalanceSheet、公司 IR | `balance_sheet` |
 | 現金流與資本支出 | MOPS XBRL、TWSE/TPEx | FinMind TaiwanStockCashFlowsStatement、公司 IR | `cashflow` |
 | 股利、殖利率、本益比、股價淨值比 | TWSE/TPEx OpenAPI、公司股利公告 | FinMind、yfinance 價格與已發布股利 | `valuation` / `dividend` |
-| 董監、大股東、股東人數 | MOPS、TDCC 股權分散 | 公司 IR | `ownership_monthly` |
+| 董監、大股東、股東人數 | TWSE OpenAPI `t187ap11_L/P`、TDCC 開放資料 `1-5` | TDCC `1-4` 分戶保管只作輔助 | `ownership_monthly` |
 | 3.5 年價格與公司行動 | yfinance Adj Close（`auto_adjust=False`） | Yahoo chart adjusted close；FinMind raw close 僅作代理 | `daily_price` |
 
 上市公司第一批實作會直接使用 TWSE OpenAPI 的 `exchangeReport/BWIBBU_ALL`（PE/PB/殖利率）、`opendata/t187ap05_L`（月營收）、`opendata/t187ap06_L_ci`／`t187ap07_L_ci`（一般業損益與資產負債）及 `opendata/t187ap45_L`（股利）。上櫃公司改接 TPEx 對應 endpoint；現金流、股權分散與公告日缺口再由 MOPS XBRL、FinMind 或公司 IR 補齊。
@@ -27,7 +27,7 @@
 1. 先對 A 母體前 100 檔抓五年年度／季度財報、五年股利與估值、十二個月股權分散；建立原始列與欄位 mapping。
 2. 由原始列計算 FCF、CFO/淨利、ROE、週轉天數、F-score、殖利率與五年百分位。
 3. 逐項執行 33 個條件，保存 `availableAt`、`period` 與 `sourceRefs`。
-4. 只有在該檔 33 項均有可比較資料後，才把「健診完成」納入榜單；資料仍不足的檔案仍可研究，但會列出具體缺口與回退來源。
+4. 只有在該檔 33 項均有可比較資料後，才把「健診完成」納入榜單；資料仍不足的檔案仍可研究，但會列出具體缺口與回退來源。籌碼參考資訊另行發布，只展示於三個策略，不參與策略 gate。
 
 ## 已接入的官方快照（A 母體前 100 檔）
 
@@ -38,5 +38,7 @@
 - `opendata/t187ap06_L_ci`：最近可得一般業損益欄位（營收、毛利、營業利益、稅前／稅後淨利、EPS）。
 - `opendata/t187ap07_L_ci`：最近可得一般業資產負債欄位（資產、負債、權益、應收、存貨、每股淨值）。
 - `opendata/t187ap45_L`：股利年度、現金股利、股票股利與公告日。
+- TWSE OpenAPI `opendata/t187ap11_L`／`t187ap11_P`：資料年月、職稱、目前持股、設質股數與內部人關係人持股。
+- TDCC Open Data `1-5`：資料日期、證券代號、持股分級、人數、股數與占集保庫存比例；每週最後營業日資料。
 
-目前以官方當期快照判定 PB<3、當期殖利率>6%、當期 PE/PB 市場百分位等可證明條件；畫面會標示「當期橫截面代理」。五年序列、股權分散與 F-score 仍需下一階段用 MOPS/XBRL、TDCC 與公司 IR 歷史資料逐期回填，不能用單一最新值冒充。
+目前以官方當期快照判定 PB<3、當期殖利率>6%、當期 PE/PB 市場百分位等可證明條件；畫面會標示「當期橫截面代理」。五年序列與 F-score 仍需下一階段逐期回填。籌碼參考初版定義為：TDCC 級距17人數作股東人數，級距15（持股1,000,001以上）比例作高持股級距參考；級距16差異調整不計入。董監持股由 TWSE `t187ap11_L/P` 按明示職稱加總，與同月發行股數對齊。這些值只供三策略參考，不改候選資格。

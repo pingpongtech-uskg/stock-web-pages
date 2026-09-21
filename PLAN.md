@@ -22,7 +22,7 @@
 
 ### 資料邊界
 
-只使用 FinMind、yfinance、TWSE、TPEx 可取得的資料。不能增加財報狗、新聞站、公司官網爬蟲、TDCC、付費券商報告、社群資料或外部 AI 推論服務。GitHub 與 Cloudflare 是程式執行、儲存及部署服務，不是新增行情來源。
+只使用 FinMind、yfinance、TWSE、TPEx、TDCC 可取得的資料。不能增加財報狗、新聞站、公司官網爬蟲、付費券商報告、社群資料或外部 AI 推論服務。GitHub 與 Cloudflare 是程式執行、儲存及部署服務，不是新增行情來源。TDCC 僅限官方公開股權分散 CSV；不抓投資人私人帳戶資料。
 
 第一版對「護城河」只提供財務品質代理：獲利穩定、資本報酬、現金轉換、負債與毛利率。產品文字必須寫「品質條件」，不能宣稱已證明護城河。成長催化劑限於已公布的營收、利益與毛利改善，不能自動編造客戶、訂單或新產品故事。
 
@@ -358,7 +358,7 @@ package.json / package-lock.json / vite.config.ts / tsconfig.json
 pyproject.toml / uv.lock
 config/
   strategy.json                 # 固定閾值與版本
-  source_registry.json          # 四來源、能力、單位、公開用途
+  source_registry.json          # 五來源、能力、單位、公開用途
   tracked_symbols.json          # 批次優先追蹤；不含私人持股數量
 schemas/
   run.schema.json

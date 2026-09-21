@@ -1,6 +1,6 @@
 # 資料與部署來源查核
 
-查核日期：2026-09-08。官方文件可能更新，實作P0須保存當時能力、schema與小型測試回應。此文件區分「文件確認」和「實際API成功」，不把前者當後者。
+查核日期：2026-09-21。官方文件可能更新，實作P0須保存當時能力、schema與小型測試回應。此文件區分「文件確認」和「實際API成功」，不把前者當後者。
 
 ## 1. 資料來源分工
 
@@ -8,6 +8,7 @@
 |---|---|---|
 | TWSE | 上市母體、行情、法人、估值與財務批次 | 最新OpenAPI不自動等於歷史API；各資料集須核對單位、日與完整性 |
 | TPEx | 上櫃對應資料 | 不可只用buy排行頁代表完整法人報表，未列股票不一定是0 |
+| TDCC | 股權分散、持股級距、股東人數 | 官方公開週 CSV；以 `資料日期`、級距、歸戶口徑保存；不抓私人帳戶資料 |
 | FinMind | 按股歷史價量、法人、營收、財報、公司行動 | 免費／付費能力不同；財務期末不等於公告日 |
 | yfinance | 私有行情核對、研究備援 | 非Yahoo官方工具；不能預設可以公開再散布取得的資料 |
 
@@ -16,10 +17,19 @@
 ### TWSE
 
 - [OpenAPI目錄](https://openapi.twse.com.tw/)及其[Swagger JSON](https://openapi.twse.com.tw/v1/swagger.json)：用來確認當前批次API。實作記錄實際endpoint、欄位、日期、單位與資料筆數，不自行添加未聲明的歷史參數。
+- 董監事持股正式端點：[上市公司 `t187ap11_L`](https://openapi.twse.com.tw/v1/opendata/t187ap11_L)、[公發公司 `t187ap11_P`](https://openapi.twse.com.tw/v1/opendata/t187ap11_P)。兩者 schema 均含 `資料年月`、`公司代號`、`職稱`、`目前持股`；先按明示職稱範圍加總，再與同月發行股數對齊。
+- 大股東交叉資料：[持股逾10%大股東名單 `t187ap02_L`](https://openapi.twse.com.tw/v1/opendata/t187ap02_L)。只作交叉研究，不替代 TDCC 股權分散趨勢。
 - [T86三大法人日報](https://www.twse.com.tw/fund/T86?response=html)：本次讀到投信買進／賣出／買賣超「股數」欄位。沒有個股投信實際成交金額。
 - [TWT44U投信日報](https://www.twse.com.tw/fund/TWT44U?response=html)：本次讀到相同股數概念。歷史日期JSON請求及全市場參數仍需部署runner smoke，不宣稱已測通。
 
 候選使用官方每日完整買賣资料；若無法取得完整買賣雙方向，不能以買超頁缺列推導零。保留原始標頭以驗證schema變更。
+
+### TDCC
+
+- [官方開放資料專區](https://www.tdcc.com.tw/portal/zh/stats/openData)已列出[股權分散表 `1-5`](https://opendata.tdcc.com.tw/getOD.ashx?id=1-5)與[發行人董監分戶保管 `1-4`](https://opendata.tdcc.com.tw/getOD.ashx?id=1-4)。
+- `1-5` 實際探針 HTTP 200，CSV header 為 `資料日期,證券代號,持股分級,人數,股數,占集保庫存數比例%`，資料按週最後營業日發布。
+- 籌碼參考初版使用 `1-5`：`持股分級=17` 人數作股東人數；級距15（1,000,001以上）比例作高持股級距參考。級距16為差異數調整，不計入。方法頁顯示官方級距定義，不冒充 StatementDog 內部門檻。
+- `1-4` 只作分戶保管輔助資料，不能冒充完整董監持股；完整董監持股改用 TWSE `t187ap11_L/P`。
 
 ### TPEx
 

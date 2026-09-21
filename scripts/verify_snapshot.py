@@ -21,6 +21,8 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
+from pipeline.release_contract import chip_reference_error
+
 RANKING_KEYS = ('trust', 'growth', 'lowPosition', 'lowBase', 'lowBaseGrowth', 'lowBaseQuality')
 STRATEGY_FUNNEL_KEYS = ('trust', 'growth', 'lowPosition')
 REGRESSION_WINDOW_DAYS = round(365 * 3.5)
@@ -203,6 +205,9 @@ def main(root: Path | None = None) -> int:
         for row in latest['rankings'][key]:
             if not isinstance(row, dict) or not row.get('code') or row.get('status') not in {'pass', 'fail', 'unknown', 'not_applicable'}:
                 return fail('ranking_row:' + key)
+            chip_error = chip_reference_error(row.get("chipReference"), str(row.get("code")))
+            if chip_error:
+                return fail(chip_error)
             for field in ('currentPeg', 'currentPrice', 'fairPrice', 'valuePrice075', 'valuePrice066'):
                 if field in row and row[field] is not None and not is_number(row[field]):
                     return fail(f'ranking_row_{field}:{key}')
@@ -242,6 +247,12 @@ def main(root: Path | None = None) -> int:
     stocks = latest.get('stocks')
     if not isinstance(stocks, list):
         return fail('stocks_type')
+    for stock in stocks:
+        if not isinstance(stock, dict) or not stock.get('code'):
+            return fail('stock_row')
+        chip_error = chip_reference_error(stock.get("chipReference"), str(stock.get("code")))
+        if chip_error:
+            return fail(chip_error)
     summary_valuations = [stock.get('valuation') for stock in stocks if isinstance(stock.get('valuation'), dict)]
     if len(summary_valuations) != funnel['valuationComplete']:
         return fail('funnel_valuation_mismatch')

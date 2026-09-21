@@ -68,6 +68,8 @@ from pipeline.release_contract import (  # noqa: E402
     compute_funnel,
     is_common_stock_code,
 )
+from pipeline.ownership_checks import evaluate_chip_reference  # noqa: E402
+from scripts.fetch_ownership import OWNERSHIP_SNAPSHOT_VERSION  # noqa: E402
 from pipeline.institutional_ranking import annotate_top_n_entries  # noqa: E402
 from pipeline.valuation import calculate_zulu_valuation  # noqa: E402
 
@@ -99,6 +101,43 @@ def merge_refs(*groups: list[str] | None) -> list[str]:
             if value and value not in result:
                 result.append(value)
     return result
+
+
+def attach_chip_references(
+    details: list[dict[str, Any]],
+    rankings: dict[str, list[dict[str, Any]]],
+    chip_by_code: dict[str, dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, list[dict[str, Any]]]]:
+    """Attach display-only chip evidence without changing ranking membership/order."""
+    for detail in details:
+        detail["chipReference"] = chip_by_code.get(str(detail.get("code")), _unavailable_chip_reference())
+    for rows in rankings.values():
+        for row in rows:
+            row["chipReference"] = chip_by_code.get(str(row.get("code")), _unavailable_chip_reference())
+    return details, rankings
+
+
+def _unavailable_chip_reference() -> dict[str, Any]:
+    return evaluate_chip_reference([], data_freshness="unavailable")
+
+
+def load_ownership_chips(path: Path | None, codes: list[str], *, offline: bool) -> tuple[dict[str, dict[str, Any]], str, list[str]]:
+    """Load only a validated cache; offline releases explicitly stay stale."""
+    if path is None or not path.exists():
+        return {code: _unavailable_chip_reference() for code in codes}, "unavailable", []
+    try:
+        payload = load_json(path)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return {code: _unavailable_chip_reference() for code in codes}, "unavailable", []
+    if payload.get("schemaVersion") != OWNERSHIP_SNAPSHOT_VERSION or not isinstance(payload.get("rows"), list):
+        return {code: _unavailable_chip_reference() for code in codes}, "unavailable", []
+    by_code: dict[str, list[dict[str, Any]]] = {}
+    for row in payload["rows"]:
+        if isinstance(row, dict) and row.get("code"):
+            by_code.setdefault(str(row["code"]), []).append(row)
+    freshness = "stale" if offline else str(payload.get("status") or "stale")
+    chips = {code: evaluate_chip_reference(by_code.get(code, []), data_freshness=freshness) for code in codes}
+    return chips, freshness, [str(ref) for ref in payload.get("sourceRefs", []) if ref]
 
 
 def parse_date(value: str | None, fallback: date) -> date:
@@ -874,7 +913,7 @@ def low_base_gap(results: dict[str, dict[str, Any]], *, label: str, tracked_coun
     }
 
 
-def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool) -> dict[str, Any]:
+def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None) -> dict[str, Any]:
     latest_path = data_dir / "latest.json"
     if not latest_path.exists():
         raise FileNotFoundError(f"missing baseline release: {latest_path}")
@@ -904,6 +943,13 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         enriched.append(next_detail)
         errors_by_code[str(next_detail.get("code"))] = errors
         used_sources = merge_refs(used_sources, next_detail.get("sourceRefs"))
+
+    chip_by_code, chip_freshness, chip_source_refs = load_ownership_chips(
+        ownership_snapshot, [str(detail.get("code")) for detail in enriched], offline=offline
+    )
+    for detail in enriched:
+        detail["chipReference"] = chip_by_code.get(str(detail.get("code")), _unavailable_chip_reference())
+    used_sources = merge_refs(used_sources, chip_source_refs)
 
     for detail in enriched:
         valuation = _valuation_from_detail(detail)
@@ -1357,6 +1403,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         "lowBaseGrowth": low_base_growth_rank,
         "lowBaseQuality": low_base_quality_rank,
     }
+    _, rankings_payload = attach_chip_references(enriched, rankings_payload, chip_by_code)
     rankings_hash = hashlib.sha256(
         json.dumps(rankings_payload, ensure_ascii=False, sort_keys=True).encode()
     ).hexdigest()
@@ -1453,10 +1500,14 @@ def main() -> int:
     parser.add_argument("--as-of", default=None, help="query end date YYYY-MM-DD; default uses latest baseline date")
     parser.add_argument("--output", default=str(ROOT / "public" / "data"))
     parser.add_argument("--offline", action="store_true", help="skip network sources and recalculate from the checked-in snapshot")
+    parser.add_argument("--ownership-snapshot", default=None, help="validated ownership cache path; ownership is reference-only")
     args = parser.parse_args()
     codes = list(dict.fromkeys(code.strip() for code in args.codes.split(",") if code.strip()))
     try:
-        result = build_release(Path(args.output), codes, as_of=args.as_of, offline=args.offline)
+        result = build_release(
+            Path(args.output), codes, as_of=args.as_of, offline=args.offline,
+            ownership_snapshot=Path(args.ownership_snapshot) if args.ownership_snapshot else None,
+        )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"snapshot_refresh_failed={type(exc).__name__}: {exc}", file=sys.stderr)
         return 1

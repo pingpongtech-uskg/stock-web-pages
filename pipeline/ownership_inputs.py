@@ -110,12 +110,12 @@ def normalize_director_rows(
         period = _month(row.get("資料年月") or row.get("period"))
         holding = _number(row.get("目前持股") or row.get("holding"))
         denominator = _number(row.get("已發行普通股數") or row.get("issuedCommonShares") or row.get("denominator"))
-        if code and period and holding is not None and denominator is not None:
+        if code and period and holding is not None:
             grouped[(code, period)].append({"title": title, "holding": holding, "denominator": denominator, "row": row})
     result = []
     for (code, period), entries in sorted(grouped.items()):
         denominators = {entry["denominator"] for entry in entries}
-        denominator = next(iter(denominators)) if len(denominators) == 1 and next(iter(denominators)) > 0 else None
+        denominator = next(iter(denominators)) if len(denominators) == 1 and next(iter(denominators)) is not None and next(iter(denominators)) > 0 else None
         item = _base(code, period, retrieved_at=retrieved_at, source=source, dataset=dataset, snapshot_id=snapshot_id)
         item["directorDenominator"] = denominator
         item["directorScope"] = sorted({entry["title"] for entry in entries}, key=DIRECTOR_SCOPE.index)

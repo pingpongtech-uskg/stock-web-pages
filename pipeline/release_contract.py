@@ -26,6 +26,33 @@ FORMULA_VERSIONS = {
     "growthFallback": "growth-proxy-chain-v1",
     "ranking": "three-strategy-tabs-v1",
 }
+CHIP_REFERENCE_VERSION = "chip-reference-v1"
+CHIP_STATUSES = {"pass", "fail", "unknown"}
+CHIP_FRESHNESS = {"current", "stale", "unavailable", "unknown"}
+
+
+def chip_reference_error(value: object, code: str) -> str | None:
+    """Validate display-only chip evidence without making it a strategy gate."""
+    if not isinstance(value, dict):
+        return "chip_reference_missing:" + code
+    if value.get("schemaVersion") != CHIP_REFERENCE_VERSION:
+        return "chip_reference_schema_version:" + code
+    if value.get("displayOnly") is not True:
+        return "chip_reference_display_only:" + code
+    if value.get("formulaVersion") != CHIP_REFERENCE_VERSION:
+        return "chip_reference_formula_version:" + code
+    if value.get("dataFreshness") not in CHIP_FRESHNESS:
+        return "chip_reference_freshness:" + code
+    if value.get("status") not in CHIP_STATUSES:
+        return "chip_reference_status:" + code
+    for key in ("largeHolderTrend", "directorSupervisor12m", "shareholderCountTrend"):
+        child = value.get(key)
+        if not isinstance(child, dict) or child.get("status") not in CHIP_STATUSES:
+            return f"chip_reference_indicator:{key}:{code}"
+    refs = value.get("sourceRefs")
+    if not isinstance(refs, list) or any(not isinstance(ref, str) or not ref for ref in refs):
+        return "chip_reference_source_refs:" + code
+    return None
 
 
 def is_common_stock_code(code: str) -> bool:

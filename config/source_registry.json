@@ -1,5 +1,5 @@
 {
-  "allowlist": ["FinMind", "TWSE", "TPEx", "yfinance"],
+  "allowlist": ["FinMind", "TWSE", "TPEx", "TDCC", "yfinance"],
   "sources": {
     "FinMind": {
       "role": "按股歷史價量、法人、月營收、財報與公司行動",
@@ -19,11 +19,21 @@
       "url": "https://www.tpex.org.tw/openapi/",
       "status": "adapter planned"
     },
+    "TDCC": {
+      "role": "股權分散、股東人數與持股級距；官方公開週資料",
+      "url": "https://www.tdcc.com.tw/portal/zh/stats/openData",
+      "data_urls": [
+        "https://opendata.tdcc.com.tw/getOD.ashx?id=1-5",
+        "https://opendata.tdcc.com.tw/getOD.ashx?id=1-4"
+      ],
+      "status": "public CSV verified 2026-09-21",
+      "public_policy": "只發布正規化欄位與來源 metadata；不抓投資人私人帳戶資料"
+    },
     "yfinance": {
       "role": "私有行情交叉核對",
       "url": "https://github.com/ranaroussi/yfinance",
       "status": "private check only; not published"
     }
   },
-  "forbidden_sources": ["財報狗", "TDCC", "新聞站", "公司官網爬蟲", "付費券商報告", "社群資料", "外部 AI 推論服務"]
+  "forbidden_sources": ["財報狗", "新聞站", "公司官網爬蟲", "付費券商報告", "社群資料", "外部 AI 推論服務"]
 }
