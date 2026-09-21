@@ -21,6 +21,10 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from pipeline.release_contract import chip_reference_error
 
 RANKING_KEYS = ('trust', 'growth', 'lowPosition', 'lowBase', 'lowBaseGrowth', 'lowBaseQuality')
