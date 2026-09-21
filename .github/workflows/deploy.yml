@@ -8,7 +8,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
-    if: ${{ vars.CLOUDFLARE_PAGES_ENABLED == 'true' }}
+    # Production deploy is explicitly requested; the action still fails closed
+    # when the three Cloudflare secrets are not configured.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
