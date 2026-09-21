@@ -16,7 +16,7 @@ def test_normalize_tdcc_rows_uses_last_week_and_frozen_class_mapping():
     assert result == [{
         "code": "2330", "market": "TWSE", "period": "2026-08", "asOf": "2026-08-28",
         "publishedAt": None, "retrievedAt": "2026-09-01T00:00:00+08:00",
-        "largeHolderPct": 9.3, "directorSupervisorPct": None, "shareholderCount": 12500,
+        "largeHolderPct": 4.1, "directorSupervisorPct": None, "shareholderCount": 12500,
         "source": "TDCC", "dataset": "1-5", "snapshotId": "tdcc-1", "schemaVersion": "ownership-v1",
         "sourceRefs": ["TDCC:1-5:2026-08-28"],
     }]

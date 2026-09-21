@@ -63,8 +63,10 @@ def normalize_tdcc_rows(
 ) -> list[dict[str, Any]]:
     """Collapse TDCC weekly 1-5 rows to each code's latest published week/month.
 
-    The frozen mapping is class 15+16 for percentage and class 17 for the
-    official total shareholder count. Missing values remain ``None``.
+    The frozen mapping is class 15 for percentage (TDCC labels it
+    ``1,000,001以上``); class 16 is a difference adjustment and is not a
+    holding band. Class 17 supplies the official total shareholder count.
+    Missing values remain ``None``.
     """
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
@@ -82,8 +84,8 @@ def normalize_tdcc_rows(
         item = _base(code, period, retrieved_at=retrieved_at, source=source, dataset=dataset, snapshot_id=snapshot_id)
         item["asOf"] = latest
         item["publishedAt"] = next((row.get("發布日期") or row.get("publishedAt") for row in selected if row.get("發布日期") or row.get("publishedAt")), None)
-        pct = sum((_number(row.get("占集保庫存數比例%")) or 0) for row in selected if _text(row.get("持股分級")) in {"15", "16"})
-        pct_values = [_number(row.get("占集保庫存數比例%")) for row in selected if _text(row.get("持股分級")) in {"15", "16"}]
+        pct_values = [_number(row.get("占集保庫存數比例%")) for row in selected if _text(row.get("持股分級")) == "15"]
+        pct = sum(value for value in pct_values if value is not None)
         count = next((_number(row.get("人數")) for row in selected if _text(row.get("持股分級")) == "17"), None)
         item["largeHolderPct"] = round(pct, 10) if pct_values and all(value is not None for value in pct_values) else None
         item["shareholderCount"] = int(count) if count is not None and count.is_integer() else count
