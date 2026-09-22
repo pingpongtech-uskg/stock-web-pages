@@ -424,7 +424,7 @@ def _confirmed_dividend_yield(detail: dict[str, Any], current_price: float | Non
 
 
 def _growth_valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
-    """Build the primary Chen-style total-return P/E valuation."""
+    """Build the primary total-return P/E valuation reference."""
     health_inputs = detail.get("healthInputs")
     rows = health_inputs.get("incomeQuarterly", []) if isinstance(health_inputs, dict) else []
     rows = [row for row in rows if isinstance(row, dict)]

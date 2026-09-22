@@ -1,8 +1,6 @@
 """Valuation methods used by the published research snapshot.
 
-The three strategy cards retain the Zulu PEG as a cross-check metric.  The
-growth strategy's primary valuation is the documented Chen Qiaohong video-style
-total-return P/E.  These are deliberately separate methods and versions.
+The growth strategy uses a documented total-return P/E reference method.
 """
 
 from __future__ import annotations
@@ -208,7 +206,7 @@ def calculate_growth_total_return_valuation(
     growth_method: str = "five_year_eps_cagr",
     growth_method_label: str = "多年度 EPS CAGR（可得完整年度）",
 ) -> dict[str, Any]:
-    """Calculate the documented video-style total-return P/E valuation."""
+    """Calculate the documented total-return P/E valuation."""
     price = _finite(current_price)
     pe = _finite(current_pe)
     eps = _finite(ttm_eps)
@@ -264,7 +262,7 @@ def calculate_growth_total_return_valuation(
     base.update(
         {
             "status": "extreme" if extreme else "available",
-            "reason": "基期效應／極端外推，不發布主合理價" if extreme else "可用的影片版總報酬本益比",
+            "reason": "基期效應／極端外推，不發布主合理價" if extreme else "可用的總報酬本益比（本站整理）",
             "conservative_growth": conservative,
             "total_return_pct": total_return_pct,
             "total_return_pe": total_return_pe,
