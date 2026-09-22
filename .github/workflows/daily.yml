@@ -36,12 +36,30 @@ jobs:
             fi
           done
           exit 1
-      - run: python scripts/fetch_finmind.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output public/data
+      - name: Refresh FinMind seed when token is available
+        shell: bash
         env:
           FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "${FINMIND_TOKEN:-}" ]; then
+            python scripts/fetch_finmind.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output public/data
+            echo "SNAPSHOT_MODE=live" >> "$GITHUB_ENV"
+          else
+            echo "FINMIND_TOKEN is not configured; keep the checked-in release and run an honest offline refresh."
+            echo "SNAPSHOT_MODE=offline" >> "$GITHUB_ENV"
+          fi
       - name: Fetch ownership reference cache
         run: python scripts/fetch_ownership.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output .cache/ownership_snapshot.json
-      - run: python scripts/refresh_snapshot.py --output public/data --ownership-snapshot .cache/ownership_snapshot.json
+      - name: Refresh validated snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${SNAPSHOT_MODE:-offline}" = "live" ]; then
+            python scripts/refresh_snapshot.py --output public/data --ownership-snapshot .cache/ownership_snapshot.json
+          else
+            python scripts/refresh_snapshot.py --offline --output public/data --ownership-snapshot .cache/ownership_snapshot.json
+          fi
       - run: python scripts/verify_snapshot.py
       - run: python -m pytest pipeline scripts -q
       - run: npm run build
