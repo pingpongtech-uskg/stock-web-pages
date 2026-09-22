@@ -25,11 +25,15 @@ def compute_volume_multiple(rows,*,as_of=None):
  points={}
  for row in rows:
   if not isinstance(row,dict): continue
-  day=_date(row.get('date') or row.get('日期')); volume=_volume(row.get('volume') if 'volume' in row else row.get('成交股數'))
-  if day is not None and volume is not None and (as_of is None or day<=as_of): points[day]=volume
+  day=_date(row.get('date') or row.get('日期'))
+  if day is None or (as_of is not None and day>as_of): continue
+  volume=_volume(row.get('volume') if 'volume' in row else row.get('成交股數'))
+  points[day]=volume
  ordered=sorted(points)
  if len(ordered)<6: return _unavailable('需要目前交易日與前五個完成交易日的成交量資料')
- current_day=ordered[-1]; previous=ordered[-6:-1]; current=points[current_day]; average=sum(points[d] for d in previous)/5.0
+ current_day=ordered[-1]; previous=ordered[-6:-1]; current=points[current_day]
+ if current is None or any(points[d] is None for d in previous): return _unavailable('目前日或前五個交易日成交量資料不完整',market_date=current_day)
+ average=sum(points[d] for d in previous)/5.0
  if not math.isfinite(average) or average<=0: return _unavailable('前五個交易日平均成交量不可用',market_date=current_day)
  multiple=current/average
  if not math.isfinite(multiple): return _unavailable('成交量倍數不可用',market_date=current_day)

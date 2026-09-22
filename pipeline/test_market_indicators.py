@@ -29,3 +29,11 @@ def test_volume_multiple_fails_closed_without_five_prior_sessions():
     assert result["status"] == "unavailable"
     assert result["multiple"] is None
     assert result["signal"] == "unknown"
+
+
+def test_volume_multiple_does_not_skip_a_missing_prior_session():
+    rows = [row(f"2026-09-{day:02d}", "1,500") for day in range(15, 22)]
+    rows[2]["volume"] = ""
+    result = compute_volume_multiple(rows, as_of=date(2026, 9, 22))
+    assert result["status"] == "unavailable"
+    assert result["signal"] == "unknown"
