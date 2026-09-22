@@ -49,6 +49,13 @@ def chip_reference_error(value: object, code: str) -> str | None:
         child = value.get(key)
         if not isinstance(child, dict) or child.get("status") not in CHIP_STATUSES:
             return f"chip_reference_indicator:{key}:{code}"
+        if not isinstance(child.get("value"), str) or not child["value"]:
+            return f"chip_reference_indicator_value:{key}:{code}"
+        if not isinstance(child.get("period"), str) or not child["period"]:
+            return f"chip_reference_indicator_period:{key}:{code}"
+        child_refs = child.get("sourceRefs")
+        if not isinstance(child_refs, list) or any(not isinstance(ref, str) or not ref for ref in child_refs):
+            return f"chip_reference_indicator_source_refs:{key}:{code}"
     refs = value.get("sourceRefs")
     if not isinstance(refs, list) or any(not isinstance(ref, str) or not ref for ref in refs):
         return "chip_reference_source_refs:" + code

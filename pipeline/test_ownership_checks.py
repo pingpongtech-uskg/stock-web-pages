@@ -42,3 +42,11 @@ def test_chip_reference_never_uses_institutional_daily_proxy():
     assert result["status"] == "unknown"
     assert result["largeHolderTrend"]["status"] == "unknown"
     assert result["shareholderCountTrend"]["status"] == "unknown"
+
+
+def test_unknown_indicators_keep_renderable_value_and_period_strings():
+    result = evaluate_chip_reference([])
+
+    for key in ("largeHolderTrend", "directorSupervisor12m", "shareholderCountTrend"):
+        assert result[key]["value"] == "—"
+        assert result[key]["period"] == "—"

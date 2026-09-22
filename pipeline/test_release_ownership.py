@@ -3,6 +3,7 @@ from scripts.refresh_snapshot import attach_chip_references
 
 
 def chip(status="unknown"):
+    indicator = {"status": "unknown", "value": "—", "period": "—", "sourceRefs": []}
     return {
         "schemaVersion": "chip-reference-v1",
         "displayOnly": True,
@@ -10,9 +11,9 @@ def chip(status="unknown"):
         "dataFreshness": "unavailable",
         "status": status,
         "sourceRefs": [],
-        "largeHolderTrend": {"status": "unknown"},
-        "directorSupervisor12m": {"status": "unknown"},
-        "shareholderCountTrend": {"status": "unknown"},
+        "largeHolderTrend": dict(indicator),
+        "directorSupervisor12m": dict(indicator),
+        "shareholderCountTrend": dict(indicator),
     }
 
 
@@ -27,6 +28,12 @@ def test_chip_reference_contract_rejects_non_display_only_or_wrong_formula():
     value["displayOnly"] = True
     value["formulaVersion"] = "wrong"
     assert chip_reference_error(value, "2330") == "chip_reference_formula_version:2330"
+
+
+def test_chip_reference_contract_rejects_non_renderable_indicator_fields():
+    value = chip()
+    del value["largeHolderTrend"]["value"]
+    assert chip_reference_error(value, "2330") == "chip_reference_indicator_value:largeHolderTrend:2330"
 
 
 def test_attach_chip_references_covers_summary_and_every_strategy_row():
