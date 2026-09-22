@@ -27,7 +27,7 @@ export function StrategyCard({ presentation, rows }: StrategyCardProps) {
         <p><strong>條件：</strong>{presentation.condition}</p>
         <p><strong>怎麼篩：</strong>{presentation.selection}</p>
         <p><strong>{presentation.valuationNote}</strong></p>
-        <p className="valuation-formula"><strong>{presentation.key === 'growth' ? '影片版總報酬本益比：' : '祖魯 PEG 標準：'}</strong>{presentation.valuationFormula}</p>
+        <p className="valuation-formula"><strong>{presentation.key === 'growth' ? '總報酬本益比（本站整理）：' : '祖魯 PEG 標準：'}</strong>{presentation.valuationFormula}</p>
       </div>
 
       {visibleRows.length ? (
@@ -178,7 +178,7 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
         <span className="stock-evidence">
           <em className={observation ? 'evidence-badge observation' : 'evidence-badge'}>{lowPosition ? '價格／回歸觀察' : observation ? '觀察候選' : '策略條件'}</em>
           {!lowPosition && !growth && <em className={proxy ? 'evidence-badge proxy' : 'evidence-badge formal'}>{proxy ? '正式／代理證據：代理' : '正式 EPS PEG'}</em>}
-          {!lowPosition && growth && <em className="evidence-badge formal">影片版總報酬估值</em>}
+          {!lowPosition && growth && <em className="evidence-badge formal">總報酬估值</em>}
           {proxy && row.valuationGrowthMethodLabel?.includes('營收') && <em className="evidence-badge proxy">營收成長僅為代理，不等同 EPS 成長</em>}
           {strategy === 'trust' && row.entryStatus === 'new' && <em className="evidence-badge new-entry">新進榜</em>}
           {strategy === 'trust' && row.entryStatus === 'retained' && <em className="evidence-badge">續留</em>}
@@ -210,8 +210,8 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
       <span className="stock-prices">
         <span><small>現在價格</small><strong>{formatMaybePrice(row.currentPrice)}</strong></span>
         {!lowPosition && growth && <>
-          <span><small>影片版情境合理價</small><strong>{formatMaybePrice(row.growthFairPrice)}</strong></span>
-          <span><small>低估參考價</small><strong>{formatMaybePrice(row.growthBuyZonePrice)}</strong></span>
+          <span><small>總報酬估值參考價（本站整理）</small><strong>{formatMaybePrice(row.growthFairPrice)}</strong></span>
+          <span><small>低估門檻參考價</small><strong>{formatMaybePrice(row.growthBuyZonePrice)}</strong></span>
           {!valuationAvailable && <small className="valuation-unavailable">{row.growthValuationReason || '合理價暫不可用'}</small>}
         </>}
         {!lowPosition && !growth && <>

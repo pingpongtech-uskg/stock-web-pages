@@ -6,7 +6,7 @@ describe('strategy presentation', () => {
     expect(strategyPresentations.map((item) => item.key)).toEqual(['trust', 'growth', 'lowPosition'])
   })
 
-  it('keeps Zulu as the shared cross-check and the video method as growth primary', () => {
+  it('keeps Zulu as the shared cross-check and the 總報酬本益比（本站整理） as growth primary', () => {
     expect(strategyPresentations.filter((item) => item.key !== 'growth').every((item) => item.valuationFormula === ZULU_VALUATION_FORMULA)).toBe(true)
     expect(strategyPresentations.find((item) => item.key === 'growth')?.valuationFormula).toBe(GROWTH_TOTAL_RETURN_FORMULA)
     expect(ZULU_VALUATION_FORMULA).toContain('PEG < 0.66')

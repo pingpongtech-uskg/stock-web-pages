@@ -1,5 +1,6 @@
 import { Component, createContext, useContext, useEffect, useState, type ErrorInfo, type ReactNode } from 'react'
 
+import { HistoryPanel } from './components/HistoryPanel'
 import { StrategyCard } from './components/StrategyCard'
 import { loadLatestRelease } from './data/api'
 import { releaseCoverageFunnel, type CoverageFunnel } from './domain/coverage'
@@ -127,6 +128,9 @@ function Dashboard() {
 function DashboardContent({ release }: { release: Release }) {
   const blocks = dashboardStrategyRows(release)
   const [activeKey, setActiveKey] = useState<StrategyKey>('trust')
+  const [historyView, setHistoryView] = useState(() => new URLSearchParams(window.location.search).get('view') === 'history')
+  useEffect(() => { const onPop = () => setHistoryView(new URLSearchParams(window.location.search).get('view') === 'history'); window.addEventListener('popstate', onPop); return () => window.removeEventListener('popstate', onPop) }, [])
+  const showHistory = () => { window.history.replaceState(null, '', `${window.location.pathname}?view=history`); setHistoryView(true); trackEvent('history_view') }
   const active = blocks.find((block) => block.presentation.key === activeKey) ?? blocks[0]
 
   useEffect(() => {
@@ -163,9 +167,12 @@ function DashboardContent({ release }: { release: Release }) {
           <div className="dashboard-meta" aria-label="資料資訊">
             <span>資料日 <strong>{release.marketDate ?? '—'}</strong></span>
             <span>更新 <strong>{formatGeneratedAt(release.generatedAt)}</strong></span>
+            <button className="history-nav-button" onClick={showHistory} aria-pressed={historyView}>歷史篩選</button>
           </div>
         </header>
 
+        {historyView && <HistoryPanel />}
+        <div hidden={historyView}>
         <CoverageFunnelView funnel={releaseCoverageFunnel(release, activeKey)} strategy={activeKey} />
 
         <div className="strategy-tabs" role="tablist" aria-label="股票策略">
@@ -222,6 +229,7 @@ function DashboardContent({ release }: { release: Release }) {
           <span>只讀同一次發布快照 · {release.runId}</span>
           <span>研究篩選入口，不是投資建議或自動下單。</span>
         </footer>
+        </div>
       </main>
     </div>
   )
@@ -236,7 +244,7 @@ function CoverageFunnelView({ funnel, strategy }: { funnel: CoverageFunnel; stra
         <i aria-hidden="true">→</i>
         <span><small>價格完整</small><strong>{funnel.priceComplete}</strong></span>
         <i aria-hidden="true">→</i>
-        <span><small>{growth ? '影片版估值可計算' : 'PEG 可計算'}</small><strong>{growth ? funnel.growthValuationComplete : funnel.valuationComplete}</strong></span>
+        <span><small>{growth ? '總報酬本益比（本站整理）估值可計算' : 'PEG 可計算'}</small><strong>{growth ? funnel.growthValuationComplete : funnel.valuationComplete}</strong></span>
         <i aria-hidden="true">→</i>
         <span><small>{growth ? '總報酬本益比 ≥ 1.20' : 'PEG &lt; 0.75'}</small><strong>{growth ? funnel.strategyCandidates : funnel.pegCandidates}</strong></span>
         <i aria-hidden="true">→</i>

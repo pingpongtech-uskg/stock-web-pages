@@ -93,7 +93,7 @@ def write_archive_atomic(staging_dir: Path | str, archive_dir: Path | str, month
         payload = _month_payload(month, months[month]); filename = month_filename(month, payload)
         (month_dir / filename).write_bytes(payload)
         dates = [r["marketDate"] for r in months[month]]
-        metadata.append({"month": month, "path": f"/data/archive/v1/months/{filename}", "sha256": hashlib.sha256(payload).hexdigest(), "bytes": len(payload), "marketDateStart": min(dates), "marketDateEnd": max(dates), "recordCount": len(dates)})
+        metadata.append({"month": month, "path": f"/data/archive/v1/months/{filename}", "sha256": hashlib.sha256(payload).hexdigest(), "bytes": len(payload), "marketDateStart": min(dates), "marketDateEnd": max(dates), "marketDates": sorted(dates), "recordCount": len(dates)})
     all_dates = [r["marketDate"] for rs in months.values() for r in rs]
     index = {"schemaVersion": INDEX_VERSION, "generatedAt": generated_at or "", "retentionDays": 366, "earliestMarketDate": min(all_dates) if all_dates else None, "latestMarketDate": max(all_dates) if all_dates else None, "months": metadata}
     (target / "index.json").write_bytes(canonical_json_bytes(index))

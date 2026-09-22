@@ -1,4 +1,5 @@
 import type { RankingRow, Release, StockSummary } from '../domain/types'
+export { loadHistoryIndex, loadHistoryMonth, validateHistoryIndex, validateHistoryMonth } from '../domain/history'
 
 const DATA_ROOT = '/data'
 const FRESHNESS_VALUES = new Set(['current', 'stale', 'degraded', 'unavailable'])

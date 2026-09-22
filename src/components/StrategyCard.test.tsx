@@ -30,7 +30,7 @@ const knownRow: RankingRow = {
   growthFairPrice: 187.32,
   growthBuyZonePrice: 156.1,
   growthValuationStatus: 'available',
-  growthValuationReason: '可用的影片版總報酬本益比',
+  growthValuationReason: '可用的總報酬本益比（本站整理）',
 }
 
 const unavailableRow: RankingRow = {
@@ -63,7 +63,7 @@ describe('StrategyCard', () => {
     }
   })
 
-  it('hides chip reference on growth and renders the teacher total-return valuation', () => {
+  it('hides chip reference on growth and renders the neutral total-return valuation', () => {
     const chipReference: ChipReference = {
       schemaVersion: 'chip-reference-v1', status: 'unknown', displayOnly: true, formulaVersion: 'chip-reference-v1', dataFreshness: 'unavailable',
       largeHolderTrend: { status: 'unknown', value: '—', period: '—', sourceRefs: [] },
@@ -73,12 +73,12 @@ describe('StrategyCard', () => {
     }
     const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[1]} rows={[{ ...knownRow, chipReference }]} />)
 
-    expect(markup).toContain('影片版總報酬本益比')
+    expect(markup).toContain('總報酬本益比（本站整理）')
     expect(markup).toContain('總報酬本益比')
     expect(markup).toContain('1.62')
-    expect(markup).toContain('影片版情境合理價')
+    expect(markup).toContain('總報酬估值參考價（本站整理）')
     expect(markup).toContain('187.32')
-    expect(markup).toContain('低估參考價')
+    expect(markup).toContain('低估門檻參考價')
     expect(markup).toContain('祖魯 PEG 交叉參考')
     expect(markup).not.toContain('籌碼參考（不影響策略篩選）')
     expect(markup).not.toContain('董監：')
@@ -166,7 +166,7 @@ describe('StrategyCard', () => {
     }
     const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[1]} rows={[row]} />)
     expect(markup).toContain('營收成長僅為代理，不等同 EPS 成長')
-    expect(markup).toContain('影片版總報酬估值')
+    expect(markup).toContain('總報酬估值')
     expect(markup).toContain('缺少已確認現金股利資料')
     expect(markup).toContain('PEG 不可用')
     expect(markup).not.toContain('<strong>0.00</strong>')

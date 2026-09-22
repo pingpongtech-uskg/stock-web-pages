@@ -9,6 +9,7 @@ export type AppEventName =
   | 'valuation_evidence_view'
   | 'candidate_external_open'
   | 'retry_release'
+  | 'history_view'
 
 export interface AppEvent {
   name: AppEventName

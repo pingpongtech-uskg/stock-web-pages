@@ -2,13 +2,25 @@
 from __future__ import annotations
 import argparse,re,sys
 from pathlib import Path
+import json
 FORBIDDEN=("Chen Qiaohong","Qiaohong","影片版","老師本人","老師審核","teacher","video-style")
+def _files_for_root(root: Path):
+ if root.is_dir() and root.name == 'data' and (root / 'latest.json').exists():
+  # Retired full releases remain immutable audit artifacts; only latest plus
+  # the compact archive are rendered by the current product.
+  latest = json.loads((root / 'latest.json').read_text(encoding='utf-8'))
+  current = str(latest.get('runId') or '')
+  selected = [root / 'latest.json', root / 'archive']
+  if current:
+   selected.append(root / 'releases' / current)
+  return [f for p in selected if p.exists() for f in ([p] if p.is_file() else p.rglob('*'))]
+ return [root] if root.is_file() else list(root.rglob('*'))
+
 def scan(paths):
  hits=[]
  for root in paths:
-  p=Path(root)
-  files=[p] if p.is_file() else [x for x in p.rglob('*') if x.is_file() and x.suffix not in {'.png','.jpg','.jpeg','.gif','.woff','.woff2'}]
-  for f in files:
+  for f in _files_for_root(Path(root)):
+   if not f.is_file() or f.suffix in {'.png','.jpg','.jpeg','.gif','.woff','.woff2'}: continue
    try: text=f.read_text(encoding='utf-8')
    except (UnicodeDecodeError,OSError): continue
    for i,line in enumerate(text.splitlines(),1):

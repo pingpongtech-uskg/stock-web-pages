@@ -358,6 +358,44 @@ export interface ReleaseFunnel {
   instrumentExcluded: number
 }
 
+export interface HistoryRankingRow {
+  rank: number
+  code: string
+  name: string
+  sector: string
+  value: number | null
+  valueLabel: string
+  status: MetricStatus
+  reason: string
+  entryStatus?: 'new' | 'retained' | 'unknown' | 'not_applicable'
+  sourceRank?: number | null
+  previousRank?: number | null
+  currentPrice?: number | null
+  currentPeg?: number | null
+  growthTotalReturnPe?: number | null
+  growthFairPrice?: number | null
+  growthBuyZonePrice?: number | null
+  valuationEvidenceLevel?: 'formal' | 'proxy' | 'unavailable'
+  valuationFormulaVersion?: string
+}
+
+export interface ScreeningHistoryRecord {
+  marketDate: string
+  generatedAt: string
+  runId: string
+  revision: string
+  freshness: Exclude<Freshness, 'unavailable'>
+  statusMessage: string
+  formulaVersions: Record<'regression' | 'valuation' | 'growthValuation' | 'growthFallback' | 'ranking', string>
+  funnel: { universe: number; priceComplete: number; valuationComplete: number; growthValuationComplete: number; pegCandidates: number; growthCandidates: number; strategyCandidates: { trust: number; growth: number; lowPosition: number }; formalValuations: number; proxyValuations: number }
+  strategies: { trust: HistoryRankingRow[]; growth: HistoryRankingRow[]; lowPosition: HistoryRankingRow[] }
+  sourceRefs: string[]
+}
+
+export interface ScreeningHistoryMonth { schemaVersion: 'screening-history-month-v1'; month: string; records: ScreeningHistoryRecord[] }
+export interface ScreeningHistoryIndexEntry { month: string; path: string; sha256: string; bytes: number; marketDateStart: string; marketDateEnd: string; marketDates: string[]; recordCount: number }
+export interface ScreeningHistoryIndex { schemaVersion: 'screening-history-index-v1'; generatedAt: string; retentionDays: number; earliestMarketDate: string | null; latestMarketDate: string | null; months: ScreeningHistoryIndexEntry[] }
+
 export interface Release {
   schemaVersion: string
   strategyVersion: string
