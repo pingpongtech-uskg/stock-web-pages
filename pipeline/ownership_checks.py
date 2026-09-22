@@ -44,7 +44,9 @@ def _source_refs(rows: Iterable[dict[str, Any]]) -> list[str]:
 
 
 def _check(status: str, *, value: Any = "—", period: str | None = "—", raw_values: Any = None, explanation: str = "") -> dict[str, Any]:
-    result = {"status": status, "value": value, "period": period, "rawValues": raw_values, "sourceRefs": []}
+    result = {"status": status, "value": value, "period": period, "sourceRefs": []}
+    if raw_values is not None:
+        result["rawValues"] = raw_values
     if explanation:
         result["explanation"] = explanation
     return result

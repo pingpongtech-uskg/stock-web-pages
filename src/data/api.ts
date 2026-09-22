@@ -72,7 +72,7 @@ function validateChipReference(value: unknown): void {
     requireString(indicator.value)
     requireString(indicator.period)
     expect(requireArray(indicator.sourceRefs).every((ref) => typeof ref === 'string'))
-    if (indicator.rawValues !== undefined) {
+    if (indicator.rawValues !== undefined && indicator.rawValues !== null) {
       if (key === 'directorSupervisor12m') {
         const raw = requireRecord(indicator.rawValues)
         requireFiniteNumber(raw.latest)

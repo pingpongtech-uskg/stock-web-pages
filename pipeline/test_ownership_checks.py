@@ -50,3 +50,4 @@ def test_unknown_indicators_keep_renderable_value_and_period_strings():
     for key in ("largeHolderTrend", "directorSupervisor12m", "shareholderCountTrend"):
         assert result[key]["value"] == "—"
         assert result[key]["period"] == "—"
+        assert "rawValues" not in result[key]

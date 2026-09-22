@@ -74,6 +74,21 @@ describe('validateRelease', () => {
     expect(validateRelease(release)).toBe(release)
   })
 
+  it('accepts an older unknown chip indicator with null raw values', () => {
+    const release = validRelease() as unknown as Record<string, unknown>
+    ;(release.rankings as Record<string, unknown>).trust = [{
+      rank: 1, code: '2330', name: '聯電', sector: '', value: 1, valueLabel: '%', status: 'unknown', reason: 'official',
+      chipReference: {
+        schemaVersion: 'chip-reference-v1', status: 'unknown', displayOnly: true, formulaVersion: 'chip-reference-v1', dataFreshness: 'stale',
+        largeHolderTrend: { status: 'unknown', value: '—', period: '—', rawValues: null, sourceRefs: [] },
+        directorSupervisor12m: { status: 'unknown', value: '—', period: '—', rawValues: null, sourceRefs: [] },
+        shareholderCountTrend: { status: 'unknown', value: '—', period: '—', rawValues: null, sourceRefs: [] },
+        sourceRefs: [], availableAt: null,
+      },
+    }]
+    expect(validateRelease(release)).toBe(release)
+  })
+
   it('rejects a chip reference that is not explicitly display-only', () => {
     const release = validRelease() as unknown as Record<string, unknown>
     ;(release.rankings as Record<string, unknown>).trust = [{
