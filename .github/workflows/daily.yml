@@ -46,12 +46,11 @@ jobs:
       - run: python -m pytest pipeline scripts -q
       - run: npm run build
       - name: Deploy validated release
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: ${{ secrets.CLOUDFLARE_PAGES_PROJECT }}
-          directory: dist
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PAGES_PROJECT: ${{ secrets.CLOUDFLARE_PAGES_PROJECT }}
+        run: npx --yes wrangler@latest pages deploy dist --project-name "$CLOUDFLARE_PAGES_PROJECT" --branch main
       - uses: actions/upload-artifact@v4
         with:
           name: validated-static-release
