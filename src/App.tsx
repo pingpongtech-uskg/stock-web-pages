@@ -166,7 +166,7 @@ function DashboardContent({ release }: { release: Release }) {
           </div>
         </header>
 
-        <CoverageFunnelView funnel={releaseCoverageFunnel(release, activeKey)} />
+        <CoverageFunnelView funnel={releaseCoverageFunnel(release, activeKey)} strategy={activeKey} />
 
         <div className="strategy-tabs" role="tablist" aria-label="股票策略">
           {blocks.map((block, index) => {
@@ -227,7 +227,8 @@ function DashboardContent({ release }: { release: Release }) {
   )
 }
 
-function CoverageFunnelView({ funnel }: { funnel: CoverageFunnel }) {
+function CoverageFunnelView({ funnel, strategy }: { funnel: CoverageFunnel; strategy: StrategyKey }) {
+  const growth = strategy === 'growth'
   return (
     <section className="coverage-funnel" aria-label="候選資料漏斗">
       <div className="funnel-steps">
@@ -235,9 +236,9 @@ function CoverageFunnelView({ funnel }: { funnel: CoverageFunnel }) {
         <i aria-hidden="true">→</i>
         <span><small>價格完整</small><strong>{funnel.priceComplete}</strong></span>
         <i aria-hidden="true">→</i>
-        <span><small>PEG 可計算</small><strong>{funnel.valuationComplete}</strong></span>
+        <span><small>{growth ? '影片版估值可計算' : 'PEG 可計算'}</small><strong>{growth ? funnel.growthValuationComplete : funnel.valuationComplete}</strong></span>
         <i aria-hidden="true">→</i>
-        <span><small>PEG &lt; 0.75</small><strong>{funnel.pegCandidates}</strong></span>
+        <span><small>{growth ? '總報酬本益比 ≥ 1.20' : 'PEG &lt; 0.75'}</small><strong>{growth ? funnel.strategyCandidates : funnel.pegCandidates}</strong></span>
         <i aria-hidden="true">→</i>
         <span><small>本策略</small><strong>{funnel.strategyCandidates}</strong></span>
       </div>

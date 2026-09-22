@@ -27,7 +27,7 @@ export function StrategyCard({ presentation, rows }: StrategyCardProps) {
         <p><strong>條件：</strong>{presentation.condition}</p>
         <p><strong>怎麼篩：</strong>{presentation.selection}</p>
         <p><strong>{presentation.valuationNote}</strong></p>
-        <p className="valuation-formula"><strong>祖魯 PEG 標準：</strong>{presentation.valuationFormula}</p>
+        <p className="valuation-formula"><strong>{presentation.key === 'growth' ? '影片版總報酬本益比：' : '祖魯 PEG 標準：'}</strong>{presentation.valuationFormula}</p>
       </div>
 
       {visibleRows.length ? (
@@ -86,6 +86,19 @@ function formatMaybePeg(value: number | null | undefined): string {
   return Number.isFinite(value) ? Number(value).toFixed(2) : 'PEG 不可用'
 }
 
+function formatMaybeTotalReturnPe(value: number | null | undefined): string {
+  return Number.isFinite(value) ? Number(value).toFixed(2) : '不可用'
+}
+
+function growthValuationInputsLabel(row: RankingRow): string | null {
+  const parts: string[] = []
+  if (Number.isFinite(row.growthConservativeGrowth)) parts.push(`保守成長 ${(Number(row.growthConservativeGrowth) * 100).toFixed(1)}%`)
+  if (Number.isFinite(row.growthDividendYield)) parts.push(`股利殖利率 ${(Number(row.growthDividendYield) * 100).toFixed(2)}%`)
+  if (Number.isFinite(row.currentPe)) parts.push(`PE ${Number(row.currentPe).toFixed(2)}`)
+  if (Number.isFinite(row.growthForwardEps)) parts.push(`Forward EPS ${Number(row.growthForwardEps).toFixed(2)}`)
+  return parts.length ? parts.join(' · ') : null
+}
+
 function formatZ(value: number | null | undefined): string {
   return Number.isFinite(value) ? `Z ${Number(value).toFixed(2)}` : 'Z —'
 }
@@ -136,11 +149,15 @@ export function ChipReferenceSummary({ chip }: { chip: ChipReference }) {
 function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel: string; strategy: StrategyKey }) {
   const href = statementDogHealthCheckUrl(row.code)
   const chipReference = row.chipReference
+  const growth = strategy === 'growth'
   const proxy = isProxyValuation(row)
   const observation = row.status !== 'pass'
   const lowPosition = strategy === 'lowPosition'
   const pegAvailable = Number.isFinite(row.currentPeg)
-  const valuationAvailable = Number.isFinite(row.fairPrice) || Number.isFinite(row.valuePrice075) || Number.isFinite(row.valuePrice066)
+  const growthValuationAvailable = Number.isFinite(row.growthFairPrice) || Number.isFinite(row.growthBuyZonePrice)
+  const valuationAvailable = growth
+    ? growthValuationAvailable
+    : Number.isFinite(row.fairPrice) || Number.isFinite(row.valuePrice075) || Number.isFinite(row.valuePrice066)
   const pegThreshold = row.pegBand === 'strict' ? '< 0.66' : '< 0.75'
   const pegBadge = !pegAvailable ? '估值資料不足' : proxy ? `PEG ${pegThreshold}（代理）` : row.pegBand === 'strict' ? 'PEG < 0.66 嚴格' : 'PEG < 0.75 可接受'
   const fairPriceLabel = proxy ? '祖魯基準價（代理情境，PEG=1）' : '祖魯合理價（PEG=1）'
@@ -149,6 +166,7 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
   const extreme = proxy && row.extremeExtrapolation === true
   const ratio = extreme && Number(row.currentPrice) > 0 && Number.isFinite(row.fairPrice) ? Number(row.fairPrice) / Number(row.currentPrice) : null
   const inputsLabel = valuationInputsLabel(row)
+  const growthInputsLabel = growthValuationInputsLabel(row)
   const windowLabel = regressionWindowLabel(row)
   const reason = knownReason(row.reason, row.valuationGrowthMethodLabel, row.status)
   const content = (
@@ -159,7 +177,8 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
         <small>{row.sector || '產業未填'}</small>
         <span className="stock-evidence">
           <em className={observation ? 'evidence-badge observation' : 'evidence-badge'}>{lowPosition ? '價格／回歸觀察' : observation ? '觀察候選' : '策略條件'}</em>
-          {!lowPosition && <em className={proxy ? 'evidence-badge proxy' : 'evidence-badge formal'}>{proxy ? '正式／代理證據：代理' : '正式 EPS PEG'}</em>}
+          {!lowPosition && !growth && <em className={proxy ? 'evidence-badge proxy' : 'evidence-badge formal'}>{proxy ? '正式／代理證據：代理' : '正式 EPS PEG'}</em>}
+          {!lowPosition && growth && <em className="evidence-badge formal">影片版總報酬估值</em>}
           {proxy && row.valuationGrowthMethodLabel?.includes('營收') && <em className="evidence-badge proxy">營收成長僅為代理，不等同 EPS 成長</em>}
           {strategy === 'trust' && row.entryStatus === 'new' && <em className="evidence-badge new-entry">新進榜</em>}
           {strategy === 'trust' && row.entryStatus === 'retained' && <em className="evidence-badge">續留</em>}
@@ -173,14 +192,29 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
         <strong>{lowPosition ? formatZ(row.zScore) : formatRankingValue(row)}</strong>
         {Number.isFinite(row.slope) && <small>slope {Number(row.slope).toFixed(3)}</small>}
       </span>
-      <span className="stock-peg">
-        <small>目前 PEG</small>
-        <strong>{formatMaybePeg(row.currentPeg)}</strong>
-        <em className={row.pegBand === 'strict' ? 'peg-badge strict' : 'peg-badge'}>{pegBadge}</em>
-      </span>
+      {growth ? (
+        <span className="stock-peg">
+          <small>總報酬本益比</small>
+          <strong>{formatMaybeTotalReturnPe(row.growthTotalReturnPe)}</strong>
+          <em className={Number(row.growthTotalReturnPe) >= 1.2 ? 'peg-badge strict' : 'peg-badge'}>{Number(row.growthTotalReturnPe) >= 1.2 ? '≥ 1.20 低估研究' : row.growthValuationStatus === 'extreme' ? '極端外推' : '估值不可用'}</em>
+          <small>祖魯 PEG 交叉參考</small>
+          <strong>{formatMaybePeg(row.currentPeg)}</strong>
+        </span>
+      ) : (
+        <span className="stock-peg">
+          <small>目前 PEG</small>
+          <strong>{formatMaybePeg(row.currentPeg)}</strong>
+          <em className={row.pegBand === 'strict' ? 'peg-badge strict' : 'peg-badge'}>{pegBadge}</em>
+        </span>
+      )}
       <span className="stock-prices">
         <span><small>現在價格</small><strong>{formatMaybePrice(row.currentPrice)}</strong></span>
-        {!lowPosition && <>
+        {!lowPosition && growth && <>
+          <span><small>影片版情境合理價</small><strong>{formatMaybePrice(row.growthFairPrice)}</strong></span>
+          <span><small>低估參考價</small><strong>{formatMaybePrice(row.growthBuyZonePrice)}</strong></span>
+          {!valuationAvailable && <small className="valuation-unavailable">{row.growthValuationReason || '合理價暫不可用'}</small>}
+        </>}
+        {!lowPosition && !growth && <>
           <span><small>{fairPriceLabel}</small><strong>{formatMaybePrice(row.fairPrice)}</strong></span>
           <span><small>{band075Label}</small><strong>{formatMaybePrice(row.valuePrice075)}</strong></span>
           <span><small>{band066Label}</small><strong>{formatMaybePrice(row.valuePrice066)}</strong></span>
@@ -188,9 +222,10 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
         </>}
         {extreme && <em className="extrapolation-warning">高成長不可直接外推{ratio ? `（代理情境價為現價 ${ratio.toFixed(1)} 倍）` : ''}</em>}
         {windowLabel && <small className="stock-window">{windowLabel}</small>}
-        {inputsLabel && <small className="stock-valuation-inputs">{inputsLabel}</small>}
+        {growth && growthInputsLabel && <small className="stock-valuation-inputs">{growthInputsLabel}</small>}
+        {!growth && inputsLabel && <small className="stock-valuation-inputs">{inputsLabel}</small>}
       </span>
-      {chipReference && <ChipReferenceSummary chip={chipReference} />}
+      {chipReference && strategy !== 'growth' && <ChipReferenceSummary chip={chipReference} />}
       <span className="health-link-label">財報狗健檢 ↗</span>
     </>
   )
@@ -203,7 +238,7 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`${row.code} ${row.name}${lowPosition ? '，價格／回歸觀察' : pegAvailable ? `，目前 PEG ${Number(row.currentPeg).toFixed(2)}` : '，PEG 不可用'}，開啟財報狗股票健檢`}
+      aria-label={`${row.code} ${row.name}${lowPosition ? '，價格／回歸觀察' : growth ? `，總報酬本益比 ${formatMaybeTotalReturnPe(row.growthTotalReturnPe)}` : pegAvailable ? `，目前 PEG ${Number(row.currentPeg).toFixed(2)}` : '，PEG 不可用'}，開啟財報狗股票健檢`}
       onClick={() => trackEvent('candidate_external_open', { strategy, code: row.code })}
     >
       {content}

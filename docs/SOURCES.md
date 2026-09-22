@@ -18,6 +18,7 @@
 
 - [OpenAPI目錄](https://openapi.twse.com.tw/)及其[Swagger JSON](https://openapi.twse.com.tw/v1/swagger.json)：用來確認當前批次API。實作記錄實際endpoint、欄位、日期、單位與資料筆數，不自行添加未聲明的歷史參數。
 - 董監事持股正式端點：[上市公司 `t187ap11_L`](https://openapi.twse.com.tw/v1/opendata/t187ap11_L)、[公發公司 `t187ap11_P`](https://openapi.twse.com.tw/v1/opendata/t187ap11_P)。兩者 schema 均含 `資料年月`、`公司代號`、`職稱`、`目前持股`；先按明示職稱範圍加總，再與同月發行股數對齊。
+- 同月份分母使用官方公司基本資料：上市 `t187ap03_L`、公開發行 `t187ap03_P` 的 `已發行普通股數或TDR原股發行股數`；無法證明月份／公司行動一致時維持 `unknown`。
 - 大股東交叉資料：[持股逾10%大股東名單 `t187ap02_L`](https://openapi.twse.com.tw/v1/opendata/t187ap02_L)。只作交叉研究，不替代 TDCC 股權分散趨勢。
 - [T86三大法人日報](https://www.twse.com.tw/fund/T86?response=html)：本次讀到投信買進／賣出／買賣超「股數」欄位。沒有個股投信實際成交金額。
 - [TWT44U投信日報](https://www.twse.com.tw/fund/TWT44U?response=html)：本次讀到相同股數概念。歷史日期JSON請求及全市場參數仍需部署runner smoke，不宣稱已測通。

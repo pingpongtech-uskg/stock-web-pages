@@ -27,6 +27,9 @@ from pipeline.ownership_inputs import normalize_director_rows, normalize_tdcc_ro
 OWNERSHIP_SNAPSHOT_VERSION = "ownership-snapshot-v1"
 TDCC_URL = "https://opendata.tdcc.com.tw/getOD.ashx?id=1-5"
 MOPS_URL = "https://mops.twse.com.tw/mops/api/stapap1"
+TWSE_OPENAPI_BASE = "https://openapi.twse.com.tw/v1"
+DIRECTOR_ENDPOINTS = ("t187ap11_L", "t187ap11_P")
+ISSUED_SHARES_ENDPOINTS = ("t187ap03_L", "t187ap03_P")
 TDCC_HISTORY_URL = "https://www.tdcc.com.tw/portal/zh/smWeb/qryStock"
 DIRECTOR_SCOPE = ("董事長本人", "董事本人", "獨立董事本人", "監察人本人")
 
@@ -150,6 +153,51 @@ def parse_mops_payload(payload: dict[str, Any], *, code: str, period: str, retri
     return normalize_director_rows(rows, retrieved_at=retrieved_at, source="MOPS", dataset="stapap1")
 
 
+def parse_twse_issued_shares(rows: list[dict[str, Any]]) -> dict[str, float]:
+    """Map the official company-basic snapshot to issued common shares."""
+    result: dict[str, float] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        code = str(row.get("公司代號") or row.get("code") or "").strip()
+        shares = _number(
+            row.get("已發行普通股數或TDR原股發行股數")
+            or row.get("已發行普通股數")
+            or row.get("issuedCommonShares")
+        )
+        if code and shares is not None and shares > 0:
+            result[code] = shares
+    return result
+
+
+def parse_twse_director_rows(
+    rows: list[dict[str, Any]],
+    *,
+    issued_shares_by_code: dict[str, float],
+    dataset: str,
+    retrieved_at: str | None = None,
+) -> list[dict[str, Any]]:
+    """Attach same-snapshot official issued shares before normalization."""
+    normalized: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        code = str(row.get("公司代號") or row.get("code") or "").strip()
+        normalized.append({
+            "資料年月": row.get("資料年月") or row.get("period"),
+            "公司代號": code,
+            "職稱": row.get("職稱") or row.get("title"),
+            "目前持股": row.get("目前持股") or row.get("holding"),
+            "已發行普通股數": issued_shares_by_code.get(code),
+        })
+    return normalize_director_rows(
+        normalized,
+        retrieved_at=retrieved_at,
+        source="TWSE OpenAPI",
+        dataset=dataset,
+    )
+
+
 def _request(url: str, *, data: bytes | None = None, timeout: float = 20.0, retries: int = 2) -> bytes:
     last: Exception | None = None
     for attempt in range(retries + 1):
@@ -162,6 +210,23 @@ def _request(url: str, *, data: bytes | None = None, timeout: float = 20.0, retr
             if attempt < retries:
                 time.sleep(0.5 * (attempt + 1))
     raise RuntimeError(f"ownership source unavailable: {last}")
+
+
+def fetch_twse_director_rows(codes: list[str], *, retrieved_at: str | None = None) -> list[dict[str, Any]]:
+    """Fetch official director holdings and same-snapshot issued shares."""
+    requested = {str(code).strip() for code in codes if str(code).strip()}
+    issued_rows: list[dict[str, Any]] = []
+    for endpoint in ISSUED_SHARES_ENDPOINTS:
+        payload = json.loads(_request(f"{TWSE_OPENAPI_BASE}/opendata/{endpoint}").decode("utf-8"))
+        if isinstance(payload, list):
+            issued_rows.extend(row for row in payload if isinstance(row, dict))
+    issued = parse_twse_issued_shares(issued_rows)
+    result: list[dict[str, Any]] = []
+    for endpoint in DIRECTOR_ENDPOINTS:
+        payload = json.loads(_request(f"{TWSE_OPENAPI_BASE}/opendata/{endpoint}").decode("utf-8"))
+        rows = [row for row in payload if isinstance(row, dict) and str(row.get("公司代號") or "").strip() in requested] if isinstance(payload, list) else []
+        result.extend(parse_twse_director_rows(rows, issued_shares_by_code=issued, dataset=endpoint, retrieved_at=retrieved_at))
+    return merge_ownership_rows(result)
 
 
 def fetch_tdcc(*, retrieved_at: str | None = None) -> list[dict[str, Any]]:
@@ -209,27 +274,13 @@ def fetch_ownership_rows(codes: list[str], *, as_of: str | None = None) -> list[
                 # resulting cache stale and the evaluator stays fail-closed.
                 continue
 
-    directors: list[dict[str, Any]] = []
-    for code in requested:
-        latest_director_period: str | None = None
-        for candidate in (anchor, shift_month(anchor, -1), shift_month(anchor, -2)):
-            year, month = candidate.split("-")
-            try:
-                latest_rows = fetch_mops(code, str(int(year) - 1911), month, retrieved_at=retrieved)
-            except Exception:
-                continue
-            if latest_rows:
-                directors.extend(latest_rows)
-                latest_director_period = candidate
-                break
-            time.sleep(0.05)
-        if latest_director_period:
-            prior_period = shift_month(latest_director_period, -12)
-            year, month = prior_period.split("-")
-            try:
-                directors.extend(fetch_mops(code, str(int(year) - 1911), month, retrieved_at=retrieved))
-            except Exception:
-                pass
+    try:
+        directors = fetch_twse_director_rows(requested, retrieved_at=retrieved)
+    except Exception:
+        # Official source failure is handled by the snapshot stale/unknown
+        # contract. Never fall back to MOPS holdings without a same-period
+        # issued-share denominator.
+        directors = []
     return merge_ownership_rows(current, historical, directors)
 
 

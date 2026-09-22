@@ -71,7 +71,12 @@ from pipeline.release_contract import (  # noqa: E402
 from pipeline.ownership_checks import evaluate_chip_reference  # noqa: E402
 from scripts.fetch_ownership import OWNERSHIP_SNAPSHOT_VERSION  # noqa: E402
 from pipeline.institutional_ranking import annotate_top_n_entries  # noqa: E402
-from pipeline.valuation import calculate_zulu_valuation  # noqa: E402
+from pipeline.valuation import (  # noqa: E402
+    calculate_growth_total_return_valuation,
+    calculate_zulu_valuation,
+    derive_stable_eps_growth,
+    derive_ttm_eps,
+)
 
 
 TAIPEI = ZoneInfo("Asia/Taipei")
@@ -389,12 +394,68 @@ def _valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
     return valuation
 
 
+def _confirmed_dividend_yield(detail: dict[str, Any], current_price: float | None) -> float | None:
+    """Return the latest confirmed cash dividend / current price.
+
+    An empty dividend feed is unknown, not zero.  A published zero cash
+    dividend is valid evidence of a non-paying year and remains zero.
+    """
+    if current_price is None or current_price <= 0:
+        return None
+    health_inputs = detail.get("healthInputs")
+    rows = health_inputs.get("dividends", []) if isinstance(health_inputs, dict) else []
+    valid: list[tuple[str, float]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        try:
+            cash = float(row.get("cashPerShare"))
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(cash) or cash < 0:
+            continue
+        period = str(row.get("availableAt") or row.get("year") or "")
+        valid.append((period, cash))
+    if not valid:
+        return None
+    _period, cash_per_share = max(valid, key=lambda item: item[0])
+    result = cash_per_share / current_price
+    return result if math.isfinite(result) and result >= 0 else None
+
+
+def _growth_valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
+    """Build the primary Chen-style total-return P/E valuation."""
+    health_inputs = detail.get("healthInputs")
+    rows = health_inputs.get("incomeQuarterly", []) if isinstance(health_inputs, dict) else []
+    rows = [row for row in rows if isinstance(row, dict)]
+    growth = derive_stable_eps_growth(rows)
+    current_price = _current_price(detail)
+    valuation_current = health_inputs.get("valuationCurrent") if isinstance(health_inputs, dict) else None
+    if not isinstance(valuation_current, dict):
+        valuation_current = {}
+    result = calculate_growth_total_return_valuation(
+        current_price=current_price,
+        current_pe=valuation_current.get("pe"),
+        ttm_eps=derive_ttm_eps(rows),
+        earnings_growth=growth.get("growth"),
+        dividend_yield=_confirmed_dividend_yield(detail, current_price),
+        growth_method=str(growth.get("method") or "no_stable_growth"),
+        growth_method_label=str(growth.get("method_label") or "完整年度 EPS 資料不足"),
+    )
+    result["growth_valid_years"] = growth.get("valid_years", 0)
+    result["growth_years"] = growth.get("growth_years")
+    result["annual_eps"] = growth.get("annual_eps", {})
+    return result
+
+
 def _attach_valuation(
     rows: list[dict[str, Any]],
     detail_by_code: dict[str, dict[str, Any]],
     *,
     require_peg_below_075: bool = True,
     exclude_extreme: bool = True,
+    valuation_key: str = "valuation",
+    require_growth_total_return_pe: float | None = None,
 ) -> list[dict[str, Any]]:
     visible: list[dict[str, Any]] = []
     for row in rows:
@@ -407,7 +468,60 @@ def _attach_valuation(
         regression = detail.get("regression")
         if not isinstance(regression, dict):
             regression = {}
-        valuation = detail.get("valuation")
+        valuation = detail.get(valuation_key)
+        growth_route = require_growth_total_return_pe is not None or valuation_key == "growthValuation"
+        if growth_route:
+            if (
+                not isinstance(valuation, dict)
+                or valuation.get("status") != "available"
+                or valuation.get("extreme_extrapolation") is True
+                or not isinstance(valuation.get("total_return_pe"), (int, float))
+                or float(valuation["total_return_pe"]) < float(require_growth_total_return_pe or 1.2)
+            ):
+                continue
+            zulu_value = detail.get("valuation")
+            zulu: dict[str, Any] = zulu_value if isinstance(zulu_value, dict) else {}
+            row.update(
+                {
+                    "value": valuation.get("total_return_pe"),
+                    "valueLabel": "×",
+                    "currentPrice": valuation.get("current_price"),
+                    "fairPrice": valuation.get("fair_price"),
+                    "valuePrice075": None,
+                    "valuePrice066": None,
+                    "currentPeg": zulu.get("current_peg"),
+                    "currentPe": valuation.get("current_pe"),
+                    "currentEps": valuation.get("ttm_eps"),
+                    "valuationMethod": valuation.get("method"),
+                    "valuationGrowthInput": valuation.get("earnings_growth"),
+                    "valuationGrowthMethod": valuation.get("growth_method"),
+                    "valuationGrowthMethodLabel": valuation.get("growth_method_label"),
+                    "valuationEvidenceLevel": "formal",
+                    "valuationFormulaVersion": valuation.get("formula_version"),
+                    "extremeExtrapolation": False,
+                    "growthTotalReturnPe": valuation.get("total_return_pe"),
+                    "growthConservativeGrowth": valuation.get("conservative_growth"),
+                    "growthDividendYield": valuation.get("dividend_yield"),
+                    "growthForwardEps": valuation.get("forward_eps"),
+                    "growthFairPrice": valuation.get("fair_price"),
+                    "growthBuyZonePrice": valuation.get("buy_zone_price"),
+                    "growthValuationStatus": valuation.get("status"),
+                    "growthValuationReason": valuation.get("reason"),
+                    "priceBasis": detail.get("priceBasis"),
+                    "zScore": detail.get("zScore"),
+                    "slope": detail.get("slope"),
+                    "regressionStart": regression.get("historyStart"),
+                    "regressionEnd": regression.get("historyEnd"),
+                    "regressionObservations": regression.get("observations"),
+                    "regressionExpectedObservations": regression.get("expectedObservations"),
+                }
+            )
+            if zulu.get("below_066") or zulu.get("below_075"):
+                row["pegBand"] = "strict" if zulu.get("below_066") else "acceptable"
+            else:
+                row.pop("pegBand", None)
+            visible.append(row)
+            continue
         if not isinstance(valuation, dict):
             if require_peg_below_075:
                 continue
@@ -962,6 +1076,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             detail.pop("valuation", None)
         else:
             detail["valuation"] = valuation
+        detail["growthValuation"] = _growth_valuation_from_detail(detail)
 
     # A is the source-published research universe.  Preserve its rank as an
     # input label for every strategy; do not re-rank the already selected 100
@@ -1312,7 +1427,13 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         current["reason"] = f"{current.get('reason', '')}；另一路徑亦通過"
     low_base_rank = rank_low_base_rows(list(low_base_by_code.values()), institutional_rank_by_code)
     trust_rank = _attach_valuation(trust_rank, detail_by_code, require_peg_below_075=False, exclude_extreme=False)
-    growth_rank = _attach_valuation(growth_rank, detail_by_code)
+    growth_rank = _attach_valuation(
+        growth_rank,
+        detail_by_code,
+        valuation_key="growthValuation",
+        require_growth_total_return_pe=1.2,
+    )
+    growth_rank = rank_rows(growth_rank, reverse=True)
     # Low-position is a price/recovery observation.  Keep rows without PEG and
     # extreme proxy rows so the price signal remains visible; warn in the row
     # instead of letting valuation evidence delete the observation.
@@ -1357,6 +1478,13 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         instrument_excluded=sum(1 for detail in enriched if not is_common_stock_code(str(detail.get("code")))),
         valuations=valuation_dicts,
         strategy_counts={"trust": len(trust_rank), "growth": len(growth_rank), "lowPosition": len(low_rank)},
+        growth_candidates=len(growth_rank),
+        growth_valuation_complete=sum(
+            1
+            for detail in enriched
+            if isinstance(detail.get("growthValuation"), dict)
+            and detail["growthValuation"].get("status") == "available"
+        ),
     )
     market_dates = [str(detail.get("asOf")) for detail in enriched if detail.get("asOf")]
     market_date = max(market_dates) if market_dates else baseline.get("marketDate")

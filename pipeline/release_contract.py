@@ -23,6 +23,7 @@ NON_COMMON_STOCK_CODE = re.compile(r"^0\d{3,5}[A-Z]?$")
 FORMULA_VERSIONS = {
     "regression": "lohas-linear-3.5y-research-v1",
     "valuation": "zulu-peg-eps-growth-v2",
+    "growthValuation": "growth-total-return-pe-v1",
     "growthFallback": "growth-proxy-chain-v1",
     "ranking": "three-strategy-tabs-v1",
 }
@@ -83,6 +84,8 @@ def compute_funnel(
     instrument_excluded: int,
     valuations: Iterable[dict[str, Any]],
     strategy_counts: dict[str, int],
+    growth_candidates: int | None = None,
+    growth_valuation_complete: int | None = None,
 ) -> dict[str, Any]:
     """Build the published funnel and fail loudly when it does not conserve."""
 
@@ -92,14 +95,18 @@ def compute_funnel(
     counts = {str(key): int(value) for key, value in strategy_counts.items()}
     if peg_count > len(values) or proxy_count > len(values):
         raise ValueError("funnel stage counts do not conserve")
-    if counts.get("growth", 0) > peg_count:
-        raise ValueError("growth route exceeds peg pool")
+    if growth_candidates is None and counts.get("growth", 0) > peg_count:
+        raise ValueError("growth route exceeds legacy peg pool")
+    if growth_candidates is not None and counts.get("growth", 0) > growth_candidates:
+        raise ValueError("growth route exceeds growth valuation pool")
     return {
         "version": FUNNEL_VERSION,
         "universe": int(universe),
         "priceComplete": int(price_complete),
         "valuationComplete": len(values),
+        "growthValuationComplete": int(growth_valuation_complete if growth_valuation_complete is not None else 0),
         "pegCandidates": peg_count,
+        "growthCandidates": int(growth_candidates if growth_candidates is not None else counts.get("growth", 0)),
         "strategyCandidates": counts,
         "formalValuations": len(values) - proxy_count,
         "proxyValuations": proxy_count,

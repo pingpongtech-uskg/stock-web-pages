@@ -43,6 +43,15 @@ def _month(value: Any) -> str | None:
         except ValueError:
             return None
         return text
+    roc = re.fullmatch(r"(\d{3})(\d{2})", text)
+    if roc:
+        year = int(roc.group(1)) + 1911
+        month = int(roc.group(2))
+        try:
+            date(year, month, 1)
+        except ValueError:
+            return None
+        return f"{year:04d}-{month:02d}"
     parsed = _date(value)
     return parsed[:7] if parsed else None
 

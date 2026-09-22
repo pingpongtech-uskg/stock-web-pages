@@ -45,6 +45,32 @@ export interface ValuationSummary {
   formula_version: string
 }
 
+export interface GrowthValuationSummary {
+  method: 'growth-total-return-pe'
+  formula_version: 'growth-total-return-pe-v1'
+  status: 'available' | 'unavailable' | 'extreme'
+  reason: string
+  current_price: number | null
+  current_pe: number | null
+  ttm_eps: number | null
+  earnings_growth: number | null
+  growth_method: string
+  growth_method_label: string
+  dividend_yield: number | null
+  conservative_growth: number | null
+  total_return_pct: number | null
+  total_return_pe: number | null
+  forward_eps: number | null
+  fair_pe: number | null
+  fair_price: number | null
+  buy_zone_price: number | null
+  undervalued: boolean
+  reasonable: boolean
+  extreme_extrapolation: boolean
+  growth_valid_years?: number
+  growth_years?: number | null
+}
+
 export interface StockSummary {
   code: string
   name: string
@@ -94,6 +120,7 @@ export interface StockSummary {
   sourceRefs: string[]
   chipReference?: ChipReference
   valuation?: ValuationSummary
+  growthValuation?: GrowthValuationSummary
   healthCategories?: HealthCategory[]
   healthScore?: { passCount: number; total: number; status: MetricStatus }
   healthInputSummary?: { valuationDate?: string | null; incomePeriods: number; balancePeriods: number; dividendRows: number; officialRevenueRows: number; source: string }
@@ -230,12 +257,20 @@ export interface RankingRow {
   currentPe?: number | null
   currentEps?: number | null
   pegBand?: 'strict' | 'acceptable'
-  valuationMethod?: 'zulu-peg'
+  valuationMethod?: 'zulu-peg' | 'growth-total-return-pe'
   valuationGrowthInput?: number
   valuationGrowthMethod?: string
   valuationGrowthMethodLabel?: string
   valuationEvidenceLevel?: 'formal' | 'proxy' | 'unavailable'
   valuationFormulaVersion?: string
+  growthTotalReturnPe?: number | null
+  growthConservativeGrowth?: number | null
+  growthDividendYield?: number | null
+  growthForwardEps?: number | null
+  growthFairPrice?: number | null
+  growthBuyZonePrice?: number | null
+  growthValuationStatus?: 'available' | 'unavailable' | 'extreme'
+  growthValuationReason?: string
   /** Proxy growth beyond 100% (or a scenario price >3× current) needs an
    *  explicit "do not extrapolate" warning next to the scenario prices. */
   extremeExtrapolation?: boolean
@@ -313,7 +348,9 @@ export interface ReleaseFunnel {
   universe: number
   priceComplete: number
   valuationComplete: number
+  growthValuationComplete?: number
   pegCandidates: number
+  growthCandidates?: number
   strategyCandidates: { trust: number; growth: number; lowPosition: number }
   formalValuations: number
   proxyValuations: number

@@ -1,7 +1,7 @@
-from scripts.refresh_snapshot import next_expected_update_for_market_date
 from scripts.refresh_snapshot import _attach_valuation
 from scripts.refresh_snapshot import growth_health_qualifies
 from scripts.refresh_snapshot import new_entry_rows
+from scripts.refresh_snapshot import next_expected_update_for_market_date
 
 
 def test_growth_health_requires_four_known_passes():
@@ -63,3 +63,52 @@ def test_extreme_revenue_proxy_is_retained_for_non_growth_observation():
     assert result[0]["code"] == "2330"
     assert result[0]["extremeExtrapolation"] is True
     assert result[0]["valuationEvidenceLevel"] == "proxy"
+
+
+def test_growth_route_uses_teacher_total_return_pe_and_keeps_zulu_cross_check():
+    rows = [{"code": "2330", "rank": 1, "value": 25}]
+    details = {"2330": {
+        "valuation": {"current_peg": 0.52, "below_075": True, "below_066": True},
+        "growthValuation": {
+            "status": "available",
+            "method": "growth-total-return-pe",
+            "formula_version": "growth-total-return-pe-v1",
+            "current_price": 100,
+            "current_pe": 13,
+            "ttm_eps": 7.69,
+            "earnings_growth": 0.20,
+            "growth_method": "five_year_eps_cagr",
+            "growth_method_label": "多年度 EPS CAGR（可得完整年度）",
+            "dividend_yield": 0.05,
+            "conservative_growth": 0.16,
+            "total_return_pct": 21.0,
+            "total_return_pe": 21 / 13,
+            "forward_eps": 8.92,
+            "fair_pe": 21.0,
+            "fair_price": 187.32,
+            "buy_zone_price": 156.1,
+            "undervalued": True,
+            "reasonable": False,
+            "extreme_extrapolation": False,
+        },
+    }}
+
+    result = _attach_valuation(rows, details, valuation_key="growthValuation", require_growth_total_return_pe=1.2)
+
+    assert len(result) == 1
+    assert result[0]["growthTotalReturnPe"] == 21 / 13
+    assert result[0]["growthFairPrice"] == 187.32
+    assert result[0]["currentPeg"] == 0.52
+    assert result[0]["valuationFormulaVersion"] == "growth-total-return-pe-v1"
+
+
+def test_growth_route_rejects_extreme_formal_valuation():
+    rows = [{"code": "2330", "rank": 1, "value": 25}]
+    details = {"2330": {"growthValuation": {
+        "status": "extreme",
+        "total_return_pe": 2.0,
+        "extreme_extrapolation": True,
+        "reason": "基期效應／極端外推，不發布主合理價",
+    }}}
+
+    assert _attach_valuation(rows, details, valuation_key="growthValuation", require_growth_total_return_pe=1.2) == []

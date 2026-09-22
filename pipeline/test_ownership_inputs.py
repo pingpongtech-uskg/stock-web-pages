@@ -1,4 +1,5 @@
 from pipeline.ownership_inputs import normalize_director_rows, normalize_tdcc_rows
+from scripts.fetch_ownership import parse_twse_director_rows, parse_twse_issued_shares
 
 
 def test_normalize_tdcc_rows_uses_last_week_and_frozen_class_mapping():
@@ -35,3 +36,18 @@ def test_normalize_director_rows_excludes_proxies_and_calculates_percentage():
     assert result[0]["directorDenominator"] == 1000.0
     assert result[0]["directorScope"] == ["董事長本人", "董事本人"]
     assert result[0]["source"] == "TWSE OpenAPI"
+
+
+def test_twse_openapi_director_rows_join_same_snapshot_issued_shares():
+    issued = parse_twse_issued_shares([
+        {"公司代號": "2330", "已發行普通股數或TDR原股發行股數": "1,000"},
+    ])
+    result = parse_twse_director_rows([
+        {"資料年月": "11508", "公司代號": "2330", "職稱": "董事長本人", "目前持股": "100"},
+        {"資料年月": "11508", "公司代號": "2330", "職稱": "董事本人", "目前持股": "50"},
+        {"資料年月": "11508", "公司代號": "2330", "職稱": "董事之法人代表人", "目前持股": "999"},
+    ], issued_shares_by_code=issued, dataset="t187ap11_L")
+
+    assert result[0]["directorSupervisorPct"] == 15.0
+    assert result[0]["source"] == "TWSE OpenAPI"
+    assert result[0]["dataset"] == "t187ap11_L"

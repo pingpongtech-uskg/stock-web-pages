@@ -9,6 +9,8 @@ const ROW_NULLABLE_NUMBERS = [
   'currentPrice', 'fairPrice', 'valuePrice075', 'valuePrice066', 'currentPeg',
   'currentPe', 'currentEps', 'valuationGrowthInput', 'zScore', 'slope',
   'regressionObservations', 'regressionExpectedObservations',
+  'growthTotalReturnPe', 'growthConservativeGrowth', 'growthDividendYield',
+  'growthForwardEps', 'growthFairPrice', 'growthBuyZonePrice',
 ] as const
 
 type UnknownRecord = Record<string, unknown>
@@ -104,6 +106,8 @@ function validateRankingRow(value: unknown): void {
   if (row.valuationGrowthMethod !== undefined) requireString(row.valuationGrowthMethod)
   if (row.valuationGrowthMethodLabel !== undefined) requireString(row.valuationGrowthMethodLabel)
   if (row.valuationFormulaVersion !== undefined) requireString(row.valuationFormulaVersion)
+  if (row.growthValuationStatus !== undefined) expect(['available', 'unavailable', 'extreme'].includes(requireString(row.growthValuationStatus)))
+  if (row.growthValuationReason !== undefined) requireString(row.growthValuationReason)
   if (row.priceBasis !== undefined) expect(row.priceBasis === 'adjusted' || row.priceBasis === 'raw_proxy' || row.priceBasis === 'unknown')
   if (row.regressionStart !== undefined) requireNullableString(row.regressionStart)
   if (row.regressionEnd !== undefined) requireNullableString(row.regressionEnd)
@@ -152,19 +156,23 @@ export function validateRelease(payload: unknown): Release {
   const funnelUniverse = requireFiniteNumber(funnel.universe)
   const funnelPrice = requireFiniteNumber(funnel.priceComplete)
   const funnelValuation = requireFiniteNumber(funnel.valuationComplete)
+  if (funnel.growthValuationComplete !== undefined) requireFiniteNumber(funnel.growthValuationComplete)
   const funnelPeg = requireFiniteNumber(funnel.pegCandidates)
   const funnelFormal = requireFiniteNumber(funnel.formalValuations)
   const funnelProxy = requireFiniteNumber(funnel.proxyValuations)
   requireFiniteNumber(funnel.instrumentExcluded)
   requireString(funnel.instrumentPolicy)
   const strategyCounts = requireRecord(funnel.strategyCandidates)
+  const funnelGrowth = funnel.growthCandidates === undefined
+    ? requireFiniteNumber(strategyCounts.growth)
+    : requireFiniteNumber(funnel.growthCandidates)
   const counts = FUNNEL_STRATEGY_KEYS.map((key) => requireFiniteNumber(strategyCounts[key]))
   expect(funnelPeg <= funnelValuation)
   expect(funnelFormal + funnelProxy === funnelValuation)
   expect(funnelUniverse >= 0 && funnelPrice >= 0)
   // Official trust flow and low-position price observations do not require
   // a PEG value. Only the growth route is bounded by the PEG pool.
-  expect(counts[1] <= funnelPeg)
+  expect(counts[1] <= funnelGrowth)
 
   const rankings = requireRecord(p.rankings)
   for (const key of RANKING_KEYS) {

@@ -19,6 +19,7 @@ export interface StrategyPresentation {
 }
 
 export const ZULU_VALUATION_FORMULA = '正式 PEG = 目前 PE ÷ 可驗證的 EPS／獲利成長率（%）；若成長輸入只有代理，仍顯示「估算／代理 PEG」與方法，但不等同正式 EPS PEG；當前 EPS 一律由「現價 ÷ 當期 PE」反推；Forward EPS = 當前 EPS ×（1 + 成長率）；祖魯基準價（PEG=1）= Forward EPS × 成長率（%）；PEG < 0.75 可接受、PEG < 0.66 嚴格。只有可追溯的正式或代理成長輸入才計算 PEG 與情境價；營收成長僅為觀察代理，不等同 EPS 成長。'
+export const GROWTH_TOTAL_RETURN_FORMULA = '影片版總報酬本益比：保守獲利成長率 = 多年度 EPS 成長 × 0.8；總報酬率（百分點）= 保守獲利成長率 + 已確認現金股利殖利率；總報酬本益比 = 總報酬率 ÷ 目前 PE；Forward EPS = TTM EPS ×（1 + 保守獲利成長率）；影片版情境合理價 = Forward EPS × 總報酬率；總報酬本益比 ≥ 1.2 才列低估研究候選。缺股利、缺多年度 EPS 或極端外推時不發布主合理價。祖魯 PEG 僅作交叉參考。'
 
 export const strategyPresentations: readonly StrategyPresentation[] = [
   {
@@ -38,15 +39,15 @@ export const strategyPresentations: readonly StrategyPresentation[] = [
   {
     key: 'growth',
     title: '成長股',
-    subtitle: '共同 A 母體／LTM 成長與 PEG',
+    subtitle: '影片版總報酬本益比',
     horizon: '6～36 個月',
-    metricLabel: 'EPS 成長／代理',
+    metricLabel: '總報酬本益比',
     description: '成長股不另建一個母體，直接在投信十日買超前 100 內尋找成長仍能支撐估值的標的。',
-    condition: '母體：同一個投信十日買超前 100；PEG < 0.75；且五項成長健康檢查至少 4/5（80%）。',
-    selection: '篩選：正式 EPS／獲利成長優先；營收成長只作明示代理，極端外推與資料不足不列為正式成長候選；五項健康未達 4/5 不進榜。',
-    valuationNote: '營收成長不直接代入 EPS PEG；沒有可驗證獲利成長時不計算正式 PEG／情境價。',
-    valuationFormula: ZULU_VALUATION_FORMULA,
-    emptyBody: '目前共同 A 母體沒有足夠已知資料形成 PEG 價值候選。',
+    condition: '母體：同一個投信十日買超前 100；影片版總報酬本益比 ≥ 1.2；且五項成長健康檢查至少 4/5（80%）。',
+    selection: '篩選：使用可得完整年度 EPS 的多年度 CAGR；營收成長不代替獲利成長。缺已確認股利、多年度 EPS 或遇極端外推時不列為合理價候選。',
+    valuationNote: '主估值使用影片版總報酬本益比；祖魯 PEG 保留為交叉參考，不參與成長股主排序。成長股頁不顯示籌碼參考。',
+    valuationFormula: GROWTH_TOTAL_RETURN_FORMULA,
+    emptyBody: '目前共同 A 母體沒有同時具備多年度 EPS、已確認股利與影片版總報酬本益比 ≥ 1.2 的候選。',
     accent: 'growth',
   },
   {

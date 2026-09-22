@@ -278,7 +278,7 @@ def main(root: Path | None = None) -> int:
     if not isinstance(code_commit, str) or not re.fullmatch(r'[0-9a-f]{7,64}', code_commit):
         return fail('manifest_code_commit')
     formula_versions = manifest.get('formulaVersions')
-    if not isinstance(formula_versions, dict) or set(formula_versions) != {'regression', 'valuation', 'growthFallback', 'ranking'}:
+    if not isinstance(formula_versions, dict) or set(formula_versions) != {'regression', 'valuation', 'growthValuation', 'growthFallback', 'ranking'}:
         return fail('manifest_formula_versions')
     if any(not isinstance(value, str) or not value for value in formula_versions.values()):
         return fail('manifest_formula_versions_empty')

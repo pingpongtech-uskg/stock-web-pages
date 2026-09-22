@@ -23,6 +23,14 @@ const knownRow: RankingRow = {
   valuationMethod: 'zulu-peg',
   valuationGrowthMethod: 'ltm_reported_eps',
   valuationGrowthMethodLabel: 'LTM 已公布 EPS 成長',
+  growthTotalReturnPe: 21 / 13,
+  growthConservativeGrowth: 0.16,
+  growthDividendYield: 0.05,
+  growthForwardEps: 8.92,
+  growthFairPrice: 187.32,
+  growthBuyZonePrice: 156.1,
+  growthValuationStatus: 'available',
+  growthValuationReason: '可用的影片版總報酬本益比',
 }
 
 const unavailableRow: RankingRow = {
@@ -35,7 +43,7 @@ const unavailableRow: RankingRow = {
 }
 
 describe('StrategyCard', () => {
-  it('renders the same display-only chip reference summary in all three strategy tabs', () => {
+  it('renders display-only chip reference summary in non-growth strategy tabs', () => {
     const chipReference: ChipReference = {
       schemaVersion: 'chip-reference-v1', status: 'pass' as const, displayOnly: true as const, formulaVersion: 'chip-reference-v1', dataFreshness: 'current' as const,
       largeHolderTrend: { status: 'pass' as const, value: '42.1% → 42.5% → 42.8%', period: '2026-06..2026-08', rawValues: [42.1, 42.5, 42.8], sourceRefs: ['TDCC'] },
@@ -44,7 +52,7 @@ describe('StrategyCard', () => {
       sourceRefs: ['TDCC', 'TWSE OpenAPI'], availableAt: '2026-09-04',
     }
     const row: RankingRow = { ...knownRow, zScore: -0.4, slope: 0.1, chipReference }
-    const markups = strategyPresentations.slice(0, 3).map((presentation) => renderToStaticMarkup(<StrategyCard presentation={presentation} rows={[row]} />))
+    const markups = strategyPresentations.filter((presentation) => presentation.key !== 'growth').map((presentation) => renderToStaticMarkup(<StrategyCard presentation={presentation} rows={[row]} />))
     for (const markup of markups) {
       expect(markup).toContain('籌碼參考（不影響策略篩選）')
       expect(markup).toContain('大股東：連續三月上升')
@@ -53,6 +61,27 @@ describe('StrategyCard', () => {
       expect(markup).toContain('資料期別：2026-06..2026-08')
       expect(markup).toContain('資料新鮮度：目前')
     }
+  })
+
+  it('hides chip reference on growth and renders the teacher total-return valuation', () => {
+    const chipReference: ChipReference = {
+      schemaVersion: 'chip-reference-v1', status: 'unknown', displayOnly: true, formulaVersion: 'chip-reference-v1', dataFreshness: 'unavailable',
+      largeHolderTrend: { status: 'unknown', value: '—', period: '—', sourceRefs: [] },
+      directorSupervisor12m: { status: 'unknown', value: '—', period: '—', sourceRefs: [] },
+      shareholderCountTrend: { status: 'unknown', value: '—', period: '—', sourceRefs: [] },
+      sourceRefs: [], availableAt: null,
+    }
+    const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[1]} rows={[{ ...knownRow, chipReference }]} />)
+
+    expect(markup).toContain('影片版總報酬本益比')
+    expect(markup).toContain('總報酬本益比')
+    expect(markup).toContain('1.62')
+    expect(markup).toContain('影片版情境合理價')
+    expect(markup).toContain('187.32')
+    expect(markup).toContain('低估參考價')
+    expect(markup).toContain('祖魯 PEG 交叉參考')
+    expect(markup).not.toContain('籌碼參考（不影響策略篩選）')
+    expect(markup).not.toContain('董監：')
   })
 
   it('makes stale chip data explicit without changing row rendering', () => {
@@ -114,11 +143,31 @@ describe('StrategyCard', () => {
   })
 
   it('labels growth proxy evidence and never fabricates unavailable prices', () => {
-    const row: RankingRow = { ...knownRow, code: '2888', name: '營收代理股', currentPrice: 80, fairPrice: null, valuePrice075: null, valuePrice066: null, currentPeg: null, valuationEvidenceLevel: 'proxy', valuationGrowthMethodLabel: '營收成長代理', growthHealth: { status: 'pass', passCount: 3, total: 4, reason: '成長健康證據' } }
+    const row: RankingRow = {
+      ...knownRow,
+      code: '2888',
+      name: '營收代理股',
+      currentPrice: 80,
+      fairPrice: null,
+      valuePrice075: null,
+      valuePrice066: null,
+      currentPeg: null,
+      valuationEvidenceLevel: 'proxy',
+      valuationGrowthMethodLabel: '營收成長代理',
+      growthTotalReturnPe: null,
+      growthConservativeGrowth: null,
+      growthDividendYield: null,
+      growthForwardEps: null,
+      growthFairPrice: null,
+      growthBuyZonePrice: null,
+      growthValuationStatus: 'unavailable',
+      growthValuationReason: '缺少已確認現金股利資料',
+      growthHealth: { status: 'pass', passCount: 3, total: 4, reason: '成長健康證據' },
+    }
     const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[1]} rows={[row]} />)
     expect(markup).toContain('營收成長僅為代理，不等同 EPS 成長')
-    expect(markup).toContain('正式／代理證據：代理')
-    expect(markup).toContain('估值資料不足')
+    expect(markup).toContain('影片版總報酬估值')
+    expect(markup).toContain('缺少已確認現金股利資料')
     expect(markup).toContain('PEG 不可用')
     expect(markup).not.toContain('<strong>0.00</strong>')
   })
