@@ -7,7 +7,7 @@ from urllib.parse import urlencode, urljoin
 ROOT=Path(__file__).resolve().parents[1]
 def get_json(base_url,path,cachebust):
  url=urljoin(base_url.rstrip('/')+'/',path.lstrip('/')); sep='&' if '?' in url else '?'
- req=urllib.request.Request(url+sep+urlencode({'cachebust':cachebust}),headers={'Accept':'application/json','Cache-Control':'no-cache','Pragma':'no-cache'})
+ req=urllib.request.Request(url+sep+urlencode({'cachebust':cachebust}),headers={'Accept':'application/json','Cache-Control':'no-cache','Pragma':'no-cache','User-Agent':'Mozilla/5.0 (compatible; stock-release-verifier/1.0)'})
  with urllib.request.urlopen(req,timeout=30) as resp:
   body=resp.read(); headers={k.lower():v for k,v in resp.headers.items()}
   if resp.status!=200: raise ValueError(f'http_status:{path}:{resp.status}')
