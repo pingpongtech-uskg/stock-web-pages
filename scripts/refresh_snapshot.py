@@ -965,6 +965,12 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     universe_source = ""
     universe_label = "投信十日買超前100"
     previous_universe_rows: list[dict[str, Any]] = []
+    universe_stale = False
+    try:
+        published_universe = load_json(data_dir / "institutional_universe.json")
+        universe_stale = bool(published_universe.get("stale"))
+    except (OSError, ValueError, json.JSONDecodeError):
+        pass
     try:
         config = load_json(data_dir.parent.parent / "config" / "tracked_symbols.json")
         raw_universe = config.get("universe")
@@ -1365,6 +1371,9 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             status_message = f"離線重算 {tracked_count} 檔；沿用已發布的 {adjusted_count} 檔調整價與財務代理，未呼叫外部來源。"
         else:
             status_message = f"離線重算 {tracked_count} 檔；沿用可得官方觀察值，未呼叫外部來源。"
+    elif universe_stale:
+        freshness = "degraded"
+        status_message = "官方投信十日母體本次來源不可用；沿用最近一次完整母體，其他可得資料仍照常驗證。"
     elif all_errors and adjusted_count == 0:
         freshness = "degraded"
         status_message = "已保留官方觀察值；yfinance 調整價本次不可用，價格仍明示為未調整代理。"
@@ -1388,6 +1397,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         "trackedCompleteCount": tracked_complete,
         "trackedCompletenessPct": tracked_pct,
         "universeCoveragePct": universe_pct,
+        "universeStale": universe_stale,
         "scopeLabel": f"A 母體：{universe_label}（{tracked_count} 檔）",
         "universeId": "A",
         "universeLabel": universe_label,

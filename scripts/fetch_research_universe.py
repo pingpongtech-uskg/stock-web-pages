@@ -124,6 +124,22 @@ def atomic_json(path: Path, payload: Any) -> None:
     temp.replace(path)
 
 
+def stale_previous_config(path: Path, reason: str) -> dict[str, Any]:
+    """Return a marked stale copy without mutating the tracked config."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        raise ValueError(f"previous universe config unavailable: {path}") from exc
+    if not isinstance(payload, dict) or not isinstance(payload.get("symbols"), list) or not payload["symbols"]:
+        raise ValueError(f"previous universe config is incomplete: {path}")
+    return {
+        **payload,
+        "stale": True,
+        "staleReason": reason,
+        "staleAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+    }
+
+
 def update_tracked_config(rows: list[dict[str, Any]], path: Path, source_url: str) -> dict[str, Any]:
     previous: dict[str, Any] = {}
     if path.exists():
@@ -139,6 +155,7 @@ def update_tracked_config(rows: list[dict[str, Any]], path: Path, source_url: st
         current = metadata.get(code) if isinstance(metadata.get(code), dict) else {}
         metadata[code] = {**current, "name": row["name"]}
     payload = {
+        "stale": False,
         "symbols": [row["code"] for row in rows],
         "metadata": {code: metadata[code] for code in [row["code"] for row in rows] if code in metadata},
         "purpose": "A：公開投信十日買超前100；所有策略共用此研究母體",
@@ -213,6 +230,7 @@ def update_official_tracked_config(
     market_dates = [str(snapshot["date"]) for snapshot in snapshots[:10]]
     previous_market_dates = [str(snapshot["date"]) for snapshot in snapshots[1:11]]
     payload = {
+        "stale": False,
         "symbols": [row["code"] for row in rows],
         "metadata": {code: metadata[code] for code in [row["code"] for row in rows]},
         "purpose": "A：TWSE＋TPEx 官方投信十日買賣超前100；所有策略共用此研究母體",
@@ -254,6 +272,7 @@ def main() -> int:
     parser.add_argument("--print-codes", action="store_true")
     parser.add_argument("--sessions", type=int, default=11, help="complete sessions to fetch; 11 supports adjacent 10-session windows")
     parser.add_argument("--lookback-days", type=int, default=35)
+    parser.add_argument("--allow-stale", action="store_true", help="keep the last complete universe when the official source is unavailable")
     args = parser.parse_args()
     try:
         if args.source == "official":
@@ -265,6 +284,16 @@ def main() -> int:
         if args.output:
             atomic_json(Path(args.output), payload)
     except (OSError, ValueError, urllib.error.URLError, OfficialInstitutionalError) as exc:
+        if args.allow_stale:
+            try:
+                payload = stale_previous_config(Path(args.config), f"{type(exc).__name__}: {exc}")
+                if args.output:
+                    atomic_json(Path(args.output), payload)
+                print(json.dumps({"universe": "A", "stale": True, "reason": payload["staleReason"]}, ensure_ascii=False, sort_keys=True))
+                return 0
+            except (OSError, ValueError, json.JSONDecodeError) as fallback_exc:
+                print(f"research_universe_stale_fallback_failed={type(fallback_exc).__name__}: {fallback_exc}")
+                return 1
         print(f"research_universe_failed={type(exc).__name__}: {exc}")
         return 1
     if args.print_codes:
