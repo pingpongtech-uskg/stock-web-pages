@@ -77,6 +77,7 @@ from pipeline.valuation import (  # noqa: E402
     derive_stable_eps_growth,
     derive_ttm_eps,
 )
+from pipeline.market_indicators import build_00631l_volume_indicator  # noqa: E402
 
 
 TAIPEI = ZoneInfo("Asia/Taipei")
@@ -1488,6 +1489,11 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     )
     market_dates = [str(detail.get("asOf")) for detail in enriched if detail.get("asOf")]
     market_date = max(market_dates) if market_dates else baseline.get("marketDate")
+    volume_indicator = build_00631l_volume_indicator(market_date)
+    market_indicators = {
+        **(baseline.get("marketIndicators") if isinstance(baseline.get("marketIndicators"), dict) else {}),
+        "volumeMultiple00631L": volume_indicator,
+    }
     generated = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     canonical = json.dumps(
         {"baselineRunId": baseline.get("runId"), "codes": codes, "details": enriched, "marketDate": market_date},
@@ -1537,7 +1543,11 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         "universeSource": universe_source or "https://stock.wearn.com/b50.asp",
         "queueStatus": f"A 母體 {tracked_count}/{universe} 檔；所有策略共用此初始篩選",
     }
-    source_refs = merge_refs(baseline.get("sourceRefs"), used_sources)
+    source_refs = merge_refs(
+        baseline.get("sourceRefs"),
+        used_sources,
+        volume_indicator.get("sourceRefs") if isinstance(volume_indicator, dict) else None,
+    )
     rankings_payload = {
         "trust": trust_rank,
         "growth": growth_rank,
@@ -1562,6 +1572,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         "freshness": freshness,
         "statusMessage": status_message,
         "sourceRefs": source_refs,
+        "marketIndicators": market_indicators,
         "coverage": coverage,
         "summary": {
             **(baseline.get("summary") or {}),

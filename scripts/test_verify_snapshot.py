@@ -11,6 +11,7 @@ from scripts.verify_snapshot import (
     is_number,
     ranking_valuation_error,
     regression_contract_error,
+    market_indicator_error,
 )
 
 
@@ -93,3 +94,18 @@ def test_daily_workflow_runs_v3_refresh_and_gate() -> None:
     fetch = workflow.index("python scripts/fetch_finmind.py")
     assert fetch < refresh < verify
     assert "python -m pytest pipeline scripts -q" in workflow
+
+
+def test_volume_indicator_enforces_two_times_green_boundary() -> None:
+    base = {
+        "symbol": "00631L", "market": "TWSE",
+        "formulaVersion": "twse-volume-multiple-v1", "threshold": 2,
+        "displayOnly": True,
+        "priorFiveSessions": [{"date": f"2026-09-{day:02d}", "volume": 1500} for day in range(15, 20)],
+        "status": "available", "signal": "green",
+        "sourceRefs": ["TWSE STOCK_DAY"], "currentVolume": 3000,
+        "previous5AverageVolume": 1500, "multiple": 2,
+        "marketDate": "2026-09-22",
+    }
+    assert market_indicator_error({"volumeMultiple00631L": base}, "2026-09-22") is None
+    assert market_indicator_error({"volumeMultiple00631L": {**base, "multiple": 1.99, "signal": "green"}}, "2026-09-22") == "volume_indicator_yellow_threshold"

@@ -183,6 +183,33 @@ def ranking_valuation_error(row: object, key: str) -> str | None:
     return None
 
 
+def market_indicator_error(value: object, market_date: str | None) -> str | None:
+    if value is None: return None
+    if not isinstance(value, dict): return 'market_indicators_type'
+    indicator=value.get('volumeMultiple00631L')
+    if indicator is None: return None
+    if not isinstance(indicator, dict): return 'volume_indicator_type'
+    if indicator.get('symbol')!='00631L' or indicator.get('market')!='TWSE': return 'volume_indicator_identity'
+    if indicator.get('formulaVersion')!='twse-volume-multiple-v1': return 'volume_indicator_formula'
+    if indicator.get('threshold')!=2: return 'volume_indicator_threshold'
+    if indicator.get('displayOnly') is not True: return 'volume_indicator_display_only'
+    sessions=indicator.get('priorFiveSessions')
+    if not isinstance(sessions,list) or len(sessions) not in (0,5): return 'volume_indicator_prior_five'
+    if any(not isinstance(row,dict) or not isinstance(row.get('date'),str) or not is_number(row.get('volume')) for row in sessions): return 'volume_indicator_prior_five_values'
+    if indicator.get('status') not in {'available','unavailable'}: return 'volume_indicator_status'
+    if indicator.get('signal') not in {'green','yellow','unknown'}: return 'volume_indicator_signal'
+    if not isinstance(indicator.get('sourceRefs'),list) or any(not isinstance(ref,str) for ref in indicator['sourceRefs']): return 'volume_indicator_sources'
+    if indicator.get('status')=='unavailable':
+        if indicator.get('multiple') is not None or indicator.get('signal')!='unknown': return 'volume_indicator_unavailable_values'
+        return None
+    for key in ('currentVolume','previous5AverageVolume','multiple'):
+        if not is_number(indicator.get(key)): return 'volume_indicator_value:'+key
+    if indicator.get('multiple')>=2 and indicator.get('signal')!='green': return 'volume_indicator_green_threshold'
+    if indicator.get('multiple')<2 and indicator.get('signal')!='yellow': return 'volume_indicator_yellow_threshold'
+    if market_date and indicator.get('marketDate')!=market_date: return 'volume_indicator_date_mismatch'
+    return None
+
+
 def main(root: Path | None = None) -> int:
     root = root or Path(__file__).resolve().parents[1]
     data = root / 'public' / 'data'
@@ -197,6 +224,9 @@ def main(root: Path | None = None) -> int:
     missing = sorted(required - set(latest))
     if missing:
         return fail('missing:' + ','.join(missing))
+    indicator_error = market_indicator_error(latest.get('marketIndicators'), latest.get('marketDate'))
+    if indicator_error:
+        return fail(indicator_error)
     if not isinstance(latest.get('rankings'), dict) or set(latest['rankings']) != set(RANKING_KEYS):
         return fail('ranking_keys')
     if not isinstance(latest.get('formulaVersion'), str) or '3.5y' not in latest['formulaVersion']:

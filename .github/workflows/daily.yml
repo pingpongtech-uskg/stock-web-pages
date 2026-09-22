@@ -64,7 +64,7 @@ jobs:
       - run: python scripts/build_history_archive.py
       - run: python scripts/verify_history_archive.py
       - run: python scripts/prune_releases.py --data-dir public/data --keep 3 --max-bytes 250000000
-      - run: python scripts/verify_history_production.py
+      - run: python scripts/verify_history_archive.py --archive public/data/archive/v1
       - run: python scripts/verify_neutral_copy.py --paths src public/data
       - run: python -m pytest pipeline scripts -q
       - run: npm run build

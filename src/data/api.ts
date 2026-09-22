@@ -61,6 +61,32 @@ function requireNullableString(value: unknown): string | null {
   return value
 }
 
+function validateMarketIndicators(value: unknown): void {
+  const indicators = requireRecord(value)
+  if (indicators.volumeMultiple00631L === undefined) return
+  const indicator = requireRecord(indicators.volumeMultiple00631L)
+  expect(requireString(indicator.symbol) === '00631L')
+  requireString(indicator.name)
+  expect(requireString(indicator.market) === 'TWSE')
+  requireNullableString(indicator.marketDate)
+  requireNullableNumber(indicator.currentVolume)
+  requireNullableNumber(indicator.previous5AverageVolume)
+  requireNullableNumber(indicator.multiple)
+  expect(indicator.threshold === 2)
+  expect(indicator.displayOnly === true)
+  expect(requireArray(indicator.priorFiveSessions).every((row) => {
+    const item = requireRecord(row)
+    requireString(item.date)
+    requireFiniteNumber(item.volume)
+    return true
+  }))
+  expect(['green', 'yellow', 'unknown'].includes(requireString(indicator.signal)))
+  expect(['available', 'unavailable'].includes(requireString(indicator.status)))
+  expect(requireString(indicator.formulaVersion) === 'twse-volume-multiple-v1')
+  expect(requireArray(indicator.sourceRefs).every((ref) => typeof ref === 'string'))
+  requireString(indicator.reason)
+}
+
 function validateChipReference(value: unknown): void {
   const chip = requireRecord(value)
   expect(requireString(chip.schemaVersion) === 'chip-reference-v1')
@@ -135,6 +161,7 @@ export function validateRelease(payload: unknown): Release {
   requireString(p.generatedAt)
   requireNullableString(p.marketDate)
   if (p.nextExpectedUpdateAt !== undefined) requireNullableString(p.nextExpectedUpdateAt)
+  if (p.marketIndicators !== undefined) validateMarketIndicators(p.marketIndicators)
   expect(FRESHNESS_VALUES.has(requireString(p.freshness)))
   requireString(p.statusMessage)
   expect(requireArray(p.sourceRefs).every((ref) => typeof ref === 'string'))

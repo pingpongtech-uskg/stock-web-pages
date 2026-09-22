@@ -1,6 +1,7 @@
 import { Component, createContext, useContext, useEffect, useState, type ErrorInfo, type ReactNode } from 'react'
 
 import { HistoryPanel } from './components/HistoryPanel'
+import { MarketVolumeIndicator } from './components/MarketVolumeIndicator'
 import { StrategyCard } from './components/StrategyCard'
 import { loadLatestRelease } from './data/api'
 import { releaseCoverageFunnel, type CoverageFunnel } from './domain/coverage'
@@ -173,6 +174,7 @@ function DashboardContent({ release }: { release: Release }) {
 
         {historyView && <HistoryPanel />}
         <div hidden={historyView}>
+        <MarketVolumeIndicator indicator={release.marketIndicators?.volumeMultiple00631L} />
         <CoverageFunnelView funnel={releaseCoverageFunnel(release, activeKey)} strategy={activeKey} />
 
         <div className="strategy-tabs" role="tablist" aria-label="股票策略">

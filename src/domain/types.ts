@@ -358,6 +358,28 @@ export interface ReleaseFunnel {
   instrumentExcluded: number
 }
 
+export interface MarketVolumeMultipleIndicator {
+  symbol: '00631L'
+  name: string
+  market: 'TWSE'
+  marketDate: string | null
+  currentVolume: number | null
+  previous5AverageVolume: number | null
+  multiple: number | null
+  threshold: 2
+  displayOnly: true
+  priorFiveSessions: Array<{ date: string; volume: number }>
+  signal: 'green' | 'yellow' | 'unknown'
+  status: 'available' | 'unavailable'
+  formulaVersion: 'twse-volume-multiple-v1'
+  sourceRefs: string[]
+  reason: string
+}
+
+export interface MarketIndicators {
+  volumeMultiple00631L?: MarketVolumeMultipleIndicator
+}
+
 export interface HistoryRankingRow {
   rank: number
   code: string
@@ -407,6 +429,7 @@ export interface Release {
   freshness: Freshness
   statusMessage: string
   sourceRefs: string[]
+  marketIndicators?: MarketIndicators
   coverage: Coverage
   /** Producer-published funnel stage counts; never derived from rankings. */
   funnel: ReleaseFunnel
