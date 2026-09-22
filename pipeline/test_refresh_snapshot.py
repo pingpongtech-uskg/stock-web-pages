@@ -1,6 +1,7 @@
 from scripts.refresh_snapshot import next_expected_update_for_market_date
 from scripts.refresh_snapshot import _attach_valuation
 from scripts.refresh_snapshot import growth_health_qualifies
+from scripts.refresh_snapshot import new_entry_rows
 
 
 def test_growth_health_requires_four_known_passes():
@@ -15,6 +16,16 @@ def test_next_expected_update_skips_weekend_after_friday_market_date():
 
 def test_next_expected_update_uses_next_day_for_weekday_market_date():
     assert next_expected_update_for_market_date("2026-09-17") == "2026-09-18T15:17:00+00:00"
+
+
+def test_trust_strategy_keeps_only_new_entries():
+    rows = [
+        {"code": "A", "entryStatus": "retained"},
+        {"code": "B", "entryStatus": "new"},
+        {"code": "C", "entryStatus": "unknown"},
+    ]
+
+    assert [row["code"] for row in new_entry_rows(rows)] == ["B"]
 
 
 def test_official_trust_row_without_valuation_is_retained():

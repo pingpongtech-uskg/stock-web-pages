@@ -12,6 +12,7 @@ const ROW_NULLABLE_NUMBERS = [
 ] as const
 
 type UnknownRecord = Record<string, unknown>
+const RELEASE_CACHE_KEY = 'taiwan-stock-research:last-valid-release:v1'
 
 function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -183,9 +184,35 @@ async function getJson<T>(url: string): Promise<T> {
   return response.json() as Promise<T>
 }
 
+function cacheRelease(release: Release): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(RELEASE_CACHE_KEY, JSON.stringify(release))
+  } catch {
+    // Storage can be disabled or full. The network release remains primary.
+  }
+}
+
+function loadCachedRelease(): Release | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(RELEASE_CACHE_KEY)
+    return raw ? validateRelease(JSON.parse(raw) as unknown) : null
+  } catch {
+    return null
+  }
+}
+
 export async function loadLatestRelease(): Promise<Release> {
-  const release = validateRelease(await getJson<unknown>(`${DATA_ROOT}/latest.json`))
-  return release
+  try {
+    const release = validateRelease(await getJson<unknown>(`${DATA_ROOT}/latest.json`))
+    cacheRelease(release)
+    return release
+  } catch (error) {
+    const cached = loadCachedRelease()
+    if (cached) return cached
+    throw error
+  }
 }
 
 export async function loadStockDetail(runId: string, code: string): Promise<StockSummary> {

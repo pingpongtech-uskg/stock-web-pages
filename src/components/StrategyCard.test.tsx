@@ -13,6 +13,7 @@ const knownRow: RankingRow = {
   valueLabel: '%',
   status: 'pass',
   reason: '已知營收成長條件符合',
+  entryStatus: 'new',
   currentPrice: 1000,
   fairPrice: 1450,
   valuePrice075: 1087.5,
@@ -90,7 +91,7 @@ describe('StrategyCard', () => {
     expect(markup).not.toContain('未知')
   })
 
-  it('renders an official trust row when valuation is unavailable', () => {
+  it('hides retained trust rows and keeps only new entries', () => {
     const officialUnavailable: RankingRow = {
       ...knownRow,
       code: '9999',
@@ -107,14 +108,9 @@ describe('StrategyCard', () => {
       <StrategyCard presentation={strategyPresentations[0]} rows={[knownRow, officialUnavailable]} />,
     )
 
-    expect(markup).toContain('2 檔')
+    expect(markup).toContain('1 檔')
     expect(markup).toContain('2330')
-    expect(markup).toContain('9999')
-    expect(markup).toContain('PEG 不可用')
-    expect(markup).toContain('估值資料不足')
-    expect(markup).toContain('現在價格')
-    expect(markup).toContain('<strong>—</strong>')
-    expect(markup).not.toContain('<strong>0.00</strong>')
+    expect(markup).not.toContain('9999')
   })
 
   it('labels growth proxy evidence and never fabricates unavailable prices', () => {

@@ -44,7 +44,7 @@ export function StrategyCard({ presentation, rows }: StrategyCardProps) {
 }
 
 function isRenderableRow(row: RankingRow, strategy: StrategyKey): boolean {
-  if (strategy === 'trust') return true
+  if (strategy === 'trust') return row.entryStatus === 'new'
   if (strategy === 'lowPosition') {
     return row.status !== 'fail'
       && row.status !== 'not_applicable'

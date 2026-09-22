@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Release } from '../domain/types'
-import { validateRelease } from './api'
+import { loadLatestRelease, validateRelease } from './api'
 
 function validRelease(): Release {
   return {
@@ -54,6 +54,24 @@ function validRelease(): Release {
 }
 
 describe('validateRelease', () => {
+  it('uses the last valid browser release when the latest fetch fails', async () => {
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => validRelease(),
+    })) as unknown as typeof fetch
+    await loadLatestRelease()
+
+    globalThis.fetch = vi.fn(async () => {
+      throw new Error('network unavailable')
+    }) as unknown as typeof fetch
+    const cached = await loadLatestRelease()
+
+    expect(cached.runId).toBe('run-1')
+    window.localStorage.clear()
+    globalThis.fetch = originalFetch
+  })
+
   it('accepts a complete release contract', () => {
     const release = validRelease()
     expect(validateRelease(release)).toBe(release)

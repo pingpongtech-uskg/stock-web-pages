@@ -1,5 +1,5 @@
 import { Component, createContext, useContext, useEffect, useState, type ErrorInfo, type ReactNode } from 'react'
-import { DataStatus } from './components/DataStatus'
+
 import { StrategyCard } from './components/StrategyCard'
 import { loadLatestRelease } from './data/api'
 import { releaseCoverageFunnel, type CoverageFunnel } from './domain/coverage'
@@ -166,7 +166,6 @@ function DashboardContent({ release }: { release: Release }) {
           </div>
         </header>
 
-        <DataStatus release={release} />
         <CoverageFunnelView funnel={releaseCoverageFunnel(release, activeKey)} />
 
         <div className="strategy-tabs" role="tablist" aria-label="股票策略">

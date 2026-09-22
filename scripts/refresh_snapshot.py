@@ -868,6 +868,11 @@ def rank_rows(rows: list[dict[str, Any]], *, reverse: bool) -> list[dict[str, An
     return valid[:100]
 
 
+def new_entry_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep only rows that entered the current official Top10 from outside it."""
+    return [row for row in rows if row.get("entryStatus") == "new"]
+
+
 def rank_low_base_rows(rows: list[dict[str, Any]], institutional_rank_by_code: dict[str, int]) -> list[dict[str, Any]]:
     """Rank eligible low-base rows by institutional context, without gating.
 
@@ -1281,9 +1286,9 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             row["reason"] = f"{universe_label} Top10，第 {row['rank']} 名；前期第 {row.get('previousRank')} 名。"
         else:
             row["reason"] = f"{universe_label} Top10，第 {row['rank']} 名；前期排行資料不足，暫不判定新進榜。"
-    trust_signal_count = len(trust_signal_rank)
     trust_new_entry_count = sum(1 for row in trust_signal_rank if row.get("entryStatus") == "new")
-    trust_rank = trust_signal_rank
+    trust_rank = new_entry_rows(trust_signal_rank)
+    trust_signal_count = len(trust_rank)
     growth_rank = rank_rows(growth_rows, reverse=True)
     low_rank = rank_rows(low_rows, reverse=False)
     strict_low_base_growth_rank = rank_low_base_rows(strict_low_base_growth_rows, institutional_rank_by_code)
