@@ -26,8 +26,8 @@
     "2481",
     "2633",
     "2855",
-    "2449",
     "3105",
+    "2449",
     "5347",
     "3374",
     "3264",
@@ -35,6 +35,7 @@
     "5876",
     "2317",
     "6770",
+    "3605",
     "2409",
     "3036",
     "3406",
@@ -44,7 +45,6 @@
     "4763",
     "2637",
     "2353",
-    "3605",
     "2308",
     "2474",
     "3026",
@@ -60,16 +60,16 @@
     "9910",
     "4915",
     "4979",
-    "1560",
     "1504",
     "6213",
     "2606",
+    "1560",
+    "3529",
     "5880",
     "2347",
     "2455",
     "3189",
     "8021",
-    "3529",
     "3450",
     "2845",
     "2105",
@@ -82,12 +82,13 @@
     "1513",
     "3037",
     "3532",
+    "6531",
     "8996",
     "2357",
     "4904",
     "3443",
-    "6531",
     "3293",
+    "2404",
     "2912",
     "4938",
     "1808",
@@ -96,7 +97,6 @@
     "2313",
     "3702",
     "3260",
-    "2404",
     "5469",
     "6274",
     "6121",
@@ -203,13 +203,13 @@
       "name": "統一證",
       "market": "TWSE"
     },
-    "2449": {
-      "name": "京元電子",
-      "market": "TWSE"
-    },
     "3105": {
       "name": "穩懋",
       "market": "TPEx"
+    },
+    "2449": {
+      "name": "京元電子",
+      "market": "TWSE"
     },
     "5347": {
       "name": "世界",
@@ -237,6 +237,10 @@
     },
     "6770": {
       "name": "力積電",
+      "market": "TWSE"
+    },
+    "3605": {
+      "name": "宏致",
       "market": "TWSE"
     },
     "2409": {
@@ -273,10 +277,6 @@
     },
     "2353": {
       "name": "宏碁",
-      "market": "TWSE"
-    },
-    "3605": {
-      "name": "宏致",
       "market": "TWSE"
     },
     "2308": {
@@ -339,10 +339,6 @@
       "name": "華星光",
       "market": "TPEx"
     },
-    "1560": {
-      "name": "中砂",
-      "market": "TWSE"
-    },
     "1504": {
       "name": "東元",
       "market": "TWSE"
@@ -354,6 +350,14 @@
     "2606": {
       "name": "裕民",
       "market": "TWSE"
+    },
+    "1560": {
+      "name": "中砂",
+      "market": "TWSE"
+    },
+    "3529": {
+      "name": "力旺",
+      "market": "TPEx"
     },
     "5880": {
       "name": "合庫金",
@@ -374,10 +378,6 @@
     "8021": {
       "name": "尖點",
       "market": "TWSE"
-    },
-    "3529": {
-      "name": "力旺",
-      "market": "TPEx"
     },
     "3450": {
       "name": "聯鈞",
@@ -427,6 +427,10 @@
       "name": "台勝科",
       "market": "TWSE"
     },
+    "6531": {
+      "name": "愛普*",
+      "market": "TWSE"
+    },
     "8996": {
       "name": "高力",
       "market": "TWSE"
@@ -443,13 +447,13 @@
       "name": "創意",
       "market": "TWSE"
     },
-    "6531": {
-      "name": "愛普*",
-      "market": "TWSE"
-    },
     "3293": {
       "name": "鈊象",
       "market": "TPEx"
+    },
+    "2404": {
+      "name": "漢唐",
+      "market": "TWSE"
     },
     "2912": {
       "name": "統一超",
@@ -483,10 +487,6 @@
       "name": "威剛",
       "market": "TPEx"
     },
-    "2404": {
-      "name": "漢唐",
-      "market": "TWSE"
-    },
     "5469": {
       "name": "瀚宇博",
       "market": "TWSE"
@@ -514,7 +514,7 @@
       "TPEx:insti/sitcStat"
     ],
     "sourceMethod": "兩市場每日投信買進／賣出；TPEx 張數轉股；最近10個市場日累積；不在子集合內重算",
-    "asOfFetchedAt": "2026-09-23T10:02:06+00:00",
+    "asOfFetchedAt": "2026-09-23T14:14:47+00:00",
     "marketDates": [
       "2026-09-23",
       "2026-09-22",
@@ -818,23 +818,23 @@
       {
         "rank": 26,
         "sourceRank": 26,
+        "code": "3105",
+        "name": "穩懋",
+        "market": "TPEx",
+        "netShares": 7208000,
+        "net": "7208000",
+        "previousRank": 22,
+        "entryStatus": "not_applicable"
+      },
+      {
+        "rank": 27,
+        "sourceRank": 27,
         "code": "2449",
         "name": "京元電子",
         "market": "TWSE",
         "netShares": 6721581,
         "net": "6721581",
         "previousRank": 27,
-        "entryStatus": "not_applicable"
-      },
-      {
-        "rank": 27,
-        "sourceRank": 27,
-        "code": "3105",
-        "name": "穩懋",
-        "market": "TPEx",
-        "netShares": 6413000,
-        "net": "6413000",
-        "previousRank": 22,
         "entryStatus": "not_applicable"
       },
       {
@@ -917,6 +917,17 @@
       {
         "rank": 35,
         "sourceRank": 35,
+        "code": "3605",
+        "name": "宏致",
+        "market": "TWSE",
+        "netShares": 4056100,
+        "net": "4056100",
+        "previousRank": 46,
+        "entryStatus": "not_applicable"
+      },
+      {
+        "rank": 36,
+        "sourceRank": 36,
         "code": "2409",
         "name": "友達",
         "market": "TWSE",
@@ -926,8 +937,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 36,
-        "sourceRank": 36,
+        "rank": 37,
+        "sourceRank": 37,
         "code": "3036",
         "name": "文曄",
         "market": "TWSE",
@@ -937,8 +948,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 37,
-        "sourceRank": 37,
+        "rank": 38,
+        "sourceRank": 38,
         "code": "3406",
         "name": "玉晶光",
         "market": "TWSE",
@@ -948,8 +959,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 38,
-        "sourceRank": 38,
+        "rank": 39,
+        "sourceRank": 39,
         "code": "2327",
         "name": "國巨*",
         "market": "TWSE",
@@ -959,8 +970,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 39,
-        "sourceRank": 39,
+        "rank": 40,
+        "sourceRank": 40,
         "code": "1102",
         "name": "亞泥",
         "market": "TWSE",
@@ -970,8 +981,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 40,
-        "sourceRank": 40,
+        "rank": 41,
+        "sourceRank": 41,
         "code": "5871",
         "name": "中租-KY",
         "market": "TWSE",
@@ -981,8 +992,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 41,
-        "sourceRank": 41,
+        "rank": 42,
+        "sourceRank": 42,
         "code": "4763",
         "name": "材料*-KY",
         "market": "TWSE",
@@ -992,8 +1003,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 42,
-        "sourceRank": 42,
+        "rank": 43,
+        "sourceRank": 43,
         "code": "2637",
         "name": "慧洋-KY",
         "market": "TWSE",
@@ -1003,8 +1014,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 43,
-        "sourceRank": 43,
+        "rank": 44,
+        "sourceRank": 44,
         "code": "2353",
         "name": "宏碁",
         "market": "TWSE",
@@ -1014,24 +1025,13 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 44,
-        "sourceRank": 44,
-        "code": "3605",
-        "name": "宏致",
-        "market": "TWSE",
-        "netShares": 3021100,
-        "net": "3021100",
-        "previousRank": 46,
-        "entryStatus": "not_applicable"
-      },
-      {
         "rank": 45,
         "sourceRank": 45,
         "code": "2308",
         "name": "台達電",
         "market": "TWSE",
-        "netShares": 2768529,
-        "net": "2768529",
+        "netShares": 2789529,
+        "net": "2789529",
         "previousRank": 55,
         "entryStatus": "not_applicable"
       },
@@ -1192,17 +1192,6 @@
       {
         "rank": 60,
         "sourceRank": 60,
-        "code": "1560",
-        "name": "中砂",
-        "market": "TWSE",
-        "netShares": 2007500,
-        "net": "2007500",
-        "previousRank": 72,
-        "entryStatus": "not_applicable"
-      },
-      {
-        "rank": 61,
-        "sourceRank": 61,
         "code": "1504",
         "name": "東元",
         "market": "TWSE",
@@ -1212,8 +1201,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 62,
-        "sourceRank": 62,
+        "rank": 61,
+        "sourceRank": 61,
         "code": "6213",
         "name": "聯茂",
         "market": "TWSE",
@@ -1223,8 +1212,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 63,
-        "sourceRank": 63,
+        "rank": 62,
+        "sourceRank": 62,
         "code": "2606",
         "name": "裕民",
         "market": "TWSE",
@@ -1234,8 +1223,30 @@
         "entryStatus": "not_applicable"
       },
       {
+        "rank": 63,
+        "sourceRank": 63,
+        "code": "1560",
+        "name": "中砂",
+        "market": "TWSE",
+        "netShares": 1807500,
+        "net": "1807500",
+        "previousRank": 72,
+        "entryStatus": "not_applicable"
+      },
+      {
         "rank": 64,
         "sourceRank": 64,
+        "code": "3529",
+        "name": "力旺",
+        "market": "TPEx",
+        "netShares": 1791000,
+        "net": "1791000",
+        "previousRank": 89,
+        "entryStatus": "not_applicable"
+      },
+      {
+        "rank": 65,
+        "sourceRank": 65,
         "code": "5880",
         "name": "合庫金",
         "market": "TWSE",
@@ -1245,8 +1256,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 65,
-        "sourceRank": 65,
+        "rank": 66,
+        "sourceRank": 66,
         "code": "2347",
         "name": "聯強",
         "market": "TWSE",
@@ -1256,8 +1267,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 66,
-        "sourceRank": 66,
+        "rank": 67,
+        "sourceRank": 67,
         "code": "2455",
         "name": "全新",
         "market": "TWSE",
@@ -1267,8 +1278,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 67,
-        "sourceRank": 67,
+        "rank": 68,
+        "sourceRank": 68,
         "code": "3189",
         "name": "景碩",
         "market": "TWSE",
@@ -1278,25 +1289,14 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 68,
-        "sourceRank": 68,
+        "rank": 69,
+        "sourceRank": 69,
         "code": "8021",
         "name": "尖點",
         "market": "TWSE",
         "netShares": 1628000,
         "net": "1628000",
         "previousRank": 68,
-        "entryStatus": "not_applicable"
-      },
-      {
-        "rank": 69,
-        "sourceRank": 69,
-        "code": "3529",
-        "name": "力旺",
-        "market": "TPEx",
-        "netShares": 1541000,
-        "net": "1541000",
-        "previousRank": 89,
         "entryStatus": "not_applicable"
       },
       {
@@ -1434,17 +1434,28 @@
       {
         "rank": 82,
         "sourceRank": 82,
-        "code": "8996",
-        "name": "高力",
+        "code": "6531",
+        "name": "愛普*",
         "market": "TWSE",
-        "netShares": 1104153,
-        "net": "1104153",
-        "previousRank": 84,
+        "netShares": 1124620,
+        "net": "1124620",
+        "previousRank": 73,
         "entryStatus": "not_applicable"
       },
       {
         "rank": 83,
         "sourceRank": 83,
+        "code": "8996",
+        "name": "高力",
+        "market": "TWSE",
+        "netShares": 1096953,
+        "net": "1096953",
+        "previousRank": 84,
+        "entryStatus": "not_applicable"
+      },
+      {
+        "rank": 84,
+        "sourceRank": 84,
         "code": "2357",
         "name": "華碩",
         "market": "TWSE",
@@ -1454,8 +1465,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 84,
-        "sourceRank": 84,
+        "rank": 85,
+        "sourceRank": 85,
         "code": "4904",
         "name": "遠傳",
         "market": "TWSE",
@@ -1465,25 +1476,14 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 85,
-        "sourceRank": 85,
+        "rank": 86,
+        "sourceRank": 86,
         "code": "3443",
         "name": "創意",
         "market": "TWSE",
         "netShares": 1025839,
         "net": "1025839",
         "previousRank": 85,
-        "entryStatus": "not_applicable"
-      },
-      {
-        "rank": 86,
-        "sourceRank": 86,
-        "code": "6531",
-        "name": "愛普*",
-        "market": "TWSE",
-        "netShares": 998400,
-        "net": "998400",
-        "previousRank": 73,
         "entryStatus": "not_applicable"
       },
       {
@@ -1500,6 +1500,17 @@
       {
         "rank": 88,
         "sourceRank": 88,
+        "code": "2404",
+        "name": "漢唐",
+        "market": "TWSE",
+        "netShares": 956000,
+        "net": "956000",
+        "previousRank": 103,
+        "entryStatus": "not_applicable"
+      },
+      {
+        "rank": 89,
+        "sourceRank": 89,
         "code": "2912",
         "name": "統一超",
         "market": "TWSE",
@@ -1509,8 +1520,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 89,
-        "sourceRank": 89,
+        "rank": 90,
+        "sourceRank": 90,
         "code": "4938",
         "name": "和碩",
         "market": "TWSE",
@@ -1520,8 +1531,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 90,
-        "sourceRank": 90,
+        "rank": 91,
+        "sourceRank": 91,
         "code": "1808",
         "name": "潤隆",
         "market": "TWSE",
@@ -1531,8 +1542,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 91,
-        "sourceRank": 91,
+        "rank": 92,
+        "sourceRank": 92,
         "code": "2377",
         "name": "微星",
         "market": "TWSE",
@@ -1542,8 +1553,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 92,
-        "sourceRank": 92,
+        "rank": 93,
+        "sourceRank": 93,
         "code": "3044",
         "name": "健鼎",
         "market": "TWSE",
@@ -1553,8 +1564,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 93,
-        "sourceRank": 93,
+        "rank": 94,
+        "sourceRank": 94,
         "code": "2313",
         "name": "華通",
         "market": "TWSE",
@@ -1564,8 +1575,8 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 94,
-        "sourceRank": 94,
+        "rank": 95,
+        "sourceRank": 95,
         "code": "3702",
         "name": "大聯大",
         "market": "TWSE",
@@ -1575,25 +1586,14 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 95,
-        "sourceRank": 95,
+        "rank": 96,
+        "sourceRank": 96,
         "code": "3260",
         "name": "威剛",
         "market": "TPEx",
         "netShares": 795000,
         "net": "795000",
         "previousRank": 93,
-        "entryStatus": "not_applicable"
-      },
-      {
-        "rank": 96,
-        "sourceRank": 96,
-        "code": "2404",
-        "name": "漢唐",
-        "market": "TWSE",
-        "netShares": 782000,
-        "net": "782000",
-        "previousRank": 103,
         "entryStatus": "not_applicable"
       },
       {
@@ -2515,6 +2515,6850 @@
         "market": "TWSE",
         "netShares": 21534445,
         "rank": 10
+      }
+    ],
+    "dailyRows": [
+      {
+        "date": "2026-09-23",
+        "rows": [
+          {
+            "code": "2618",
+            "name": "長榮航",
+            "market": "TWSE",
+            "buyShares": 7744000,
+            "sellShares": 263000,
+            "netShares": 7481000
+          },
+          {
+            "code": "2610",
+            "name": "華航",
+            "market": "TWSE",
+            "buyShares": 5626000,
+            "sellShares": 128000,
+            "netShares": 5498000
+          },
+          {
+            "code": "2892",
+            "name": "第一金",
+            "market": "TWSE",
+            "buyShares": 3343000,
+            "sellShares": 109000,
+            "netShares": 3234000
+          },
+          {
+            "code": "2884",
+            "name": "玉山金",
+            "market": "TWSE",
+            "buyShares": 3005000,
+            "sellShares": 0,
+            "netShares": 3005000
+          },
+          {
+            "code": "2887",
+            "name": "台新新光金",
+            "market": "TWSE",
+            "buyShares": 2291000,
+            "sellShares": 285000,
+            "netShares": 2006000
+          },
+          {
+            "code": "2603",
+            "name": "長榮",
+            "market": "TWSE",
+            "buyShares": 1986700,
+            "sellShares": 25000,
+            "netShares": 1961700
+          },
+          {
+            "code": "2542",
+            "name": "興富發",
+            "market": "TWSE",
+            "buyShares": 1930000,
+            "sellShares": 19000,
+            "netShares": 1911000
+          },
+          {
+            "code": "2891",
+            "name": "中信金",
+            "market": "TWSE",
+            "buyShares": 1924000,
+            "sellShares": 32000,
+            "netShares": 1892000
+          },
+          {
+            "code": "5871",
+            "name": "中租-KY",
+            "market": "TWSE",
+            "buyShares": 1772000,
+            "sellShares": 26000,
+            "netShares": 1746000
+          },
+          {
+            "code": "3605",
+            "name": "宏致",
+            "market": "TWSE",
+            "buyShares": 1569100,
+            "sellShares": 0,
+            "netShares": 1569100
+          },
+          {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 2015000,
+            "sellShares": 559000,
+            "netShares": 1456000
+          },
+          {
+            "code": "2303",
+            "name": "聯電",
+            "market": "TWSE",
+            "buyShares": 1741000,
+            "sellShares": 367000,
+            "netShares": 1374000
+          },
+          {
+            "code": "2882",
+            "name": "國泰金",
+            "market": "TWSE",
+            "buyShares": 1430000,
+            "sellShares": 123000,
+            "netShares": 1307000
+          },
+          {
+            "code": "2801",
+            "name": "彰銀",
+            "market": "TWSE",
+            "buyShares": 1521000,
+            "sellShares": 356000,
+            "netShares": 1165000
+          },
+          {
+            "code": "2027",
+            "name": "大成鋼",
+            "market": "TWSE",
+            "buyShares": 1120000,
+            "sellShares": 38000,
+            "netShares": 1082000
+          },
+          {
+            "code": "2317",
+            "name": "鴻海",
+            "market": "TWSE",
+            "buyShares": 1167000,
+            "sellShares": 199074,
+            "netShares": 967926
+          },
+          {
+            "code": "4904",
+            "name": "遠傳",
+            "market": "TWSE",
+            "buyShares": 946000,
+            "sellShares": 0,
+            "netShares": 946000
+          },
+          {
+            "code": "2474",
+            "name": "可成",
+            "market": "TWSE",
+            "buyShares": 741000,
+            "sellShares": 61000,
+            "netShares": 680000
+          },
+          {
+            "code": "2382",
+            "name": "廣達",
+            "market": "TWSE",
+            "buyShares": 821000,
+            "sellShares": 148000,
+            "netShares": 673000
+          },
+          {
+            "code": "2633",
+            "name": "台灣高鐵",
+            "market": "TWSE",
+            "buyShares": 598000,
+            "sellShares": 0,
+            "netShares": 598000
+          },
+          {
+            "code": "6805",
+            "name": "富世達",
+            "market": "TWSE",
+            "buyShares": 657000,
+            "sellShares": 67000,
+            "netShares": 590000
+          },
+          {
+            "code": "3037",
+            "name": "欣興",
+            "market": "TWSE",
+            "buyShares": 623000,
+            "sellShares": 48000,
+            "netShares": 575000
+          },
+          {
+            "code": "2606",
+            "name": "裕民",
+            "market": "TWSE",
+            "buyShares": 447000,
+            "sellShares": 0,
+            "netShares": 447000
+          },
+          {
+            "code": "5876",
+            "name": "上海商銀",
+            "market": "TWSE",
+            "buyShares": 390000,
+            "sellShares": 0,
+            "netShares": 390000
+          },
+          {
+            "code": "2404",
+            "name": "漢唐",
+            "market": "TWSE",
+            "buyShares": 611000,
+            "sellShares": 258000,
+            "netShares": 353000
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 562300,
+            "sellShares": 233000,
+            "netShares": 329300
+          },
+          {
+            "code": "6505",
+            "name": "台塑化",
+            "market": "TWSE",
+            "buyShares": 354000,
+            "sellShares": 45000,
+            "netShares": 309000
+          },
+          {
+            "code": "4915",
+            "name": "致伸",
+            "market": "TWSE",
+            "buyShares": 300000,
+            "sellShares": 0,
+            "netShares": 300000
+          },
+          {
+            "code": "2409",
+            "name": "友達",
+            "market": "TWSE",
+            "buyShares": 250000,
+            "sellShares": 21000,
+            "netShares": 229000
+          },
+          {
+            "code": "2347",
+            "name": "聯強",
+            "market": "TWSE",
+            "buyShares": 230000,
+            "sellShares": 7000,
+            "netShares": 223000
+          },
+          {
+            "code": "2308",
+            "name": "台達電",
+            "market": "TWSE",
+            "buyShares": 283000,
+            "sellShares": 71998,
+            "netShares": 211002
+          },
+          {
+            "code": "8996",
+            "name": "高力",
+            "market": "TWSE",
+            "buyShares": 390000,
+            "sellShares": 186200,
+            "netShares": 203800
+          },
+          {
+            "code": "1102",
+            "name": "亞泥",
+            "market": "TWSE",
+            "buyShares": 168000,
+            "sellShares": 0,
+            "netShares": 168000
+          },
+          {
+            "code": "2105",
+            "name": "正新",
+            "market": "TWSE",
+            "buyShares": 154000,
+            "sellShares": 0,
+            "netShares": 154000
+          },
+          {
+            "code": "6531",
+            "name": "愛普*",
+            "market": "TWSE",
+            "buyShares": 145620,
+            "sellShares": 6000,
+            "netShares": 139620
+          },
+          {
+            "code": "2353",
+            "name": "宏碁",
+            "market": "TWSE",
+            "buyShares": 172000,
+            "sellShares": 59000,
+            "netShares": 113000
+          },
+          {
+            "code": "9904",
+            "name": "寶成",
+            "market": "TWSE",
+            "buyShares": 169000,
+            "sellShares": 73000,
+            "netShares": 96000
+          },
+          {
+            "code": "6213",
+            "name": "聯茂",
+            "market": "TWSE",
+            "buyShares": 96000,
+            "sellShares": 1000,
+            "netShares": 95000
+          },
+          {
+            "code": "2912",
+            "name": "統一超",
+            "market": "TWSE",
+            "buyShares": 73000,
+            "sellShares": 0,
+            "netShares": 73000
+          },
+          {
+            "code": "9910",
+            "name": "豐泰",
+            "market": "TWSE",
+            "buyShares": 70000,
+            "sellShares": 0,
+            "netShares": 70000
+          },
+          {
+            "code": "3532",
+            "name": "台勝科",
+            "market": "TWSE",
+            "buyShares": 71000,
+            "sellShares": 2000,
+            "netShares": 69000
+          },
+          {
+            "code": "3044",
+            "name": "健鼎",
+            "market": "TWSE",
+            "buyShares": 105000,
+            "sellShares": 70000,
+            "netShares": 35000
+          },
+          {
+            "code": "2357",
+            "name": "華碩",
+            "market": "TWSE",
+            "buyShares": 74300,
+            "sellShares": 56000,
+            "netShares": 18300
+          },
+          {
+            "code": "6446",
+            "name": "藥華藥",
+            "market": "TWSE",
+            "buyShares": 20000,
+            "sellShares": 4000,
+            "netShares": 16000
+          },
+          {
+            "code": "3406",
+            "name": "玉晶光",
+            "market": "TWSE",
+            "buyShares": 29000,
+            "sellShares": 17000,
+            "netShares": 12000
+          },
+          {
+            "code": "2481",
+            "name": "強茂",
+            "market": "TWSE",
+            "buyShares": 11000,
+            "sellShares": 0,
+            "netShares": 11000
+          },
+          {
+            "code": "2637",
+            "name": "慧洋-KY",
+            "market": "TWSE",
+            "buyShares": 2000,
+            "sellShares": 0,
+            "netShares": 2000
+          },
+          {
+            "code": "3026",
+            "name": "禾伸堂",
+            "market": "TWSE",
+            "buyShares": 3000,
+            "sellShares": 1000,
+            "netShares": 2000
+          },
+          {
+            "code": "4763",
+            "name": "材料*-KY",
+            "market": "TWSE",
+            "buyShares": 2000,
+            "sellShares": 0,
+            "netShares": 2000
+          },
+          {
+            "code": "1513",
+            "name": "中興電",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 0,
+            "netShares": 1000
+          },
+          {
+            "code": "2886",
+            "name": "兆豐金",
+            "market": "TWSE",
+            "buyShares": 393000,
+            "sellShares": 3669000,
+            "netShares": -3276000
+          },
+          {
+            "code": "3702",
+            "name": "大聯大",
+            "market": "TWSE",
+            "buyShares": 538000,
+            "sellShares": 2095000,
+            "netShares": -1557000
+          },
+          {
+            "code": "1303",
+            "name": "南亞",
+            "market": "TWSE",
+            "buyShares": 1454000,
+            "sellShares": 2193000,
+            "netShares": -739000
+          },
+          {
+            "code": "2883",
+            "name": "凱基金",
+            "market": "TWSE",
+            "buyShares": 22000,
+            "sellShares": 674000,
+            "netShares": -652000
+          },
+          {
+            "code": "3036",
+            "name": "文曄",
+            "market": "TWSE",
+            "buyShares": 2000,
+            "sellShares": 359000,
+            "netShares": -357000
+          },
+          {
+            "code": "2327",
+            "name": "國巨*",
+            "market": "TWSE",
+            "buyShares": 505000,
+            "sellShares": 840000,
+            "netShares": -335000
+          },
+          {
+            "code": "4938",
+            "name": "和碩",
+            "market": "TWSE",
+            "buyShares": 61000,
+            "sellShares": 361000,
+            "netShares": -300000
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 228000,
+            "netShares": -228000
+          },
+          {
+            "code": "2881",
+            "name": "富邦金",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 227000,
+            "netShares": -227000
+          },
+          {
+            "code": "3189",
+            "name": "景碩",
+            "market": "TWSE",
+            "buyShares": 373000,
+            "sellShares": 556000,
+            "netShares": -183000
+          },
+          {
+            "code": "2449",
+            "name": "京元電子",
+            "market": "TWSE",
+            "buyShares": 5000,
+            "sellShares": 167000,
+            "netShares": -162000
+          },
+          {
+            "code": "3005",
+            "name": "神基",
+            "market": "TWSE",
+            "buyShares": 2000,
+            "sellShares": 122191,
+            "netShares": -120191
+          },
+          {
+            "code": "5880",
+            "name": "合庫金",
+            "market": "TWSE",
+            "buyShares": 25000,
+            "sellShares": 125000,
+            "netShares": -100000
+          },
+          {
+            "code": "3450",
+            "name": "聯鈞",
+            "market": "TWSE",
+            "buyShares": 287000,
+            "sellShares": 350000,
+            "netShares": -63000
+          },
+          {
+            "code": "2313",
+            "name": "華通",
+            "market": "TWSE",
+            "buyShares": 5000,
+            "sellShares": 58000,
+            "netShares": -53000
+          },
+          {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 26000,
+            "sellShares": 55000,
+            "netShares": -29000
+          },
+          {
+            "code": "2855",
+            "name": "統一證",
+            "market": "TWSE",
+            "buyShares": 12100,
+            "sellShares": 41000,
+            "netShares": -28900
+          },
+          {
+            "code": "1101",
+            "name": "台泥",
+            "market": "TWSE",
+            "buyShares": 10000,
+            "sellShares": 34000,
+            "netShares": -24000
+          },
+          {
+            "code": "3045",
+            "name": "台灣大",
+            "market": "TWSE",
+            "buyShares": 762000,
+            "sellShares": 777000,
+            "netShares": -15000
+          },
+          {
+            "code": "2377",
+            "name": "微星",
+            "market": "TWSE",
+            "buyShares": 11000,
+            "sellShares": 25000,
+            "netShares": -14000
+          },
+          {
+            "code": "2376",
+            "name": "技嘉",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 14000,
+            "netShares": -13000
+          },
+          {
+            "code": "1504",
+            "name": "東元",
+            "market": "TWSE",
+            "buyShares": 23000,
+            "sellShares": 35000,
+            "netShares": -12000
+          },
+          {
+            "code": "6770",
+            "name": "力積電",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 12000,
+            "netShares": -11000
+          },
+          {
+            "code": "3529",
+            "name": "力旺",
+            "market": "TPEx",
+            "buyShares": 1083000,
+            "sellShares": 3000,
+            "netShares": 1080000
+          },
+          {
+            "code": "3105",
+            "name": "穩懋",
+            "market": "TPEx",
+            "buyShares": 803000,
+            "sellShares": 8000,
+            "netShares": 795000
+          },
+          {
+            "code": "6274",
+            "name": "台燿",
+            "market": "TPEx",
+            "buyShares": 251000,
+            "sellShares": 82000,
+            "netShares": 169000
+          },
+          {
+            "code": "3211",
+            "name": "順達",
+            "market": "TPEx",
+            "buyShares": 90000,
+            "sellShares": 0,
+            "netShares": 90000
+          },
+          {
+            "code": "6121",
+            "name": "新普",
+            "market": "TPEx",
+            "buyShares": 87000,
+            "sellShares": 3000,
+            "netShares": 84000
+          },
+          {
+            "code": "3491",
+            "name": "昇達科",
+            "market": "TPEx",
+            "buyShares": 77000,
+            "sellShares": 5000,
+            "netShares": 72000
+          },
+          {
+            "code": "5904",
+            "name": "寶雅*",
+            "market": "TPEx",
+            "buyShares": 69000,
+            "sellShares": 0,
+            "netShares": 69000
+          },
+          {
+            "code": "3293",
+            "name": "鈊象",
+            "market": "TPEx",
+            "buyShares": 47000,
+            "sellShares": 12000,
+            "netShares": 35000
+          }
+        ]
+      },
+      {
+        "date": "2026-09-22",
+        "rows": [
+          {
+            "code": "2303",
+            "name": "聯電",
+            "market": "TWSE",
+            "buyShares": 8806000,
+            "sellShares": 948112,
+            "netShares": 7857888
+          },
+          {
+            "code": "2610",
+            "name": "華航",
+            "market": "TWSE",
+            "buyShares": 5133000,
+            "sellShares": 0,
+            "netShares": 5133000
+          },
+          {
+            "code": "2618",
+            "name": "長榮航",
+            "market": "TWSE",
+            "buyShares": 3993000,
+            "sellShares": 0,
+            "netShares": 3993000
+          },
+          {
+            "code": "8028",
+            "name": "昇陽半導體",
+            "market": "TWSE",
+            "buyShares": 3007000,
+            "sellShares": 0,
+            "netShares": 3007000
+          },
+          {
+            "code": "2449",
+            "name": "京元電子",
+            "market": "TWSE",
+            "buyShares": 3009000,
+            "sellShares": 29829,
+            "netShares": 2979171
+          },
+          {
+            "code": "3605",
+            "name": "宏致",
+            "market": "TWSE",
+            "buyShares": 2487000,
+            "sellShares": 0,
+            "netShares": 2487000
+          },
+          {
+            "code": "8021",
+            "name": "尖點",
+            "market": "TWSE",
+            "buyShares": 1852000,
+            "sellShares": 0,
+            "netShares": 1852000
+          },
+          {
+            "code": "2308",
+            "name": "台達電",
+            "market": "TWSE",
+            "buyShares": 1690205,
+            "sellShares": 48148,
+            "netShares": 1642057
+          },
+          {
+            "code": "6505",
+            "name": "台塑化",
+            "market": "TWSE",
+            "buyShares": 1635000,
+            "sellShares": 40833,
+            "netShares": 1594167
+          },
+          {
+            "code": "2382",
+            "name": "廣達",
+            "market": "TWSE",
+            "buyShares": 1743350,
+            "sellShares": 150097,
+            "netShares": 1593253
+          },
+          {
+            "code": "2542",
+            "name": "興富發",
+            "market": "TWSE",
+            "buyShares": 1585000,
+            "sellShares": 16000,
+            "netShares": 1569000
+          },
+          {
+            "code": "3702",
+            "name": "大聯大",
+            "market": "TWSE",
+            "buyShares": 2364000,
+            "sellShares": 1200000,
+            "netShares": 1164000
+          },
+          {
+            "code": "2603",
+            "name": "長榮",
+            "market": "TWSE",
+            "buyShares": 976000,
+            "sellShares": 789,
+            "netShares": 975211
+          },
+          {
+            "code": "2633",
+            "name": "台灣高鐵",
+            "market": "TWSE",
+            "buyShares": 665000,
+            "sellShares": 0,
+            "netShares": 665000
+          },
+          {
+            "code": "1303",
+            "name": "南亞",
+            "market": "TWSE",
+            "buyShares": 2015000,
+            "sellShares": 1376578,
+            "netShares": 638422
+          },
+          {
+            "code": "2884",
+            "name": "玉山金",
+            "market": "TWSE",
+            "buyShares": 615000,
+            "sellShares": 44957,
+            "netShares": 570043
+          },
+          {
+            "code": "5880",
+            "name": "合庫金",
+            "market": "TWSE",
+            "buyShares": 636000,
+            "sellShares": 120794,
+            "netShares": 515206
+          },
+          {
+            "code": "8996",
+            "name": "高力",
+            "market": "TWSE",
+            "buyShares": 512000,
+            "sellShares": 15000,
+            "netShares": 497000
+          },
+          {
+            "code": "5876",
+            "name": "上海商銀",
+            "market": "TWSE",
+            "buyShares": 439000,
+            "sellShares": 0,
+            "netShares": 439000
+          },
+          {
+            "code": "6805",
+            "name": "富世達",
+            "market": "TWSE",
+            "buyShares": 445700,
+            "sellShares": 15000,
+            "netShares": 430700
+          },
+          {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 580000,
+            "sellShares": 166572,
+            "netShares": 413428
+          },
+          {
+            "code": "2313",
+            "name": "華通",
+            "market": "TWSE",
+            "buyShares": 421000,
+            "sellShares": 17344,
+            "netShares": 403656
+          },
+          {
+            "code": "3005",
+            "name": "神基",
+            "market": "TWSE",
+            "buyShares": 335946,
+            "sellShares": 1000,
+            "netShares": 334946
+          },
+          {
+            "code": "4904",
+            "name": "遠傳",
+            "market": "TWSE",
+            "buyShares": 237000,
+            "sellShares": 3289,
+            "netShares": 233711
+          },
+          {
+            "code": "2347",
+            "name": "聯強",
+            "market": "TWSE",
+            "buyShares": 231000,
+            "sellShares": 6000,
+            "netShares": 225000
+          },
+          {
+            "code": "9904",
+            "name": "寶成",
+            "market": "TWSE",
+            "buyShares": 186000,
+            "sellShares": 0,
+            "netShares": 186000
+          },
+          {
+            "code": "2327",
+            "name": "國巨*",
+            "market": "TWSE",
+            "buyShares": 272500,
+            "sellShares": 86776,
+            "netShares": 185724
+          },
+          {
+            "code": "3189",
+            "name": "景碩",
+            "market": "TWSE",
+            "buyShares": 190000,
+            "sellShares": 11000,
+            "netShares": 179000
+          },
+          {
+            "code": "1102",
+            "name": "亞泥",
+            "market": "TWSE",
+            "buyShares": 182000,
+            "sellShares": 9560,
+            "netShares": 172440
+          },
+          {
+            "code": "2892",
+            "name": "第一金",
+            "market": "TWSE",
+            "buyShares": 181000,
+            "sellShares": 9514,
+            "netShares": 171486
+          },
+          {
+            "code": "2105",
+            "name": "正新",
+            "market": "TWSE",
+            "buyShares": 165000,
+            "sellShares": 0,
+            "netShares": 165000
+          },
+          {
+            "code": "2404",
+            "name": "漢唐",
+            "market": "TWSE",
+            "buyShares": 153000,
+            "sellShares": 0,
+            "netShares": 153000
+          },
+          {
+            "code": "2353",
+            "name": "宏碁",
+            "market": "TWSE",
+            "buyShares": 162000,
+            "sellShares": 59218,
+            "netShares": 102782
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 421600,
+            "sellShares": 335000,
+            "netShares": 86600
+          },
+          {
+            "code": "2481",
+            "name": "強茂",
+            "market": "TWSE",
+            "buyShares": 78000,
+            "sellShares": 0,
+            "netShares": 78000
+          },
+          {
+            "code": "9910",
+            "name": "豐泰",
+            "market": "TWSE",
+            "buyShares": 78000,
+            "sellShares": 0,
+            "netShares": 78000
+          },
+          {
+            "code": "3044",
+            "name": "健鼎",
+            "market": "TWSE",
+            "buyShares": 80000,
+            "sellShares": 10000,
+            "netShares": 70000
+          },
+          {
+            "code": "6213",
+            "name": "聯茂",
+            "market": "TWSE",
+            "buyShares": 114000,
+            "sellShares": 75000,
+            "netShares": 39000
+          },
+          {
+            "code": "4938",
+            "name": "和碩",
+            "market": "TWSE",
+            "buyShares": 64000,
+            "sellShares": 27000,
+            "netShares": 37000
+          },
+          {
+            "code": "2357",
+            "name": "華碩",
+            "market": "TWSE",
+            "buyShares": 43400,
+            "sellShares": 11353,
+            "netShares": 32047
+          },
+          {
+            "code": "2474",
+            "name": "可成",
+            "market": "TWSE",
+            "buyShares": 40000,
+            "sellShares": 14000,
+            "netShares": 26000
+          },
+          {
+            "code": "5871",
+            "name": "中租-KY",
+            "market": "TWSE",
+            "buyShares": 48000,
+            "sellShares": 24624,
+            "netShares": 23376
+          },
+          {
+            "code": "3026",
+            "name": "禾伸堂",
+            "market": "TWSE",
+            "buyShares": 16000,
+            "sellShares": 0,
+            "netShares": 16000
+          },
+          {
+            "code": "6531",
+            "name": "愛普*",
+            "market": "TWSE",
+            "buyShares": 10000,
+            "sellShares": 6000,
+            "netShares": 4000
+          },
+          {
+            "code": "3406",
+            "name": "玉晶光",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 0,
+            "netShares": 1000
+          },
+          {
+            "code": "2886",
+            "name": "兆豐金",
+            "market": "TWSE",
+            "buyShares": 1000000,
+            "sellShares": 5781067,
+            "netShares": -4781067
+          },
+          {
+            "code": "2881",
+            "name": "富邦金",
+            "market": "TWSE",
+            "buyShares": 51000,
+            "sellShares": 1612461,
+            "netShares": -1561461
+          },
+          {
+            "code": "2887",
+            "name": "台新新光金",
+            "market": "TWSE",
+            "buyShares": 46000,
+            "sellShares": 1361022,
+            "netShares": -1315022
+          },
+          {
+            "code": "2883",
+            "name": "凱基金",
+            "market": "TWSE",
+            "buyShares": 7000,
+            "sellShares": 517226,
+            "netShares": -510226
+          },
+          {
+            "code": "3450",
+            "name": "聯鈞",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 450000,
+            "netShares": -450000
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 179000,
+            "sellShares": 378000,
+            "netShares": -199000
+          },
+          {
+            "code": "3045",
+            "name": "台灣大",
+            "market": "TWSE",
+            "buyShares": 84000,
+            "sellShares": 280553,
+            "netShares": -196553
+          },
+          {
+            "code": "2801",
+            "name": "彰銀",
+            "market": "TWSE",
+            "buyShares": 5000,
+            "sellShares": 148000,
+            "netShares": -143000
+          },
+          {
+            "code": "3037",
+            "name": "欣興",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 82286,
+            "netShares": -82286
+          },
+          {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 3000,
+            "sellShares": 83378,
+            "netShares": -80378
+          },
+          {
+            "code": "2882",
+            "name": "國泰金",
+            "market": "TWSE",
+            "buyShares": 47000,
+            "sellShares": 120536,
+            "netShares": -73536
+          },
+          {
+            "code": "2891",
+            "name": "中信金",
+            "market": "TWSE",
+            "buyShares": 24000,
+            "sellShares": 79224,
+            "netShares": -55224
+          },
+          {
+            "code": "6446",
+            "name": "藥華藥",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 50230,
+            "netShares": -50230
+          },
+          {
+            "code": "2409",
+            "name": "友達",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 42863,
+            "netShares": -42863
+          },
+          {
+            "code": "2855",
+            "name": "統一證",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 37000,
+            "netShares": -37000
+          },
+          {
+            "code": "2027",
+            "name": "大成鋼",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 34000,
+            "netShares": -34000
+          },
+          {
+            "code": "1101",
+            "name": "台泥",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 31000,
+            "netShares": -31000
+          },
+          {
+            "code": "1504",
+            "name": "東元",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 31000,
+            "netShares": -31000
+          },
+          {
+            "code": "6770",
+            "name": "力積電",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 26527,
+            "netShares": -26527
+          },
+          {
+            "code": "2377",
+            "name": "微星",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 21000,
+            "netShares": -20000
+          },
+          {
+            "code": "2317",
+            "name": "鴻海",
+            "market": "TWSE",
+            "buyShares": 141719,
+            "sellShares": 160624,
+            "netShares": -18905
+          },
+          {
+            "code": "3036",
+            "name": "文曄",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 10168,
+            "netShares": -10168
+          },
+          {
+            "code": "2376",
+            "name": "技嘉",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 7446,
+            "netShares": -6446
+          },
+          {
+            "code": "3532",
+            "name": "台勝科",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 1000,
+            "netShares": -1000
+          },
+          {
+            "code": "5347",
+            "name": "世界",
+            "market": "TPEx",
+            "buyShares": 3749000,
+            "sellShares": 663000,
+            "netShares": 3086000
+          },
+          {
+            "code": "3374",
+            "name": "精材",
+            "market": "TPEx",
+            "buyShares": 1536000,
+            "sellShares": 0,
+            "netShares": 1536000
+          },
+          {
+            "code": "6147",
+            "name": "頎邦",
+            "market": "TPEx",
+            "buyShares": 727000,
+            "sellShares": 65000,
+            "netShares": 662000
+          },
+          {
+            "code": "3105",
+            "name": "穩懋",
+            "market": "TPEx",
+            "buyShares": 285000,
+            "sellShares": 3000,
+            "netShares": 282000
+          },
+          {
+            "code": "3211",
+            "name": "順達",
+            "market": "TPEx",
+            "buyShares": 361000,
+            "sellShares": 81000,
+            "netShares": 280000
+          },
+          {
+            "code": "3529",
+            "name": "力旺",
+            "market": "TPEx",
+            "buyShares": 173000,
+            "sellShares": 3000,
+            "netShares": 170000
+          },
+          {
+            "code": "5904",
+            "name": "寶雅*",
+            "market": "TPEx",
+            "buyShares": 139000,
+            "sellShares": 0,
+            "netShares": 139000
+          },
+          {
+            "code": "3081",
+            "name": "聯亞",
+            "market": "TPEx",
+            "buyShares": 112000,
+            "sellShares": 7000,
+            "netShares": 105000
+          },
+          {
+            "code": "6274",
+            "name": "台燿",
+            "market": "TPEx",
+            "buyShares": 168000,
+            "sellShares": 71000,
+            "netShares": 97000
+          },
+          {
+            "code": "6121",
+            "name": "新普",
+            "market": "TPEx",
+            "buyShares": 114000,
+            "sellShares": 57000,
+            "netShares": 57000
+          },
+          {
+            "code": "3293",
+            "name": "鈊象",
+            "market": "TPEx",
+            "buyShares": 65000,
+            "sellShares": 9000,
+            "netShares": 56000
+          }
+        ]
+      },
+      {
+        "date": "2026-09-21",
+        "rows": [
+          {
+            "code": "2303",
+            "name": "聯電",
+            "market": "TWSE",
+            "buyShares": 8505594,
+            "sellShares": 604798,
+            "netShares": 7900796
+          },
+          {
+            "code": "2449",
+            "name": "京元電子",
+            "market": "TWSE",
+            "buyShares": 4581549,
+            "sellShares": 23207,
+            "netShares": 4558342
+          },
+          {
+            "code": "2308",
+            "name": "台達電",
+            "market": "TWSE",
+            "buyShares": 3408992,
+            "sellShares": 16431,
+            "netShares": 3392561
+          },
+          {
+            "code": "1303",
+            "name": "南亞",
+            "market": "TWSE",
+            "buyShares": 3134000,
+            "sellShares": 0,
+            "netShares": 3134000
+          },
+          {
+            "code": "8028",
+            "name": "昇陽半導體",
+            "market": "TWSE",
+            "buyShares": 2991000,
+            "sellShares": 56000,
+            "netShares": 2935000
+          },
+          {
+            "code": "3450",
+            "name": "聯鈞",
+            "market": "TWSE",
+            "buyShares": 2067000,
+            "sellShares": 0,
+            "netShares": 2067000
+          },
+          {
+            "code": "2382",
+            "name": "廣達",
+            "market": "TWSE",
+            "buyShares": 1705000,
+            "sellShares": 29701,
+            "netShares": 1675299
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 1525000,
+            "sellShares": 0,
+            "netShares": 1525000
+          },
+          {
+            "code": "2610",
+            "name": "華航",
+            "market": "TWSE",
+            "buyShares": 1230000,
+            "sellShares": 120000,
+            "netShares": 1110000
+          },
+          {
+            "code": "2891",
+            "name": "中信金",
+            "market": "TWSE",
+            "buyShares": 1268000,
+            "sellShares": 224968,
+            "netShares": 1043032
+          },
+          {
+            "code": "2618",
+            "name": "長榮航",
+            "market": "TWSE",
+            "buyShares": 1035000,
+            "sellShares": 130000,
+            "netShares": 905000
+          },
+          {
+            "code": "2884",
+            "name": "玉山金",
+            "market": "TWSE",
+            "buyShares": 813000,
+            "sellShares": 41685,
+            "netShares": 771315
+          },
+          {
+            "code": "6805",
+            "name": "富世達",
+            "market": "TWSE",
+            "buyShares": 771000,
+            "sellShares": 0,
+            "netShares": 771000
+          },
+          {
+            "code": "3036",
+            "name": "文曄",
+            "market": "TWSE",
+            "buyShares": 783000,
+            "sellShares": 32460,
+            "netShares": 750540
+          },
+          {
+            "code": "2887",
+            "name": "台新新光金",
+            "market": "TWSE",
+            "buyShares": 964000,
+            "sellShares": 239000,
+            "netShares": 725000
+          },
+          {
+            "code": "2327",
+            "name": "國巨*",
+            "market": "TWSE",
+            "buyShares": 720616,
+            "sellShares": 33290,
+            "netShares": 687326
+          },
+          {
+            "code": "2883",
+            "name": "凱基金",
+            "market": "TWSE",
+            "buyShares": 656000,
+            "sellShares": 76234,
+            "netShares": 579766
+          },
+          {
+            "code": "2404",
+            "name": "漢唐",
+            "market": "TWSE",
+            "buyShares": 572000,
+            "sellShares": 0,
+            "netShares": 572000
+          },
+          {
+            "code": "2886",
+            "name": "兆豐金",
+            "market": "TWSE",
+            "buyShares": 711000,
+            "sellShares": 143998,
+            "netShares": 567002
+          },
+          {
+            "code": "2542",
+            "name": "興富發",
+            "market": "TWSE",
+            "buyShares": 571000,
+            "sellShares": 5001,
+            "netShares": 565999
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 520000,
+            "sellShares": 11000,
+            "netShares": 509000
+          },
+          {
+            "code": "5880",
+            "name": "合庫金",
+            "market": "TWSE",
+            "buyShares": 441000,
+            "sellShares": 34000,
+            "netShares": 407000
+          },
+          {
+            "code": "2317",
+            "name": "鴻海",
+            "market": "TWSE",
+            "buyShares": 476312,
+            "sellShares": 69661,
+            "netShares": 406651
+          },
+          {
+            "code": "1513",
+            "name": "中興電",
+            "market": "TWSE",
+            "buyShares": 396000,
+            "sellShares": 1001,
+            "netShares": 394999
+          },
+          {
+            "code": "6505",
+            "name": "台塑化",
+            "market": "TWSE",
+            "buyShares": 339000,
+            "sellShares": 12208,
+            "netShares": 326792
+          },
+          {
+            "code": "2892",
+            "name": "第一金",
+            "market": "TWSE",
+            "buyShares": 473000,
+            "sellShares": 163724,
+            "netShares": 309276
+          },
+          {
+            "code": "3037",
+            "name": "欣興",
+            "market": "TWSE",
+            "buyShares": 320281,
+            "sellShares": 56347,
+            "netShares": 263934
+          },
+          {
+            "code": "2633",
+            "name": "台灣高鐵",
+            "market": "TWSE",
+            "buyShares": 200000,
+            "sellShares": 1,
+            "netShares": 199999
+          },
+          {
+            "code": "4904",
+            "name": "遠傳",
+            "market": "TWSE",
+            "buyShares": 191000,
+            "sellShares": 322,
+            "netShares": 190678
+          },
+          {
+            "code": "5876",
+            "name": "上海商銀",
+            "market": "TWSE",
+            "buyShares": 133000,
+            "sellShares": 0,
+            "netShares": 133000
+          },
+          {
+            "code": "3005",
+            "name": "神基",
+            "market": "TWSE",
+            "buyShares": 132816,
+            "sellShares": 1000,
+            "netShares": 131816
+          },
+          {
+            "code": "2603",
+            "name": "長榮",
+            "market": "TWSE",
+            "buyShares": 129000,
+            "sellShares": 197,
+            "netShares": 128803
+          },
+          {
+            "code": "2882",
+            "name": "國泰金",
+            "market": "TWSE",
+            "buyShares": 336000,
+            "sellShares": 235741,
+            "netShares": 100259
+          },
+          {
+            "code": "6770",
+            "name": "力積電",
+            "market": "TWSE",
+            "buyShares": 109000,
+            "sellShares": 21908,
+            "netShares": 87092
+          },
+          {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 672000,
+            "sellShares": 597322,
+            "netShares": 74678
+          },
+          {
+            "code": "6531",
+            "name": "愛普*",
+            "market": "TWSE",
+            "buyShares": 67000,
+            "sellShares": 4000,
+            "netShares": 63000
+          },
+          {
+            "code": "1102",
+            "name": "亞泥",
+            "market": "TWSE",
+            "buyShares": 64000,
+            "sellShares": 11950,
+            "netShares": 52050
+          },
+          {
+            "code": "2105",
+            "name": "正新",
+            "market": "TWSE",
+            "buyShares": 52000,
+            "sellShares": 0,
+            "netShares": 52000
+          },
+          {
+            "code": "2353",
+            "name": "宏碁",
+            "market": "TWSE",
+            "buyShares": 60000,
+            "sellShares": 15773,
+            "netShares": 44227
+          },
+          {
+            "code": "2376",
+            "name": "技嘉",
+            "market": "TWSE",
+            "buyShares": 52000,
+            "sellShares": 14558,
+            "netShares": 37442
+          },
+          {
+            "code": "9904",
+            "name": "寶成",
+            "market": "TWSE",
+            "buyShares": 106000,
+            "sellShares": 72000,
+            "netShares": 34000
+          },
+          {
+            "code": "9910",
+            "name": "豐泰",
+            "market": "TWSE",
+            "buyShares": 32000,
+            "sellShares": 0,
+            "netShares": 32000
+          },
+          {
+            "code": "2377",
+            "name": "微星",
+            "market": "TWSE",
+            "buyShares": 51000,
+            "sellShares": 20000,
+            "netShares": 31000
+          },
+          {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 101773,
+            "sellShares": 78400,
+            "netShares": 23373
+          },
+          {
+            "code": "3045",
+            "name": "台灣大",
+            "market": "TWSE",
+            "buyShares": 67000,
+            "sellShares": 48416,
+            "netShares": 18584
+          },
+          {
+            "code": "4763",
+            "name": "材料*-KY",
+            "market": "TWSE",
+            "buyShares": 17000,
+            "sellShares": 0,
+            "netShares": 17000
+          },
+          {
+            "code": "3026",
+            "name": "禾伸堂",
+            "market": "TWSE",
+            "buyShares": 11000,
+            "sellShares": 1000,
+            "netShares": 10000
+          },
+          {
+            "code": "9945",
+            "name": "潤泰新",
+            "market": "TWSE",
+            "buyShares": 10000,
+            "sellShares": 0,
+            "netShares": 10000
+          },
+          {
+            "code": "2637",
+            "name": "慧洋-KY",
+            "market": "TWSE",
+            "buyShares": 5000,
+            "sellShares": 0,
+            "netShares": 5000
+          },
+          {
+            "code": "2855",
+            "name": "統一證",
+            "market": "TWSE",
+            "buyShares": 16000,
+            "sellShares": 11000,
+            "netShares": 5000
+          },
+          {
+            "code": "6446",
+            "name": "藥華藥",
+            "market": "TWSE",
+            "buyShares": 3000,
+            "sellShares": 455,
+            "netShares": 2545
+          },
+          {
+            "code": "1101",
+            "name": "台泥",
+            "market": "TWSE",
+            "buyShares": 10000,
+            "sellShares": 9000,
+            "netShares": 1000
+          },
+          {
+            "code": "2481",
+            "name": "強茂",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 0,
+            "netShares": 1000
+          },
+          {
+            "code": "2881",
+            "name": "富邦金",
+            "market": "TWSE",
+            "buyShares": 330000,
+            "sellShares": 1432504,
+            "netShares": -1102504
+          },
+          {
+            "code": "2313",
+            "name": "華通",
+            "market": "TWSE",
+            "buyShares": 8000,
+            "sellShares": 1040430,
+            "netShares": -1032430
+          },
+          {
+            "code": "4938",
+            "name": "和碩",
+            "market": "TWSE",
+            "buyShares": 24000,
+            "sellShares": 399000,
+            "netShares": -375000
+          },
+          {
+            "code": "2801",
+            "name": "彰銀",
+            "market": "TWSE",
+            "buyShares": 20000,
+            "sellShares": 229000,
+            "netShares": -209000
+          },
+          {
+            "code": "6213",
+            "name": "聯茂",
+            "market": "TWSE",
+            "buyShares": 30000,
+            "sellShares": 142000,
+            "netShares": -112000
+          },
+          {
+            "code": "3189",
+            "name": "景碩",
+            "market": "TWSE",
+            "buyShares": 11000,
+            "sellShares": 85000,
+            "netShares": -74000
+          },
+          {
+            "code": "2474",
+            "name": "可成",
+            "market": "TWSE",
+            "buyShares": 19000,
+            "sellShares": 92001,
+            "netShares": -73001
+          },
+          {
+            "code": "2606",
+            "name": "裕民",
+            "market": "TWSE",
+            "buyShares": 5000,
+            "sellShares": 64000,
+            "netShares": -59000
+          },
+          {
+            "code": "8021",
+            "name": "尖點",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 55000,
+            "netShares": -55000
+          },
+          {
+            "code": "5871",
+            "name": "中租-KY",
+            "market": "TWSE",
+            "buyShares": 13000,
+            "sellShares": 54136,
+            "netShares": -41136
+          },
+          {
+            "code": "3406",
+            "name": "玉晶光",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 41000,
+            "netShares": -41000
+          },
+          {
+            "code": "3702",
+            "name": "大聯大",
+            "market": "TWSE",
+            "buyShares": 17000,
+            "sellShares": 49000,
+            "netShares": -32000
+          },
+          {
+            "code": "2347",
+            "name": "聯強",
+            "market": "TWSE",
+            "buyShares": 71000,
+            "sellShares": 102000,
+            "netShares": -31000
+          },
+          {
+            "code": "2409",
+            "name": "友達",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 27329,
+            "netShares": -27329
+          },
+          {
+            "code": "3044",
+            "name": "健鼎",
+            "market": "TWSE",
+            "buyShares": 2000,
+            "sellShares": 22000,
+            "netShares": -20000
+          },
+          {
+            "code": "8996",
+            "name": "高力",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 10000,
+            "netShares": -10000
+          },
+          {
+            "code": "2357",
+            "name": "華碩",
+            "market": "TWSE",
+            "buyShares": 38000,
+            "sellShares": 45202,
+            "netShares": -7202
+          },
+          {
+            "code": "1504",
+            "name": "東元",
+            "market": "TWSE",
+            "buyShares": 3000,
+            "sellShares": 10000,
+            "netShares": -7000
+          },
+          {
+            "code": "2027",
+            "name": "大成鋼",
+            "market": "TWSE",
+            "buyShares": 5000,
+            "sellShares": 11000,
+            "netShares": -6000
+          },
+          {
+            "code": "2912",
+            "name": "統一超",
+            "market": "TWSE",
+            "buyShares": 14000,
+            "sellShares": 17000,
+            "netShares": -3000
+          },
+          {
+            "code": "3532",
+            "name": "台勝科",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 1000,
+            "netShares": -1000
+          },
+          {
+            "code": "3264",
+            "name": "欣銓",
+            "market": "TPEx",
+            "buyShares": 1703000,
+            "sellShares": 14000,
+            "netShares": 1689000
+          },
+          {
+            "code": "4979",
+            "name": "華星光",
+            "market": "TPEx",
+            "buyShares": 1409000,
+            "sellShares": 0,
+            "netShares": 1409000
+          },
+          {
+            "code": "1815",
+            "name": "富喬",
+            "market": "TPEx",
+            "buyShares": 1185000,
+            "sellShares": 0,
+            "netShares": 1185000
+          },
+          {
+            "code": "6147",
+            "name": "頎邦",
+            "market": "TPEx",
+            "buyShares": 1194000,
+            "sellShares": 270000,
+            "netShares": 924000
+          },
+          {
+            "code": "3105",
+            "name": "穩懋",
+            "market": "TPEx",
+            "buyShares": 710000,
+            "sellShares": 3000,
+            "netShares": 707000
+          },
+          {
+            "code": "3081",
+            "name": "聯亞",
+            "market": "TPEx",
+            "buyShares": 673000,
+            "sellShares": 1000,
+            "netShares": 672000
+          },
+          {
+            "code": "3211",
+            "name": "順達",
+            "market": "TPEx",
+            "buyShares": 434000,
+            "sellShares": 0,
+            "netShares": 434000
+          },
+          {
+            "code": "8069",
+            "name": "元太",
+            "market": "TPEx",
+            "buyShares": 109000,
+            "sellShares": 32000,
+            "netShares": 77000
+          },
+          {
+            "code": "3293",
+            "name": "鈊象",
+            "market": "TPEx",
+            "buyShares": 34000,
+            "sellShares": 0,
+            "netShares": 34000
+          },
+          {
+            "code": "5904",
+            "name": "寶雅*",
+            "market": "TPEx",
+            "buyShares": 22000,
+            "sellShares": 0,
+            "netShares": 22000
+          },
+          {
+            "code": "3491",
+            "name": "昇達科",
+            "market": "TPEx",
+            "buyShares": 2000,
+            "sellShares": 0,
+            "netShares": 2000
+          },
+          {
+            "code": "3529",
+            "name": "力旺",
+            "market": "TPEx",
+            "buyShares": 2000,
+            "sellShares": 0,
+            "netShares": 2000
+          }
+        ]
+      },
+      {
+        "date": "2026-09-18",
+        "rows": [
+          {
+            "code": "2303",
+            "name": "聯電",
+            "market": "TWSE",
+            "buyShares": 19720456,
+            "sellShares": 6090268,
+            "netShares": 13630188
+          },
+          {
+            "code": "2618",
+            "name": "長榮航",
+            "market": "TWSE",
+            "buyShares": 10260974,
+            "sellShares": 967163,
+            "netShares": 9293811
+          },
+          {
+            "code": "6446",
+            "name": "藥華藥",
+            "market": "TWSE",
+            "buyShares": 8650527,
+            "sellShares": 95225,
+            "netShares": 8555302
+          },
+          {
+            "code": "2382",
+            "name": "廣達",
+            "market": "TWSE",
+            "buyShares": 5756283,
+            "sellShares": 640553,
+            "netShares": 5115730
+          },
+          {
+            "code": "2542",
+            "name": "興富發",
+            "market": "TWSE",
+            "buyShares": 4120000,
+            "sellShares": 11610,
+            "netShares": 4108390
+          },
+          {
+            "code": "6770",
+            "name": "力積電",
+            "market": "TWSE",
+            "buyShares": 3803009,
+            "sellShares": 0,
+            "netShares": 3803009
+          },
+          {
+            "code": "2409",
+            "name": "友達",
+            "market": "TWSE",
+            "buyShares": 3696311,
+            "sellShares": 66000,
+            "netShares": 3630311
+          },
+          {
+            "code": "9904",
+            "name": "寶成",
+            "market": "TWSE",
+            "buyShares": 3065601,
+            "sellShares": 49739,
+            "netShares": 3015862
+          },
+          {
+            "code": "3045",
+            "name": "台灣大",
+            "market": "TWSE",
+            "buyShares": 3010307,
+            "sellShares": 861815,
+            "netShares": 2148492
+          },
+          {
+            "code": "2610",
+            "name": "華航",
+            "market": "TWSE",
+            "buyShares": 3813765,
+            "sellShares": 1863000,
+            "netShares": 1950765
+          },
+          {
+            "code": "1102",
+            "name": "亞泥",
+            "market": "TWSE",
+            "buyShares": 1496038,
+            "sellShares": 10520,
+            "netShares": 1485518
+          },
+          {
+            "code": "3702",
+            "name": "大聯大",
+            "market": "TWSE",
+            "buyShares": 1309526,
+            "sellShares": 26000,
+            "netShares": 1283526
+          },
+          {
+            "code": "2481",
+            "name": "強茂",
+            "market": "TWSE",
+            "buyShares": 1217000,
+            "sellShares": 0,
+            "netShares": 1217000
+          },
+          {
+            "code": "2884",
+            "name": "玉山金",
+            "market": "TWSE",
+            "buyShares": 2947692,
+            "sellShares": 1741932,
+            "netShares": 1205760
+          },
+          {
+            "code": "2633",
+            "name": "台灣高鐵",
+            "market": "TWSE",
+            "buyShares": 1019000,
+            "sellShares": 19395,
+            "netShares": 999605
+          },
+          {
+            "code": "4763",
+            "name": "材料*-KY",
+            "market": "TWSE",
+            "buyShares": 984000,
+            "sellShares": 0,
+            "netShares": 984000
+          },
+          {
+            "code": "6213",
+            "name": "聯茂",
+            "market": "TWSE",
+            "buyShares": 950000,
+            "sellShares": 61000,
+            "netShares": 889000
+          },
+          {
+            "code": "3037",
+            "name": "欣興",
+            "market": "TWSE",
+            "buyShares": 922748,
+            "sellShares": 110813,
+            "netShares": 811935
+          },
+          {
+            "code": "9945",
+            "name": "潤泰新",
+            "market": "TWSE",
+            "buyShares": 689000,
+            "sellShares": 0,
+            "netShares": 689000
+          },
+          {
+            "code": "3036",
+            "name": "文曄",
+            "market": "TWSE",
+            "buyShares": 825003,
+            "sellShares": 139000,
+            "netShares": 686003
+          },
+          {
+            "code": "2327",
+            "name": "國巨*",
+            "market": "TWSE",
+            "buyShares": 883109,
+            "sellShares": 246000,
+            "netShares": 637109
+          },
+          {
+            "code": "6805",
+            "name": "富世達",
+            "market": "TWSE",
+            "buyShares": 500000,
+            "sellShares": 3000,
+            "netShares": 497000
+          },
+          {
+            "code": "9910",
+            "name": "豐泰",
+            "market": "TWSE",
+            "buyShares": 474000,
+            "sellShares": 1000,
+            "netShares": 473000
+          },
+          {
+            "code": "5876",
+            "name": "上海商銀",
+            "market": "TWSE",
+            "buyShares": 454862,
+            "sellShares": 8000,
+            "netShares": 446862
+          },
+          {
+            "code": "1303",
+            "name": "南亞",
+            "market": "TWSE",
+            "buyShares": 1411000,
+            "sellShares": 967833,
+            "netShares": 443167
+          },
+          {
+            "code": "1513",
+            "name": "中興電",
+            "market": "TWSE",
+            "buyShares": 435700,
+            "sellShares": 3782,
+            "netShares": 431918
+          },
+          {
+            "code": "2855",
+            "name": "統一證",
+            "market": "TWSE",
+            "buyShares": 426000,
+            "sellShares": 5184,
+            "netShares": 420816
+          },
+          {
+            "code": "3189",
+            "name": "景碩",
+            "market": "TWSE",
+            "buyShares": 310000,
+            "sellShares": 2000,
+            "netShares": 308000
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 298000,
+            "sellShares": 0,
+            "netShares": 298000
+          },
+          {
+            "code": "2474",
+            "name": "可成",
+            "market": "TWSE",
+            "buyShares": 420000,
+            "sellShares": 131905,
+            "netShares": 288095
+          },
+          {
+            "code": "3026",
+            "name": "禾伸堂",
+            "market": "TWSE",
+            "buyShares": 277000,
+            "sellShares": 9000,
+            "netShares": 268000
+          },
+          {
+            "code": "3005",
+            "name": "神基",
+            "market": "TWSE",
+            "buyShares": 250634,
+            "sellShares": 3631,
+            "netShares": 247003
+          },
+          {
+            "code": "2376",
+            "name": "技嘉",
+            "market": "TWSE",
+            "buyShares": 291000,
+            "sellShares": 58759,
+            "netShares": 232241
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 606000,
+            "sellShares": 395000,
+            "netShares": 211000
+          },
+          {
+            "code": "3406",
+            "name": "玉晶光",
+            "market": "TWSE",
+            "buyShares": 273000,
+            "sellShares": 91000,
+            "netShares": 182000
+          },
+          {
+            "code": "2912",
+            "name": "統一超",
+            "market": "TWSE",
+            "buyShares": 315039,
+            "sellShares": 192000,
+            "netShares": 123039
+          },
+          {
+            "code": "2404",
+            "name": "漢唐",
+            "market": "TWSE",
+            "buyShares": 157000,
+            "sellShares": 60000,
+            "netShares": 97000
+          },
+          {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 140671,
+            "sellShares": 50124,
+            "netShares": 90547
+          },
+          {
+            "code": "2105",
+            "name": "正新",
+            "market": "TWSE",
+            "buyShares": 73573,
+            "sellShares": 8952,
+            "netShares": 64621
+          },
+          {
+            "code": "2347",
+            "name": "聯強",
+            "market": "TWSE",
+            "buyShares": 46000,
+            "sellShares": 6960,
+            "netShares": 39040
+          },
+          {
+            "code": "2353",
+            "name": "宏碁",
+            "market": "TWSE",
+            "buyShares": 609000,
+            "sellShares": 571734,
+            "netShares": 37266
+          },
+          {
+            "code": "1504",
+            "name": "東元",
+            "market": "TWSE",
+            "buyShares": 16936,
+            "sellShares": 3000,
+            "netShares": 13936
+          },
+          {
+            "code": "1101",
+            "name": "台泥",
+            "market": "TWSE",
+            "buyShares": 10000,
+            "sellShares": 0,
+            "netShares": 10000
+          },
+          {
+            "code": "2606",
+            "name": "裕民",
+            "market": "TWSE",
+            "buyShares": 251000,
+            "sellShares": 241000,
+            "netShares": 10000
+          },
+          {
+            "code": "3450",
+            "name": "聯鈞",
+            "market": "TWSE",
+            "buyShares": 6000,
+            "sellShares": 0,
+            "netShares": 6000
+          },
+          {
+            "code": "2027",
+            "name": "大成鋼",
+            "market": "TWSE",
+            "buyShares": 38755,
+            "sellShares": 34000,
+            "netShares": 4755
+          },
+          {
+            "code": "8021",
+            "name": "尖點",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 0,
+            "netShares": 1000
+          },
+          {
+            "code": "2882",
+            "name": "國泰金",
+            "market": "TWSE",
+            "buyShares": 31358,
+            "sellShares": 8561403,
+            "netShares": -8530045
+          },
+          {
+            "code": "2886",
+            "name": "兆豐金",
+            "market": "TWSE",
+            "buyShares": 4042068,
+            "sellShares": 9067043,
+            "netShares": -5024975
+          },
+          {
+            "code": "2887",
+            "name": "台新新光金",
+            "market": "TWSE",
+            "buyShares": 85773,
+            "sellShares": 2534334,
+            "netShares": -2448561
+          },
+          {
+            "code": "2881",
+            "name": "富邦金",
+            "market": "TWSE",
+            "buyShares": 70742,
+            "sellShares": 1992394,
+            "netShares": -1921652
+          },
+          {
+            "code": "5880",
+            "name": "合庫金",
+            "market": "TWSE",
+            "buyShares": 71389,
+            "sellShares": 1950198,
+            "netShares": -1878809
+          },
+          {
+            "code": "2891",
+            "name": "中信金",
+            "market": "TWSE",
+            "buyShares": 2680474,
+            "sellShares": 4294009,
+            "netShares": -1613535
+          },
+          {
+            "code": "2892",
+            "name": "第一金",
+            "market": "TWSE",
+            "buyShares": 541000,
+            "sellShares": 1656255,
+            "netShares": -1115255
+          },
+          {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 654382,
+            "sellShares": 1646558,
+            "netShares": -992176
+          },
+          {
+            "code": "2357",
+            "name": "華碩",
+            "market": "TWSE",
+            "buyShares": 15954,
+            "sellShares": 993162,
+            "netShares": -977208
+          },
+          {
+            "code": "4904",
+            "name": "遠傳",
+            "market": "TWSE",
+            "buyShares": 193402,
+            "sellShares": 1075969,
+            "netShares": -882567
+          },
+          {
+            "code": "2883",
+            "name": "凱基金",
+            "market": "TWSE",
+            "buyShares": 829614,
+            "sellShares": 1463507,
+            "netShares": -633893
+          },
+          {
+            "code": "2317",
+            "name": "鴻海",
+            "market": "TWSE",
+            "buyShares": 751389,
+            "sellShares": 1295558,
+            "netShares": -544169
+          },
+          {
+            "code": "2637",
+            "name": "慧洋-KY",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 316279,
+            "netShares": -316279
+          },
+          {
+            "code": "4938",
+            "name": "和碩",
+            "market": "TWSE",
+            "buyShares": 210000,
+            "sellShares": 442060,
+            "netShares": -232060
+          },
+          {
+            "code": "6505",
+            "name": "台塑化",
+            "market": "TWSE",
+            "buyShares": 177000,
+            "sellShares": 357461,
+            "netShares": -180461
+          },
+          {
+            "code": "2449",
+            "name": "京元電子",
+            "market": "TWSE",
+            "buyShares": 864000,
+            "sellShares": 1010035,
+            "netShares": -146035
+          },
+          {
+            "code": "6531",
+            "name": "愛普*",
+            "market": "TWSE",
+            "buyShares": 47000,
+            "sellShares": 185000,
+            "netShares": -138000
+          },
+          {
+            "code": "2801",
+            "name": "彰銀",
+            "market": "TWSE",
+            "buyShares": 93646,
+            "sellShares": 134462,
+            "netShares": -40816
+          },
+          {
+            "code": "5871",
+            "name": "中租-KY",
+            "market": "TWSE",
+            "buyShares": 114860,
+            "sellShares": 146490,
+            "netShares": -31630
+          },
+          {
+            "code": "3044",
+            "name": "健鼎",
+            "market": "TWSE",
+            "buyShares": 151000,
+            "sellShares": 174322,
+            "netShares": -23322
+          },
+          {
+            "code": "8996",
+            "name": "高力",
+            "market": "TWSE",
+            "buyShares": 1653,
+            "sellShares": 22000,
+            "netShares": -20347
+          },
+          {
+            "code": "2308",
+            "name": "台達電",
+            "market": "TWSE",
+            "buyShares": 243944,
+            "sellShares": 264090,
+            "netShares": -20146
+          },
+          {
+            "code": "2377",
+            "name": "微星",
+            "market": "TWSE",
+            "buyShares": 419000,
+            "sellShares": 433000,
+            "netShares": -14000
+          },
+          {
+            "code": "2313",
+            "name": "華通",
+            "market": "TWSE",
+            "buyShares": 549016,
+            "sellShares": 563000,
+            "netShares": -13984
+          },
+          {
+            "code": "2603",
+            "name": "長榮",
+            "market": "TWSE",
+            "buyShares": 260031,
+            "sellShares": 270844,
+            "netShares": -10813
+          },
+          {
+            "code": "2845",
+            "name": "遠東銀",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 5000,
+            "netShares": -5000
+          },
+          {
+            "code": "4915",
+            "name": "致伸",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 2183,
+            "netShares": -2183
+          },
+          {
+            "code": "3532",
+            "name": "台勝科",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 2000,
+            "netShares": -2000
+          },
+          {
+            "code": "6147",
+            "name": "頎邦",
+            "market": "TPEx",
+            "buyShares": 2565000,
+            "sellShares": 0,
+            "netShares": 2565000
+          },
+          {
+            "code": "5904",
+            "name": "寶雅*",
+            "market": "TPEx",
+            "buyShares": 687000,
+            "sellShares": 0,
+            "netShares": 687000
+          },
+          {
+            "code": "4979",
+            "name": "華星光",
+            "market": "TPEx",
+            "buyShares": 622000,
+            "sellShares": 0,
+            "netShares": 622000
+          },
+          {
+            "code": "5347",
+            "name": "世界",
+            "market": "TPEx",
+            "buyShares": 2008000,
+            "sellShares": 1439000,
+            "netShares": 569000
+          },
+          {
+            "code": "3293",
+            "name": "鈊象",
+            "market": "TPEx",
+            "buyShares": 257000,
+            "sellShares": 0,
+            "netShares": 257000
+          },
+          {
+            "code": "3105",
+            "name": "穩懋",
+            "market": "TPEx",
+            "buyShares": 236000,
+            "sellShares": 0,
+            "netShares": 236000
+          },
+          {
+            "code": "3260",
+            "name": "威剛",
+            "market": "TPEx",
+            "buyShares": 156000,
+            "sellShares": 0,
+            "netShares": 156000
+          },
+          {
+            "code": "3491",
+            "name": "昇達科",
+            "market": "TPEx",
+            "buyShares": 166000,
+            "sellShares": 11000,
+            "netShares": 155000
+          },
+          {
+            "code": "3529",
+            "name": "力旺",
+            "market": "TPEx",
+            "buyShares": 122000,
+            "sellShares": 1000,
+            "netShares": 121000
+          },
+          {
+            "code": "3081",
+            "name": "聯亞",
+            "market": "TPEx",
+            "buyShares": 108000,
+            "sellShares": 0,
+            "netShares": 108000
+          },
+          {
+            "code": "6121",
+            "name": "新普",
+            "market": "TPEx",
+            "buyShares": 9000,
+            "sellShares": 0,
+            "netShares": 9000
+          },
+          {
+            "code": "3211",
+            "name": "順達",
+            "market": "TPEx",
+            "buyShares": 1000,
+            "sellShares": 0,
+            "netShares": 1000
+          },
+          {
+            "code": "3374",
+            "name": "精材",
+            "market": "TPEx",
+            "buyShares": 0,
+            "sellShares": 0,
+            "netShares": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-09-17",
+        "rows": [
+          {
+            "code": "2303",
+            "name": "聯電",
+            "market": "TWSE",
+            "buyShares": 31786000,
+            "sellShares": 3877000,
+            "netShares": 27909000
+          },
+          {
+            "code": "1303",
+            "name": "南亞",
+            "market": "TWSE",
+            "buyShares": 23531000,
+            "sellShares": 214000,
+            "netShares": 23317000
+          },
+          {
+            "code": "2801",
+            "name": "彰銀",
+            "market": "TWSE",
+            "buyShares": 9503000,
+            "sellShares": 35000,
+            "netShares": 9468000
+          },
+          {
+            "code": "2884",
+            "name": "玉山金",
+            "market": "TWSE",
+            "buyShares": 8701000,
+            "sellShares": 16000,
+            "netShares": 8685000
+          },
+          {
+            "code": "2887",
+            "name": "台新新光金",
+            "market": "TWSE",
+            "buyShares": 10694000,
+            "sellShares": 2631000,
+            "netShares": 8063000
+          },
+          {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 8002000,
+            "sellShares": 27000,
+            "netShares": 7975000
+          },
+          {
+            "code": "2892",
+            "name": "第一金",
+            "market": "TWSE",
+            "buyShares": 6211000,
+            "sellShares": 30000,
+            "netShares": 6181000
+          },
+          {
+            "code": "6505",
+            "name": "台塑化",
+            "market": "TWSE",
+            "buyShares": 5451000,
+            "sellShares": 0,
+            "netShares": 5451000
+          },
+          {
+            "code": "2886",
+            "name": "兆豐金",
+            "market": "TWSE",
+            "buyShares": 3736000,
+            "sellShares": 21000,
+            "netShares": 3715000
+          },
+          {
+            "code": "2891",
+            "name": "中信金",
+            "market": "TWSE",
+            "buyShares": 5719000,
+            "sellShares": 2021000,
+            "netShares": 3698000
+          },
+          {
+            "code": "2382",
+            "name": "廣達",
+            "market": "TWSE",
+            "buyShares": 3418000,
+            "sellShares": 378000,
+            "netShares": 3040000
+          },
+          {
+            "code": "9904",
+            "name": "寶成",
+            "market": "TWSE",
+            "buyShares": 3027000,
+            "sellShares": 0,
+            "netShares": 3027000
+          },
+          {
+            "code": "2542",
+            "name": "興富發",
+            "market": "TWSE",
+            "buyShares": 3056000,
+            "sellShares": 43000,
+            "netShares": 3013000
+          },
+          {
+            "code": "2618",
+            "name": "長榮航",
+            "market": "TWSE",
+            "buyShares": 2651000,
+            "sellShares": 10000,
+            "netShares": 2641000
+          },
+          {
+            "code": "3036",
+            "name": "文曄",
+            "market": "TWSE",
+            "buyShares": 2582000,
+            "sellShares": 0,
+            "netShares": 2582000
+          },
+          {
+            "code": "2603",
+            "name": "長榮",
+            "market": "TWSE",
+            "buyShares": 2214000,
+            "sellShares": 0,
+            "netShares": 2214000
+          },
+          {
+            "code": "2027",
+            "name": "大成鋼",
+            "market": "TWSE",
+            "buyShares": 2044000,
+            "sellShares": 59000,
+            "netShares": 1985000
+          },
+          {
+            "code": "8028",
+            "name": "昇陽半導體",
+            "market": "TWSE",
+            "buyShares": 1971000,
+            "sellShares": 0,
+            "netShares": 1971000
+          },
+          {
+            "code": "2481",
+            "name": "強茂",
+            "market": "TWSE",
+            "buyShares": 1908000,
+            "sellShares": 0,
+            "netShares": 1908000
+          },
+          {
+            "code": "2376",
+            "name": "技嘉",
+            "market": "TWSE",
+            "buyShares": 1414000,
+            "sellShares": 2000,
+            "netShares": 1412000
+          },
+          {
+            "code": "4763",
+            "name": "材料*-KY",
+            "market": "TWSE",
+            "buyShares": 1270000,
+            "sellShares": 1000,
+            "netShares": 1269000
+          },
+          {
+            "code": "2610",
+            "name": "華航",
+            "market": "TWSE",
+            "buyShares": 1218000,
+            "sellShares": 0,
+            "netShares": 1218000
+          },
+          {
+            "code": "2633",
+            "name": "台灣高鐵",
+            "market": "TWSE",
+            "buyShares": 949000,
+            "sellShares": 0,
+            "netShares": 949000
+          },
+          {
+            "code": "9945",
+            "name": "潤泰新",
+            "market": "TWSE",
+            "buyShares": 887000,
+            "sellShares": 0,
+            "netShares": 887000
+          },
+          {
+            "code": "3450",
+            "name": "聯鈞",
+            "market": "TWSE",
+            "buyShares": 869000,
+            "sellShares": 0,
+            "netShares": 869000
+          },
+          {
+            "code": "2353",
+            "name": "宏碁",
+            "market": "TWSE",
+            "buyShares": 814000,
+            "sellShares": 0,
+            "netShares": 814000
+          },
+          {
+            "code": "3702",
+            "name": "大聯大",
+            "market": "TWSE",
+            "buyShares": 787000,
+            "sellShares": 6000,
+            "netShares": 781000
+          },
+          {
+            "code": "3026",
+            "name": "禾伸堂",
+            "market": "TWSE",
+            "buyShares": 752000,
+            "sellShares": 0,
+            "netShares": 752000
+          },
+          {
+            "code": "5876",
+            "name": "上海商銀",
+            "market": "TWSE",
+            "buyShares": 575000,
+            "sellShares": 0,
+            "netShares": 575000
+          },
+          {
+            "code": "2313",
+            "name": "華通",
+            "market": "TWSE",
+            "buyShares": 560000,
+            "sellShares": 0,
+            "netShares": 560000
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 1236000,
+            "sellShares": 685000,
+            "netShares": 551000
+          },
+          {
+            "code": "9910",
+            "name": "豐泰",
+            "market": "TWSE",
+            "buyShares": 479000,
+            "sellShares": 0,
+            "netShares": 479000
+          },
+          {
+            "code": "2855",
+            "name": "統一證",
+            "market": "TWSE",
+            "buyShares": 447000,
+            "sellShares": 0,
+            "netShares": 447000
+          },
+          {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 430200,
+            "sellShares": 0,
+            "netShares": 430200
+          },
+          {
+            "code": "2474",
+            "name": "可成",
+            "market": "TWSE",
+            "buyShares": 435000,
+            "sellShares": 7000,
+            "netShares": 428000
+          },
+          {
+            "code": "1513",
+            "name": "中興電",
+            "market": "TWSE",
+            "buyShares": 420000,
+            "sellShares": 0,
+            "netShares": 420000
+          },
+          {
+            "code": "6213",
+            "name": "聯茂",
+            "market": "TWSE",
+            "buyShares": 356000,
+            "sellShares": 0,
+            "netShares": 356000
+          },
+          {
+            "code": "2606",
+            "name": "裕民",
+            "market": "TWSE",
+            "buyShares": 324000,
+            "sellShares": 0,
+            "netShares": 324000
+          },
+          {
+            "code": "3189",
+            "name": "景碩",
+            "market": "TWSE",
+            "buyShares": 315000,
+            "sellShares": 2000,
+            "netShares": 313000
+          },
+          {
+            "code": "4938",
+            "name": "和碩",
+            "market": "TWSE",
+            "buyShares": 296000,
+            "sellShares": 2000,
+            "netShares": 294000
+          },
+          {
+            "code": "6805",
+            "name": "富世達",
+            "market": "TWSE",
+            "buyShares": 288000,
+            "sellShares": 0,
+            "netShares": 288000
+          },
+          {
+            "code": "2912",
+            "name": "統一超",
+            "market": "TWSE",
+            "buyShares": 284000,
+            "sellShares": 4000,
+            "netShares": 280000
+          },
+          {
+            "code": "2308",
+            "name": "台達電",
+            "market": "TWSE",
+            "buyShares": 258707,
+            "sellShares": 5209,
+            "netShares": 253498
+          },
+          {
+            "code": "4904",
+            "name": "遠傳",
+            "market": "TWSE",
+            "buyShares": 245000,
+            "sellShares": 1000,
+            "netShares": 244000
+          },
+          {
+            "code": "3005",
+            "name": "神基",
+            "market": "TWSE",
+            "buyShares": 206250,
+            "sellShares": 0,
+            "netShares": 206250
+          },
+          {
+            "code": "1102",
+            "name": "亞泥",
+            "market": "TWSE",
+            "buyShares": 180000,
+            "sellShares": 0,
+            "netShares": 180000
+          },
+          {
+            "code": "2327",
+            "name": "國巨*",
+            "market": "TWSE",
+            "buyShares": 285000,
+            "sellShares": 129000,
+            "netShares": 156000
+          },
+          {
+            "code": "2317",
+            "name": "鴻海",
+            "market": "TWSE",
+            "buyShares": 112104,
+            "sellShares": 3000,
+            "netShares": 109104
+          },
+          {
+            "code": "5880",
+            "name": "合庫金",
+            "market": "TWSE",
+            "buyShares": 76000,
+            "sellShares": 0,
+            "netShares": 76000
+          },
+          {
+            "code": "1101",
+            "name": "台泥",
+            "market": "TWSE",
+            "buyShares": 66000,
+            "sellShares": 0,
+            "netShares": 66000
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 52000,
+            "sellShares": 0,
+            "netShares": 52000
+          },
+          {
+            "code": "3045",
+            "name": "台灣大",
+            "market": "TWSE",
+            "buyShares": 51000,
+            "sellShares": 0,
+            "netShares": 51000
+          },
+          {
+            "code": "1504",
+            "name": "東元",
+            "market": "TWSE",
+            "buyShares": 32000,
+            "sellShares": 1000,
+            "netShares": 31000
+          },
+          {
+            "code": "2347",
+            "name": "聯強",
+            "market": "TWSE",
+            "buyShares": 38000,
+            "sellShares": 14000,
+            "netShares": 24000
+          },
+          {
+            "code": "2352",
+            "name": "佳世達",
+            "market": "TWSE",
+            "buyShares": 20000,
+            "sellShares": 0,
+            "netShares": 20000
+          },
+          {
+            "code": "6531",
+            "name": "愛普*",
+            "market": "TWSE",
+            "buyShares": 10000,
+            "sellShares": 1000,
+            "netShares": 9000
+          },
+          {
+            "code": "6446",
+            "name": "藥華藥",
+            "market": "TWSE",
+            "buyShares": 2000,
+            "sellShares": 0,
+            "netShares": 2000
+          },
+          {
+            "code": "2883",
+            "name": "凱基金",
+            "market": "TWSE",
+            "buyShares": 153000,
+            "sellShares": 2423000,
+            "netShares": -2270000
+          },
+          {
+            "code": "2882",
+            "name": "國泰金",
+            "market": "TWSE",
+            "buyShares": 93000,
+            "sellShares": 1830000,
+            "netShares": -1737000
+          },
+          {
+            "code": "3037",
+            "name": "欣興",
+            "market": "TWSE",
+            "buyShares": 323000,
+            "sellShares": 1842000,
+            "netShares": -1519000
+          },
+          {
+            "code": "2881",
+            "name": "富邦金",
+            "market": "TWSE",
+            "buyShares": 76000,
+            "sellShares": 1471000,
+            "netShares": -1395000
+          },
+          {
+            "code": "2357",
+            "name": "華碩",
+            "market": "TWSE",
+            "buyShares": 243000,
+            "sellShares": 541000,
+            "netShares": -298000
+          },
+          {
+            "code": "2637",
+            "name": "慧洋-KY",
+            "market": "TWSE",
+            "buyShares": 120000,
+            "sellShares": 411000,
+            "netShares": -291000
+          },
+          {
+            "code": "2377",
+            "name": "微星",
+            "market": "TWSE",
+            "buyShares": 20000,
+            "sellShares": 194000,
+            "netShares": -174000
+          },
+          {
+            "code": "5871",
+            "name": "中租-KY",
+            "market": "TWSE",
+            "buyShares": 26000,
+            "sellShares": 144000,
+            "netShares": -118000
+          },
+          {
+            "code": "2404",
+            "name": "漢唐",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 55000,
+            "netShares": -55000
+          },
+          {
+            "code": "3406",
+            "name": "玉晶光",
+            "market": "TWSE",
+            "buyShares": 50000,
+            "sellShares": 80000,
+            "netShares": -30000
+          },
+          {
+            "code": "8021",
+            "name": "尖點",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 25000,
+            "netShares": -25000
+          },
+          {
+            "code": "3044",
+            "name": "健鼎",
+            "market": "TWSE",
+            "buyShares": 26000,
+            "sellShares": 48000,
+            "netShares": -22000
+          },
+          {
+            "code": "2409",
+            "name": "友達",
+            "market": "TWSE",
+            "buyShares": 14000,
+            "sellShares": 35000,
+            "netShares": -21000
+          },
+          {
+            "code": "8996",
+            "name": "高力",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 17000,
+            "netShares": -16000
+          },
+          {
+            "code": "6770",
+            "name": "力積電",
+            "market": "TWSE",
+            "buyShares": 8000,
+            "sellShares": 21000,
+            "netShares": -13000
+          },
+          {
+            "code": "2449",
+            "name": "京元電子",
+            "market": "TWSE",
+            "buyShares": 5000,
+            "sellShares": 7000,
+            "netShares": -2000
+          },
+          {
+            "code": "2845",
+            "name": "遠東銀",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 1000,
+            "netShares": -1000
+          },
+          {
+            "code": "6147",
+            "name": "頎邦",
+            "market": "TPEx",
+            "buyShares": 2416000,
+            "sellShares": 7000,
+            "netShares": 2409000
+          },
+          {
+            "code": "3264",
+            "name": "欣銓",
+            "market": "TPEx",
+            "buyShares": 2065000,
+            "sellShares": 0,
+            "netShares": 2065000
+          },
+          {
+            "code": "3374",
+            "name": "精材",
+            "market": "TPEx",
+            "buyShares": 1932000,
+            "sellShares": 0,
+            "netShares": 1932000
+          },
+          {
+            "code": "3105",
+            "name": "穩懋",
+            "market": "TPEx",
+            "buyShares": 1369000,
+            "sellShares": 3000,
+            "netShares": 1366000
+          },
+          {
+            "code": "5904",
+            "name": "寶雅*",
+            "market": "TPEx",
+            "buyShares": 675000,
+            "sellShares": 0,
+            "netShares": 675000
+          },
+          {
+            "code": "8069",
+            "name": "元太",
+            "market": "TPEx",
+            "buyShares": 364000,
+            "sellShares": 5000,
+            "netShares": 359000
+          },
+          {
+            "code": "3293",
+            "name": "鈊象",
+            "market": "TPEx",
+            "buyShares": 239000,
+            "sellShares": 0,
+            "netShares": 239000
+          },
+          {
+            "code": "3491",
+            "name": "昇達科",
+            "market": "TPEx",
+            "buyShares": 206000,
+            "sellShares": 0,
+            "netShares": 206000
+          },
+          {
+            "code": "3260",
+            "name": "威剛",
+            "market": "TPEx",
+            "buyShares": 147000,
+            "sellShares": 19000,
+            "netShares": 128000
+          },
+          {
+            "code": "3529",
+            "name": "力旺",
+            "market": "TPEx",
+            "buyShares": 112000,
+            "sellShares": 1000,
+            "netShares": 111000
+          },
+          {
+            "code": "3081",
+            "name": "聯亞",
+            "market": "TPEx",
+            "buyShares": 65000,
+            "sellShares": 0,
+            "netShares": 65000
+          },
+          {
+            "code": "6121",
+            "name": "新普",
+            "market": "TPEx",
+            "buyShares": 8000,
+            "sellShares": 0,
+            "netShares": 8000
+          }
+        ]
+      },
+      {
+        "date": "2026-09-16",
+        "rows": [
+          {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 16272000,
+            "sellShares": 83000,
+            "netShares": 16189000
+          },
+          {
+            "code": "2801",
+            "name": "彰銀",
+            "market": "TWSE",
+            "buyShares": 12343000,
+            "sellShares": 148000,
+            "netShares": 12195000
+          },
+          {
+            "code": "2883",
+            "name": "凱基金",
+            "market": "TWSE",
+            "buyShares": 11959000,
+            "sellShares": 820000,
+            "netShares": 11139000
+          },
+          {
+            "code": "2891",
+            "name": "中信金",
+            "market": "TWSE",
+            "buyShares": 9340000,
+            "sellShares": 85411,
+            "netShares": 9254589
+          },
+          {
+            "code": "2882",
+            "name": "國泰金",
+            "market": "TWSE",
+            "buyShares": 9138000,
+            "sellShares": 0,
+            "netShares": 9138000
+          },
+          {
+            "code": "2887",
+            "name": "台新新光金",
+            "market": "TWSE",
+            "buyShares": 8275340,
+            "sellShares": 91000,
+            "netShares": 8184340
+          },
+          {
+            "code": "2884",
+            "name": "玉山金",
+            "market": "TWSE",
+            "buyShares": 7869000,
+            "sellShares": 17000,
+            "netShares": 7852000
+          },
+          {
+            "code": "2881",
+            "name": "富邦金",
+            "market": "TWSE",
+            "buyShares": 6149000,
+            "sellShares": 149000,
+            "netShares": 6000000
+          },
+          {
+            "code": "2892",
+            "name": "第一金",
+            "market": "TWSE",
+            "buyShares": 6067000,
+            "sellShares": 108000,
+            "netShares": 5959000
+          },
+          {
+            "code": "2542",
+            "name": "興富發",
+            "market": "TWSE",
+            "buyShares": 3943000,
+            "sellShares": 32000,
+            "netShares": 3911000
+          },
+          {
+            "code": "2303",
+            "name": "聯電",
+            "market": "TWSE",
+            "buyShares": 4234000,
+            "sellShares": 324000,
+            "netShares": 3910000
+          },
+          {
+            "code": "2382",
+            "name": "廣達",
+            "market": "TWSE",
+            "buyShares": 3800000,
+            "sellShares": 25458,
+            "netShares": 3774542
+          },
+          {
+            "code": "2481",
+            "name": "強茂",
+            "market": "TWSE",
+            "buyShares": 3763000,
+            "sellShares": 1400,
+            "netShares": 3761600
+          },
+          {
+            "code": "9904",
+            "name": "寶成",
+            "market": "TWSE",
+            "buyShares": 3523000,
+            "sellShares": 69000,
+            "netShares": 3454000
+          },
+          {
+            "code": "5880",
+            "name": "合庫金",
+            "market": "TWSE",
+            "buyShares": 2791000,
+            "sellShares": 0,
+            "netShares": 2791000
+          },
+          {
+            "code": "1303",
+            "name": "南亞",
+            "market": "TWSE",
+            "buyShares": 3037000,
+            "sellShares": 322299,
+            "netShares": 2714701
+          },
+          {
+            "code": "6505",
+            "name": "台塑化",
+            "market": "TWSE",
+            "buyShares": 2583000,
+            "sellShares": 0,
+            "netShares": 2583000
+          },
+          {
+            "code": "2618",
+            "name": "長榮航",
+            "market": "TWSE",
+            "buyShares": 2258000,
+            "sellShares": 157415,
+            "netShares": 2100585
+          },
+          {
+            "code": "2027",
+            "name": "大成鋼",
+            "market": "TWSE",
+            "buyShares": 1984000,
+            "sellShares": 1000,
+            "netShares": 1983000
+          },
+          {
+            "code": "1504",
+            "name": "東元",
+            "market": "TWSE",
+            "buyShares": 1817000,
+            "sellShares": 75000,
+            "netShares": 1742000
+          },
+          {
+            "code": "2603",
+            "name": "長榮",
+            "market": "TWSE",
+            "buyShares": 2561000,
+            "sellShares": 820000,
+            "netShares": 1741000
+          },
+          {
+            "code": "2633",
+            "name": "台灣高鐵",
+            "market": "TWSE",
+            "buyShares": 1607000,
+            "sellShares": 0,
+            "netShares": 1607000
+          },
+          {
+            "code": "8028",
+            "name": "昇陽半導體",
+            "market": "TWSE",
+            "buyShares": 1592000,
+            "sellShares": 2000,
+            "netShares": 1590000
+          },
+          {
+            "code": "2855",
+            "name": "統一證",
+            "market": "TWSE",
+            "buyShares": 2186000,
+            "sellShares": 627000,
+            "netShares": 1559000
+          },
+          {
+            "code": "1101",
+            "name": "台泥",
+            "market": "TWSE",
+            "buyShares": 1779000,
+            "sellShares": 296000,
+            "netShares": 1483000
+          },
+          {
+            "code": "2317",
+            "name": "鴻海",
+            "market": "TWSE",
+            "buyShares": 1420857,
+            "sellShares": 139000,
+            "netShares": 1281857
+          },
+          {
+            "code": "2474",
+            "name": "可成",
+            "market": "TWSE",
+            "buyShares": 1297000,
+            "sellShares": 81499,
+            "netShares": 1215501
+          },
+          {
+            "code": "5871",
+            "name": "中租-KY",
+            "market": "TWSE",
+            "buyShares": 1438000,
+            "sellShares": 225882,
+            "netShares": 1212118
+          },
+          {
+            "code": "2376",
+            "name": "技嘉",
+            "market": "TWSE",
+            "buyShares": 1325000,
+            "sellShares": 228000,
+            "netShares": 1097000
+          },
+          {
+            "code": "5876",
+            "name": "上海商銀",
+            "market": "TWSE",
+            "buyShares": 1043000,
+            "sellShares": 0,
+            "netShares": 1043000
+          },
+          {
+            "code": "2610",
+            "name": "華航",
+            "market": "TWSE",
+            "buyShares": 1121000,
+            "sellShares": 113000,
+            "netShares": 1008000
+          },
+          {
+            "code": "2353",
+            "name": "宏碁",
+            "market": "TWSE",
+            "buyShares": 1010000,
+            "sellShares": 2973,
+            "netShares": 1007027
+          },
+          {
+            "code": "2377",
+            "name": "微星",
+            "market": "TWSE",
+            "buyShares": 1143000,
+            "sellShares": 189788,
+            "netShares": 953212
+          },
+          {
+            "code": "2886",
+            "name": "兆豐金",
+            "market": "TWSE",
+            "buyShares": 966000,
+            "sellShares": 83000,
+            "netShares": 883000
+          },
+          {
+            "code": "2357",
+            "name": "華碩",
+            "market": "TWSE",
+            "buyShares": 937000,
+            "sellShares": 76000,
+            "netShares": 861000
+          },
+          {
+            "code": "5469",
+            "name": "瀚宇博",
+            "market": "TWSE",
+            "buyShares": 858000,
+            "sellShares": 33000,
+            "netShares": 825000
+          },
+          {
+            "code": "4763",
+            "name": "材料*-KY",
+            "market": "TWSE",
+            "buyShares": 798000,
+            "sellShares": 26480,
+            "netShares": 771520
+          },
+          {
+            "code": "4915",
+            "name": "致伸",
+            "market": "TWSE",
+            "buyShares": 751000,
+            "sellShares": 0,
+            "netShares": 751000
+          },
+          {
+            "code": "2606",
+            "name": "裕民",
+            "market": "TWSE",
+            "buyShares": 837000,
+            "sellShares": 94000,
+            "netShares": 743000
+          },
+          {
+            "code": "2327",
+            "name": "國巨*",
+            "market": "TWSE",
+            "buyShares": 700020,
+            "sellShares": 22000,
+            "netShares": 678020
+          },
+          {
+            "code": "9910",
+            "name": "豐泰",
+            "market": "TWSE",
+            "buyShares": 639000,
+            "sellShares": 12808,
+            "netShares": 626192
+          },
+          {
+            "code": "9945",
+            "name": "潤泰新",
+            "market": "TWSE",
+            "buyShares": 558000,
+            "sellShares": 0,
+            "netShares": 558000
+          },
+          {
+            "code": "2308",
+            "name": "台達電",
+            "market": "TWSE",
+            "buyShares": 1334069,
+            "sellShares": 782181,
+            "netShares": 551888
+          },
+          {
+            "code": "6213",
+            "name": "聯茂",
+            "market": "TWSE",
+            "buyShares": 512000,
+            "sellShares": 0,
+            "netShares": 512000
+          },
+          {
+            "code": "3044",
+            "name": "健鼎",
+            "market": "TWSE",
+            "buyShares": 545000,
+            "sellShares": 64000,
+            "netShares": 481000
+          },
+          {
+            "code": "4904",
+            "name": "遠傳",
+            "market": "TWSE",
+            "buyShares": 473000,
+            "sellShares": 9000,
+            "netShares": 464000
+          },
+          {
+            "code": "3045",
+            "name": "台灣大",
+            "market": "TWSE",
+            "buyShares": 485000,
+            "sellShares": 59939,
+            "netShares": 425061
+          },
+          {
+            "code": "6770",
+            "name": "力積電",
+            "market": "TWSE",
+            "buyShares": 424000,
+            "sellShares": 1000,
+            "netShares": 423000
+          },
+          {
+            "code": "2912",
+            "name": "統一超",
+            "market": "TWSE",
+            "buyShares": 406000,
+            "sellShares": 19118,
+            "netShares": 386882
+          },
+          {
+            "code": "2313",
+            "name": "華通",
+            "market": "TWSE",
+            "buyShares": 330410,
+            "sellShares": 0,
+            "netShares": 330410
+          },
+          {
+            "code": "1102",
+            "name": "亞泥",
+            "market": "TWSE",
+            "buyShares": 473000,
+            "sellShares": 163472,
+            "netShares": 309528
+          },
+          {
+            "code": "3005",
+            "name": "神基",
+            "market": "TWSE",
+            "buyShares": 265927,
+            "sellShares": 1041,
+            "netShares": 264886
+          },
+          {
+            "code": "3450",
+            "name": "聯鈞",
+            "market": "TWSE",
+            "buyShares": 257000,
+            "sellShares": 0,
+            "netShares": 257000
+          },
+          {
+            "code": "3026",
+            "name": "禾伸堂",
+            "market": "TWSE",
+            "buyShares": 257000,
+            "sellShares": 700,
+            "netShares": 256300
+          },
+          {
+            "code": "2105",
+            "name": "正新",
+            "market": "TWSE",
+            "buyShares": 258000,
+            "sellShares": 34366,
+            "netShares": 223634
+          },
+          {
+            "code": "6271",
+            "name": "同欣電",
+            "market": "TWSE",
+            "buyShares": 210000,
+            "sellShares": 0,
+            "netShares": 210000
+          },
+          {
+            "code": "2851",
+            "name": "中再保",
+            "market": "TWSE",
+            "buyShares": 208000,
+            "sellShares": 0,
+            "netShares": 208000
+          },
+          {
+            "code": "4938",
+            "name": "和碩",
+            "market": "TWSE",
+            "buyShares": 724000,
+            "sellShares": 568155,
+            "netShares": 155845
+          },
+          {
+            "code": "3189",
+            "name": "景碩",
+            "market": "TWSE",
+            "buyShares": 160000,
+            "sellShares": 9000,
+            "netShares": 151000
+          },
+          {
+            "code": "3532",
+            "name": "台勝科",
+            "market": "TWSE",
+            "buyShares": 102000,
+            "sellShares": 3000,
+            "netShares": 99000
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 38000,
+            "sellShares": 0,
+            "netShares": 38000
+          },
+          {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 35000,
+            "sellShares": 3700,
+            "netShares": 31300
+          },
+          {
+            "code": "2409",
+            "name": "友達",
+            "market": "TWSE",
+            "buyShares": 4000,
+            "sellShares": 0,
+            "netShares": 4000
+          },
+          {
+            "code": "8021",
+            "name": "尖點",
+            "market": "TWSE",
+            "buyShares": 2000,
+            "sellShares": 0,
+            "netShares": 2000
+          },
+          {
+            "code": "2347",
+            "name": "聯強",
+            "market": "TWSE",
+            "buyShares": 680000,
+            "sellShares": 1186207,
+            "netShares": -506207
+          },
+          {
+            "code": "3702",
+            "name": "大聯大",
+            "market": "TWSE",
+            "buyShares": 864000,
+            "sellShares": 1287994,
+            "netShares": -423994
+          },
+          {
+            "code": "2845",
+            "name": "遠東銀",
+            "market": "TWSE",
+            "buyShares": 678000,
+            "sellShares": 1025000,
+            "netShares": -347000
+          },
+          {
+            "code": "3036",
+            "name": "文曄",
+            "market": "TWSE",
+            "buyShares": 388000,
+            "sellShares": 697152,
+            "netShares": -309152
+          },
+          {
+            "code": "2637",
+            "name": "慧洋-KY",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 271000,
+            "netShares": -271000
+          },
+          {
+            "code": "3037",
+            "name": "欣興",
+            "market": "TWSE",
+            "buyShares": 448000,
+            "sellShares": 617000,
+            "netShares": -169000
+          },
+          {
+            "code": "2449",
+            "name": "京元電子",
+            "market": "TWSE",
+            "buyShares": 205000,
+            "sellShares": 335390,
+            "netShares": -130390
+          },
+          {
+            "code": "2352",
+            "name": "佳世達",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 118000,
+            "netShares": -118000
+          },
+          {
+            "code": "6446",
+            "name": "藥華藥",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 85375,
+            "netShares": -84375
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 284710,
+            "sellShares": 349000,
+            "netShares": -64290
+          },
+          {
+            "code": "6805",
+            "name": "富世達",
+            "market": "TWSE",
+            "buyShares": 95000,
+            "sellShares": 159000,
+            "netShares": -64000
+          },
+          {
+            "code": "3406",
+            "name": "玉晶光",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 60000,
+            "netShares": -60000
+          },
+          {
+            "code": "2404",
+            "name": "漢唐",
+            "market": "TWSE",
+            "buyShares": 2000,
+            "sellShares": 45000,
+            "netShares": -43000
+          },
+          {
+            "code": "1513",
+            "name": "中興電",
+            "market": "TWSE",
+            "buyShares": 4000,
+            "sellShares": 20000,
+            "netShares": -16000
+          },
+          {
+            "code": "6531",
+            "name": "愛普*",
+            "market": "TWSE",
+            "buyShares": 9000,
+            "sellShares": 17000,
+            "netShares": -8000
+          },
+          {
+            "code": "8996",
+            "name": "高力",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 5000,
+            "netShares": -5000
+          },
+          {
+            "code": "6147",
+            "name": "頎邦",
+            "market": "TPEx",
+            "buyShares": 2765000,
+            "sellShares": 332000,
+            "netShares": 2433000
+          },
+          {
+            "code": "5904",
+            "name": "寶雅*",
+            "market": "TPEx",
+            "buyShares": 772000,
+            "sellShares": 0,
+            "netShares": 772000
+          },
+          {
+            "code": "3081",
+            "name": "聯亞",
+            "market": "TPEx",
+            "buyShares": 458000,
+            "sellShares": 6000,
+            "netShares": 452000
+          },
+          {
+            "code": "8069",
+            "name": "元太",
+            "market": "TPEx",
+            "buyShares": 348000,
+            "sellShares": 43000,
+            "netShares": 305000
+          },
+          {
+            "code": "3293",
+            "name": "鈊象",
+            "market": "TPEx",
+            "buyShares": 301000,
+            "sellShares": 0,
+            "netShares": 301000
+          },
+          {
+            "code": "6121",
+            "name": "新普",
+            "market": "TPEx",
+            "buyShares": 162000,
+            "sellShares": 11000,
+            "netShares": 151000
+          },
+          {
+            "code": "3211",
+            "name": "順達",
+            "market": "TPEx",
+            "buyShares": 100000,
+            "sellShares": 10000,
+            "netShares": 90000
+          },
+          {
+            "code": "3260",
+            "name": "威剛",
+            "market": "TPEx",
+            "buyShares": 185000,
+            "sellShares": 98000,
+            "netShares": 87000
+          },
+          {
+            "code": "3491",
+            "name": "昇達科",
+            "market": "TPEx",
+            "buyShares": 75000,
+            "sellShares": 16000,
+            "netShares": 59000
+          },
+          {
+            "code": "3105",
+            "name": "穩懋",
+            "market": "TPEx",
+            "buyShares": 37000,
+            "sellShares": 11000,
+            "netShares": 26000
+          },
+          {
+            "code": "3529",
+            "name": "力旺",
+            "market": "TPEx",
+            "buyShares": 9000,
+            "sellShares": 0,
+            "netShares": 9000
+          }
+        ]
+      },
+      {
+        "date": "2026-09-15",
+        "rows": [
+          {
+            "code": "2303",
+            "name": "聯電",
+            "market": "TWSE",
+            "buyShares": 10536479,
+            "sellShares": 1047000,
+            "netShares": 9489479
+          },
+          {
+            "code": "2886",
+            "name": "兆豐金",
+            "market": "TWSE",
+            "buyShares": 5606000,
+            "sellShares": 593000,
+            "netShares": 5013000
+          },
+          {
+            "code": "2884",
+            "name": "玉山金",
+            "market": "TWSE",
+            "buyShares": 4564000,
+            "sellShares": 6000,
+            "netShares": 4558000
+          },
+          {
+            "code": "2801",
+            "name": "彰銀",
+            "market": "TWSE",
+            "buyShares": 4141000,
+            "sellShares": 299000,
+            "netShares": 3842000
+          },
+          {
+            "code": "2887",
+            "name": "台新新光金",
+            "market": "TWSE",
+            "buyShares": 4579000,
+            "sellShares": 999000,
+            "netShares": 3580000
+          },
+          {
+            "code": "2892",
+            "name": "第一金",
+            "market": "TWSE",
+            "buyShares": 3933000,
+            "sellShares": 563000,
+            "netShares": 3370000
+          },
+          {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 3708000,
+            "sellShares": 377000,
+            "netShares": 3331000
+          },
+          {
+            "code": "2891",
+            "name": "中信金",
+            "market": "TWSE",
+            "buyShares": 3378538,
+            "sellShares": 380000,
+            "netShares": 2998538
+          },
+          {
+            "code": "2618",
+            "name": "長榮航",
+            "market": "TWSE",
+            "buyShares": 3169052,
+            "sellShares": 654000,
+            "netShares": 2515052
+          },
+          {
+            "code": "2881",
+            "name": "富邦金",
+            "market": "TWSE",
+            "buyShares": 1810960,
+            "sellShares": 3000,
+            "netShares": 1807960
+          },
+          {
+            "code": "2855",
+            "name": "統一證",
+            "market": "TWSE",
+            "buyShares": 1514900,
+            "sellShares": 57000,
+            "netShares": 1457900
+          },
+          {
+            "code": "2603",
+            "name": "長榮",
+            "market": "TWSE",
+            "buyShares": 1468800,
+            "sellShares": 33000,
+            "netShares": 1435800
+          },
+          {
+            "code": "2882",
+            "name": "國泰金",
+            "market": "TWSE",
+            "buyShares": 1243000,
+            "sellShares": 0,
+            "netShares": 1243000
+          },
+          {
+            "code": "2347",
+            "name": "聯強",
+            "market": "TWSE",
+            "buyShares": 1319300,
+            "sellShares": 156000,
+            "netShares": 1163300
+          },
+          {
+            "code": "2542",
+            "name": "興富發",
+            "market": "TWSE",
+            "buyShares": 1218400,
+            "sellShares": 95000,
+            "netShares": 1123400
+          },
+          {
+            "code": "2633",
+            "name": "台灣高鐵",
+            "market": "TWSE",
+            "buyShares": 950000,
+            "sellShares": 3000,
+            "netShares": 947000
+          },
+          {
+            "code": "2481",
+            "name": "強茂",
+            "market": "TWSE",
+            "buyShares": 892000,
+            "sellShares": 0,
+            "netShares": 892000
+          },
+          {
+            "code": "4915",
+            "name": "致伸",
+            "market": "TWSE",
+            "buyShares": 807000,
+            "sellShares": 0,
+            "netShares": 807000
+          },
+          {
+            "code": "3189",
+            "name": "景碩",
+            "market": "TWSE",
+            "buyShares": 695000,
+            "sellShares": 0,
+            "netShares": 695000
+          },
+          {
+            "code": "5876",
+            "name": "上海商銀",
+            "market": "TWSE",
+            "buyShares": 651000,
+            "sellShares": 4000,
+            "netShares": 647000
+          },
+          {
+            "code": "2637",
+            "name": "慧洋-KY",
+            "market": "TWSE",
+            "buyShares": 647000,
+            "sellShares": 11000,
+            "netShares": 636000
+          },
+          {
+            "code": "2382",
+            "name": "廣達",
+            "market": "TWSE",
+            "buyShares": 699942,
+            "sellShares": 267000,
+            "netShares": 432942
+          },
+          {
+            "code": "3406",
+            "name": "玉晶光",
+            "market": "TWSE",
+            "buyShares": 494000,
+            "sellShares": 99000,
+            "netShares": 395000
+          },
+          {
+            "code": "8028",
+            "name": "昇陽半導體",
+            "market": "TWSE",
+            "buyShares": 411000,
+            "sellShares": 17000,
+            "netShares": 394000
+          },
+          {
+            "code": "2606",
+            "name": "裕民",
+            "market": "TWSE",
+            "buyShares": 607000,
+            "sellShares": 219000,
+            "netShares": 388000
+          },
+          {
+            "code": "3037",
+            "name": "欣興",
+            "market": "TWSE",
+            "buyShares": 405600,
+            "sellShares": 58000,
+            "netShares": 347600
+          },
+          {
+            "code": "2105",
+            "name": "正新",
+            "market": "TWSE",
+            "buyShares": 283228,
+            "sellShares": 0,
+            "netShares": 283228
+          },
+          {
+            "code": "2357",
+            "name": "華碩",
+            "market": "TWSE",
+            "buyShares": 271700,
+            "sellShares": 34000,
+            "netShares": 237700
+          },
+          {
+            "code": "2353",
+            "name": "宏碁",
+            "market": "TWSE",
+            "buyShares": 276000,
+            "sellShares": 40000,
+            "netShares": 236000
+          },
+          {
+            "code": "1102",
+            "name": "亞泥",
+            "market": "TWSE",
+            "buyShares": 267952,
+            "sellShares": 37000,
+            "netShares": 230952
+          },
+          {
+            "code": "2327",
+            "name": "國巨*",
+            "market": "TWSE",
+            "buyShares": 396000,
+            "sellShares": 199000,
+            "netShares": 197000
+          },
+          {
+            "code": "9904",
+            "name": "寶成",
+            "market": "TWSE",
+            "buyShares": 262000,
+            "sellShares": 74000,
+            "netShares": 188000
+          },
+          {
+            "code": "3026",
+            "name": "禾伸堂",
+            "market": "TWSE",
+            "buyShares": 179000,
+            "sellShares": 3000,
+            "netShares": 176000
+          },
+          {
+            "code": "2376",
+            "name": "技嘉",
+            "market": "TWSE",
+            "buyShares": 406000,
+            "sellShares": 244000,
+            "netShares": 162000
+          },
+          {
+            "code": "4763",
+            "name": "材料*-KY",
+            "market": "TWSE",
+            "buyShares": 140881,
+            "sellShares": 0,
+            "netShares": 140881
+          },
+          {
+            "code": "6213",
+            "name": "聯茂",
+            "market": "TWSE",
+            "buyShares": 119000,
+            "sellShares": 0,
+            "netShares": 119000
+          },
+          {
+            "code": "9910",
+            "name": "豐泰",
+            "market": "TWSE",
+            "buyShares": 115812,
+            "sellShares": 3000,
+            "netShares": 112812
+          },
+          {
+            "code": "3005",
+            "name": "神基",
+            "market": "TWSE",
+            "buyShares": 122438,
+            "sellShares": 11000,
+            "netShares": 111438
+          },
+          {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 112000,
+            "sellShares": 9000,
+            "netShares": 103000
+          },
+          {
+            "code": "2027",
+            "name": "大成鋼",
+            "market": "TWSE",
+            "buyShares": 100000,
+            "sellShares": 0,
+            "netShares": 100000
+          },
+          {
+            "code": "2912",
+            "name": "統一超",
+            "market": "TWSE",
+            "buyShares": 105523,
+            "sellShares": 45000,
+            "netShares": 60523
+          },
+          {
+            "code": "6770",
+            "name": "力積電",
+            "market": "TWSE",
+            "buyShares": 59000,
+            "sellShares": 7000,
+            "netShares": 52000
+          },
+          {
+            "code": "3036",
+            "name": "文曄",
+            "market": "TWSE",
+            "buyShares": 64533,
+            "sellShares": 28000,
+            "netShares": 36533
+          },
+          {
+            "code": "5871",
+            "name": "中租-KY",
+            "market": "TWSE",
+            "buyShares": 90941,
+            "sellShares": 57000,
+            "netShares": 33941
+          },
+          {
+            "code": "9945",
+            "name": "潤泰新",
+            "market": "TWSE",
+            "buyShares": 26000,
+            "sellShares": 0,
+            "netShares": 26000
+          },
+          {
+            "code": "1513",
+            "name": "中興電",
+            "market": "TWSE",
+            "buyShares": 23000,
+            "sellShares": 0,
+            "netShares": 23000
+          },
+          {
+            "code": "3044",
+            "name": "健鼎",
+            "market": "TWSE",
+            "buyShares": 118000,
+            "sellShares": 102000,
+            "netShares": 16000
+          },
+          {
+            "code": "8021",
+            "name": "尖點",
+            "market": "TWSE",
+            "buyShares": 13000,
+            "sellShares": 0,
+            "netShares": 13000
+          },
+          {
+            "code": "6505",
+            "name": "台塑化",
+            "market": "TWSE",
+            "buyShares": 12000,
+            "sellShares": 0,
+            "netShares": 12000
+          },
+          {
+            "code": "1303",
+            "name": "南亞",
+            "market": "TWSE",
+            "buyShares": 941289,
+            "sellShares": 938000,
+            "netShares": 3289
+          },
+          {
+            "code": "8996",
+            "name": "高力",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 0,
+            "netShares": 1000
+          },
+          {
+            "code": "2308",
+            "name": "台達電",
+            "market": "TWSE",
+            "buyShares": 467661,
+            "sellShares": 1432000,
+            "netShares": -964339
+          },
+          {
+            "code": "2313",
+            "name": "華通",
+            "market": "TWSE",
+            "buyShares": 30000,
+            "sellShares": 481000,
+            "netShares": -451000
+          },
+          {
+            "code": "4938",
+            "name": "和碩",
+            "market": "TWSE",
+            "buyShares": 131000,
+            "sellShares": 520000,
+            "netShares": -389000
+          },
+          {
+            "code": "3450",
+            "name": "聯鈞",
+            "market": "TWSE",
+            "buyShares": 3000,
+            "sellShares": 390000,
+            "netShares": -387000
+          },
+          {
+            "code": "2610",
+            "name": "華航",
+            "market": "TWSE",
+            "buyShares": 355000,
+            "sellShares": 586000,
+            "netShares": -231000
+          },
+          {
+            "code": "1101",
+            "name": "台泥",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 201000,
+            "netShares": -201000
+          },
+          {
+            "code": "2883",
+            "name": "凱基金",
+            "market": "TWSE",
+            "buyShares": 817000,
+            "sellShares": 1000000,
+            "netShares": -183000
+          },
+          {
+            "code": "3702",
+            "name": "大聯大",
+            "market": "TWSE",
+            "buyShares": 31000,
+            "sellShares": 185000,
+            "netShares": -154000
+          },
+          {
+            "code": "6805",
+            "name": "富世達",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 155000,
+            "netShares": -154000
+          },
+          {
+            "code": "4904",
+            "name": "遠傳",
+            "market": "TWSE",
+            "buyShares": 6000,
+            "sellShares": 143000,
+            "netShares": -137000
+          },
+          {
+            "code": "2317",
+            "name": "鴻海",
+            "market": "TWSE",
+            "buyShares": 159853,
+            "sellShares": 251000,
+            "netShares": -91147
+          },
+          {
+            "code": "5469",
+            "name": "瀚宇博",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 83000,
+            "netShares": -83000
+          },
+          {
+            "code": "1504",
+            "name": "東元",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 69000,
+            "netShares": -69000
+          },
+          {
+            "code": "2377",
+            "name": "微星",
+            "market": "TWSE",
+            "buyShares": 8000,
+            "sellShares": 73000,
+            "netShares": -65000
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 64000,
+            "netShares": -64000
+          },
+          {
+            "code": "2449",
+            "name": "京元電子",
+            "market": "TWSE",
+            "buyShares": 5000,
+            "sellShares": 66000,
+            "netShares": -61000
+          },
+          {
+            "code": "2474",
+            "name": "可成",
+            "market": "TWSE",
+            "buyShares": 72000,
+            "sellShares": 122000,
+            "netShares": -50000
+          },
+          {
+            "code": "3045",
+            "name": "台灣大",
+            "market": "TWSE",
+            "buyShares": 10000,
+            "sellShares": 56000,
+            "netShares": -46000
+          },
+          {
+            "code": "5880",
+            "name": "合庫金",
+            "market": "TWSE",
+            "buyShares": 20000,
+            "sellShares": 66000,
+            "netShares": -46000
+          },
+          {
+            "code": "2404",
+            "name": "漢唐",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 28000,
+            "netShares": -27000
+          },
+          {
+            "code": "2352",
+            "name": "佳世達",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 20000,
+            "netShares": -20000
+          },
+          {
+            "code": "2845",
+            "name": "遠東銀",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 15000,
+            "netShares": -15000
+          },
+          {
+            "code": "3532",
+            "name": "台勝科",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 16000,
+            "netShares": -15000
+          },
+          {
+            "code": "6446",
+            "name": "藥華藥",
+            "market": "TWSE",
+            "buyShares": 1409,
+            "sellShares": 5000,
+            "netShares": -3591
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 2000,
+            "sellShares": 3000,
+            "netShares": -1000
+          },
+          {
+            "code": "2409",
+            "name": "友達",
+            "market": "TWSE",
+            "buyShares": 14000,
+            "sellShares": 14000,
+            "netShares": 0
+          },
+          {
+            "code": "6531",
+            "name": "愛普*",
+            "market": "TWSE",
+            "buyShares": 4000,
+            "sellShares": 4000,
+            "netShares": 0
+          },
+          {
+            "code": "1815",
+            "name": "富喬",
+            "market": "TPEx",
+            "buyShares": 6843000,
+            "sellShares": 3232000,
+            "netShares": 3611000
+          },
+          {
+            "code": "6147",
+            "name": "頎邦",
+            "market": "TPEx",
+            "buyShares": 1997000,
+            "sellShares": 0,
+            "netShares": 1997000
+          },
+          {
+            "code": "3105",
+            "name": "穩懋",
+            "market": "TPEx",
+            "buyShares": 1882000,
+            "sellShares": 16000,
+            "netShares": 1866000
+          },
+          {
+            "code": "3374",
+            "name": "精材",
+            "market": "TPEx",
+            "buyShares": 364000,
+            "sellShares": 1000,
+            "netShares": 363000
+          },
+          {
+            "code": "3211",
+            "name": "順達",
+            "market": "TPEx",
+            "buyShares": 308000,
+            "sellShares": 0,
+            "netShares": 308000
+          },
+          {
+            "code": "8069",
+            "name": "元太",
+            "market": "TPEx",
+            "buyShares": 250000,
+            "sellShares": 19000,
+            "netShares": 232000
+          },
+          {
+            "code": "6274",
+            "name": "台燿",
+            "market": "TPEx",
+            "buyShares": 176000,
+            "sellShares": 0,
+            "netShares": 176000
+          },
+          {
+            "code": "3529",
+            "name": "力旺",
+            "market": "TPEx",
+            "buyShares": 132000,
+            "sellShares": 3000,
+            "netShares": 129000
+          },
+          {
+            "code": "6121",
+            "name": "新普",
+            "market": "TPEx",
+            "buyShares": 23000,
+            "sellShares": 2000,
+            "netShares": 21000
+          },
+          {
+            "code": "3491",
+            "name": "昇達科",
+            "market": "TPEx",
+            "buyShares": 16000,
+            "sellShares": 1000,
+            "netShares": 15000
+          },
+          {
+            "code": "3293",
+            "name": "鈊象",
+            "market": "TPEx",
+            "buyShares": 41000,
+            "sellShares": 35000,
+            "netShares": 6000
+          }
+        ]
+      },
+      {
+        "date": "2026-09-14",
+        "rows": [
+          {
+            "code": "2801",
+            "name": "彰銀",
+            "market": "TWSE",
+            "buyShares": 6073000,
+            "sellShares": 0,
+            "netShares": 6073000
+          },
+          {
+            "code": "2887",
+            "name": "台新新光金",
+            "market": "TWSE",
+            "buyShares": 5486000,
+            "sellShares": 0,
+            "netShares": 5486000
+          },
+          {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 5357000,
+            "sellShares": 0,
+            "netShares": 5357000
+          },
+          {
+            "code": "2884",
+            "name": "玉山金",
+            "market": "TWSE",
+            "buyShares": 4386000,
+            "sellShares": 0,
+            "netShares": 4386000
+          },
+          {
+            "code": "2303",
+            "name": "聯電",
+            "market": "TWSE",
+            "buyShares": 4622000,
+            "sellShares": 241000,
+            "netShares": 4381000
+          },
+          {
+            "code": "2603",
+            "name": "長榮",
+            "market": "TWSE",
+            "buyShares": 4197600,
+            "sellShares": 0,
+            "netShares": 4197600
+          },
+          {
+            "code": "2892",
+            "name": "第一金",
+            "market": "TWSE",
+            "buyShares": 4020000,
+            "sellShares": 97000,
+            "netShares": 3923000
+          },
+          {
+            "code": "2845",
+            "name": "遠東銀",
+            "market": "TWSE",
+            "buyShares": 3825000,
+            "sellShares": 0,
+            "netShares": 3825000
+          },
+          {
+            "code": "2891",
+            "name": "中信金",
+            "market": "TWSE",
+            "buyShares": 3181182,
+            "sellShares": 50000,
+            "netShares": 3131182
+          },
+          {
+            "code": "2886",
+            "name": "兆豐金",
+            "market": "TWSE",
+            "buyShares": 3063000,
+            "sellShares": 0,
+            "netShares": 3063000
+          },
+          {
+            "code": "1303",
+            "name": "南亞",
+            "market": "TWSE",
+            "buyShares": 3000289,
+            "sellShares": 100000,
+            "netShares": 2900289
+          },
+          {
+            "code": "2883",
+            "name": "凱基金",
+            "market": "TWSE",
+            "buyShares": 2189000,
+            "sellShares": 0,
+            "netShares": 2189000
+          },
+          {
+            "code": "2352",
+            "name": "佳世達",
+            "market": "TWSE",
+            "buyShares": 2126000,
+            "sellShares": 0,
+            "netShares": 2126000
+          },
+          {
+            "code": "2855",
+            "name": "統一證",
+            "market": "TWSE",
+            "buyShares": 1188300,
+            "sellShares": 0,
+            "netShares": 1188300
+          },
+          {
+            "code": "2851",
+            "name": "中再保",
+            "market": "TWSE",
+            "buyShares": 1171000,
+            "sellShares": 0,
+            "netShares": 1171000
+          },
+          {
+            "code": "2313",
+            "name": "華通",
+            "market": "TWSE",
+            "buyShares": 1717000,
+            "sellShares": 579383,
+            "netShares": 1137617
+          },
+          {
+            "code": "2637",
+            "name": "慧洋-KY",
+            "market": "TWSE",
+            "buyShares": 1026000,
+            "sellShares": 0,
+            "netShares": 1026000
+          },
+          {
+            "code": "2882",
+            "name": "國泰金",
+            "market": "TWSE",
+            "buyShares": 826000,
+            "sellShares": 0,
+            "netShares": 826000
+          },
+          {
+            "code": "2317",
+            "name": "鴻海",
+            "market": "TWSE",
+            "buyShares": 799600,
+            "sellShares": 0,
+            "netShares": 799600
+          },
+          {
+            "code": "2327",
+            "name": "國巨*",
+            "market": "TWSE",
+            "buyShares": 995002,
+            "sellShares": 255000,
+            "netShares": 740002
+          },
+          {
+            "code": "3532",
+            "name": "台勝科",
+            "market": "TWSE",
+            "buyShares": 658000,
+            "sellShares": 22000,
+            "netShares": 636000
+          },
+          {
+            "code": "2376",
+            "name": "技嘉",
+            "market": "TWSE",
+            "buyShares": 612000,
+            "sellShares": 0,
+            "netShares": 612000
+          },
+          {
+            "code": "2542",
+            "name": "興富發",
+            "market": "TWSE",
+            "buyShares": 550700,
+            "sellShares": 0,
+            "netShares": 550700
+          },
+          {
+            "code": "2881",
+            "name": "富邦金",
+            "market": "TWSE",
+            "buyShares": 509000,
+            "sellShares": 0,
+            "netShares": 509000
+          },
+          {
+            "code": "2633",
+            "name": "台灣高鐵",
+            "market": "TWSE",
+            "buyShares": 455000,
+            "sellShares": 0,
+            "netShares": 455000
+          },
+          {
+            "code": "8028",
+            "name": "昇陽半導體",
+            "market": "TWSE",
+            "buyShares": 425000,
+            "sellShares": 0,
+            "netShares": 425000
+          },
+          {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 362600,
+            "sellShares": 17000,
+            "netShares": 345600
+          },
+          {
+            "code": "2353",
+            "name": "宏碁",
+            "market": "TWSE",
+            "buyShares": 341000,
+            "sellShares": 0,
+            "netShares": 341000
+          },
+          {
+            "code": "3037",
+            "name": "欣興",
+            "market": "TWSE",
+            "buyShares": 380000,
+            "sellShares": 49000,
+            "netShares": 331000
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 307000,
+            "sellShares": 18000,
+            "netShares": 289000
+          },
+          {
+            "code": "2382",
+            "name": "廣達",
+            "market": "TWSE",
+            "buyShares": 256942,
+            "sellShares": 0,
+            "netShares": 256942
+          },
+          {
+            "code": "1101",
+            "name": "台泥",
+            "market": "TWSE",
+            "buyShares": 242000,
+            "sellShares": 0,
+            "netShares": 242000
+          },
+          {
+            "code": "2357",
+            "name": "華碩",
+            "market": "TWSE",
+            "buyShares": 231100,
+            "sellShares": 26000,
+            "netShares": 205100
+          },
+          {
+            "code": "3026",
+            "name": "禾伸堂",
+            "market": "TWSE",
+            "buyShares": 197002,
+            "sellShares": 7000,
+            "netShares": 190002
+          },
+          {
+            "code": "2347",
+            "name": "聯強",
+            "market": "TWSE",
+            "buyShares": 162300,
+            "sellShares": 0,
+            "netShares": 162300
+          },
+          {
+            "code": "2610",
+            "name": "華航",
+            "market": "TWSE",
+            "buyShares": 160000,
+            "sellShares": 0,
+            "netShares": 160000
+          },
+          {
+            "code": "1504",
+            "name": "東元",
+            "market": "TWSE",
+            "buyShares": 140000,
+            "sellShares": 0,
+            "netShares": 140000
+          },
+          {
+            "code": "4938",
+            "name": "和碩",
+            "market": "TWSE",
+            "buyShares": 126000,
+            "sellShares": 0,
+            "netShares": 126000
+          },
+          {
+            "code": "2105",
+            "name": "正新",
+            "market": "TWSE",
+            "buyShares": 123228,
+            "sellShares": 0,
+            "netShares": 123228
+          },
+          {
+            "code": "5871",
+            "name": "中租-KY",
+            "market": "TWSE",
+            "buyShares": 105941,
+            "sellShares": 0,
+            "netShares": 105941
+          },
+          {
+            "code": "2377",
+            "name": "微星",
+            "market": "TWSE",
+            "buyShares": 68000,
+            "sellShares": 0,
+            "netShares": 68000
+          },
+          {
+            "code": "2027",
+            "name": "大成鋼",
+            "market": "TWSE",
+            "buyShares": 61000,
+            "sellShares": 0,
+            "netShares": 61000
+          },
+          {
+            "code": "9910",
+            "name": "豐泰",
+            "market": "TWSE",
+            "buyShares": 57812,
+            "sellShares": 0,
+            "netShares": 57812
+          },
+          {
+            "code": "9904",
+            "name": "寶成",
+            "market": "TWSE",
+            "buyShares": 132000,
+            "sellShares": 75000,
+            "netShares": 57000
+          },
+          {
+            "code": "4904",
+            "name": "遠傳",
+            "market": "TWSE",
+            "buyShares": 34000,
+            "sellShares": 0,
+            "netShares": 34000
+          },
+          {
+            "code": "3702",
+            "name": "大聯大",
+            "market": "TWSE",
+            "buyShares": 26000,
+            "sellShares": 0,
+            "netShares": 26000
+          },
+          {
+            "code": "6213",
+            "name": "聯茂",
+            "market": "TWSE",
+            "buyShares": 13000,
+            "sellShares": 0,
+            "netShares": 13000
+          },
+          {
+            "code": "3036",
+            "name": "文曄",
+            "market": "TWSE",
+            "buyShares": 12533,
+            "sellShares": 0,
+            "netShares": 12533
+          },
+          {
+            "code": "3406",
+            "name": "玉晶光",
+            "market": "TWSE",
+            "buyShares": 7620,
+            "sellShares": 1000,
+            "netShares": 6620
+          },
+          {
+            "code": "3005",
+            "name": "神基",
+            "market": "TWSE",
+            "buyShares": 5000,
+            "sellShares": 0,
+            "netShares": 5000
+          },
+          {
+            "code": "2912",
+            "name": "統一超",
+            "market": "TWSE",
+            "buyShares": 4523,
+            "sellShares": 0,
+            "netShares": 4523
+          },
+          {
+            "code": "6446",
+            "name": "藥華藥",
+            "market": "TWSE",
+            "buyShares": 6409,
+            "sellShares": 4000,
+            "netShares": 2409
+          },
+          {
+            "code": "2618",
+            "name": "長榮航",
+            "market": "TWSE",
+            "buyShares": 139052,
+            "sellShares": 665000,
+            "netShares": -525948
+          },
+          {
+            "code": "4763",
+            "name": "材料*-KY",
+            "market": "TWSE",
+            "buyShares": 83881,
+            "sellShares": 410000,
+            "netShares": -326119
+          },
+          {
+            "code": "8996",
+            "name": "高力",
+            "market": "TWSE",
+            "buyShares": 111000,
+            "sellShares": 378000,
+            "netShares": -267000
+          },
+          {
+            "code": "3189",
+            "name": "景碩",
+            "market": "TWSE",
+            "buyShares": 269000,
+            "sellShares": 488000,
+            "netShares": -219000
+          },
+          {
+            "code": "5876",
+            "name": "上海商銀",
+            "market": "TWSE",
+            "buyShares": 300000,
+            "sellShares": 519000,
+            "netShares": -219000
+          },
+          {
+            "code": "5880",
+            "name": "合庫金",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 154150,
+            "netShares": -154150
+          },
+          {
+            "code": "1808",
+            "name": "潤隆",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 126000,
+            "netShares": -126000
+          },
+          {
+            "code": "3045",
+            "name": "台灣大",
+            "market": "TWSE",
+            "buyShares": 67000,
+            "sellShares": 179000,
+            "netShares": -112000
+          },
+          {
+            "code": "1102",
+            "name": "亞泥",
+            "market": "TWSE",
+            "buyShares": 249952,
+            "sellShares": 339000,
+            "netShares": -89048
+          },
+          {
+            "code": "2308",
+            "name": "台達電",
+            "market": "TWSE",
+            "buyShares": 41148,
+            "sellShares": 119657,
+            "netShares": -78509
+          },
+          {
+            "code": "2449",
+            "name": "京元電子",
+            "market": "TWSE",
+            "buyShares": 23000,
+            "sellShares": 100000,
+            "netShares": -77000
+          },
+          {
+            "code": "3044",
+            "name": "健鼎",
+            "market": "TWSE",
+            "buyShares": 34000,
+            "sellShares": 95000,
+            "netShares": -61000
+          },
+          {
+            "code": "6805",
+            "name": "富世達",
+            "market": "TWSE",
+            "buyShares": 41000,
+            "sellShares": 89000,
+            "netShares": -48000
+          },
+          {
+            "code": "2404",
+            "name": "漢唐",
+            "market": "TWSE",
+            "buyShares": 4000,
+            "sellShares": 41000,
+            "netShares": -37000
+          },
+          {
+            "code": "3450",
+            "name": "聯鈞",
+            "market": "TWSE",
+            "buyShares": 74000,
+            "sellShares": 85000,
+            "netShares": -11000
+          },
+          {
+            "code": "2474",
+            "name": "可成",
+            "market": "TWSE",
+            "buyShares": 28000,
+            "sellShares": 34000,
+            "netShares": -6000
+          },
+          {
+            "code": "6531",
+            "name": "愛普*",
+            "market": "TWSE",
+            "buyShares": 3000,
+            "sellShares": 9000,
+            "netShares": -6000
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 2000,
+            "netShares": -2000
+          },
+          {
+            "code": "6147",
+            "name": "頎邦",
+            "market": "TPEx",
+            "buyShares": 1439000,
+            "sellShares": 3000,
+            "netShares": 1436000
+          },
+          {
+            "code": "8069",
+            "name": "元太",
+            "market": "TPEx",
+            "buyShares": 437000,
+            "sellShares": 6000,
+            "netShares": 431000
+          },
+          {
+            "code": "6274",
+            "name": "台燿",
+            "market": "TPEx",
+            "buyShares": 303000,
+            "sellShares": 42000,
+            "netShares": 261000
+          },
+          {
+            "code": "3211",
+            "name": "順達",
+            "market": "TPEx",
+            "buyShares": 117000,
+            "sellShares": 1000,
+            "netShares": 116000
+          },
+          {
+            "code": "3260",
+            "name": "威剛",
+            "market": "TPEx",
+            "buyShares": 101000,
+            "sellShares": 1000,
+            "netShares": 101000
+          },
+          {
+            "code": "5904",
+            "name": "寶雅*",
+            "market": "TPEx",
+            "buyShares": 65000,
+            "sellShares": 4000,
+            "netShares": 61000
+          },
+          {
+            "code": "3491",
+            "name": "昇達科",
+            "market": "TPEx",
+            "buyShares": 44000,
+            "sellShares": 0,
+            "netShares": 43000
+          },
+          {
+            "code": "5347",
+            "name": "世界",
+            "market": "TPEx",
+            "buyShares": 31000,
+            "sellShares": 2000,
+            "netShares": 29000
+          },
+          {
+            "code": "3105",
+            "name": "穩懋",
+            "market": "TPEx",
+            "buyShares": 25000,
+            "sellShares": 1000,
+            "netShares": 24000
+          },
+          {
+            "code": "6121",
+            "name": "新普",
+            "market": "TPEx",
+            "buyShares": 22000,
+            "sellShares": 1000,
+            "netShares": 21000
+          },
+          {
+            "code": "3081",
+            "name": "聯亞",
+            "market": "TPEx",
+            "buyShares": 35000,
+            "sellShares": 22000,
+            "netShares": 14000
+          },
+          {
+            "code": "3529",
+            "name": "力旺",
+            "market": "TPEx",
+            "buyShares": 8000,
+            "sellShares": 0,
+            "netShares": 8000
+          }
+        ]
+      },
+      {
+        "date": "2026-09-11",
+        "rows": [
+          {
+            "code": "2892",
+            "name": "第一金",
+            "market": "TWSE",
+            "buyShares": 9924000,
+            "sellShares": 50495,
+            "netShares": 9873505
+          },
+          {
+            "code": "2886",
+            "name": "兆豐金",
+            "market": "TWSE",
+            "buyShares": 9438000,
+            "sellShares": 45055,
+            "netShares": 9392945
+          },
+          {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 8041000,
+            "sellShares": 60932,
+            "netShares": 7980068
+          },
+          {
+            "code": "2801",
+            "name": "彰銀",
+            "market": "TWSE",
+            "buyShares": 7641000,
+            "sellShares": 49000,
+            "netShares": 7592000
+          },
+          {
+            "code": "6505",
+            "name": "台塑化",
+            "market": "TWSE",
+            "buyShares": 5199000,
+            "sellShares": 0,
+            "netShares": 5199000
+          },
+          {
+            "code": "2027",
+            "name": "大成鋼",
+            "market": "TWSE",
+            "buyShares": 2040000,
+            "sellShares": 0,
+            "netShares": 2040000
+          },
+          {
+            "code": "2637",
+            "name": "慧洋-KY",
+            "market": "TWSE",
+            "buyShares": 1886000,
+            "sellShares": 0,
+            "netShares": 1886000
+          },
+          {
+            "code": "2303",
+            "name": "聯電",
+            "market": "TWSE",
+            "buyShares": 2078000,
+            "sellShares": 441775,
+            "netShares": 1636225
+          },
+          {
+            "code": "2884",
+            "name": "玉山金",
+            "market": "TWSE",
+            "buyShares": 1534000,
+            "sellShares": 19638,
+            "netShares": 1514362
+          },
+          {
+            "code": "2603",
+            "name": "長榮",
+            "market": "TWSE",
+            "buyShares": 1211800,
+            "sellShares": 5000,
+            "netShares": 1206800
+          },
+          {
+            "code": "2855",
+            "name": "統一證",
+            "market": "TWSE",
+            "buyShares": 1128900,
+            "sellShares": 0,
+            "netShares": 1128900
+          },
+          {
+            "code": "2542",
+            "name": "興富發",
+            "market": "TWSE",
+            "buyShares": 1087900,
+            "sellShares": 38000,
+            "netShares": 1049900
+          },
+          {
+            "code": "1808",
+            "name": "潤隆",
+            "market": "TWSE",
+            "buyShares": 1011000,
+            "sellShares": 0,
+            "netShares": 1011000
+          },
+          {
+            "code": "2382",
+            "name": "廣達",
+            "market": "TWSE",
+            "buyShares": 975509,
+            "sellShares": 18354,
+            "netShares": 957155
+          },
+          {
+            "code": "2633",
+            "name": "台灣高鐵",
+            "market": "TWSE",
+            "buyShares": 939000,
+            "sellShares": 0,
+            "netShares": 939000
+          },
+          {
+            "code": "2887",
+            "name": "台新新光金",
+            "market": "TWSE",
+            "buyShares": 956000,
+            "sellShares": 35166,
+            "netShares": 920834
+          },
+          {
+            "code": "2357",
+            "name": "華碩",
+            "market": "TWSE",
+            "buyShares": 889500,
+            "sellShares": 8456,
+            "netShares": 881044
+          },
+          {
+            "code": "8996",
+            "name": "高力",
+            "market": "TWSE",
+            "buyShares": 762000,
+            "sellShares": 0,
+            "netShares": 762000
+          },
+          {
+            "code": "3026",
+            "name": "禾伸堂",
+            "market": "TWSE",
+            "buyShares": 758500,
+            "sellShares": 1000,
+            "netShares": 757500
+          },
+          {
+            "code": "2347",
+            "name": "聯強",
+            "market": "TWSE",
+            "buyShares": 756300,
+            "sellShares": 4000,
+            "netShares": 752300
+          },
+          {
+            "code": "3406",
+            "name": "玉晶光",
+            "market": "TWSE",
+            "buyShares": 727000,
+            "sellShares": 7000,
+            "netShares": 720000
+          },
+          {
+            "code": "5876",
+            "name": "上海商銀",
+            "market": "TWSE",
+            "buyShares": 616000,
+            "sellShares": 6000,
+            "netShares": 610000
+          },
+          {
+            "code": "2327",
+            "name": "國巨*",
+            "market": "TWSE",
+            "buyShares": 640500,
+            "sellShares": 75394,
+            "netShares": 565106
+          },
+          {
+            "code": "2376",
+            "name": "技嘉",
+            "market": "TWSE",
+            "buyShares": 554000,
+            "sellShares": 5606,
+            "netShares": 548394
+          },
+          {
+            "code": "1102",
+            "name": "亞泥",
+            "market": "TWSE",
+            "buyShares": 464907,
+            "sellShares": 3671,
+            "netShares": 461236
+          },
+          {
+            "code": "3037",
+            "name": "欣興",
+            "market": "TWSE",
+            "buyShares": 601775,
+            "sellShares": 145000,
+            "netShares": 456775
+          },
+          {
+            "code": "2317",
+            "name": "鴻海",
+            "market": "TWSE",
+            "buyShares": 471850,
+            "sellShares": 61825,
+            "netShares": 410025
+          },
+          {
+            "code": "1101",
+            "name": "台泥",
+            "market": "TWSE",
+            "buyShares": 410000,
+            "sellShares": 0,
+            "netShares": 410000
+          },
+          {
+            "code": "3044",
+            "name": "健鼎",
+            "market": "TWSE",
+            "buyShares": 347000,
+            "sellShares": 4058,
+            "netShares": 342942
+          },
+          {
+            "code": "3532",
+            "name": "台勝科",
+            "market": "TWSE",
+            "buyShares": 337000,
+            "sellShares": 0,
+            "netShares": 337000
+          },
+          {
+            "code": "2891",
+            "name": "中信金",
+            "market": "TWSE",
+            "buyShares": 417807,
+            "sellShares": 82518,
+            "netShares": 335289
+          },
+          {
+            "code": "2610",
+            "name": "華航",
+            "market": "TWSE",
+            "buyShares": 329000,
+            "sellShares": 4000,
+            "netShares": 325000
+          },
+          {
+            "code": "9904",
+            "name": "寶成",
+            "market": "TWSE",
+            "buyShares": 262000,
+            "sellShares": 0,
+            "netShares": 262000
+          },
+          {
+            "code": "2883",
+            "name": "凱基金",
+            "market": "TWSE",
+            "buyShares": 262000,
+            "sellShares": 1491,
+            "netShares": 260509
+          },
+          {
+            "code": "2105",
+            "name": "正新",
+            "market": "TWSE",
+            "buyShares": 253459,
+            "sellShares": 2000,
+            "netShares": 251459
+          },
+          {
+            "code": "2353",
+            "name": "宏碁",
+            "market": "TWSE",
+            "buyShares": 260000,
+            "sellShares": 19692,
+            "netShares": 240308
+          },
+          {
+            "code": "2618",
+            "name": "長榮航",
+            "market": "TWSE",
+            "buyShares": 244107,
+            "sellShares": 4579,
+            "netShares": 239528
+          },
+          {
+            "code": "2474",
+            "name": "可成",
+            "market": "TWSE",
+            "buyShares": 226000,
+            "sellShares": 5000,
+            "netShares": 221000
+          },
+          {
+            "code": "6531",
+            "name": "愛普*",
+            "market": "TWSE",
+            "buyShares": 213000,
+            "sellShares": 2000,
+            "netShares": 211000
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 209600,
+            "sellShares": 1000,
+            "netShares": 208600
+          },
+          {
+            "code": "1303",
+            "name": "南亞",
+            "market": "TWSE",
+            "buyShares": 194580,
+            "sellShares": 0,
+            "netShares": 194580
+          },
+          {
+            "code": "4938",
+            "name": "和碩",
+            "market": "TWSE",
+            "buyShares": 201000,
+            "sellShares": 8000,
+            "netShares": 193000
+          },
+          {
+            "code": "2352",
+            "name": "佳世達",
+            "market": "TWSE",
+            "buyShares": 178000,
+            "sellShares": 0,
+            "netShares": 178000
+          },
+          {
+            "code": "3189",
+            "name": "景碩",
+            "market": "TWSE",
+            "buyShares": 221000,
+            "sellShares": 61000,
+            "netShares": 160000
+          },
+          {
+            "code": "5871",
+            "name": "中租-KY",
+            "market": "TWSE",
+            "buyShares": 160883,
+            "sellShares": 16000,
+            "netShares": 144883
+          },
+          {
+            "code": "9910",
+            "name": "豐泰",
+            "market": "TWSE",
+            "buyShares": 118625,
+            "sellShares": 0,
+            "netShares": 118625
+          },
+          {
+            "code": "1504",
+            "name": "東元",
+            "market": "TWSE",
+            "buyShares": 102000,
+            "sellShares": 1000,
+            "netShares": 101000
+          },
+          {
+            "code": "2377",
+            "name": "微星",
+            "market": "TWSE",
+            "buyShares": 80000,
+            "sellShares": 5000,
+            "netShares": 75000
+          },
+          {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 94000,
+            "sellShares": 19322,
+            "netShares": 74678
+          },
+          {
+            "code": "3045",
+            "name": "台灣大",
+            "market": "TWSE",
+            "buyShares": 89000,
+            "sellShares": 28837,
+            "netShares": 60163
+          },
+          {
+            "code": "3005",
+            "name": "神基",
+            "market": "TWSE",
+            "buyShares": 36431,
+            "sellShares": 1000,
+            "netShares": 35431
+          },
+          {
+            "code": "8028",
+            "name": "昇陽半導體",
+            "market": "TWSE",
+            "buyShares": 421000,
+            "sellShares": 386000,
+            "netShares": 35000
+          },
+          {
+            "code": "2882",
+            "name": "國泰金",
+            "market": "TWSE",
+            "buyShares": 88000,
+            "sellShares": 53409,
+            "netShares": 34591
+          },
+          {
+            "code": "4763",
+            "name": "材料*-KY",
+            "market": "TWSE",
+            "buyShares": 15764,
+            "sellShares": 0,
+            "netShares": 15764
+          },
+          {
+            "code": "2313",
+            "name": "華通",
+            "market": "TWSE",
+            "buyShares": 29000,
+            "sellShares": 14000,
+            "netShares": 15000
+          },
+          {
+            "code": "6213",
+            "name": "聯茂",
+            "market": "TWSE",
+            "buyShares": 4000,
+            "sellShares": 1000,
+            "netShares": 3000
+          },
+          {
+            "code": "6446",
+            "name": "藥華藥",
+            "market": "TWSE",
+            "buyShares": 819,
+            "sellShares": 0,
+            "netShares": 819
+          },
+          {
+            "code": "2912",
+            "name": "統一超",
+            "market": "TWSE",
+            "buyShares": 3047,
+            "sellShares": 3000,
+            "netShares": 47
+          },
+          {
+            "code": "2308",
+            "name": "台達電",
+            "market": "TWSE",
+            "buyShares": 67818,
+            "sellShares": 603222,
+            "netShares": -535404
+          },
+          {
+            "code": "3450",
+            "name": "聯鈞",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 240000,
+            "netShares": -240000
+          },
+          {
+            "code": "3702",
+            "name": "大聯大",
+            "market": "TWSE",
+            "buyShares": 44000,
+            "sellShares": 282000,
+            "netShares": -238000
+          },
+          {
+            "code": "6805",
+            "name": "富世達",
+            "market": "TWSE",
+            "buyShares": 15000,
+            "sellShares": 113000,
+            "netShares": -98000
+          },
+          {
+            "code": "2404",
+            "name": "漢唐",
+            "market": "TWSE",
+            "buyShares": 3000,
+            "sellShares": 50000,
+            "netShares": -47000
+          },
+          {
+            "code": "2409",
+            "name": "友達",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 32803,
+            "netShares": -32803
+          },
+          {
+            "code": "5880",
+            "name": "合庫金",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 16000,
+            "netShares": -16000
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 15000,
+            "netShares": -15000
+          },
+          {
+            "code": "6770",
+            "name": "力積電",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 11000,
+            "netShares": -11000
+          },
+          {
+            "code": "2449",
+            "name": "京元電子",
+            "market": "TWSE",
+            "buyShares": 27000,
+            "sellShares": 34406,
+            "netShares": -7406
+          },
+          {
+            "code": "2845",
+            "name": "遠東銀",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 5000,
+            "netShares": -5000
+          },
+          {
+            "code": "4904",
+            "name": "遠傳",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 4184,
+            "netShares": -4184
+          },
+          {
+            "code": "3036",
+            "name": "文曄",
+            "market": "TWSE",
+            "buyShares": 15067,
+            "sellShares": 17125,
+            "netShares": -2058
+          },
+          {
+            "code": "2881",
+            "name": "富邦金",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 838,
+            "netShares": -838
+          },
+          {
+            "code": "1815",
+            "name": "富喬",
+            "market": "TPEx",
+            "buyShares": 7612000,
+            "sellShares": 0,
+            "netShares": 7612000
+          },
+          {
+            "code": "3624",
+            "name": "光頡",
+            "market": "TPEx",
+            "buyShares": 2304000,
+            "sellShares": 0,
+            "netShares": 2304000
+          },
+          {
+            "code": "3374",
+            "name": "精材",
+            "market": "TPEx",
+            "buyShares": 1732000,
+            "sellShares": 0,
+            "netShares": 1732000
+          },
+          {
+            "code": "3260",
+            "name": "威剛",
+            "market": "TPEx",
+            "buyShares": 323000,
+            "sellShares": 0,
+            "netShares": 323000
+          },
+          {
+            "code": "6121",
+            "name": "新普",
+            "market": "TPEx",
+            "buyShares": 319000,
+            "sellShares": 0,
+            "netShares": 319000
+          },
+          {
+            "code": "5347",
+            "name": "世界",
+            "market": "TPEx",
+            "buyShares": 281000,
+            "sellShares": 42000,
+            "netShares": 239000
+          },
+          {
+            "code": "3491",
+            "name": "昇達科",
+            "market": "TPEx",
+            "buyShares": 72000,
+            "sellShares": 1000,
+            "netShares": 71000
+          },
+          {
+            "code": "3105",
+            "name": "穩懋",
+            "market": "TPEx",
+            "buyShares": 68000,
+            "sellShares": 8000,
+            "netShares": 60000
+          },
+          {
+            "code": "3293",
+            "name": "鈊象",
+            "market": "TPEx",
+            "buyShares": 37000,
+            "sellShares": 2000,
+            "netShares": 35000
+          },
+          {
+            "code": "3211",
+            "name": "順達",
+            "market": "TPEx",
+            "buyShares": 16000,
+            "sellShares": 0,
+            "netShares": 16000
+          }
+        ]
+      },
+      {
+        "date": "2026-09-10",
+        "rows": [
+          {
+            "code": "2303",
+            "name": "聯電",
+            "market": "TWSE",
+            "buyShares": 13136000,
+            "sellShares": 618194,
+            "netShares": 12517806
+          },
+          {
+            "code": "2887",
+            "name": "台新新光金",
+            "market": "TWSE",
+            "buyShares": 11662000,
+            "sellShares": 11791,
+            "netShares": 11650209
+          },
+          {
+            "code": "2884",
+            "name": "玉山金",
+            "market": "TWSE",
+            "buyShares": 7194000,
+            "sellShares": 10909,
+            "netShares": 7183091
+          },
+          {
+            "code": "6505",
+            "name": "台塑化",
+            "market": "TWSE",
+            "buyShares": 6519000,
+            "sellShares": 2000,
+            "netShares": 6517000
+          },
+          {
+            "code": "2892",
+            "name": "第一金",
+            "market": "TWSE",
+            "buyShares": 5941000,
+            "sellShares": 6624,
+            "netShares": 5934376
+          },
+          {
+            "code": "2801",
+            "name": "彰銀",
+            "market": "TWSE",
+            "buyShares": 6091000,
+            "sellShares": 164175,
+            "netShares": 5926825
+          },
+          {
+            "code": "2891",
+            "name": "中信金",
+            "market": "TWSE",
+            "buyShares": 2521000,
+            "sellShares": 23379,
+            "netShares": 2497621
+          },
+          {
+            "code": "3406",
+            "name": "玉晶光",
+            "market": "TWSE",
+            "buyShares": 2305000,
+            "sellShares": 0,
+            "netShares": 2305000
+          },
+          {
+            "code": "2027",
+            "name": "大成鋼",
+            "market": "TWSE",
+            "buyShares": 2965000,
+            "sellShares": 801000,
+            "netShares": 2164000
+          },
+          {
+            "code": "1303",
+            "name": "南亞",
+            "market": "TWSE",
+            "buyShares": 2308000,
+            "sellShares": 243000,
+            "netShares": 2065000
+          },
+          {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 1454000,
+            "sellShares": 4483,
+            "netShares": 1449517
+          },
+          {
+            "code": "4938",
+            "name": "和碩",
+            "market": "TWSE",
+            "buyShares": 1455000,
+            "sellShares": 69000,
+            "netShares": 1386000
+          },
+          {
+            "code": "2603",
+            "name": "長榮",
+            "market": "TWSE",
+            "buyShares": 1326900,
+            "sellShares": 1000,
+            "netShares": 1325900
+          },
+          {
+            "code": "2855",
+            "name": "統一證",
+            "market": "TWSE",
+            "buyShares": 1304500,
+            "sellShares": 1000,
+            "netShares": 1303500
+          },
+          {
+            "code": "6271",
+            "name": "同欣電",
+            "market": "TWSE",
+            "buyShares": 1049000,
+            "sellShares": 0,
+            "netShares": 1049000
+          },
+          {
+            "code": "2317",
+            "name": "鴻海",
+            "market": "TWSE",
+            "buyShares": 1178245,
+            "sellShares": 167206,
+            "netShares": 1011039
+          },
+          {
+            "code": "6531",
+            "name": "愛普*",
+            "market": "TWSE",
+            "buyShares": 857000,
+            "sellShares": 7000,
+            "netShares": 850000
+          },
+          {
+            "code": "2542",
+            "name": "興富發",
+            "market": "TWSE",
+            "buyShares": 631900,
+            "sellShares": 0,
+            "netShares": 631900
+          },
+          {
+            "code": "2883",
+            "name": "凱基金",
+            "market": "TWSE",
+            "buyShares": 608000,
+            "sellShares": 6373,
+            "netShares": 601627
+          },
+          {
+            "code": "2633",
+            "name": "台灣高鐵",
+            "market": "TWSE",
+            "buyShares": 443000,
+            "sellShares": 1000,
+            "netShares": 442000
+          },
+          {
+            "code": "2376",
+            "name": "技嘉",
+            "market": "TWSE",
+            "buyShares": 426000,
+            "sellShares": 15151,
+            "netShares": 410849
+          },
+          {
+            "code": "2481",
+            "name": "強茂",
+            "market": "TWSE",
+            "buyShares": 440000,
+            "sellShares": 70000,
+            "netShares": 370000
+          },
+          {
+            "code": "2637",
+            "name": "慧洋-KY",
+            "market": "TWSE",
+            "buyShares": 360000,
+            "sellShares": 0,
+            "netShares": 360000
+          },
+          {
+            "code": "3189",
+            "name": "景碩",
+            "market": "TWSE",
+            "buyShares": 346000,
+            "sellShares": 2000,
+            "netShares": 344000
+          },
+          {
+            "code": "5876",
+            "name": "上海商銀",
+            "market": "TWSE",
+            "buyShares": 292000,
+            "sellShares": 2000,
+            "netShares": 290000
+          },
+          {
+            "code": "1101",
+            "name": "台泥",
+            "market": "TWSE",
+            "buyShares": 229000,
+            "sellShares": 3000,
+            "netShares": 226000
+          },
+          {
+            "code": "1102",
+            "name": "亞泥",
+            "market": "TWSE",
+            "buyShares": 228000,
+            "sellShares": 2418,
+            "netShares": 225582
+          },
+          {
+            "code": "4915",
+            "name": "致伸",
+            "market": "TWSE",
+            "buyShares": 195000,
+            "sellShares": 0,
+            "netShares": 195000
+          },
+          {
+            "code": "3037",
+            "name": "欣興",
+            "market": "TWSE",
+            "buyShares": 325000,
+            "sellShares": 143000,
+            "netShares": 182000
+          },
+          {
+            "code": "3036",
+            "name": "文曄",
+            "market": "TWSE",
+            "buyShares": 209000,
+            "sellShares": 37031,
+            "netShares": 171969
+          },
+          {
+            "code": "4763",
+            "name": "材料*-KY",
+            "market": "TWSE",
+            "buyShares": 166000,
+            "sellShares": 0,
+            "netShares": 166000
+          },
+          {
+            "code": "2610",
+            "name": "華航",
+            "market": "TWSE",
+            "buyShares": 156000,
+            "sellShares": 2000,
+            "netShares": 154000
+          },
+          {
+            "code": "2886",
+            "name": "兆豐金",
+            "market": "TWSE",
+            "buyShares": 358000,
+            "sellShares": 207264,
+            "netShares": 150736
+          },
+          {
+            "code": "2357",
+            "name": "華碩",
+            "market": "TWSE",
+            "buyShares": 146200,
+            "sellShares": 4364,
+            "netShares": 141836
+          },
+          {
+            "code": "5880",
+            "name": "合庫金",
+            "market": "TWSE",
+            "buyShares": 125000,
+            "sellShares": 6000,
+            "netShares": 119000
+          },
+          {
+            "code": "5871",
+            "name": "中租-KY",
+            "market": "TWSE",
+            "buyShares": 116000,
+            "sellShares": 0,
+            "netShares": 116000
+          },
+          {
+            "code": "2105",
+            "name": "正新",
+            "market": "TWSE",
+            "buyShares": 110000,
+            "sellShares": 2000,
+            "netShares": 108000
+          },
+          {
+            "code": "2352",
+            "name": "佳世達",
+            "market": "TWSE",
+            "buyShares": 104000,
+            "sellShares": 0,
+            "netShares": 104000
+          },
+          {
+            "code": "2353",
+            "name": "宏碁",
+            "market": "TWSE",
+            "buyShares": 118000,
+            "sellShares": 21423,
+            "netShares": 96577
+          },
+          {
+            "code": "2881",
+            "name": "富邦金",
+            "market": "TWSE",
+            "buyShares": 90000,
+            "sellShares": 6210,
+            "netShares": 83790
+          },
+          {
+            "code": "1504",
+            "name": "東元",
+            "market": "TWSE",
+            "buyShares": 62000,
+            "sellShares": 1000,
+            "netShares": 61000
+          },
+          {
+            "code": "9910",
+            "name": "豐泰",
+            "market": "TWSE",
+            "buyShares": 53000,
+            "sellShares": 0,
+            "netShares": 53000
+          },
+          {
+            "code": "9904",
+            "name": "寶成",
+            "market": "TWSE",
+            "buyShares": 125000,
+            "sellShares": 83000,
+            "netShares": 42000
+          },
+          {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 58600,
+            "sellShares": 22081,
+            "netShares": 36519
+          },
+          {
+            "code": "2618",
+            "name": "長榮航",
+            "market": "TWSE",
+            "buyShares": 110000,
+            "sellShares": 84145,
+            "netShares": 25855
+          },
+          {
+            "code": "3005",
+            "name": "神基",
+            "market": "TWSE",
+            "buyShares": 24291,
+            "sellShares": 1000,
+            "netShares": 23291
+          },
+          {
+            "code": "3532",
+            "name": "台勝科",
+            "market": "TWSE",
+            "buyShares": 20000,
+            "sellShares": 3000,
+            "netShares": 17000
+          },
+          {
+            "code": "3045",
+            "name": "台灣大",
+            "market": "TWSE",
+            "buyShares": 51000,
+            "sellShares": 35959,
+            "netShares": 15041
+          },
+          {
+            "code": "3026",
+            "name": "禾伸堂",
+            "market": "TWSE",
+            "buyShares": 8000,
+            "sellShares": 0,
+            "netShares": 8000
+          },
+          {
+            "code": "6213",
+            "name": "聯茂",
+            "market": "TWSE",
+            "buyShares": 8000,
+            "sellShares": 1000,
+            "netShares": 7000
+          },
+          {
+            "code": "6446",
+            "name": "藥華藥",
+            "market": "TWSE",
+            "buyShares": 5000,
+            "sellShares": 0,
+            "netShares": 5000
+          },
+          {
+            "code": "3044",
+            "name": "健鼎",
+            "market": "TWSE",
+            "buyShares": 21000,
+            "sellShares": 16015,
+            "netShares": 4985
+          },
+          {
+            "code": "2377",
+            "name": "微星",
+            "market": "TWSE",
+            "buyShares": 36000,
+            "sellShares": 33000,
+            "netShares": 3000
+          },
+          {
+            "code": "2845",
+            "name": "遠東銀",
+            "market": "TWSE",
+            "buyShares": 143000,
+            "sellShares": 2127000,
+            "netShares": -1984000
+          },
+          {
+            "code": "2308",
+            "name": "台達電",
+            "market": "TWSE",
+            "buyShares": 46702,
+            "sellShares": 1709781,
+            "netShares": -1663079
+          },
+          {
+            "code": "2382",
+            "name": "廣達",
+            "market": "TWSE",
+            "buyShares": 264000,
+            "sellShares": 1341338,
+            "netShares": -1077338
+          },
+          {
+            "code": "3450",
+            "name": "聯鈞",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 552000,
+            "netShares": -552000
+          },
+          {
+            "code": "2347",
+            "name": "聯強",
+            "market": "TWSE",
+            "buyShares": 442700,
+            "sellShares": 785000,
+            "netShares": -342300
+          },
+          {
+            "code": "2449",
+            "name": "京元電子",
+            "market": "TWSE",
+            "buyShares": 27000,
+            "sellShares": 257101,
+            "netShares": -230101
+          },
+          {
+            "code": "2327",
+            "name": "國巨*",
+            "market": "TWSE",
+            "buyShares": 29000,
+            "sellShares": 245099,
+            "netShares": -216099
+          },
+          {
+            "code": "8021",
+            "name": "尖點",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 160000,
+            "netShares": -160000
+          },
+          {
+            "code": "6805",
+            "name": "富世達",
+            "market": "TWSE",
+            "buyShares": 90000,
+            "sellShares": 199000,
+            "netShares": -109000
+          },
+          {
+            "code": "2313",
+            "name": "華通",
+            "market": "TWSE",
+            "buyShares": 42000,
+            "sellShares": 118000,
+            "netShares": -76000
+          },
+          {
+            "code": "3702",
+            "name": "大聯大",
+            "market": "TWSE",
+            "buyShares": 31000,
+            "sellShares": 80000,
+            "netShares": -49000
+          },
+          {
+            "code": "8996",
+            "name": "高力",
+            "market": "TWSE",
+            "buyShares": 250500,
+            "sellShares": 299000,
+            "netShares": -48500
+          },
+          {
+            "code": "2409",
+            "name": "友達",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 40451,
+            "netShares": -40451
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 1000,
+            "sellShares": 29000,
+            "netShares": -28000
+          },
+          {
+            "code": "4904",
+            "name": "遠傳",
+            "market": "TWSE",
+            "buyShares": 12000,
+            "sellShares": 34046,
+            "netShares": -22046
+          },
+          {
+            "code": "6770",
+            "name": "力積電",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 21000,
+            "netShares": -21000
+          },
+          {
+            "code": "1513",
+            "name": "中興電",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 16000,
+            "netShares": -16000
+          },
+          {
+            "code": "5469",
+            "name": "瀚宇博",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 13000,
+            "netShares": -13000
+          },
+          {
+            "code": "2404",
+            "name": "漢唐",
+            "market": "TWSE",
+            "buyShares": 3000,
+            "sellShares": 13000,
+            "netShares": -10000
+          },
+          {
+            "code": "2882",
+            "name": "國泰金",
+            "market": "TWSE",
+            "buyShares": 170000,
+            "sellShares": 178352,
+            "netShares": -8352
+          },
+          {
+            "code": "2474",
+            "name": "可成",
+            "market": "TWSE",
+            "buyShares": 26000,
+            "sellShares": 32000,
+            "netShares": -6000
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 0,
+            "sellShares": 2000,
+            "netShares": -2000
+          },
+          {
+            "code": "1815",
+            "name": "富喬",
+            "market": "TPEx",
+            "buyShares": 11431000,
+            "sellShares": 0,
+            "netShares": 11431000
+          },
+          {
+            "code": "6147",
+            "name": "頎邦",
+            "market": "TPEx",
+            "buyShares": 3508000,
+            "sellShares": 21000,
+            "netShares": 3487000
+          },
+          {
+            "code": "5347",
+            "name": "世界",
+            "market": "TPEx",
+            "buyShares": 2302000,
+            "sellShares": 63000,
+            "netShares": 2239000
+          },
+          {
+            "code": "3105",
+            "name": "穩懋",
+            "market": "TPEx",
+            "buyShares": 1871000,
+            "sellShares": 25000,
+            "netShares": 1846000
+          },
+          {
+            "code": "3264",
+            "name": "欣銓",
+            "market": "TPEx",
+            "buyShares": 1464000,
+            "sellShares": 299000,
+            "netShares": 1165000
+          },
+          {
+            "code": "3529",
+            "name": "力旺",
+            "market": "TPEx",
+            "buyShares": 164000,
+            "sellShares": 3000,
+            "netShares": 161000
+          },
+          {
+            "code": "3491",
+            "name": "昇達科",
+            "market": "TPEx",
+            "buyShares": 32000,
+            "sellShares": 1000,
+            "netShares": 31000
+          },
+          {
+            "code": "6121",
+            "name": "新普",
+            "market": "TPEx",
+            "buyShares": 21000,
+            "sellShares": 0,
+            "netShares": 21000
+          },
+          {
+            "code": "3293",
+            "name": "鈊象",
+            "market": "TPEx",
+            "buyShares": 17000,
+            "sellShares": 10000,
+            "netShares": 7000
+          }
+        ]
       }
     ]
   },

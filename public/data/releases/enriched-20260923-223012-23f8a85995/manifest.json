@@ -108083,5 +108083,23 @@
       ],
       "reason": "今日成交量 ÷ 前五個完成交易日平均成交量（不含今日）"
     }
+  },
+  "inputHash": "23f8a85995dfd3a0062ecfe5874df111dd0ba119119fbb2ba43ad39380776825",
+  "codeCommit": "1f721de4e7b518555e1f14c2400e2f514a127bc3",
+  "formulaVersions": {
+    "regression": "lohas-linear-3.5y-research-v1",
+    "valuation": "zulu-peg-eps-growth-v2",
+    "growthValuation": "growth-total-return-pe-v1",
+    "growthFallback": "growth-proxy-chain-v1",
+    "ranking": "three-strategy-tabs-v1"
+  },
+  "rankingsHash": "4fc011f0f42a236b72ac02e1ad73631bc8bbb7d51bd1eeb14c20944c1924910a",
+  "baselineRunId": "enriched-20260923-181734-e792516184",
+  "enrichment": {
+    "adjustedPriceSource": "yfinance Adj Close when available; Yahoo chart fallback is tagged",
+    "fundamentalSource": "yfinance:Ticker.financials/cashflow/balance_sheet",
+    "adjustedStocks": 100,
+    "trackedStocks": 100,
+    "errorsByCode": {}
   }
 }
