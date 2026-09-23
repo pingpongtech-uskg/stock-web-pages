@@ -94,6 +94,8 @@ def test_daily_workflow_runs_v3_refresh_and_gate() -> None:
     fetch = workflow.index("python scripts/fetch_finmind.py")
     assert fetch < refresh < verify
     assert "python -m pytest pipeline scripts -q" in workflow
+    assert "--offline" not in workflow
+    assert "python scripts/verify_daily_freshness.py" in workflow
 
 
 def test_volume_indicator_enforces_two_times_green_boundary() -> None:

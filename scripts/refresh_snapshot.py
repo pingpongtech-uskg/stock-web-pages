@@ -39,6 +39,7 @@ from pipeline.enrichment import (  # noqa: E402
     apply_regression,
     clip_price_window,
     derive_signal_state,
+    finite,
     formal_growth_status,
     growth_proxy_status,
     low_base_growth_gates,
@@ -53,6 +54,7 @@ from pipeline.enrichment import (  # noqa: E402
     quality_proxy_checks,
 )
 from pipeline.health_checks import evaluate_snapshot_health, health_totals  # noqa: E402
+from pipeline.indicators import trust_metrics  # noqa: E402
 from pipeline.health_inputs import merge_health_inputs, normalize_finmind_health_inputs  # noqa: E402
 from pipeline.yahoo_client import (  # noqa: E402
     YAHOO_CHART_SOURCE,
@@ -107,6 +109,98 @@ def merge_refs(*groups: list[str] | None) -> list[str]:
             if value and value not in result:
                 result.append(value)
     return result
+
+
+def official_institutional_index(
+    universe: dict[str, Any],
+) -> tuple[list[str], dict[str, dict[str, dict[str, Any]]]]:
+    """Index current official daily flow rows by code and market date."""
+
+    raw_dates = universe.get("marketDates") if isinstance(universe, dict) else []
+    market_dates = [str(value)[:10] for value in raw_dates if value][:10] if isinstance(raw_dates, list) else []
+    index: dict[str, dict[str, dict[str, Any]]] = {}
+    daily_rows = universe.get("dailyRows") if isinstance(universe, dict) else []
+    if not isinstance(daily_rows, list):
+        return market_dates, index
+    for snapshot in daily_rows:
+        if not isinstance(snapshot, dict):
+            continue
+        day = str(snapshot.get("date") or "")[:10]
+        if not day:
+            continue
+        for row in snapshot.get("rows", []):
+            if not isinstance(row, dict):
+                continue
+            code = str(row.get("code") or "")
+            if code:
+                index.setdefault(code, {})[day] = row
+    return market_dates, index
+
+
+def apply_official_institutional_metrics(
+    detail: dict[str, Any],
+    *,
+    market_dates: list[str],
+    daily_by_code: dict[str, dict[str, dict[str, Any]]],
+) -> None:
+    """Recalculate all ten-session institutional metrics from current inputs."""
+
+    code = str(detail.get("code") or "")
+    price_by_date = {
+        str(point.get("date") or "")[:10]: finite(point.get("volume"))
+        for point in detail.get("priceSeries", [])
+        if isinstance(point, dict) and point.get("date")
+    }
+    rows_by_date = daily_by_code.get(code, {})
+    source_rows_available = bool(daily_by_code)
+    nets: list[float | None] = []
+    volumes: list[float | None] = []
+    daily: list[dict[str, Any]] = []
+    for day in market_dates:
+        source_row = rows_by_date.get(day)
+        # The official report is a complete market report. A tracked stock that
+        # is absent from one complete day had no reported institutional trade;
+        # that is zero, not a stale/unknown value. Missing the entire daily
+        # cache remains unknown and fails closed.
+        if source_row is None and source_rows_available:
+            net = 0.0
+        else:
+            net = finite(source_row.get("netShares")) if isinstance(source_row, dict) else None
+        volume = price_by_date.get(day)
+        nets.append(net)
+        volumes.append(volume)
+        daily.append({
+            "date": day,
+            "netShares": net,
+            "volume": volume,
+            "status": "pass" if net is not None and volume is not None and volume > 0 else "unknown",
+            "source": "TWSE:TWT44U + TPEx:insti/sitcStat",
+        })
+    metrics = trust_metrics(nets, volumes)
+    net_metric = metrics.get("net_shares_10")
+    participation_metric = metrics.get("participation_10")
+    detail["institutionalDaily"] = daily
+    detail["institutionDataAsOf"] = market_dates[0] if market_dates else None
+    detail["institutionDataStatus"] = metrics.get("status")
+    detail["institutionNetShares10"] = net_metric
+    detail["positiveDays10"] = metrics.get("positive_days_10")
+    detail["participation10"] = participation_metric
+    reasons = [
+        str(reason)
+        for reason in detail.get("entryReasons", [])
+        if not str(reason).startswith("投信")
+    ]
+    if (
+        metrics.get("status") == "pass"
+        and isinstance(net_metric, (int, float))
+        and isinstance(participation_metric, (int, float))
+        and float(net_metric) > 0
+    ):
+        reasons.insert(
+            0,
+            f"投信關注：十日淨買超 {int(net_metric):,} 股，該股成交占比 {float(participation_metric) * 100:.2f}%",
+        )
+    detail["entryReasons"] = reasons
 
 
 def attach_chip_references(
@@ -721,7 +815,10 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
             source_refs.append(price_source)
         if error:
             errors.append(error)
-    price = merge_adjusted_prices(raw_price, adjusted_rows)
+    # Live runs must not reuse an old price series as today's quote or curve.
+    # Offline mode remains available for explicit reference recalculation only;
+    # the daily workflow never uses it.
+    price = merge_adjusted_prices(raw_price if offline else [], adjusted_rows)
     # The 3.5-year label is a fixed window, not a minimum: merged rows that
     # fall before the window start must be dropped so an older fetch's longer
     # history can never widen the published regression back to four years.
@@ -873,14 +970,19 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
     adjusted_change = None if adjusted_latest is None or adjusted_previous in (None, 0) else (adjusted_latest - adjusted_previous) / adjusted_previous
     old_formal_status = str(detail.get("qualityStatus") or "unknown")
     data_status = "pass" if raw_values or adjusted_values else "fail"
+    live_fallback_price = _current_price(detail) if offline else None
     detail.update(
         {
-            "asOf": detail.get("asOf") or (price[-1].get("date") if price else None),
+            "asOf": (
+                detail.get("asOf") or (price[-1].get("date") if price else None)
+                if offline
+                else (price[-1].get("date") if price else None)
+            ),
             # Some public rows expose only adjusted close.  It is still a
             # usable latest quote, so keep the price column populated and
             # label the research curve separately below.
-            "lastPrice": latest_raw if latest_raw is not None else (adjusted_latest if adjusted_latest is not None else _current_price(detail)),
-            "changePct": change_pct if change_pct is not None else (adjusted_change if adjusted_change is not None else detail.get("changePct")),
+            "lastPrice": latest_raw if latest_raw is not None else (adjusted_latest if adjusted_latest is not None else live_fallback_price),
+            "changePct": change_pct if change_pct is not None else (adjusted_change if adjusted_change is not None else None),
             "adjustedLastPrice": adjusted_latest,
             "adjustedChangePct": adjusted_change,
             "zScore": regression.get("z"),
@@ -1044,11 +1146,9 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         details = [detail for detail in details if str(detail.get("code")) in allowed]
     if not details:
         raise ValueError("no tracked stock details found in baseline release")
-    fallback_end = max(
-        (parse_date(str(detail.get("asOf") or ""), date.today()) for detail in details),
-        default=date.today(),
-    )
-    end = parse_date(as_of, fallback_end)
+    # A daily refresh must query through today's Taipei date. Deriving the end
+    # date from the baseline made every run stop at the old snapshot date.
+    end = parse_date(as_of, datetime.now(TAIPEI).date()) if as_of else datetime.now(TAIPEI).date()
     errors_by_code: dict[str, list[str]] = {}
     enriched: list[dict[str, Any]] = []
     used_sources: list[str] = []
@@ -1086,6 +1186,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     universe_source = ""
     universe_label = "投信十日買超前100"
     previous_universe_rows: list[dict[str, Any]] = []
+    universe_config: dict[str, Any] = {}
     universe_stale = False
     try:
         published_universe = load_json(data_dir / "institutional_universe.json")
@@ -1095,11 +1196,11 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     try:
         config = load_json(data_dir.parent.parent / "config" / "tracked_symbols.json")
         raw_universe = config.get("universe")
-        universe = raw_universe if isinstance(raw_universe, dict) else {}
-        universe_rows = [row for row in universe.get("rows", []) if isinstance(row, dict)]
-        universe_source = str(universe.get("sourceUrl") or "")
-        universe_label = str(universe.get("label") or universe_label)
-        previous_universe_rows = [row for row in universe.get("previousRows", []) if isinstance(row, dict)]
+        universe_config = raw_universe if isinstance(raw_universe, dict) else {}
+        universe_rows = [row for row in universe_config.get("rows", []) if isinstance(row, dict)]
+        universe_source = str(universe_config.get("sourceUrl") or "")
+        universe_label = str(universe_config.get("label") or universe_label)
+        previous_universe_rows = [row for row in universe_config.get("previousRows", []) if isinstance(row, dict)]
     except (OSError, ValueError, json.JSONDecodeError):
         universe_rows = []
     detail_by_code = {str(detail.get("code")): detail for detail in enriched}
@@ -1141,6 +1242,18 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             "reason": f"{universe_label}，第 {source_rank} 名；此名次是完整來源排行，不是子集合重算。",
             "source": detail["researchUniverseSource"],
         })
+
+    official_market_dates, official_daily_by_code = official_institutional_index(universe_config)
+    official_refs = ["TWSE:TWT44U", "TPEx:insti/sitcStat"]
+    for detail in enriched:
+        # Clear old ten-session values when the current official source is
+        # stale/unavailable. Never publish yesterday's metrics as current.
+        apply_official_institutional_metrics(
+            detail,
+            market_dates=[] if universe_stale else official_market_dates,
+            daily_by_code={} if universe_stale else official_daily_by_code,
+        )
+        detail["sourceRefs"] = merge_refs(detail.get("sourceRefs"), official_refs)
 
     trust_rows: list[dict[str, Any]] = []
     growth_rows: list[dict[str, Any]] = []

@@ -55,10 +55,19 @@ def merge_adjusted_prices(
         adjusted = finite(row.get("adjustedClose"))
         if not day or adjusted is None or adjusted <= 0:
             continue
-        point = by_date.setdefault(
-            day,
-            {"date": day, "close": None, "volume": None, "amount": None},
-        )
+        point = by_date.get(day)
+        if point is None:
+            point = {
+                "date": day,
+                "close": row.get("close"),
+                "volume": row.get("volume"),
+                "amount": row.get("amount"),
+            }
+            by_date[day] = point
+        else:
+            for key in ("close", "volume", "amount"):
+                if point.get(key) is None and row.get(key) is not None:
+                    point[key] = row.get(key)
         point["adjustedClose"] = adjusted
     return [by_date[day] for day in sorted(by_date)]
 

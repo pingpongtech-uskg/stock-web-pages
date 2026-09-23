@@ -185,6 +185,25 @@ def update_official_tracked_config(
     current_rows = annotate_top_n_entries(current, previous, limit=limit)
     current_top10 = annotate_top_n_entries(current, previous, limit=10)
     top10_by_code = {str(row["code"]): row for row in current_top10}
+    tracked_codes = {str(row["code"]) for row in current_rows}
+    # Keep daily source rows for the current universe. The aggregate rank alone
+    # cannot reproduce positiveDays10 or participation10 on the next refresh.
+    daily_rows = []
+    for snapshot in snapshots[:10]:
+        day = str(snapshot.get("date") or "")[:10]
+        rows = []
+        for raw_row in snapshot.get("rows", []):
+            if not isinstance(raw_row, dict) or str(raw_row.get("code") or "") not in tracked_codes:
+                continue
+            rows.append({
+                "code": str(raw_row.get("code") or ""),
+                "name": str(raw_row.get("name") or ""),
+                "market": str(raw_row.get("market") or ""),
+                "buyShares": raw_row.get("buyShares"),
+                "sellShares": raw_row.get("sellShares"),
+                "netShares": raw_row.get("netShares"),
+            })
+        daily_rows.append({"date": day, "rows": rows})
 
     previous_config: dict[str, Any] = {}
     if path.exists():
@@ -247,6 +266,7 @@ def update_official_tracked_config(
             "previousRows": previous[:limit],
             "top10": current_top10,
             "previousTop10": previous[:10],
+            "dailyRows": daily_rows,
         },
         "updated_at": market_dates[0] if market_dates else datetime.now(timezone.utc).date().isoformat(),
     }

@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from pipeline.enrichment import clip_price_window, low_base_growth_gates, low_base_quality_gates, low_position_gates
+from pipeline.enrichment import clip_price_window, low_base_growth_gates, low_base_quality_gates, low_position_gates, merge_adjusted_prices
 
 
 def proxy_checks(statuses: list[str]) -> list[dict[str, str]]:
@@ -68,6 +68,25 @@ def test_low_position_price_only_row_keeps_growth_health_unknown():
 def test_low_position_formal_row_requires_growth_health():
     result = low_position_gates(z=-0.5, slope=0.2, price_eligible=True, growth_health="pass")
     assert result["status"] == "pass"
+
+
+def test_merge_adjusted_prices_keeps_live_quote_and_volume_without_baseline():
+    merged = merge_adjusted_prices(
+        [],
+        [{"date": "2026-09-23", "close": 343.0, "volume": 21255470, "adjustedClose": 343.0}],
+    )
+
+    assert merged == [{"date": "2026-09-23", "close": 343.0, "volume": 21255470, "amount": None, "adjustedClose": 343.0}]
+
+
+def test_merge_adjusted_prices_fills_missing_live_fields_on_existing_point():
+    merged = merge_adjusted_prices(
+        [{"date": "2026-09-23", "close": None, "volume": None}],
+        [{"date": "2026-09-23", "close": 343.0, "volume": 21255470, "adjustedClose": 343.0}],
+    )
+
+    assert merged[0]["close"] == 343.0
+    assert merged[0]["volume"] == 21255470
 
 
 def test_clip_price_window_keeps_only_the_fixed_3_5_year_frame():

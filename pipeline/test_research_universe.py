@@ -37,4 +37,6 @@ def test_official_config_persists_adjacent_window_and_top10_entry_status(tmp_pat
     assert top10["NEW"]["entryStatus"] == "new"
     assert top10["OLD"]["entryStatus"] == "retained"
     assert payload["universe"]["previousRows"]
+    assert len(payload["universe"]["dailyRows"]) == 10
+    assert payload["universe"]["dailyRows"][0]["rows"]
 

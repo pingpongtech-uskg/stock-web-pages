@@ -28,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in 1 2 3; do
-            if python scripts/fetch_research_universe.py --source official --allow-stale --config config/tracked_symbols.json --output public/data/institutional_universe.json; then
+            if python scripts/fetch_research_universe.py --source official --config config/tracked_symbols.json --output public/data/institutional_universe.json; then
               exit 0
             fi
             if [ "$attempt" -lt 3 ]; then
@@ -46,8 +46,8 @@ jobs:
             python scripts/fetch_finmind.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output public/data
             echo "SNAPSHOT_MODE=live" >> "$GITHUB_ENV"
           else
-            echo "FINMIND_TOKEN is not configured; keep the checked-in release and run an honest offline refresh."
-            echo "SNAPSHOT_MODE=offline" >> "$GITHUB_ENV"
+            echo "FINMIND_TOKEN is not configured; run the public-source live refresh."
+            echo "SNAPSHOT_MODE=public" >> "$GITHUB_ENV"
           fi
       - name: Fetch ownership reference cache
         run: python scripts/fetch_ownership.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output .cache/ownership_snapshot.json
@@ -55,12 +55,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "${SNAPSHOT_MODE:-offline}" = "live" ]; then
-            python scripts/refresh_snapshot.py --output public/data --ownership-snapshot .cache/ownership_snapshot.json
-          else
-            python scripts/refresh_snapshot.py --offline --output public/data --ownership-snapshot .cache/ownership_snapshot.json
-          fi
+          # Both modes are live. FinMind enriches the public-source refresh
+          # when configured; without it, Yahoo/TWSE/TPEx still fetch current
+          # prices, regression inputs, valuation inputs, and official flows.
+          python scripts/refresh_snapshot.py --output public/data --ownership-snapshot .cache/ownership_snapshot.json
       - run: python scripts/verify_snapshot.py
+      - run: python scripts/verify_daily_freshness.py --data-dir public/data --config config/tracked_symbols.json
       - run: python scripts/build_history_archive.py
       - run: python scripts/verify_history_archive.py
       - run: python scripts/prune_releases.py --data-dir public/data --keep 3 --max-bytes 250000000

@@ -1,4 +1,5 @@
 from scripts.refresh_snapshot import _attach_valuation
+from scripts.refresh_snapshot import apply_official_institutional_metrics
 from scripts.refresh_snapshot import growth_health_qualifies
 from scripts.refresh_snapshot import new_entry_rows
 from scripts.refresh_snapshot import next_expected_update_for_market_date
@@ -100,6 +101,53 @@ def test_growth_route_uses_teacher_total_return_pe_and_keeps_zulu_cross_check():
     assert result[0]["growthFairPrice"] == 187.32
     assert result[0]["currentPeg"] == 0.52
     assert result[0]["valuationFormulaVersion"] == "growth-total-return-pe-v1"
+
+
+def test_official_institutional_metrics_replace_old_values():
+    detail = {
+        "code": "2330",
+        "entryReasons": ["投信舊資料：999"],
+        "priceSeries": [
+            {"date": f"2026-09-{day:02d}", "volume": 1000}
+            for day in range(14, 24)
+        ],
+    }
+    dates = [f"2026-09-{day:02d}" for day in range(23, 13, -1)]
+    daily = {
+        date: {"netShares": 100 if index % 2 == 0 else -50}
+        for index, date in enumerate(dates)
+    }
+    apply_official_institutional_metrics(
+        detail,
+        market_dates=dates,
+        daily_by_code={"2330": daily},
+    )
+    assert detail["institutionDataAsOf"] == "2026-09-23"
+    assert detail["institutionNetShares10"] == 250
+    assert detail["positiveDays10"] == 5
+    assert detail["participation10"] == 0.025
+    assert len(detail["institutionalDaily"]) == 10
+    assert all(row["status"] == "pass" for row in detail["institutionalDaily"])
+    assert not any(reason.startswith("投信舊資料") for reason in detail["entryReasons"])
+
+
+def test_official_institutional_metrics_fail_closed_on_missing_daily_row():
+    detail = {
+        "code": "2330",
+        "institutionNetShares10": 999,
+        "participation10": 0.9,
+        "positiveDays10": 10,
+        "priceSeries": [{"date": "2026-09-23", "volume": 1000}],
+    }
+    apply_official_institutional_metrics(
+        detail,
+        market_dates=["2026-09-23"],
+        daily_by_code={"2330": {}},
+    )
+    assert detail["institutionDataStatus"] == "unknown"
+    assert detail["institutionNetShares10"] is None
+    assert detail["participation10"] is None
+    assert detail["positiveDays10"] is None
 
 
 def test_growth_route_rejects_extreme_formal_valuation():
