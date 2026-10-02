@@ -1,6 +1,6 @@
 # Stockscreener workflow
 
-The existing workflow is `huDBNJDss4KuPmn4`, titled **Stockscreener**. It remains inactive until the coordinator verifies the deployed backend and the real exact-run archive path. The generated SDK and JSON live in `scripts/n8n/`; edit `engine.cjs`, `runtime.cjs`, or `build-workflow.cjs`, then run the generator. The JSON contains credential identifiers, never credential secrets.
+The existing workflow is `huDBNJDss4KuPmn4`, titled **Stockscreener**. The backend has been promoted to main commit `2451036717641cd4827dbdc3856f8af8ac462fc6` and its deployed UI/archive were verified. This workflow remains inactive while explicit human approval for the controlled production run, imports, retry proof, and activation is pending. The generated SDK and JSON live in `scripts/n8n/`; edit `engine.cjs`, `runtime.cjs`, or `build-workflow.cjs`, then run the generator. The JSON contains credential identifiers, never credential secrets.
 
 ## Schedule and ownership
 
@@ -50,7 +50,7 @@ Durable CAS state is the recovery authority. Append-only n8n Data Table `JWOzPb7
 
 Run `node --test --experimental-test-coverage scripts/n8n/test-*.cjs` and `node scripts/n8n/build-workflow.cjs`. Validate every node config and the SDK through the installed n8n tooling before updating the remote draft.
 
-`runtime-evidence.json` separates actual server executions from local unit fixtures. Execution 707 verified the real calendar and modern Notion metadata. Execution 708 verified real GitHub create/competing-create/exact-SHA/stale-SHA responses and removed its owned temporary diagnostic file; its temporary workflow was archived. Real Actions-artifact-to-Notion-to-live-deployment acceptance remains pending until the backend is deployed and an authorized exact run is available. Local tests never create fake production dates or stock records.
+`runtime-evidence.json` separates actual server executions from local unit fixtures. Execution 707 verified the real calendar and modern Notion metadata. Execution 708 verified real GitHub create/competing-create/exact-SHA/stale-SHA responses and removed its owned temporary diagnostic file; its temporary workflow was archived. Automatic approval review rejected the October 2 live execution before an execution ID or Actions dispatch existed. Its stated reason was that exact screening, Notion writes, and main-to-Cloudflare production publication lacked explicit user authorization. Diagnostic defaults have been restored. Real Actions-artifact-to-Notion-to-live-deployment acceptance remains pending human approval; no workaround execution was attempted. Local tests never create fake production dates or stock records.
 
 Primary API references: [GitHub Contents compare-and-swap](https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28), [Notion database creation](https://developers.notion.com/reference/create-a-database), and [n8n concurrency behavior](https://docs.n8n.io/hosting/scaling/concurrency-control/).
 

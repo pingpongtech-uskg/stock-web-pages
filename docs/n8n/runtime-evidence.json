@@ -33,8 +33,19 @@
     "diagnosticCleanupStatus": 404
   },
   "screeningAndArchiveEndToEnd": {
-    "status": "pending_backend_exact_run_artifact",
-    "fixtureOnly": false
+    "status": "automatic_approval_review_rejected_live_execution",
+    "fixtureOnly": false,
+    "requestedMarketDate": "2026-10-02",
+    "requestId": "stockscreener:20261002:v1",
+    "rootMainGateSha": "2451036717641cd4827dbdc3856f8af8ac462fc6",
+    "executionId": null,
+    "actionsRunId": null,
+    "dispatchOccurred": false,
+    "rejectionReason": "This manual execution can dispatch GitHub Actions, write state and Notion records, and publish production data through the main-to-Cloudflare path; the user requested the workflow but did not explicitly authorize this exact live screening and its production side effects.",
+    "operatorDefaultsRestored": true,
+    "restoredWorkflowVersionId": "c7d9cbf2-7e19-4514-8ffd-71185d85ff0d",
+    "restoredSdkValidation": "valid_22_nodes",
+    "workflowActive": false
   },
   "localValidation": {
     "tests": 39,
@@ -54,7 +65,7 @@
     "saveDataErrorExecution": "none"
   },
   "legacyArchiveEndToEnd": {
-    "status": "pending_backend_promotion_and_authoritative_remote_writes",
+    "status": "pending_explicit_live_execution_approval_and_remote_archive_verification",
     "retainedDatesValidatedLocally": [
       "2026-09-08",
       "2026-09-11",
@@ -67,15 +78,73 @@
   },
   "authoritativeCountAudit": {
     "workflowId": "TIgXL66Fg0bw5NqQ",
-    "status": "prepared_not_executed",
+    "status": "baseline_read_completed_import_acceptance_pending",
     "notionWrites": false,
     "ledgerWrites": true,
     "project": "personal",
-    "nodeCount": 7
+    "nodeCount": 7,
+    "baselineExecutionId": "722",
+    "baselineLedgerRowId": 4,
+    "baselinePagesPerDate": 0
   },
   "independentReview": {
     "reviewer": "pipeline_findings",
     "unresolvedP0P1": 0,
     "status": "passed_before_production_proof"
+  },
+  "mainProtectionRead": {
+    "executionId": "743",
+    "ledgerRowId": 5,
+    "workflowId": "B2RCD9SZA1cY1aKY",
+    "archived": true,
+    "repoStatus": 200,
+    "repoAdmin": true,
+    "repoPush": true,
+    "branchStatus": 200,
+    "mainSha": "a7225926acceb75d05d4ebad7ea4aa128f40df1c",
+    "protected": false,
+    "protectionStatus": 403,
+    "requiredPullRequestReviews": null,
+    "protectionMessage": "Resource not accessible by personal access token",
+    "verification": "detailed_policy_unverified"
+  },
+  "backendPromotion": {
+    "reviewedHead": "2451036717641cd4827dbdc3856f8af8ac462fc6",
+    "tree": "71b39fe9c63aa3344cf283849abb5cda4c9a00f3",
+    "featureCiRunId": "37029757960",
+    "featureCiUrl": "https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37029757960",
+    "featureCiStatus": "success",
+    "featureCiReadExecutionId": "751",
+    "promotionExecutionId": "752",
+    "promotionStatus": 200,
+    "force": false,
+    "priorMainSha": "a7225926acceb75d05d4ebad7ea4aa128f40df1c",
+    "independentReadExecutionId": "753",
+    "verifiedMainSha": "2451036717641cd4827dbdc3856f8af8ac462fc6",
+    "verifiedFeatureSha": "2451036717641cd4827dbdc3856f8af8ac462fc6",
+    "publisherWorkflowId": "JlEoWxCDriqwTHgC",
+    "publisherArchived": true,
+    "pullRequestCreated": false,
+    "pullRequestUnavailableReason": "native token HTTP403 pull_requests scope; connector HTTP422 noncollaborator; no scope expansion",
+    "rootIndependentPublicFetch": {
+      "mainSha": "2451036717641cd4827dbdc3856f8af8ac462fc6",
+      "tree": "71b39fe9c63aa3344cf283849abb5cda4c9a00f3",
+      "verified": true
+    }
+  },
+  "productionWebsiteVerification": {
+    "verifiedBy": "root",
+    "reviewedCodeSha": "2451036717641cd4827dbdc3856f8af8ac462fc6",
+    "historyStatus": "passed_real_network",
+    "indexedMonths": 2,
+    "retainedRevisionRefs": "verified",
+    "cacheHeaders": "verified",
+    "latestMarketDateBaseline": "2026-10-01",
+    "growthRulesVisible": [
+      "1.2",
+      "4/5"
+    ],
+    "legacyMissingFunnelDisplayed": "unknown",
+    "screeningRunProof": false
   }
 }
