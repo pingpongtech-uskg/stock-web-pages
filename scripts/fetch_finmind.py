@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -426,16 +427,37 @@ def main() -> int:
     parser.add_argument("--codes", default=",".join(DEFAULT_CODES), help="comma-separated stock codes")
     parser.add_argument("--as-of", default=None, help="optional query end date YYYY-MM-DD")
     parser.add_argument("--output", default=str(ROOT / "public" / "data"))
-    parser.add_argument("--supplement", action="store_true", help="fill only missing inputs in an existing official snapshot")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--supplement", action="store_true", help="fill only missing inputs in an existing official snapshot")
     parser.add_argument("--cache-dir", default=str(ROOT / ".cache" / "finmind"))
     parser.add_argument("--budget-date", default=datetime.now(TAIPEI).date().isoformat())
     parser.add_argument("--max-requests", type=int, default=300)
     parser.add_argument("--max-runtime-seconds", type=int, default=1500)
-    parser.add_argument("--seed-only", action="store_true", help="seed the A universe without calling FinMind")
+    modes.add_argument("--seed-only", action="store_true", help="seed the A universe without calling FinMind")
     args = parser.parse_args()
     codes = list(dict.fromkeys(code.strip() for code in args.codes.split(",") if code.strip()))
     if not codes:
         parser.error("at least one code is required")
+    if any(re.fullmatch(r"[0-9]{4,6}", code) is None for code in codes):
+        parser.error("stock codes must contain 4 to 6 ASCII digits")
+    for label, value in (("as-of", args.as_of), ("budget-date", args.budget_date)):
+        if value is not None:
+            try:
+                valid = date.fromisoformat(value).isoformat() == value
+            except ValueError:
+                valid = False
+            if not valid:
+                parser.error(f"{label} must be an exact YYYY-MM-DD date")
+    if not 1 <= args.max_requests <= 300:
+        parser.error("max-requests must be between 1 and 300")
+    if args.max_runtime_seconds < 1:
+        parser.error("max-runtime-seconds must be positive")
+    if not args.seed_only:
+        today = datetime.now(TAIPEI).date().isoformat()
+        if args.budget_date != today:
+            parser.error("live budget-date must equal today's Taipei date")
+        if args.as_of is not None and args.as_of > today:
+            parser.error("live as-of cannot be after today's Taipei date")
     try:
         if args.seed_only:
             result = seed_snapshot(codes, Path(args.output), args.as_of)
