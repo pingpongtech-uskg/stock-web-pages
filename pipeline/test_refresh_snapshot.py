@@ -3,6 +3,7 @@ from scripts.refresh_snapshot import apply_official_institutional_metrics
 from scripts.refresh_snapshot import growth_health_qualifies
 from scripts.refresh_snapshot import new_entry_rows
 from scripts.refresh_snapshot import next_expected_update_for_market_date
+import pytest
 
 
 def test_growth_health_requires_four_known_passes():
@@ -394,3 +395,161 @@ def test_enrichment_returns_new_detail_without_mutating_source_snapshot():
     result, _ = enrich_detail(original, end=date(2026, 10, 1), offline=True)
     assert original == before
     assert result is not original
+
+
+def test_public_first_partial_financial_outage_recovers_from_supplemented_cache(tmp_path, monkeypatch):
+    """A missing latest quarter stays unknown until real quarter-shaped rows arrive.
+
+    All numbers are explicit test fixtures stored beneath pytest's temporary
+    directory. The repository's published financial snapshot is never touched.
+    """
+    import json
+    import scripts.refresh_snapshot as refresh
+    from pipeline.health_inputs import merge_health_inputs
+
+    data = tmp_path / "public" / "data"
+    data.mkdir(parents=True)
+    config = tmp_path / "config"
+    config.mkdir()
+    days = [f"2026-09-{day:02d}" for day in (18, 21, 22, 23, 24, 25, 28, 29, 30)] + ["2026-10-01"]
+    config.joinpath("tracked_symbols.json").write_text(json.dumps({
+        "symbols": ["2330"],
+        "universe": {
+            "sourceUrl": "https://example.test/official-universe",
+            "label": "Official test universe",
+            "rows": [{"code": "2330", "name": "Financial fixture", "rank": 7, "netShares": 1000}],
+            "previousRows": [{"code": "2330", "rank": 11}],
+            "marketDates": list(reversed(days)),
+            "dailyRows": [{"date": day, "rows": [{"code": "2330", "netShares": 100}]} for day in days],
+        },
+    }))
+    income = [{"year": year, "quarter": quarter, "eps": 1.2 ** (year - 2022),
+               "grossProfit": 100 * 1.2 ** (year - 2022), "operatingProfit": 80 * 1.2 ** (year - 2022),
+               "pretaxProfit": 70 * 1.2 ** (year - 2022), "netIncome": 60 * 1.2 ** (year - 2022),
+               "periodType": "quarter", "source": "FinMind fixture", "amountUnit": "TWD"}
+              for year in (2022, 2023, 2024, 2025) for quarter in (1, 2, 3, 4)]
+    revenue = [{"month": f"{year}-{month:02d}", "revenue": 100 if year == 2025 else 101}
+               for year in (2025, 2026) for month in (6, 7, 8)]
+    detail = {"code": "2330", "name": "Financial fixture", "market": "TWSE", "asOf": "2026-09-30",
+              "healthInputs": {"incomeQuarterly": income, "monthlyRevenueOfficial": revenue,
+                               "balanceQuarterly": [{"year": 2025, "quarter": 4, "equity": 500}]}}
+    data.joinpath("latest.json").write_text(json.dumps({
+        "runId": "fixture-before-public-refresh", "marketDate": "2026-09-30", "stocks": [detail],
+    }))
+    data.joinpath("institutional_universe.json").write_text(json.dumps({"stale": False}))
+    calls = []
+
+    def public(codes):
+        calls.append("official_bulk")
+        assert codes == ["2330"]
+        return {"2330": {
+            "source": "TWSE OpenAPI", "errors": {"balance": "TimeoutError"}, "balanceQuarterly": [],
+            "incomeQuarterly": [{"year": 115, "quarter": 2, "periodType": "ytd", "eps": 5,
+                                 "grossProfit": 500, "source": "TWSE fixture", "amountUnit": "TWD_thousands"}],
+            "valuationCurrent": {"date": "2026-10-01", "pe": 80 / (4 * 1.2 ** 3), "source": "TWSE fixture"},
+            "dividends": [{"year": 2025, "period": "annual", "cashPerShare": 0, "confirmed": True,
+                           "availableAt": "2026-06-01", "source": "TWSE fixture"}],
+        }}
+
+    def prices(*args):
+        calls.append("adjusted_prices")
+        return ([{"date": day, "close": 80, "adjustedClose": 80, "volume": 1000,
+                  "source": refresh.YFINANCE_PRICE_SOURCE} for day in days], refresh.YFINANCE_PRICE_SOURCE, None)
+
+    def fundamentals(*args):
+        calls.append("fundamentals")
+        return ({"latestNetIncome": 100, "latestOperatingCashFlow": 110, "latestOperatingMargin": .2},
+                refresh.YFINANCE_FUNDAMENTAL_SOURCE, None)
+
+    def volume(day):
+        calls.append("market_volume")
+        assert day == "2026-10-01"
+        return {"status": "unavailable", "reason": "test fixture"}
+
+    monkeypatch.delenv("FAST_REFRESH", raising=False)
+    for key, value in {"build_health_inputs": public, "fetch_adjusted_history": prices,
+                       "fetch_fundamental_proxies": fundamentals, "build_00631l_volume_indicator": volume}.items():
+        monkeypatch.setattr(refresh, key, value)
+    first = refresh.build_release(data, [], as_of="2026-10-02", offline=False)
+    release = json.loads(data.joinpath("latest.json").read_text())
+    published = data / "releases" / first["run_id"] / "stocks" / "2330.json"
+    stock = json.loads(published.read_text())
+
+    assert calls == ["official_bulk", "adjusted_prices", "fundamentals", "market_volume"]
+    assert release["marketDate"] == "2026-10-01"
+    assert release["freshness"] == "degraded"
+    assert len(stock["healthInputs"]["incomeQuarterly"]) == 17
+    assert stock["healthInputs"]["balanceQuarterly"][0]["equity"] == 500
+    assert stock["growthValuation"]["ttm_eps"] is None
+    assert "ttmEps" in stock["growthValuation"]["missingReasons"]
+    assert release["rankings"]["growth"] == []
+    assert release["rankings"]["trust"][0]["sourceRank"] == 7
+    assert release["rankings"]["trust"][0]["previousRank"] == 11
+    assert stock["institutionNetShares10"] == 1000
+    assert stock["participation10"] == .1
+
+    supplement = {"incomeQuarterly": [
+        {"year": 2026, "quarter": quarter, "eps": eps, "grossProfit": 200,
+         "operatingProfit": 200, "pretaxProfit": 200, "netIncome": 200,
+         "periodType": "quarter", "source": "FinMind fixture", "amountUnit": "TWD"}
+        for quarter, eps in ((1, 1.5), (2, 2))
+    ]}
+    stock = {**stock, "healthInputs": merge_health_inputs(stock["healthInputs"], supplement)}
+    published.write_text(json.dumps(stock))
+    second = refresh.build_release(data, [], as_of="2026-10-02", offline=False, recompute_existing=True)
+    recovered = json.loads(data.joinpath("latest.json").read_text())
+    recovered_stock = json.loads((data / "releases" / second["run_id"] / "stocks" / "2330.json").read_text())
+    assert calls == ["official_bulk", "adjusted_prices", "fundamentals", "market_volume"]
+    assert recovered["marketDate"] == "2026-10-01"
+    assert recovered_stock["growthValuation"]["status"] == "available"
+    assert recovered_stock["growthValuation"]["inputAudit"]["ttmEps"]["origin"] == "derived"
+    assert recovered["rankings"]["growth"][0]["code"] == "2330"
+    assert recovered["funnel"]["growthHealthCandidates"] == 1
+    assert len(recovered_stock["healthInputs"]["incomeQuarterly"]) == 18
+    assert recovered["freshness"] == "degraded"
+
+
+def test_refresh_cli_missing_baseline_fails_without_writing_release(tmp_path, monkeypatch, capsys):
+    import sys
+    import scripts.refresh_snapshot as refresh
+    monkeypatch.setattr(sys, "argv", ["refresh_snapshot.py", "--recompute-existing", "--output", str(tmp_path)])
+    assert refresh.main() == 1
+    assert "snapshot_refresh_failed=FileNotFoundError" in capsys.readouterr().err
+    assert not tmp_path.joinpath("latest.json").exists()
+
+
+@pytest.mark.parametrize("derived", [True, False])
+def test_partial_reported_quarter_does_not_relabel_retained_amounts_with_new_units(derived):
+    from pipeline.health_inputs import merge_health_inputs
+    from pipeline.growth_health import evaluate_growth_health
+    amounts = ("grossProfit", "operatingProfit", "pretaxProfit", "netIncome")
+    base = {"incomeQuarterly": [{"year": 2025, "quarter": 2, "periodType": "quarter",
+                                 **dict.fromkeys(amounts, 50), "amountUnit": "TWD"},
+                                {"year": 2026, "quarter": 2, "periodType": "quarter", **dict.fromkeys(amounts, 100),
+                                 "source": "TWSE fixture", "amountUnit": "TWD_thousands",
+                                 **({"inputOrigin": "derived", "derivationMethod": "compatible_ytd_difference"}
+                                    if derived else {"inputOrigin": "reported"})}]}
+    direct = {"incomeQuarterly": [{"year": 2026, "quarter": 2, "periodType": "quarter", "eps": 2,
+                                   "source": "FinMind fixture", "amountUnit": "TWD", "inputOrigin": "reported"}]}
+    income = merge_health_inputs(base, direct)["incomeQuarterly"]
+    row = income[-1]
+    assert row["eps"] == 2
+    assert row["source"] == "FinMind fixture"
+    assert row["amountUnit"] == "TWD"
+    assert all(row.get(field) is None for field in amounts)
+    assert "derivationMethod" not in row
+    health = evaluate_growth_health([], income)
+    assert health["passCount"] == 0
+    assert all(check["status"] == "unknown" for check in health["checks"][1:])
+
+
+def test_metadata_only_quarter_overlay_preserves_derived_values_and_provenance():
+    from pipeline.health_inputs import merge_health_inputs
+    original = {"year": 2026, "quarter": 2, "periodType": "quarter", "grossProfit": 100,
+                "source": "TWSE fixture", "amountUnit": "TWD_thousands", "inputOrigin": "derived",
+                "derivationMethod": "compatible_ytd_difference"}
+    row = merge_health_inputs({"incomeQuarterly": [original]}, {"incomeQuarterly": [
+        {"year": 2026, "quarter": 2, "periodType": "quarter", "eps": None,
+         "grossProfit": None, "source": "FinMind fixture", "amountUnit": "TWD"},
+    ]})["incomeQuarterly"][0]
+    assert row == original

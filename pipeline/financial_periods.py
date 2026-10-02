@@ -101,6 +101,14 @@ def quarterly_income(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
             item["inputOrigin"] = ("derived" if key[1] > 1 else "reported") if any(number(item.get(field)) is not None for field in INCOME_FIELDS) else "unavailable"
             item["derivationMethod"] = "compatible_ytd_difference" if key[1] > 1 else "first_quarter_ytd"
         existing = result.get(key, {})
+        if existing and row.get("periodType") != "ytd" and not any(number(item.get(field)) is not None for field in INCOME_FIELDS):
+            # An empty financial overlay cannot establish new units or source.
+            continue
+        if row.get("periodType") != "ytd" and not row.get("derivationMethod") and (existing.get("derivationMethod") or not compatible_rows([existing, item])):
+            # Replace recovered or incompatible rows as a whole: unsupplied
+            # amounts cannot inherit the direct report's source or units.
+            # The cumulative evidence remains separately in incomeYtd.
+            existing = {}
         if row.get("periodType") == "ytd" and existing.get("derivationMethod") is None and existing:
             continue
         result[key] = {**existing, **{field: value for field, value in item.items() if value is not None and (field not in INCOME_FIELDS or number(value) is not None)}}
