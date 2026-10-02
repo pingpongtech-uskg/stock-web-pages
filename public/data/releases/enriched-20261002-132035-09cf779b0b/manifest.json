@@ -109616,5 +109616,27 @@
       ],
       "reason": "今日成交量 ÷ 前五個完成交易日平均成交量（不含今日）"
     }
+  },
+  "inputHash": "09cf779b0b1cc96b0cae6f7ce0d29f8d71e8f507adda4d42f21382ff69425661",
+  "codeCommit": "e0c677c9076543f1022a9c311e472e4bbeea526f",
+  "formulaVersions": {
+    "regression": "lohas-linear-3.5y-research-v1",
+    "valuation": "zulu-peg-eps-growth-v2",
+    "growthValuation": "growth-total-return-pe-v1",
+    "growthFallback": "growth-proxy-chain-v1",
+    "ranking": "three-strategy-tabs-v1"
+  },
+  "rankingsHash": "67d32ca1935b1f1d1ee7e7c001be4db4a8e1da1c4e8980e69f076c08f22ef3ee",
+  "baselineRunId": "enriched-20260924-182943-399e148ef9",
+  "enrichment": {
+    "adjustedPriceSource": "yfinance Adj Close when available; Yahoo chart fallback is tagged",
+    "fundamentalSource": "yfinance:Ticker.financials/cashflow/balance_sheet",
+    "adjustedStocks": 100,
+    "trackedStocks": 100,
+    "errorsByCode": {
+      "7856": [
+        "yfinance returned no annual income statement"
+      ]
+    }
   }
 }
