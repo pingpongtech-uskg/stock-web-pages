@@ -1,9 +1,10 @@
-import { Component, createContext, useContext, useEffect, useState, type ErrorInfo, type ReactNode } from 'react'
+import { Component, createContext, useContext, useEffect, useState, Fragment, type ErrorInfo, type ReactNode } from 'react'
 
 import { HistoryPanel } from './components/HistoryPanel'
 import { MarketVolumeIndicator } from './components/MarketVolumeIndicator'
 import { StrategyCard } from './components/StrategyCard'
-import { loadLatestRelease } from './data/api'
+import { DataStatus } from './components/DataStatus'
+import { loadLatestRelease, type LoadedRelease } from './data/api'
 import { releaseCoverageFunnel, type CoverageFunnel } from './domain/coverage'
 import { trackEvent, trackEventOnce } from './domain/events'
 import type { RankingRow, Release } from './domain/types'
@@ -12,6 +13,7 @@ import './styles.css'
 
 interface DataContextValue {
   release: Release | null
+  dataSource: LoadedRelease['source'] | null
   loading: boolean
   error: string | null
   reload: () => void
@@ -21,6 +23,7 @@ const DataContext = createContext<DataContextValue | null>(null)
 
 function DataProvider({ children }: { children: ReactNode }) {
   const [release, setRelease] = useState<Release | null>(null)
+  const [dataSource, setDataSource] = useState<LoadedRelease['source'] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
@@ -32,9 +35,10 @@ function DataProvider({ children }: { children: ReactNode }) {
     loadLatestRelease()
       .then((next) => {
         if (cancelled) return
-        setRelease(next)
+        setRelease(next.release)
+        setDataSource(next.source)
         setLoading(false)
-        trackEvent('release_load_success', { runId: next.runId })
+        trackEvent('release_load_success', { runId: next.release.runId, source: next.source })
       })
       .catch((reason: unknown) => {
         if (cancelled) return
@@ -50,7 +54,7 @@ function DataProvider({ children }: { children: ReactNode }) {
   }, [reloadKey])
 
   return (
-    <DataContext.Provider value={{ release, loading, error, reload: () => setReloadKey((value) => value + 1) }}>
+    <DataContext.Provider value={{ release, dataSource, loading, error, reload: () => setReloadKey((value) => value + 1) }}>
       {children}
     </DataContext.Provider>
   )
@@ -120,18 +124,35 @@ function FatalScreen({ message }: { message: string }) {
 }
 
 function Dashboard() {
-  const { release, loading, error } = useData()
+  const { release, dataSource, loading, error } = useData()
   if (loading) return <LoadingScreen />
   if (error || !release) return <ErrorScreen message={error ?? '發布快照不存在'} />
-  return <DashboardContent release={release} />
+  return <DashboardContent release={release} dataSource={dataSource ?? 'network'} />
 }
 
-function DashboardContent({ release }: { release: Release }) {
+function DashboardContent({ release, dataSource }: { release: Release; dataSource: LoadedRelease['source'] }) {
   const blocks = dashboardStrategyRows(release)
   const [activeKey, setActiveKey] = useState<StrategyKey>('trust')
   const [historyView, setHistoryView] = useState(() => new URLSearchParams(window.location.search).get('view') === 'history')
   useEffect(() => { const onPop = () => setHistoryView(new URLSearchParams(window.location.search).get('view') === 'history'); window.addEventListener('popstate', onPop); return () => window.removeEventListener('popstate', onPop) }, [])
-  const showHistory = () => { window.history.replaceState(null, '', `${window.location.pathname}?view=history`); setHistoryView(true); trackEvent('history_view') }
+  const showHistory = () => {
+    const params = new URLSearchParams(window.location.search)
+    params.set('view', 'history')
+    window.history.pushState({ historyView: true }, '', `${window.location.pathname}?${params}`)
+    setHistoryView(true)
+    trackEvent('history_view')
+  }
+  const returnToLatest = () => {
+    if (window.history.state?.historyView) {
+      window.history.back()
+      return
+    }
+    const params = new URLSearchParams(window.location.search)
+    params.delete('view')
+    const query = params.toString()
+    window.history.pushState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`)
+    setHistoryView(false)
+  }
   const active = blocks.find((block) => block.presentation.key === activeKey) ?? blocks[0]
 
   useEffect(() => {
@@ -166,11 +187,11 @@ function DashboardContent({ release }: { release: Release }) {
             <p className="dashboard-intro">切換策略 tab 後查看該策略的候選；每檔股票同步顯示 PEG、價格、估值帶與正式／代理證據等級。</p>
           </div>
           <div className="dashboard-meta" aria-label="資料資訊">
-            <span>資料日 <strong>{release.marketDate ?? '—'}</strong></span>
-            <span>更新 <strong>{formatGeneratedAt(release.generatedAt)}</strong></span>
-            <button className="history-nav-button" onClick={showHistory} aria-pressed={historyView}>歷史篩選</button>
+            <button className="history-nav-button" onClick={historyView ? returnToLatest : showHistory} aria-pressed={historyView}>{historyView ? '返回最新發布' : '歷史篩選'}</button>
           </div>
         </header>
+
+        <DataStatus release={release} source={dataSource} now={Date.now()} />
 
         {historyView && <HistoryPanel />}
         <div hidden={historyView}>
@@ -237,22 +258,49 @@ function DashboardContent({ release }: { release: Release }) {
   )
 }
 
-function CoverageFunnelView({ funnel, strategy }: { funnel: CoverageFunnel; strategy: StrategyKey }) {
+export function CoverageFunnelView({ funnel, strategy }: { funnel: CoverageFunnel; strategy: StrategyKey }) {
   const growth = strategy === 'growth'
+  const growthStages = [
+    ['共同母體', funnel.universe],
+    ['估值輸入完整', funnel.growthInputComplete],
+    ['總報酬本益比可計算', funnel.growthValuationComplete],
+    ['總報酬本益比 ≥ 1.20', funnel.growthThresholdCandidates],
+    ['成長健康 ≥ 4/5', funnel.growthHealthCandidates],
+    ['最終候選', funnel.strategyCandidates],
+  ] as const
+  const standardStages = [
+    ['A 母體', funnel.universe],
+    ['價格完整', funnel.priceComplete],
+    ['PEG 可計算', funnel.valuationComplete],
+    ['PEG < 0.75', funnel.pegCandidates],
+    ['本策略', funnel.strategyCandidates],
+  ] as const
+  const stages = growth ? growthStages : standardStages
+  const missingReasonLabels: Record<string, string> = {
+    price: '價格', pe: 'PE', ttmEps: 'TTM EPS', annualEpsGrowth: '多年度 EPS 成長', earningsGrowth: '多年度 EPS 成長',
+    dividend: '已確認股利', dividendYield: '已確認股利', extreme: '極端外推', threshold: '總報酬本益比門檻', health: '成長健康檢查',
+  }
+  const missingReasons = funnel.growthMissingReasons
+    ?.filter((item) => item.count > 0)
+    .map((item) => `${missingReasonLabels[item.reason] ?? item.reason} ${item.count} 檔`)
+    .join(' · ')
+  const growthExplanation = funnel.growthInputComplete === null
+    ? '此發布未提供成長估值輸入覆蓋統計；— 表示沒有統計資料，不代表 0 檔合格。'
+    : funnel.growthValuationComplete === 0
+      ? `成長估值輸入完整 ${funnel.growthInputComplete} 檔，可計算 0 檔；目前沒有可評估門檻的估值。${missingReasons ? ` 原因：${missingReasons}。` : ''}`
+      : funnel.growthThresholdCandidates === 0
+        ? `已計算 ${funnel.growthValuationComplete} 檔，但總報酬本益比門檻合格 0 檔。${missingReasons ? ` 其他未入選原因：${missingReasons}。` : ''}`
+        : missingReasons ? `未入選原因：${missingReasons}。` : '沒有缺少輸入原因明細。'
   return (
     <section className="coverage-funnel" aria-label="候選資料漏斗">
       <div className="funnel-steps">
-        <span><small>A 母體</small><strong>{funnel.universe}</strong></span>
-        <i aria-hidden="true">→</i>
-        <span><small>價格完整</small><strong>{funnel.priceComplete}</strong></span>
-        <i aria-hidden="true">→</i>
-        <span><small>{growth ? '總報酬本益比（本站整理）估值可計算' : 'PEG 可計算'}</small><strong>{growth ? funnel.growthValuationComplete : funnel.valuationComplete}</strong></span>
-        <i aria-hidden="true">→</i>
-        <span><small>{growth ? '總報酬本益比 ≥ 1.20' : 'PEG &lt; 0.75'}</small><strong>{growth ? funnel.strategyCandidates : funnel.pegCandidates}</strong></span>
-        <i aria-hidden="true">→</i>
-        <span><small>本策略</small><strong>{funnel.strategyCandidates}</strong></span>
+        {stages.map(([label, count], index) => <Fragment key={label}>
+          {index > 0 && <i aria-hidden="true">→</i>}
+          <span><small>{label}</small><strong>{count ?? '—'}</strong></span>
+        </Fragment>)}
       </div>
-      <p>估值證據：正式 EPS {funnel.formalValuations} 檔 · 代理估算 {funnel.proxyValuations} 檔；代理 PEG 仍顯示，但不等同正式 EPS。</p>
+      {growth ? <p>{growthExplanation}</p>
+        : <p>估值證據：正式 EPS {funnel.formalValuations} 檔 · 代理估算 {funnel.proxyValuations} 檔；代理 PEG 仍顯示，但不等同正式 EPS。</p>}
     </section>
   )
 }
@@ -283,12 +331,6 @@ function ErrorScreen({ message }: { message: string }) {
       </section>
     </div>
   )
-}
-
-function formatGeneratedAt(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '—'
-  return date.toLocaleString('zh-TW', { dateStyle: 'short', timeStyle: 'short' })
 }
 
 export function AppForTest() {

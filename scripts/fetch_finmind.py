@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a small, honest static snapshot from the FinMind free-plan boundary.
+"""Seed the tracked universe or incrementally supplement its public snapshot.
 
 The browser never receives a token and never calls FinMind. This script stores
 only normalized, published fields. Missing/uncertain fields remain unknown.
@@ -15,14 +15,14 @@ import os
 import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from pipeline.finmind_client import BudgetExceeded, FinMindClient, FinMindError, SourceBlocked  # noqa: E402
+from pipeline.finmind_client import FinMindError  # noqa: E402
 from pipeline.health_inputs import normalize_finmind_health_inputs  # noqa: E402
 from pipeline.health_checks import empty_health_categories, health_totals  # noqa: E402
 from pipeline.indicators import linear_regression, revenue_growth, trust_metrics  # noqa: E402
@@ -414,136 +414,11 @@ def seed_snapshot(codes: list[str], output: Path, as_of: str | None = None) -> d
     return {"run_id": run_id, "market_date": market_date, "stocks": len(details), "queued": 0, "requests": 0, "allowed_attempts": 0, "blocked": None}
 
 
-def fetch_optional(client: FinMindClient, label: str, **kwargs: str) -> tuple[list[dict[str, Any]], str | None]:
-    try:
-        return client.get(label, **kwargs), None
-    except SourceBlocked:
-        raise
-    except (BudgetExceeded, FinMindError) as exc:
-        return [], type(exc).__name__
-
-
 def build_snapshot(codes: list[str], output: Path, as_of: str | None = None) -> dict[str, Any]:
-    client = FinMindClient.from_env()
-    info_rows = client.get("TaiwanStockInfo")
-    metadata = info_map(info_rows)
-    end = date.fromisoformat(as_of) if as_of else date.today()
-    start = end - timedelta(days=round(365 * 3.5))
-    institution_start = end - timedelta(days=70)
-    revenue_start = end - timedelta(days=620)
-    financial_start = subtract_years(end, 4)
-    details: list[dict[str, Any]] = []
-    queue: list[str] = []
-    blocked_reason: str | None = None
+    from pipeline.finmind_incremental import supplement_snapshot
 
-    for code in codes:
-        errors: list[str] = []
-        try:
-            price_rows, error = fetch_optional(client, "TaiwanStockPrice", data_id=code, start_date=start.isoformat(), end_date=end.isoformat())
-            if error: errors.append(f"price:{error}")
-            price = price_points(price_rows)
-            institution_rows, error = fetch_optional(client, "TaiwanStockInstitutionalInvestorsBuySell", data_id=code, start_date=institution_start.isoformat(), end_date=end.isoformat())
-            if error: errors.append(f"institution:{error}")
-            institution, trust = institution_window(price, institution_rows)
-            revenue_rows, error = fetch_optional(client, "TaiwanStockMonthRevenue", data_id=code, start_date=revenue_start.isoformat(), end_date=end.isoformat())
-            if error: errors.append(f"revenue:{error}")
-            revenue, rev_growth = revenue_window(revenue_rows)
-            # Keep the raw structured rows in the detail snapshot. They are
-            # public, bounded to the tracked symbols, and are the input needed
-            # for the later period/statement normalization that evaluates the
-            # 33 checks. Previously these successful responses were discarded,
-            # making every financial rule permanently unknown.
-            financial_inputs: dict[str, list[dict[str, Any]]] = {}
-            dataset_keys = {
-                "TaiwanStockFinancialStatements": "incomeStatement",
-                "TaiwanStockBalanceSheet": "balanceSheet",
-                "TaiwanStockCashFlowsStatement": "cashFlow",
-            }
-            for dataset, key in dataset_keys.items():
-                rows, error = fetch_optional(client, dataset, data_id=code, start_date=financial_start.isoformat(), end_date=end.isoformat())
-                financial_inputs[key] = rows
-                if error: errors.append(f"{dataset}:{error}")
-            details.append(make_stock(code, metadata.get(code, {"name": code, "market": "unknown", "sector": ""}), price, institution, trust, revenue, rev_growth, errors, financial_inputs))
-        except (SourceBlocked, BudgetExceeded) as exc:
-            blocked_reason = str(exc)
-            queue = codes[codes.index(code):]
-            break
-        except FinMindError as exc:
-            errors.append(type(exc).__name__)
-            details.append(make_stock(code, metadata.get(code, {"name": code, "market": "unknown", "sector": ""}), [], [], {"status": "unknown", "net_shares_10": None, "positive_days_10": None, "participation_10": None}, [], None, errors, {"incomeStatement": [], "balanceSheet": [], "cashFlow": []}))
-
-    fetched_codes = {detail["code"] for detail in details}
-    queue.extend(code for code in codes if code not in fetched_codes and code not in queue)
-    market_dates = [stock["asOf"] for stock in details if stock["asOf"]]
-    market_date = max(market_dates) if market_dates else None
-    trust_candidates = [ranking_row(stock, "trust") for stock in details if stock["participation10"] is not None and (stock["institutionNetShares10"] or 0) > 0 and stock["liquidityStatus"] == "pass"]
-    growth_observations = [ranking_row(stock, "growth") for stock in details if stock["revenueGrowth3m"] is not None]
-    trust_rank = rank(trust_candidates, reverse=True)
-    growth_rank = rank(growth_observations, reverse=True)
-    low_rank: list[dict[str, Any]] = []
-    generated = iso_now()
-    canonical = json.dumps({"codes": codes, "details": details, "marketDate": market_date}, ensure_ascii=False, sort_keys=True).encode()
-    digest = hashlib.sha256(canonical).hexdigest()[:10]
-    run_id = f"live-{datetime.now(TAIPEI).strftime('%Y%m%d-%H%M%S')}-{digest}"
-    stats = client.stats()
-    blocked = blocked_reason or (stats.blocked_reason if stats.blocked else None)
-    freshness = "degraded" if blocked or len(details) < len(codes) or any(stock["dataStatus"] != "pass" for stock in details) else "current"
-    if blocked:
-        status_message = f"FinMind 已停止補資料（{blocked}）；已取得內容保留，待補隊列未丟失。"
-    else:
-        status_message = "FinMind 免費版按股快照已生成；財務與調整價仍依規格標示 unknown。"
-    universe_count = len(metadata)
-    coverage_pct = len(details) / universe_count * 100 if universe_count else None
-    release = {
-        "schemaVersion": SCHEMA_VERSION,
-        "strategyVersion": STRATEGY_VERSION,
-        "formulaVersion": FORMULA_VERSION,
-        "runId": run_id,
-        "marketDate": market_date,
-        "generatedAt": generated,
-        "nextExpectedUpdateAt": next_expected_update(),
-        "freshness": freshness,
-        "statusMessage": status_message,
-        "sourceRefs": SOURCE_REFS + ["FinMind:user_info"],
-        "coverage": {
-            "universeCount": universe_count,
-            "databaseCount": len(details),
-            "candidateCount": len(trust_rank),
-            "pendingCount": max(0, universe_count - len(details)) + len(queue),
-            "financialCompleteCount": 0,
-            "priceCompleteCount": sum(bool(stock["asOf"]) for stock in details),
-            "completenessPct": coverage_pct,
-            "finmindRequests": stats.attempts,
-            "queueStatus": "待補：免費版按股增量；未驗證欄位不進場" if not blocked else "FinMind 暫停；待補隊列已保存",
-        },
-        "summary": {
-            "watchCount": 0,
-            "lowPositionCount": 0,
-            "candidateRouteCounts": {"trust": len(trust_rank), "growth": 0, "lowPosition": 0},
-            "addedToday": 0,
-            "improvedToday": 0,
-            "removedToday": 0,
-        },
-        "stocks": [{key: stock[key] for key in stock if key not in {"priceSeries", "regression", "institutionalDaily", "revenueMonthly", "qualityChecks", "historySnapshots", "notes", "detailLimitations"}} for stock in details],
-        "rankings": {"trust": trust_rank, "growth": growth_rank, "lowPosition": low_rank},
-        "research": {
-            "status": "not_evaluable",
-            "reason": "尚未完成 point-in-time 母體、公告可得時間、公司行動、成本與樣本外回測；不以示範績效填空。",
-            "cagr": None,
-            "maxDrawdown": None,
-            "periods": [],
-        },
-    }
-    output.mkdir(parents=True, exist_ok=True)
-    release_dir = output / "releases" / run_id
-    release_dir.mkdir(parents=True, exist_ok=True)
-    for detail in details:
-        atomic_json(release_dir / "stocks" / f"{detail['code']}.json", detail)
-    atomic_json(release_dir / "manifest.json", {**release, "inputHash": hashlib.sha256(canonical).hexdigest(), "queue": queue})
-    atomic_json(output / "latest.json", release)
-    if queue:
-        atomic_json(output.parent.parent / "private" / "refresh_queue.json", {"createdAt": generated, "codes": queue, "reason": blocked or "not_fetched", "source": "FinMind"})
-    return {"run_id": run_id, "market_date": market_date, "stocks": len(details), "queued": len(queue), "requests": stats.attempts, "allowed_attempts": stats.allowed_attempts, "blocked": blocked}
+    today = datetime.now(TAIPEI).date().isoformat()
+    return supplement_snapshot(codes, output, as_of, cache_dir=ROOT / ".cache" / "finmind", budget_date=today)
 
 
 def main() -> int:
@@ -551,13 +426,24 @@ def main() -> int:
     parser.add_argument("--codes", default=",".join(DEFAULT_CODES), help="comma-separated stock codes")
     parser.add_argument("--as-of", default=None, help="optional query end date YYYY-MM-DD")
     parser.add_argument("--output", default=str(ROOT / "public" / "data"))
+    parser.add_argument("--supplement", action="store_true", help="fill only missing inputs in an existing official snapshot")
+    parser.add_argument("--cache-dir", default=str(ROOT / ".cache" / "finmind"))
+    parser.add_argument("--budget-date", default=datetime.now(TAIPEI).date().isoformat())
+    parser.add_argument("--max-requests", type=int, default=300)
+    parser.add_argument("--max-runtime-seconds", type=int, default=1500)
     parser.add_argument("--seed-only", action="store_true", help="seed the A universe without calling FinMind")
     args = parser.parse_args()
     codes = list(dict.fromkeys(code.strip() for code in args.codes.split(",") if code.strip()))
     if not codes:
         parser.error("at least one code is required")
     try:
-        result = seed_snapshot(codes, Path(args.output), args.as_of) if args.seed_only else build_snapshot(codes, Path(args.output), args.as_of)
+        if args.seed_only:
+            result = seed_snapshot(codes, Path(args.output), args.as_of)
+        else:
+            from pipeline.finmind_incremental import supplement_snapshot
+            result = supplement_snapshot(codes, Path(args.output), args.as_of, cache_dir=Path(args.cache_dir),
+                                         budget_date=args.budget_date, max_requests=args.max_requests,
+                                         max_runtime_seconds=args.max_runtime_seconds)
     except (FinMindError, ValueError) as exc:
         print(f"snapshot_failed={type(exc).__name__}: {exc}", file=sys.stderr)
         return 1

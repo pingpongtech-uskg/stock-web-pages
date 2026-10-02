@@ -67,7 +67,18 @@ describe('validateRelease', () => {
     }) as unknown as typeof fetch
     const cached = await loadLatestRelease()
 
-    expect(cached.runId).toBe('run-1')
+    expect(cached.release.runId).toBe('run-1')
+    expect(cached.source).toBe('cache')
+    window.localStorage.clear()
+    globalThis.fetch = originalFetch
+  })
+
+  it('marks online release as network sourced', async () => {
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => validRelease() })) as unknown as typeof fetch
+    const loaded = await loadLatestRelease()
+    expect(loaded.source).toBe('network')
+    expect(loaded.release.runId).toBe('run-1')
     window.localStorage.clear()
     globalThis.fetch = originalFetch
   })

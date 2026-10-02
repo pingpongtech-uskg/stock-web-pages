@@ -13,6 +13,7 @@ import math
 from datetime import datetime, timezone
 from urllib.request import Request, urlopen
 from typing import Any, Iterable
+from pipeline.financial_periods import gregorian_year, normalized_date
 
 BASE = "https://openapi.twse.com.tw/v1"
 SOURCE = "TWSE OpenAPI"
@@ -34,17 +35,7 @@ def _code(row: dict[str, Any]) -> str:
 
 def _roc_date(value: Any) -> Any:
     """Normalize TWSE ROC calendar dates while preserving unknown values."""
-    text = str(value or "")
-    digits = "".join(character for character in text if character.isdigit())
-    if len(digits) == 8 and int(digits[:4]) >= 1900:
-        return f"{digits[:4]}-{digits[4:6]}-{digits[6:8]}"
-    if len(digits) == 7 and digits[:3].isdigit():
-        return f"{int(digits[:3]) + 1911:04d}-{digits[3:5]}-{digits[5:7]}"
-    if len(digits) == 6 and int(digits[:4]) >= 1900:
-        return f"{digits[:4]}-{digits[4:6]}"
-    if len(digits) == 6 and digits[:3].isdigit():
-        return f"{int(digits[:3]) + 1911:04d}-{digits[3:5]}"
-    return value
+    return normalized_date(value) or value
 
 
 def fetch_endpoint(endpoint: str, *, timeout: int = 20) -> list[dict[str, Any]]:
@@ -56,9 +47,14 @@ def fetch_endpoint(endpoint: str, *, timeout: int = 20) -> list[dict[str, Any]]:
 
 def _income(row: dict[str, Any]) -> dict[str, Any]:
     return {
+        "periodType": "ytd",
+        "statementScope": "consolidated",
+        "amountUnit": "TWD_thousands",
+        "source": SOURCE,
+        "inputOrigin": "reported",
         "availableAt": _roc_date(row.get("出表日期")),
-        "year": str(row.get("年度") or ""),
-        "quarter": row.get("季別"),
+        "year": gregorian_year(row.get("年度")),
+        "quarter": int(row["季別"]) if str(row.get("季別") or "").isdigit() else None,
         "revenue": _number(row.get("營業收入")),
         "grossProfit": _number(row.get("營業毛利（毛損）")),
         "operatingProfit": _number(row.get("營業利益（損失）")),
@@ -72,8 +68,8 @@ def _income(row: dict[str, Any]) -> dict[str, Any]:
 def _balance(row: dict[str, Any]) -> dict[str, Any]:
     return {
         "availableAt": _roc_date(row.get("出表日期")),
-        "year": str(row.get("年度") or ""),
-        "quarter": row.get("季別"),
+        "year": gregorian_year(row.get("年度")),
+        "quarter": int(row["季別"]) if str(row.get("季別") or "").isdigit() else None,
         "assets": _number(row.get("資產總計")),
         "liabilities": _number(row.get("負債總計")),
         "equity": _number(row.get("權益總計")),
@@ -99,18 +95,27 @@ def _revenue(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _dividend(row: dict[str, Any]) -> dict[str, Any]:
+    cash_fields = ("股東配發-盈餘分配之現金股利(元/股)", "股東配發-法定盈餘公積、資本公積之現金(元/股)")
+    cash_values = [_number(row.get(field)) for field in cash_fields]
+    # A shareholder approval date confirms the distribution. A board proposal
+    # and the feed's extraction date alone do not establish approval.
+    approval = _roc_date(row.get("股東會日期"))
     return {
-        "year": str(row.get("股利年度") or ""),
+        "year": gregorian_year(row.get("股利年度")),
         "period": row.get("股利所屬年(季)度"),
-        "cashPerShare": _number(row.get("股東配發-盈餘分配之現金股利(元/股)")),
+        "cashPerShare": sum(value for value in cash_values if value is not None) if any(value is not None for value in cash_values) else None,
         "stockPerShare": _number(row.get("股東配發-盈餘轉增資配股(元/股)")),
         "boardDate": _roc_date(row.get("董事會（擬議）股利分派日")),
+        "approvedAt": approval,
+        "confirmed": bool(approval),
         "availableAt": _roc_date(row.get("出表日期")),
+        "source": SOURCE,
     }
 
 
 def _valuation(row: dict[str, Any]) -> dict[str, Any]:
     return {
+        "source": SOURCE,
         "date": _roc_date(row.get("Date")),
         "pe": _number(row.get("PEratio")),
         "pb": _number(row.get("PBratio")),

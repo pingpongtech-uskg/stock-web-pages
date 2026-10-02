@@ -17,4 +17,16 @@ describe('strategy presentation', () => {
     expect(strategyPresentations.find((item) => item.key === 'lowPosition')?.condition).toContain('4/5')
     expect(strategyPresentations.find((item) => item.key === 'lowPosition')?.valuationNote).toContain('PEG 不可用')
   })
+
+  it('explains the actual trust and low-position empty conditions', () => {
+    const trust = strategyPresentations.find((item) => item.key === 'trust')!
+    const low = strategyPresentations.find((item) => item.key === 'lowPosition')!
+    expect(trust.emptyBody).toContain('投信十日淨買超前 10 新進榜')
+    expect(trust.emptyBody).toContain('續留')
+    expect(low.emptyBody).toContain('3.5 年回歸 Z ≤ 0')
+    expect(low.emptyBody).toContain('slope > 0')
+    expect(low.emptyBody).toContain('至少 4/5')
+    expect(low.emptyBody).toContain('PEG 缺值不會排除')
+    expect(trust.emptyBody).not.toContain('成長率')
+  })
 })

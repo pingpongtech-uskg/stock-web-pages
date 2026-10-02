@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeHistoryQuery, filterHistoryRows, defaultHistoryRange, validateHistoryIndex, validateHistoryMonth } from './history'
+import { normalizeHistoryQuery, filterHistoryRows, defaultHistoryRange, validateHistoryIndex, validateHistoryMonth, loadHistoryMonth } from './history'
 
 describe('history query', () => {
   it('normalizes dates, full-width digits, strategy, and clamps range', () => {
@@ -22,5 +22,23 @@ describe('history schemas', () => {
   it('fails closed for malformed index and month', () => {
     expect(() => validateHistoryIndex({ schemaVersion: 'wrong' })).toThrow()
     expect(() => validateHistoryMonth({ schemaVersion: 'screening-history-month-v1', month: '2026-09', records: [] })).not.toThrow()
+  })
+
+  it('keys month requests by content path and retries after a failed request', async () => {
+    const originalFetch = globalThis.fetch
+    const month = (path: string) => ({ schemaVersion: 'screening-history-month-v1', month: '2040-01', records: [{ marketDate: '2040-01-02', runId: path, revision: 'v1', strategies: {} }] })
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => month('/archive/first.json') })
+      .mockResolvedValueOnce({ ok: true, json: async () => month('/archive/second.json') })
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce({ ok: true, json: async () => month('/archive/retry.json') })
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+
+    await expect(loadHistoryMonth({ month: '2040-01', path: '/archive/first.json' })).resolves.toMatchObject({ records: [{ runId: '/archive/first.json' }] })
+    await expect(loadHistoryMonth({ month: '2040-01', path: '/archive/second.json' })).resolves.toMatchObject({ records: [{ runId: '/archive/second.json' }] })
+    await expect(loadHistoryMonth({ month: '2040-01', path: '/archive/retry.json' })).rejects.toThrow('offline')
+    await expect(loadHistoryMonth({ month: '2040-01', path: '/archive/retry.json' })).resolves.toMatchObject({ records: [{ runId: '/archive/retry.json' }] })
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+    globalThis.fetch = originalFetch
   })
 })

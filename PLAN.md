@@ -238,13 +238,13 @@ flowchart LR
     K[yfinance 可選交叉檢查] --> F
 ```
 
-預設每天台北 23:17 啟動（UTC cron `17 15 * * *`），包含週末；市場沒有新交易日時不製造新行情，可更新已公布財報、補庫與檢查來源。資料／程式內容完全沒變不重新部署。金融源更新時間以實際資料日期判定，不把排程時間當新鮮保證。
+預設由 n8n 每個平日台北 18:00 啟動，先驗證官方交易日與休市表；18:45 為完成目標，19:30 為逾時門檻。休市不製造新行情或零檔篩選結果，另記 skipped 狀態。資料／程式內容完全沒變不重新部署。金融源更新時間以實際資料日期判定，不把排程時間當新鮮保證。
 
 每次先抓公司主檔、完整交易日曆、兩市場價量與投信、估值／營收批次；從持久化資料補最近缺少的交易日，保留最近 20 日法人與流動性窗口。最新 OpenAPI 不假裝支援歷史參數；歷史查詢必須使用已核對的端點或 FinMind 按股日期查詢。
 
 財報與營收是 event-driven refresh：新期別、內容 checksum 改變、尚未完成覆蓋才重抓。未知更正可用輪巡確認；每次下載保留新版本，原版本不被覆蓋。
 
-API 預算預設每 run 最多 300 次 FinMind 請求（含重試），且不得超過帳號剩餘額度的 80%；兩者取小。每來源 concurrency 2、依來源規範限速、30 秒 timeout、最多三次嘗試，遵守 Retry-After。遇 402 配額或 429 限流停止該來源重補工作，保留隊列，不迴避限制。
+API 預算預設每個台北曆日，專案跨所有 run 與重試累計最多 300 次 FinMind HTTP attempts（包含配額查詢）。同日持久化計數不重設；補資料另受實際帳戶剩餘配額的 80% 與當日尚未使用額度限制。只有實際配額查詢確認帳戶視窗重置，才可重建該視窗 allowance，專案當日計數仍保留。每來源 concurrency 2、依來源規範限速、30 秒 timeout、最多三次嘗試，遵守 Retry-After。遇 402 配額或 429 限流停止該來源重補工作，保留隊列，不迴避限制。
 
 首次建庫不是每日穩態成本。優先建立三路候選，再逐步覆蓋其餘母體；免費方案可能需多次 run。提供 `bootstrap` 與 `backfill` CLI，但不另設每天第二個排程。任何完成日期由實測請求數、速度與覆蓋率報告，不能承諾一晚完成全市場。
 
@@ -312,7 +312,7 @@ R2 Standard 免費額度目前含 10 GB-month、100 萬 Class A、1,000 萬 Clas
 
 新 Pages 專案選 Direct Upload 前先確認模式；官方有 Git integration／Direct Upload 類型切換限制，不能事後假設隨意互換。Git integration 專案另有停用自動 build、再用 Wrangler 的官方路徑，但本新專案不需要雙路發布。
 
-`daily.yml` 僅一個每日 schedule＋workflow_dispatch，使用 `concurrency` 防重疊且不取消正在寫狀態的 run。排程可能延遲／漏跑；下次根據資料水位補日，支援手動重跑；公開 repo 長期無活動也可能停用排程。前端以過期狀態顯示，不承諾準時 SLA。
+`daily.yml` 只提供帶 `request_id`、`market_date` 的 workflow_dispatch；n8n 負責台北時間平日 18:00 排程與官方休市驗證，使用 `concurrency` 防重疊且不取消正在寫狀態的 run。排程可能延遲／漏跑；下次根據資料水位補日，支援手動重跑；公開 repo 長期無活動也可能停用排程。前端以過期狀態顯示，不承諾準時 SLA。
 
 `ci.yml` 跑 PR 驗證，不對未信任 PR 暴露秘密。`deploy.yml` 在 main 程式更新時用最新已驗證資料發布，不觸發第二次每日抓取；禁止 data 更新造成自我觸發部署迴圈。讀取同一 pending/validated run 的重試必須冪等。
 
@@ -472,3 +472,16 @@ docs/{SOURCES,OPERATIONS,DATA_CONTRACTS,RESEARCH_PROTOCOL}.md
 完整v1驗收必須同時通過資料、計算、UI、紀律、部署、效能與研究功能項。投資績效目標若未達成，研究結果可以通過誠實呈現的軟體驗收，但不能取得策略有效性結論。
 
 開發者第一個任務是P0，不是先做漂亮首頁或直接搬舊站。每一階段完工都附當前覆蓋率、已知資料缺口與`answers.key`狀態，再進下一階段。
+
+## 2026-10-02 daily screening integration checklist
+
+- [x] Dispatch requires independent market date and request ID; exact request correlation appears in run name and export.
+- [x] Official bulk refresh precedes bounded supplementary FinMind requests; recompute uses existing inputs only.
+- [x] Same-day budget and durable financial rows restore before refresh; checkpoints save on failure.
+- [x] Production Actions refreshes serialize without canceling active runs.
+- [x] Canonical screening-export-v1 includes deduplicated stock rows, three strategies, hashes and Git/Actions lineage.
+- [x] History corrections preserve immutable revisions; six real legacy dates remain labeled and no dates are fabricated.
+- [x] Authoritative exchange calendar distinguishes open exceptions from closures and rejects unavailable years.
+- [ ] Verify a real triggered Actions run and exported artifact against the deployed production website.
+- [ ] Verify n8n CAS coordination, Notion schema/upsert/readback, failure ledger and concurrent retry behavior.
+- [ ] Measure warm and cold run timing, quota usage and financial coverage against the 18:45 target / 19:30 deadline.

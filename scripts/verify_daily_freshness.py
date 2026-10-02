@@ -31,11 +31,22 @@ def latest_market_date(config: dict[str, Any]) -> str | None:
     return max(valid) if valid else None
 
 
-def freshness_errors(data_dir: Path, config_path: Path) -> list[str]:
+def freshness_errors(data_dir: Path, config_path: Path, requested_market_date: str | None = None) -> list[str]:
     release = load(data_dir / "latest.json")
     config = load(config_path)
     expected = latest_market_date(config)
     errors: list[str] = []
+    if requested_market_date:
+        try:
+            if date.fromisoformat(requested_market_date).isoformat() != requested_market_date:
+                raise ValueError('exact ISO date required')
+        except ValueError:
+            return ['requested_market_date_invalid']
+        if expected != requested_market_date:
+            errors.append(f'official_market_date:{expected}!={requested_market_date}')
+        expected = requested_market_date
+    if (config.get('universe') or {}).get('stale') or (release.get('coverage') or {}).get('universeStale'):
+        errors.append('official_universe_stale')
     if expected is None:
         return ["official_universe_market_date_missing"]
     if str(release.get("marketDate") or "") != expected:
@@ -88,9 +99,19 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-dir", required=True)
     parser.add_argument("--config", required=True)
+    parser.add_argument("--market-date")
+    parser.add_argument("--universe-only", action="store_true")
     args = parser.parse_args()
     try:
-        errors = freshness_errors(Path(args.data_dir), Path(args.config))
+        if args.universe_only:
+            expected = latest_market_date(load(Path(args.config)))
+            if not args.market_date or date.fromisoformat(args.market_date).isoformat() != args.market_date:
+                raise ValueError('exact requested market date required')
+            errors = [] if expected == args.market_date else [f'official_market_date:{expected}!={args.market_date}']
+            if (load(Path(args.config)).get('universe') or {}).get('stale'):
+                errors.append('official_universe_stale')
+        else:
+            errors = freshness_errors(Path(args.data_dir), Path(args.config), args.market_date)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"daily_freshness_failed={type(exc).__name__}: {exc}", file=sys.stderr)
         return 1

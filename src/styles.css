@@ -47,6 +47,7 @@ button { cursor: pointer; }
 .data-status strong, .data-status span { display: block; }
 .data-status strong { color: var(--text); font-size: 12px; }
 .data-status-meta { display: flex; margin-left: auto; gap: 16px; color: var(--faint); font-family: var(--mono); font-size: 10px; white-space: nowrap; }
+.cache-note { color: var(--amber); font-style: normal; font-weight: 700; }
 .market-volume-indicator { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(180px, .65fr) minmax(250px, .9fr); align-items: center; gap: 18px; margin: 2px 0 12px; border: 1px solid var(--line); border-left: 4px solid var(--line-strong); border-radius: 10px; background: var(--card); padding: 14px 16px; box-shadow: var(--shadow); }
 .market-volume-indicator.signal-green { border-left-color: var(--green); background: linear-gradient(90deg, var(--green-soft), var(--card) 48%); }
 .market-volume-indicator.signal-yellow { border-left-color: var(--amber); background: linear-gradient(90deg, var(--amber-soft), var(--card) 48%); }
@@ -183,8 +184,8 @@ button { cursor: pointer; }
   .dashboard-header h1 { font-size: 34px; }
   .dashboard-intro { font-size: 13px; }
   .dashboard-meta { grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-left: 0; margin-top: 19px; padding: 13px 0 0; }
-  .data-status { align-items: flex-start; }
-  .data-status-meta { display: none; }
+  .data-status { align-items: flex-start; flex-wrap: wrap; }
+  .data-status-meta { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 12px; margin-left: 21px; white-space: normal; }
   .market-volume-indicator { grid-template-columns: 1fr 1fr; gap: 12px; }
   .market-volume-detail { grid-column: 1 / -1; }
   .funnel-steps { align-items: flex-start; overflow-x: auto; justify-content: flex-start; padding-bottom: 2px; }
@@ -225,6 +226,8 @@ button { cursor: pointer; }
 .history-filters label { display: grid; gap: 5px; color: var(--muted); font-size: 11px; font-weight: 800; }
 .history-filters input, .history-filters select { min-width: 0; min-height: 42px; border: 1px solid var(--line-strong); border-radius: 6px; background: white; padding: 0 9px; color: var(--text); }
 .history-error, .history-notice { margin: 0; color: var(--red); font-size: 12px; font-weight: 700; }
+.history-retry { display: flex; align-items: center; gap: 10px; }
+.history-error button { min-height: 32px; border: 1px solid var(--red); border-radius: 5px; background: var(--red-soft); color: var(--red); padding: 0 9px; font-size: 11px; font-weight: 800; }
 .history-notice { color: var(--amber); }
 .history-empty { margin: 0; border: 1px dashed var(--line-strong); border-radius: 7px; padding: 20px; color: var(--muted); text-align: center; }
 .history-results { display: grid; gap: 9px; min-width: 0; }

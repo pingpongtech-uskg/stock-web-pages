@@ -6,9 +6,11 @@ The growth strategy uses a documented total-return P/E reference method.
 from __future__ import annotations
 
 import math
-import statistics
 from collections import defaultdict
 from typing import Any
+from datetime import date
+from calendar import monthrange
+from pipeline.financial_periods import normalized_period, quarterly_income, compatible_rows, normalized_date
 
 PEG_ACCEPTABLE_MAX = 0.75
 PEG_STRICT_MAX = 0.66
@@ -90,68 +92,68 @@ def calculate_zulu_valuation(
     }
 
 
-def _annual_eps(rows: list[dict[str, Any]]) -> dict[int, float]:
-    grouped: dict[int, dict[int, float]] = defaultdict(dict)
-    for row in rows:
-        if not isinstance(row, dict):
+def _validated_eps_rows(rows: list[dict[str, Any]], as_of: str | None = None) -> list[dict[str, Any]]:
+    cutoff = normalized_date(as_of) if as_of else None
+    result = []
+    for row in quarterly_income(rows):
+        year, quarter = normalized_period(row)
+        period_end = date(year, quarter * 3, monthrange(year, quarter * 3)[1]).isoformat()
+        if cutoff and period_end > cutoff:
             continue
-        try:
-            year = int(str(row.get("year")))
-            quarter = int(str(row.get("quarter")))
-            eps = float(row.get("eps"))
-        except (TypeError, ValueError):
+        if cutoff and any(str(row.get(field) or "")[:10] > cutoff for field in ("availableAt", "publishedAt", "periodEnd")):
             continue
-        if quarter not in {1, 2, 3, 4} or not math.isfinite(eps):
-            continue
-        grouped[year][quarter] = eps
-
-    result: dict[int, float] = {}
-    for year, quarters in grouped.items():
-        if set(quarters) != {1, 2, 3, 4}:
-            continue
-        total = sum(quarters.values())
-        if math.isfinite(total) and total > 0:
-            result[year] = total
+        if _finite(row.get("eps")) is not None:
+            result.append(row)
     return result
 
 
-def _ttm_eps(rows: list[dict[str, Any]]) -> float | None:
-    ordered: list[tuple[int, int, float]] = []
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        try:
-            year = int(str(row.get("year")))
-            quarter = int(str(row.get("quarter")))
-            eps = float(row.get("eps"))
-        except (TypeError, ValueError):
-            continue
-        if quarter in {1, 2, 3, 4} and math.isfinite(eps):
-            ordered.append((year, quarter, eps))
-    ordered.sort(key=lambda item: (item[0], item[1]))
-    if len(ordered) < 4:
+def _annual_eps(rows: list[dict[str, Any]], as_of: str | None = None) -> dict[int, float]:
+    grouped: dict[int, dict[int, dict[str, Any]]] = defaultdict(dict)
+    cutoff_year = int((normalized_date(as_of) or str(date.today()))[:4])
+    for row in _validated_eps_rows(rows, as_of):
+        year, quarter = normalized_period(row)
+        if year < cutoff_year:
+            grouped[year][quarter] = row
+    result = {}
+    for year, quarters in grouped.items():
+        if set(quarters) == {1, 2, 3, 4} and compatible_rows(quarters.values(), eps=True):
+            total = sum(float(row["eps"]) for row in quarters.values())
+            if math.isfinite(total):
+                result[year] = total
+    return result
+
+
+def derive_ttm_eps(rows: list[dict[str, Any]], *, as_of: str | None = None) -> float | None:
+    """Return four unique consecutive quarters on a comparable EPS basis."""
+    normalized = quarterly_income(rows)
+    window = normalized[-4:]
+    if len(window) < 4 or not compatible_rows(window, eps=True):
         return None
-    value = sum(item[2] for item in ordered[-4:])
-    return value if math.isfinite(value) and value > 0 else None
-
-
-def derive_ttm_eps(rows: list[dict[str, Any]]) -> float | None:
-    """Return the latest four reported quarters' EPS total."""
-    return _ttm_eps(rows)
+    keys = [normalized_period(row) for row in window]
+    indices = [year * 4 + quarter for year, quarter in keys]
+    if any(current != previous + 1 for previous, current in zip(indices, indices[1:])):
+        return None
+    eligible = _validated_eps_rows(window, as_of)
+    if len(eligible) != 4:
+        return None
+    total = sum(float(row["eps"]) for row in eligible)
+    return total if math.isfinite(total) and total > 0 else None
 
 
 def derive_stable_eps_growth(
     rows: list[dict[str, Any]],
     *,
     min_valid_years: int = GROWTH_MIN_VALID_ANNUAL_YEARS,
+    as_of: str | None = None,
 ) -> dict[str, Any]:
     """Derive multi-year EPS growth without substituting revenue growth."""
-    annual = _annual_eps(rows)
+    annual = _annual_eps(rows, as_of)
     years = sorted(annual)[-5:]
-    if len(years) < min_valid_years:
+    comparable = compatible_rows([row for row in _validated_eps_rows(rows, as_of) if normalized_period(row)[0] in years], eps=True)
+    if len(years) < min_valid_years or not comparable or any(annual[year] <= 0 for year in years):
         return {
             "method": "no_stable_growth",
-            "method_label": "完整年度 EPS 資料不足",
+            "method_label": "完整年度 EPS 資料不足" if len(years) < min_valid_years else "年度 EPS 口徑不一致" if not comparable else "完整年度 EPS 包含非正值",
             "growth": None,
             "valid_years": len(years),
             "annual_eps": annual,
@@ -165,28 +167,15 @@ def derive_stable_eps_growth(
         if math.isfinite(growth):
             return {
                 "method": "five_year_eps_cagr",
-                "method_label": "多年度 EPS CAGR（可得完整年度）",
+                "method_label": f"EPS CAGR（{first_year}–{last_year}，{span} 年跨度）",
+                "start_year": first_year,
+                "end_year": last_year,
                 "growth": growth,
                 "valid_years": len(years),
                 "growth_years": span,
                 "annual_eps": annual,
             }
 
-    rates = [
-        annual[current] / annual[previous] - 1.0
-        for previous, current in zip(years, years[1:])
-        if annual[previous] > 0 and annual[current] > 0
-    ]
-    rates = [rate for rate in rates if math.isfinite(rate)]
-    if rates:
-        return {
-            "method": "median_annual_eps_growth",
-            "method_label": "有效年度 EPS 成長中位數",
-            "growth": statistics.median(rates),
-            "valid_years": len(years),
-            "growth_years": len(rates),
-            "annual_eps": annual,
-        }
     return {
         "method": "no_stable_growth",
         "method_label": "有效年度 EPS 成長不足",

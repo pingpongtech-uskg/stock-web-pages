@@ -12,11 +12,11 @@ def test_growth_health_requires_four_known_passes():
 
 
 def test_next_expected_update_skips_weekend_after_friday_market_date():
-    assert next_expected_update_for_market_date("2026-09-18") == "2026-09-21T15:17:00+00:00"
+    assert next_expected_update_for_market_date("2026-09-18") == "2026-09-21T11:30:00+00:00"
 
 
 def test_next_expected_update_uses_next_day_for_weekday_market_date():
-    assert next_expected_update_for_market_date("2026-09-17") == "2026-09-18T15:17:00+00:00"
+    assert next_expected_update_for_market_date("2026-09-17") == "2026-09-18T11:30:00+00:00"
 
 
 def test_trust_strategy_keeps_only_new_entries():
@@ -160,3 +160,237 @@ def test_growth_route_rejects_extreme_formal_valuation():
     }}}
 
     assert _attach_valuation(rows, details, valuation_key="growthValuation", require_growth_total_return_pe=1.2) == []
+
+
+def test_enrichment_preserves_merged_financial_history():
+    from datetime import date
+    from scripts.refresh_snapshot import enrich_detail
+    detail = {"code": "2330", "healthInputs": {
+        "incomeQuarterly": [{"year": 2025, "quarter": 1, "eps": 2}],
+        "balanceQuarterly": [{"year": 2025, "quarter": 1, "equity": 100}],
+        "monthlyRevenueOfficial": [{"month": "2025-03", "revenue": 100}],
+    }}
+    result, _ = enrich_detail(detail, end=date(2026, 10, 1), offline=True, public_inputs={
+        "incomeQuarterly": [{"year": 115, "quarter": 2, "eps": 3}],
+        "balanceQuarterly": [{"year": 115, "quarter": 2, "equity": 200}],
+        "monthlyRevenueOfficial": [{"month": "2026-08", "revenue": 150}],
+    })
+    assert len(result["healthInputs"]["incomeQuarterly"]) == 2
+    assert len(result["healthInputs"]["balanceQuarterly"]) == 2
+    assert len(result["healthInputs"]["monthlyRevenueOfficial"]) == 2
+
+
+def test_dividend_aggregation_rejects_proposals_future_and_incomplete_quarters():
+    from scripts.refresh_snapshot import _confirmed_dividend_yield
+    detail = {"asOf": "2026-10-01", "healthInputs": {"dividends": [
+        {"year": 114, "period": f"114Q{q}", "cashPerShare": 1, "confirmed": True,
+         "availableAt": "2026-03-01"} for q in (1, 2, 3, 4)
+    ]}}
+    assert _confirmed_dividend_yield(detail, 100) == 0.04
+    detail["healthInputs"]["dividends"].append({"year": 115, "period": "115", "cashPerShare": 99,
+                                               "confirmed": False, "availableAt": "2026-09-01"})
+    detail["healthInputs"]["dividends"].append({"year": 115, "period": "115", "cashPerShare": 99,
+                                               "confirmed": True, "availableAt": "2026-12-01"})
+    assert _confirmed_dividend_yield(detail, 100) == 0.04
+    detail["healthInputs"]["dividends"] = detail["healthInputs"]["dividends"][:2]
+    assert _confirmed_dividend_yield(detail, 100) is None
+
+
+def test_primary_valuation_derives_missing_pe_only_from_same_day_price_valid_ttm():
+    from scripts.refresh_snapshot import _growth_valuation_from_detail
+    detail = {"asOf": "2026-10-01", "lastPrice": 100, "healthInputs": {
+        "incomeQuarterly": [{"year": y, "quarter": q, "eps": (4 * 1.2 ** (y - 2022)) / 4}
+                             for y in (2022, 2023, 2024, 2025) for q in (1, 2, 3, 4)],
+        "dividends": [{"year": 2025, "period": "2025", "cashPerShare": 0, "confirmed": True,
+                       "availableAt": "2026-06-01"}],
+        "valuationCurrent": {"date": "2026-10-01", "pe": None},
+    }}
+    result = _growth_valuation_from_detail(detail)
+    assert result["current_pe"] == 100 / result["ttm_eps"]
+    assert result["inputAudit"]["pe"]["origin"] == "derived"
+    detail["healthInputs"]["valuationCurrent"] = {"date": "2026-09-30", "pe": 10}
+    result = _growth_valuation_from_detail(detail)
+    assert result["inputAudit"]["pe"]["origin"] == "derived"
+    assert result["current_pe"] != 10
+
+
+
+def test_next_expected_update_respects_known_closed_dates():
+    assert next_expected_update_for_market_date("2026-09-18", non_trading_dates={"2026-09-21"}, deadline="20:00") == "2026-09-22T12:00:00+00:00"
+
+
+def test_three_month_growth_does_not_use_nonconsecutive_months():
+    from scripts.refresh_snapshot import _revenue_growth_from_public_inputs
+    rows = [{"month": f"{year}-{month:02d}", "revenue": 100 if year == 2025 else 110}
+            for year in (2025, 2026) for month in (1, 3, 4)]
+    assert _revenue_growth_from_public_inputs({"monthlyRevenueOfficial": rows}) is None
+
+
+def test_growth_funnel_counts_input_calculation_threshold_health_separately():
+    from scripts.refresh_snapshot import growth_funnel
+    valuations = [
+        {"status": "unavailable", "inputsComplete": False, "missingReasons": ["pe", "ttmEps"]},
+        {"status": "extreme", "inputsComplete": True, "total_return_pe": 3},
+        {"status": "available", "inputsComplete": True, "total_return_pe": 1},
+        {"status": "available", "inputsComplete": True, "total_return_pe": 1.3},
+        {"status": "available", "inputsComplete": True, "total_return_pe": 1.4},
+    ]
+    details = [{"code": str(2000+i), "growthValuation": value, "growthHealthEligible": i == 4} for i,value in enumerate(valuations)]
+    result = growth_funnel(details)
+    assert result["growthInputComplete"] == 4
+    assert result["growthValuationComplete"] == 3
+    assert result["growthThresholdCandidates"] == 2
+    assert result["growthHealthCandidates"] == 1
+    reasons = {row["reason"]: row["count"] for row in result["growthMissingReasons"]}
+    assert reasons["pe"] == 1 and reasons["ttmEps"] == 1
+    assert reasons["extreme"] == 1 and reasons["threshold"] == 1 and reasons["health"] == 1
+
+
+def test_known_stock_dividend_blocks_unadjusted_quarter_eps():
+    from scripts.refresh_snapshot import _growth_valuation_from_detail
+    detail = {"asOf": "2026-10-01", "lastPrice": 100, "healthInputs": {
+        "incomeQuarterly": [{"year": y, "quarter": q, "eps": 2} for y in (2022, 2023, 2024, 2025) for q in (1,2,3,4)],
+        "dividends": [{"year": 2025, "period": "2025", "cashPerShare": 1, "stockPerShare": 1, "confirmed": True, "availableAt": "2026-01-01"}],
+    }}
+    result = _growth_valuation_from_detail(detail)
+    assert result["ttm_eps"] is None
+    assert result["earnings_growth"] is None
+
+
+def test_cached_recompute_has_no_network_and_selects_growth_without_15_percent_revenue(tmp_path, monkeypatch):
+    import json
+    import scripts.refresh_snapshot as refresh
+    data = tmp_path / "public" / "data"
+    data.mkdir(parents=True)
+    income = [{"year": year, "quarter": quarter, "eps": 1.2 ** (year - 2022),
+               "grossProfit": 100 * 1.2 ** (year - 2022), "operatingProfit": 80 * 1.2 ** (year - 2022),
+               "pretaxProfit": 70 * 1.2 ** (year - 2022), "netIncome": 60 * 1.2 ** (year - 2022)}
+              for year in (2022, 2023, 2024, 2025) for quarter in (1,2,3,4)]
+    revenue = [{"month": f"{year}-{month:02d}", "revenue": 100 if year == 2025 else 101}
+               for year in (2025,2026) for month in (6,7,8)]
+    detail = {"code": "2330", "name": "Test", "asOf": "2026-10-01", "lastPrice": 80,
+              "priceSeries": [{"date": "2026-10-01", "close": 80, "adjustedClose": 80, "volume": 100}],
+              "healthInputs": {"incomeQuarterly": income, "monthlyRevenueOfficial": revenue,
+                               "dividends": [{"year": 2025,"period": "2025", "cashPerShare": 0,
+                                              "confirmed": True, "availableAt": "2026-06-01"}]}}
+    (data / "latest.json").write_text(json.dumps({"runId": "baseline", "marketDate": "2026-10-01",
+                                                "freshness": "current", "stocks": [detail], "marketIndicators": {"volumeMultiple00631L": {"status": "unavailable"}}}))
+    def unexpected_network(*args, **kwargs):
+        raise AssertionError("cached recompute called network")
+    for key in ("build_health_inputs", "fetch_adjusted_history", "fetch_fundamental_proxies", "build_00631l_volume_indicator"):
+        monkeypatch.setattr(refresh, key, unexpected_network)
+    result = refresh.build_release(data, [], as_of="2026-10-02", offline=False, recompute_existing=True)
+    latest = json.loads((data / "latest.json").read_text())
+    assert result["market_date"] == "2026-10-01"
+    assert latest["rankings"]["growth"][0]["code"] == "2330"
+    assert latest["funnel"]["growthInputComplete"] == 1
+    assert latest["funnel"]["growthThresholdCandidates"] == 1
+    assert latest["funnel"]["growthHealthCandidates"] == 1
+    assert latest["acquisitionMode"] == "cached_recompute"
+
+
+def test_live_enrichment_does_not_replace_actual_price_date_with_requested_today(monkeypatch):
+    from datetime import date
+    import scripts.refresh_snapshot as refresh
+    monkeypatch.delenv("FAST_REFRESH", raising=False)
+    monkeypatch.setattr(refresh, "fetch_adjusted_history", lambda *args: (
+        [{"date": "2026-10-01", "close": 100, "adjustedClose": 100, "source": refresh.YFINANCE_PRICE_SOURCE}],
+        refresh.YFINANCE_PRICE_SOURCE, None))
+    monkeypatch.setattr(refresh, "fetch_fundamental_proxies", lambda *args: (
+        {"latestOperatingMargin": .2, "latestNetIncome": 100, "latestOperatingCashFlow": 200},
+        refresh.YFINANCE_FUNDAMENTAL_SOURCE, None))
+    detail, errors = refresh.enrich_detail({"code": "2330", "asOf": "2026-09-30", "priceSeries": []},
+                                         end=date(2026,10,2), offline=False)
+    assert errors == []
+    assert detail["asOf"] == "2026-10-01"
+    assert detail["lastPrice"] == 100
+
+
+def test_latest_dividend_year_incomplete_blocks_using_older_complete_year():
+    from scripts.refresh_snapshot import _confirmed_dividend_yield
+    detail = {"asOf": "2026-10-01", "healthInputs": {"dividends": [
+        {"year": 2024, "period": "2024", "cashPerShare": 10, "confirmed": True, "availableAt": "2025-03-01"},
+        {"year": 2025, "period": "2025Q1", "cashPerShare": 1, "confirmed": True, "availableAt": "2026-03-01"},
+    ]}}
+    assert _confirmed_dividend_yield(detail, 100) is None
+
+
+def test_confirmed_annual_zero_dividend_is_available_not_unknown():
+    from scripts.refresh_snapshot import _confirmed_dividend_yield
+    detail = {"asOf": "2026-10-01", "healthInputs": {"dividends": [
+        {"year": 2025, "period": "2025", "cashPerShare": 0, "confirmed": True, "availableAt": "2026-03-01"},
+    ]}}
+    assert _confirmed_dividend_yield(detail, 100) == 0
+    detail["healthInputs"]["dividends"] = []
+    assert _confirmed_dividend_yield(detail, 100) is None
+
+
+def test_release_deadline_uses_authoritative_calendar_and_fails_closed_outside_year(tmp_path):
+    import json
+    from scripts.refresh_snapshot import release_next_expected_update
+    (tmp_path / "trading-calendar.json").write_text(json.dumps({
+        "schemaVersion": "trading-calendar-v1", "timezone": "Asia/Taipei", "year": 2026, "closedDates": ["2026-10-09"],
+        "openExceptions": [],
+    }))
+    assert release_next_expected_update(tmp_path, "2026-10-08") == "2026-10-12T11:30:00+00:00"
+    assert release_next_expected_update(tmp_path, "2026-12-31") is None
+
+
+def test_legacy_official_snapshot_is_not_mistaken_for_single_quarter():
+    from scripts.refresh_snapshot import _health_inputs_from_detail
+    result = _health_inputs_from_detail({"healthInputs": {"source": "TWSE OpenAPI", "incomeQuarterly": [
+        {"year": 115, "quarter": 2, "eps": 5},
+    ]}})
+    assert result["incomeQuarterly"][0]["periodType"] == "ytd"
+
+
+def test_primary_pe_does_not_use_adjusted_price_as_same_day_raw_close():
+    from scripts.refresh_snapshot import _growth_valuation_from_detail
+    detail = {"asOf": "2026-10-01", "lastPrice": 100, "priceSeries": [
+        {"date": "2026-10-01", "adjustedClose": 100}], "healthInputs": {
+        "incomeQuarterly": [{"year": 2025, "quarter": q, "eps": 1} for q in (1,2,3,4)],
+    }}
+    result = _growth_valuation_from_detail(detail)
+    assert result["current_pe"] is None
+    assert result["current_price"] is None
+    assert result["inputAudit"]["price"]["origin"] == "proxy"
+
+
+def test_recompute_cli_passes_cached_mode_and_as_of_without_network(monkeypatch, capsys, tmp_path):
+    import sys
+    import scripts.refresh_snapshot as refresh
+    calls = []
+    monkeypatch.setattr(sys, "argv", ["refresh_snapshot.py", "--recompute-existing", "--as-of", "2026-10-02", "--output", str(tmp_path)])
+    def build(data, codes, **kwargs):
+        calls.append((data, codes, kwargs))
+        return {"market_date": "2026-10-01"}
+    monkeypatch.setattr(refresh, "build_release", build)
+    assert refresh.main() == 0
+    assert calls[0][2]["recompute_existing"] is True
+    assert calls[0][2]["as_of"] == "2026-10-02"
+    assert "2026-10-01" in capsys.readouterr().out
+
+
+def test_deadline_invalid_market_date_does_not_fabricate_today():
+    assert next_expected_update_for_market_date("invalid") is None
+    assert next_expected_update_for_market_date(None) is None
+
+
+def test_dividend_annual_and_quarter_rows_are_not_double_counted():
+    from scripts.refresh_snapshot import _confirmed_dividend_yield
+    rows = [{"year": 2025, "period": "annual", "cashPerShare": 4, "confirmed": True,
+             "availableAt": "2026-06-01"}] + [
+        {"year": 2025, "period": f"Q{quarter}", "cashPerShare": 1, "confirmed": True,
+         "availableAt": "2026-03-01"} for quarter in (1,2,3,4)]
+    assert _confirmed_dividend_yield({"asOf": "2026-10-01", "healthInputs": {"dividends": rows}}, 100) == .04
+
+
+def test_enrichment_returns_new_detail_without_mutating_source_snapshot():
+    from datetime import date
+    import copy
+    from scripts.refresh_snapshot import enrich_detail
+    original = {"code": "2330", "priceSeries": [], "revenueMonthly": [{"month": "2025-03", "revenue": 100}]}
+    before = copy.deepcopy(original)
+    result, _ = enrich_detail(original, end=date(2026, 10, 1), offline=True)
+    assert original == before
+    assert result is not original

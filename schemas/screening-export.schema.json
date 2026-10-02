@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Screening Export v1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "marketDate",
+    "generatedAt",
+    "runId",
+    "requestId",
+    "sourceGitCommit",
+    "actionsRunId",
+    "formulaVersions",
+    "revision",
+    "payloadHash",
+    "strategies",
+    "selectedStocks",
+    "legacy",
+    "freshness",
+    "coverage",
+    "funnel"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "screening-export-v1"
+    },
+    "marketDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requestId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_.:-]{1,160}$"
+    },
+    "sourceGitCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "actionsRunId": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "formulaVersions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{12}$"
+    },
+    "payloadHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "legacy": {
+      "type": "boolean"
+    },
+    "freshness": {
+      "enum": [
+        "current",
+        "degraded"
+      ]
+    },
+    "coverage": {
+      "type": "object"
+    },
+    "funnel": {
+      "type": "object"
+    },
+    "strategies": {
+      "type": "object",
+      "required": [
+        "trust",
+        "growth",
+        "lowPosition"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "trust": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "code",
+              "rank"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rank": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "growth": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "code",
+              "rank"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rank": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "lowPosition": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "code",
+              "rank"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rank": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    "selectedStocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "sector",
+          "metrics",
+          "strategies",
+          "provenance"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "sector": {
+            "type": "string"
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "strategies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "strategy",
+                "rank",
+                "status",
+                "reason"
+              ]
+            }
+          },
+          "provenance": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

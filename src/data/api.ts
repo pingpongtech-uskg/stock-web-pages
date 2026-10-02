@@ -185,6 +185,17 @@ export function validateRelease(payload: unknown): Release {
   const funnelPrice = requireFiniteNumber(funnel.priceComplete)
   const funnelValuation = requireFiniteNumber(funnel.valuationComplete)
   if (funnel.growthValuationComplete !== undefined) requireFiniteNumber(funnel.growthValuationComplete)
+  for (const key of ['growthInputComplete', 'growthThresholdCandidates', 'growthHealthCandidates']) {
+    if (funnel[key] !== undefined) requireFiniteNumber(funnel[key])
+  }
+  if (funnel.growthMissingReasons !== undefined) {
+    expect(requireArray(funnel.growthMissingReasons).every((value) => {
+      const item = requireRecord(value)
+      requireString(item.reason)
+      requireFiniteNumber(item.count)
+      return true
+    }))
+  }
   const funnelPeg = requireFiniteNumber(funnel.pegCandidates)
   const funnelFormal = requireFiniteNumber(funnel.formalValuations)
   const funnelProxy = requireFiniteNumber(funnel.proxyValuations)
@@ -239,14 +250,19 @@ function loadCachedRelease(): Release | null {
   }
 }
 
-export async function loadLatestRelease(): Promise<Release> {
+export interface LoadedRelease {
+  release: Release
+  source: 'network' | 'cache'
+}
+
+export async function loadLatestRelease(): Promise<LoadedRelease> {
   try {
     const release = validateRelease(await getJson<unknown>(`${DATA_ROOT}/latest.json`))
     cacheRelease(release)
-    return release
+    return { release, source: 'network' }
   } catch (error) {
     const cached = loadCachedRelease()
-    if (cached) return cached
+    if (cached) return { release: cached, source: 'cache' }
     throw error
   }
 }
@@ -264,8 +280,8 @@ export async function loadStockDetail(runId: string, code: string): Promise<Stoc
     // propagating through Pages.  Render the same release summary instead of
     // turning the whole stock page into a 404; the page clearly shows that
     // its detailed chart/evidence is waiting for the next data sync.
-    const release = await loadLatestRelease()
-    const summary = release.stocks.find((stock) => stock.code === code)
+    const loaded = await loadLatestRelease()
+    const summary = loaded.release.stocks.find((stock) => stock.code === code)
     if (!summary) throw error
     return summary
   }

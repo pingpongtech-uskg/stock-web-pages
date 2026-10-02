@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import Any, Callable, Iterable
 from datetime import date
+from pipeline.growth_health import evaluate_growth_health
+from pipeline.health_inputs import merge_health_inputs
 
 
 CATEGORY_DEFINITIONS: tuple[tuple[str, str, int, tuple[str, ...]], ...] = (
@@ -328,4 +330,9 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
                 if check.get("status") == "unknown" and key != "growth":
                     check.update({"status": "fail", "value": "未取得", "explanation": "目前追蹤快照沒有可比欄位；保守列為未通過，待補資料只會提升證據，不會默認通過。"})
             by_key[key] = evaluate_category(key, category["checks"])
+    # Use the same normalized five-check evaluator as the strategy gate.
+    normalized = merge_health_inputs({"monthlyRevenueOfficial": revenue_rows}, inputs)
+    growth = evaluate_growth_health(normalized.get("monthlyRevenueOfficial", []), normalized.get("incomeQuarterly", []))
+    growth_checks = [{**check, "period": "最近三個月／最近單季同口徑比較", "sourceRefs": official_refs} for check in growth["checks"]]
+    by_key["growth"] = evaluate_category("growth", growth_checks)
     return [by_key[key] for key, _label, _threshold, _labels in CATEGORY_DEFINITIONS]

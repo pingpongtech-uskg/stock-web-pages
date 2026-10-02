@@ -62,3 +62,28 @@ def test_one_month_positive_does_not_satisfy_three_month_rule():
     assert result["checks"][0]["status"] == "fail"
     assert result["passCount"] == 4
     assert result["status"] == "fail"
+
+
+def test_quarter_growth_normalizes_roc_and_rejects_negative_comparison_base():
+    result = evaluate_growth_health([], [
+        {"year": 2025, "quarter": 2, "grossProfit": 100, "netIncome": -100},
+        {"year": 115, "quarter": 2, "grossProfit": 120, "netIncome": -120},
+    ])
+    assert result["checks"][1]["status"] == "pass"
+    assert result["checks"][4]["status"] == "unknown"
+
+
+def test_quarter_ytd_without_previous_ytd_stays_unknown():
+    result = evaluate_growth_health([], [
+        {"year": 2025, "quarter": 2, "grossProfit": 100, "periodType": "ytd"},
+        {"year": 2026, "quarter": 2, "grossProfit": 200, "periodType": "ytd"},
+    ])
+    assert result["checks"][1]["status"] == "unknown"
+
+
+def test_different_amount_units_are_not_like_for_like_growth():
+    result = evaluate_growth_health([], [
+        {"year": 2025, "quarter": 2, "grossProfit": 100, "amountUnit": "TWD"},
+        {"year": 2026, "quarter": 2, "grossProfit": 120, "amountUnit": "TWD_thousands"},
+    ])
+    assert result["checks"][1]["status"] == "unknown"

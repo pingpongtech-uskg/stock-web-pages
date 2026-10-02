@@ -1,19 +1,56 @@
 name: Daily snapshot and deploy
+run-name: Daily screening | ${{ inputs.request_id }} | ${{ inputs.market_date }}
 on:
-  # Hermes owns the Taipei-time trading-day schedule. Keep this workflow
-  # dispatchable so the durable cron can trigger the validated release.
+  # n8n owns the weekday 18:00 Asia/Taipei schedule and holiday verification.
   workflow_dispatch:
+    inputs:
+      request_id:
+        description: Unique n8n request correlation ID
+        required: true
+        type: string
+      market_date:
+        description: Independently requested Taiwan session (YYYY-MM-DD)
+        required: true
+        type: string
 permissions:
   contents: write
+  actions: read
 concurrency:
   group: daily-snapshot
   cancel-in-progress: false
 jobs:
   snapshot:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 80
+    env:
+      REQUEST_ID: ${{ inputs.request_id }}
+      MARKET_DATE: ${{ inputs.market_date }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Validate dispatch inputs and initialize checkpoint directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os, re
+          from datetime import date
+          assert re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}', os.environ['REQUEST_ID']), 'invalid request_id'
+          assert date.fromisoformat(os.environ['MARKET_DATE']).isoformat() == os.environ['MARKET_DATE'], 'invalid market_date'
+          PY
+          mkdir -p .cache/finmind
+          echo "BUDGET_DATE=$(TZ=Asia/Taipei date +%F)" >> "$GITHUB_ENV"
+          echo "SOURCE_GIT_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - uses: actions/cache/restore@v4
+        id: finmind-cache
+        with:
+          path: .cache/finmind
+          key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            finmind-v1-${{ env.BUDGET_DATE }}-
+            finmind-v1-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -23,7 +60,15 @@ jobs:
           python-version: '3.12'
       - run: npm ci
       - run: python -m pip install -r requirements.txt
+      - name: Recover same-day budget from failure artifacts
+        timeout-minutes: 3
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/restore_finmind_checkpoint.py --cache-dir .cache/finmind --budget-date "$BUDGET_DATE"
+      - name: Fetch authoritative exchange calendar
+        run: python scripts/build_trading_calendar.py --market-date "$MARKET_DATE"
       - name: Fetch official institutional universe
+        timeout-minutes: 10
         shell: bash
         run: |
           set -euo pipefail
@@ -31,41 +76,37 @@ jobs:
             if python scripts/fetch_research_universe.py --source official --config config/tracked_symbols.json --output public/data/institutional_universe.json; then
               exit 0
             fi
-            if [ "$attempt" -lt 3 ]; then
-              sleep $((attempt * 15))
-            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 15)); fi
           done
           exit 1
-      - name: Verify fetched official universe
-        run: python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json
-      - name: Refresh FinMind seed when token is available
-        shell: bash
+      - name: Verify independent requested date against fetched official date
+        run: python scripts/verify_daily_freshness.py --universe-only --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json
+      - run: python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json
+      - name: Fetch ownership reference cache
+        timeout-minutes: 8
+        run: python scripts/fetch_ownership.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output .cache/ownership_snapshot.json
+      - name: Refresh official public-source snapshot first
+        timeout-minutes: 25
+        run: python scripts/refresh_snapshot.py --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json
+      - name: Supplement remaining financial gaps within durable free budget
+        timeout-minutes: 26
         env:
           FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [ -n "${FINMIND_TOKEN:-}" ]; then
-            python scripts/fetch_finmind.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output public/data
-            echo "SNAPSHOT_MODE=live" >> "$GITHUB_ENV"
-          else
-            echo "FINMIND_TOKEN is not configured; run the public-source live refresh."
-            echo "SNAPSHOT_MODE=public" >> "$GITHUB_ENV"
-          fi
-      - name: Fetch ownership reference cache
-        run: python scripts/fetch_ownership.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output .cache/ownership_snapshot.json
-      - name: Refresh validated snapshot
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Both modes are live. FinMind enriches the public-source refresh
-          # when configured; otherwise Yahoo/TWSE/TPEx remain the public sources.
-          # Pin every source to the latest fully completed Taiwan session.
-          AS_OF="$(python -c 'import json; print(json.load(open("config/tracked_symbols.json", encoding="utf-8"))["universe"]["marketDates"][0])')"
-          echo "Using official complete market date: $AS_OF"
-          python scripts/refresh_snapshot.py --as-of "$AS_OF" --output public/data --ownership-snapshot .cache/ownership_snapshot.json
+        run: python scripts/fetch_finmind.py --supplement --output public/data --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --as-of "$MARKET_DATE" --max-requests 300 --max-runtime-seconds 1500
+      - name: Persist completed supplementary checkpoint immediately
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/finmind
+          key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}-checkpoint
+      - name: Recompute from existing enriched inputs without network
+        timeout-minutes: 5
+        run: python scripts/refresh_snapshot.py --recompute-existing --as-of "$MARKET_DATE" --output public/data
       - run: python scripts/verify_snapshot.py
-      - run: python scripts/verify_daily_freshness.py --data-dir public/data --config config/tracked_symbols.json
-      - run: python scripts/build_history_archive.py
+      - run: python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json
+      - name: Build canonical screening export
+        run: python scripts/build_screening_export.py --data-dir public/data --request-id "$REQUEST_ID" --market-date "$MARKET_DATE" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID"
+      - run: python scripts/build_history_archive.py --require-export --as-of "$MARKET_DATE"
       - run: python scripts/verify_history_archive.py
       - run: python scripts/prune_releases.py --data-dir public/data --keep 3 --max-bytes 250000000
       - run: python scripts/verify_history_archive.py --archive public/data/archive/v1
@@ -83,13 +124,40 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add config/tracked_symbols.json public/data
-          if git diff --cached --quiet; then
-            echo "No generated release changes to publish."
-          else
+          if ! git diff --cached --quiet; then
             git commit -m "data: publish daily Taiwan stock snapshot"
             git push origin HEAD:main
           fi
+          export PUBLISHED_GIT_COMMIT="$(git rev-parse HEAD)"
+          mkdir -p .artifacts/screening-export
+          cp public/data/screening-export.json .artifacts/screening-export/screening-export.json
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          value = json.loads(Path('public/data/screening-export.json').read_bytes())
+          publication = {key: value[key] for key in ('sourceGitCommit', 'actionsRunId', 'requestId', 'marketDate', 'runId', 'payloadHash')}
+          publication['publishedGitCommit'] = os.environ['PUBLISHED_GIT_COMMIT']
+          Path('.artifacts/screening-export/publication.json').write_text(json.dumps(publication, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screening-export
+          path: .artifacts/screening-export
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: validated-static-release
           path: dist
+      - name: Persist FinMind budget, queue and rows even after failure
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/finmind
+          key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Preserve checkpoint evidence for same-day recovery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finmind-checkpoint-${{ github.run_attempt }}
+          path: .cache/finmind
+          if-no-files-found: warn

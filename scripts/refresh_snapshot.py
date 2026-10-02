@@ -20,10 +20,12 @@ published files.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 from datetime import date, datetime, timedelta, timezone
@@ -55,6 +57,7 @@ from pipeline.enrichment import (  # noqa: E402
 )
 from pipeline.health_checks import evaluate_snapshot_health, health_totals  # noqa: E402
 from pipeline.indicators import trust_metrics  # noqa: E402
+from pipeline.financial_periods import gregorian_year, normalized_date, quarterly_income, number, dividend_period
 from pipeline.health_inputs import merge_health_inputs, normalize_finmind_health_inputs  # noqa: E402
 from pipeline.yahoo_client import (  # noqa: E402
     YAHOO_CHART_SOURCE,
@@ -79,6 +82,7 @@ from pipeline.valuation import (  # noqa: E402
     derive_stable_eps_growth,
     derive_ttm_eps,
 )
+from pipeline.trading_calendar import next_deadline
 from pipeline.market_indicators import build_00631l_volume_indicator  # noqa: E402
 
 
@@ -247,18 +251,38 @@ def parse_date(value: str | None, fallback: date) -> date:
         return fallback
 
 
-def next_expected_update_for_market_date(value: str | None) -> str:
-    """Return the next weekday 23:17 Asia/Taipei update window in UTC."""
+def next_expected_update_for_market_date(value: str | None, *, non_trading_dates: set[str] | None = None, deadline: str | None = None) -> str | None:
+    """Return the next configured weekday publication deadline in UTC.
 
+    Known exchange closure dates are optional; without a calendar this is a
+    weekday estimate. Missing market dates cannot establish a next deadline.
+    """
     try:
         market_day = date.fromisoformat(str(value)[:10])
+        hour, minute = map(int, (deadline or os.environ.get("DAILY_PUBLICATION_DEADLINE", "19:30")).split(":"))
+        if hour not in range(24) or minute not in range(60):
+            raise ValueError("invalid publication deadline")
     except (TypeError, ValueError):
-        market_day = datetime.now(TAIPEI).date()
+        return None
     next_day = market_day + timedelta(days=1)
-    while next_day.weekday() >= 5:
+    closed = non_trading_dates or set()
+    while next_day.weekday() >= 5 or next_day.isoformat() in closed:
         next_day += timedelta(days=1)
-    candidate = datetime(next_day.year, next_day.month, next_day.day, 23, 17, tzinfo=TAIPEI)
+    candidate = datetime(next_day.year, next_day.month, next_day.day, hour, minute, tzinfo=TAIPEI)
     return candidate.astimezone(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def release_next_expected_update(data_dir: Path, market_date: str | None) -> str | None:
+    calendar_path = data_dir / "trading-calendar.json"
+    if not calendar_path.exists():
+        return next_expected_update_for_market_date(market_date)
+    try:
+        calendar = load_json(calendar_path)
+        hour, minute = map(int, os.environ.get("DAILY_PUBLICATION_DEADLINE", "19:30").split(":"))
+        candidate = next_deadline(calendar, str(market_date), hour=hour, minute=minute)
+        return datetime.fromisoformat(candidate).astimezone(timezone.utc).isoformat()
+    except (OSError, ValueError, TypeError, KeyError):
+        return None
 
 
 def _git_head() -> str | None:
@@ -489,57 +513,99 @@ def _valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
     return valuation
 
 
-def _confirmed_dividend_yield(detail: dict[str, Any], current_price: float | None) -> float | None:
-    """Return the latest confirmed cash dividend / current price.
+def _dividend_evidence(detail: dict[str, Any], current_price: float | None) -> dict[str, Any]:
+    """Aggregate a complete confirmed annual cash distribution as known at cutoff."""
+    audit = {"origin": "unavailable", "sourcePeriod": None, "method": "confirmed_annual_cash / same_day_close", "source": None}
+    cutoff = normalized_date(detail.get("asOf"))
+    if current_price is None or current_price <= 0 or not cutoff:
+        return {"value": None, "audit": audit}
+    inputs = detail.get("healthInputs") or {}
+    years: dict[int, dict[str, dict[str, Any]]] = {}
+    for row in inputs.get("dividends", []):
+        if not isinstance(row, dict) or row.get("confirmed") is not True:
+            continue
+        year = gregorian_year(row.get("year"))
+        cash = number(row.get("cashPerShare"))
+        available = normalized_date(row.get("approvedAt") or row.get("publishedAt") or row.get("availableAt") or row.get("exDate"))
+        if year is None or year >= int(cutoff[:4]) or cash is None or cash < 0 or not available or available > cutoff:
+            continue
+        parsed_period = dividend_period(row.get("period") or year, year)
+        if parsed_period is None:
+            continue
+        key = parsed_period[1]
+        previous = years.setdefault(year, {}).get(key)
+        if previous is None or available >= str(previous["available"]):
+            years[year][key] = {"cash": cash, "available": available, "source": row.get("source") or inputs.get("source")}
+    if not years:
+        return {"value": None, "audit": audit}
+    year = max(years)
+    periods = years[year]
+    keys = ["annual"] if "annual" in periods else ["Q1", "Q2", "Q3", "Q4"] if set(periods) == {"Q1", "Q2", "Q3", "Q4"} else ["H1", "H2"] if set(periods) == {"H1", "H2"} else []
+    if not keys:
+        return {"value": None, "audit": {**audit, "sourcePeriod": str(year), "method": "incomplete_annual_cash_distribution"}}
+    cash = sum(periods[key]["cash"] for key in keys)
+    return {"value": cash / current_price, "audit": {"origin": "derived", "sourcePeriod": str(year), "method": "sum_confirmed_annual_cash / same_day_close", "source": periods[keys[0]]["source"]}, "cashPerShare": cash}
 
-    An empty dividend feed is unknown, not zero.  A published zero cash
-    dividend is valid evidence of a non-paying year and remains zero.
-    """
-    if current_price is None or current_price <= 0:
-        return None
-    health_inputs = detail.get("healthInputs")
-    rows = health_inputs.get("dividends", []) if isinstance(health_inputs, dict) else []
-    valid: list[tuple[str, float]] = []
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        try:
-            cash = float(row.get("cashPerShare"))
-        except (TypeError, ValueError):
-            continue
-        if not math.isfinite(cash) or cash < 0:
-            continue
-        period = str(row.get("availableAt") or row.get("year") or "")
-        valid.append((period, cash))
-    if not valid:
-        return None
-    _period, cash_per_share = max(valid, key=lambda item: item[0])
-    result = cash_per_share / current_price
-    return result if math.isfinite(result) and result >= 0 else None
+
+def _confirmed_dividend_yield(detail: dict[str, Any], current_price: float | None) -> float | None:
+    return _dividend_evidence(detail, current_price)["value"]
 
 
 def _growth_valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
-    """Build the primary total-return P/E valuation reference."""
-    health_inputs = detail.get("healthInputs")
-    rows = health_inputs.get("incomeQuarterly", []) if isinstance(health_inputs, dict) else []
-    rows = [row for row in rows if isinstance(row, dict)]
-    growth = derive_stable_eps_growth(rows)
-    current_price = _current_price(detail)
-    valuation_current = health_inputs.get("valuationCurrent") if isinstance(health_inputs, dict) else None
-    if not isinstance(valuation_current, dict):
-        valuation_current = {}
+    """Build the primary reference from validated financial inputs, with origins."""
+    health_inputs = detail.get("healthInputs") or {}
+    rows = quarterly_income(health_inputs.get("incomeQuarterly", []))
+    cutoff = normalized_date(detail.get("asOf"))
+    # Raw FinMind quarters use the share basis as originally published. A
+    # known stock distribution makes cross-quarter EPS incomparable unless
+    # an explicit adjusted common basis is provided by the source.
+    dividends = health_inputs.get("dividends", [])
+    action_years = [gregorian_year(row.get("year")) for row in dividends if isinstance(row, dict) and (number(row.get("stockPerShare")) or 0) > 0]
+    raw_dividends = (detail.get("financialInputs") or {}).get("dividend", [])
+    action_years += [gregorian_year(row.get("year") or str(row.get("date") or "")[:4]) for row in raw_dividends if isinstance(row, dict) and (number(row.get("StockEarningsDistribution")) or 0) > 0]
+    periods = [row["year"] for row in rows]
+    if periods and any(year is not None and min(periods) <= year <= max(periods) for year in action_years):
+        rows = [{**row, "epsComparable": False} if not row.get("epsBasis") else row for row in rows]
+    growth = derive_stable_eps_growth(rows, as_of=cutoff)
+    eps = derive_ttm_eps(rows, as_of=cutoff)
+    current_price = _current_price(detail) if cutoff else None
+    price_origin = "reported" if current_price is not None and current_price > 0 else "unavailable"
+    quotes = [row for row in detail.get("priceSeries", []) if isinstance(row, dict)]
+    if quotes:
+        matching = [row for row in quotes if normalized_date(row.get("date")) == cutoff]
+        closes = [number(row.get("close")) for row in matching]
+        current_price = next((value for value in reversed(closes) if value is not None and value > 0), None)
+        price_origin = "reported" if current_price is not None else "proxy" if any(number(row.get("adjustedClose")) is not None for row in matching) else "unavailable"
+    valuation_current = health_inputs.get("valuationCurrent") or {}
+    reported_pe = number(valuation_current.get("pe"))
+    same_day_pe = normalized_date(valuation_current.get("date")) == cutoff
+    pe = reported_pe if same_day_pe and reported_pe is not None and reported_pe > 0 else None
+    pe_origin = "reported" if pe is not None else "unavailable"
+    if pe is None and eps is not None and current_price is not None and current_price > 0:
+        pe, pe_origin = current_price / eps, "derived"
+    dividend = _dividend_evidence(detail, current_price)
     result = calculate_growth_total_return_valuation(
-        current_price=current_price,
-        current_pe=valuation_current.get("pe"),
-        ttm_eps=derive_ttm_eps(rows),
-        earnings_growth=growth.get("growth"),
-        dividend_yield=_confirmed_dividend_yield(detail, current_price),
+        current_price=current_price, current_pe=pe, ttm_eps=eps,
+        earnings_growth=growth.get("growth"), dividend_yield=dividend["value"],
         growth_method=str(growth.get("method") or "no_stable_growth"),
         growth_method_label=str(growth.get("method_label") or "完整年度 EPS 資料不足"),
     )
-    result["growth_valid_years"] = growth.get("valid_years", 0)
-    result["growth_years"] = growth.get("growth_years")
-    result["annual_eps"] = growth.get("annual_eps", {})
+    result.update({"growth_valid_years": growth.get("valid_years", 0), "growth_years": growth.get("growth_years"), "annual_eps": growth.get("annual_eps", {})})
+    source = health_inputs.get("source")
+    eps_source = ", ".join(sorted({str(row.get("source") or source) for row in rows if row.get("source") or source})) or None
+    recent = rows[-4:]
+    period = f"{recent[0]['year']}Q{recent[0]['quarter']}–{recent[-1]['year']}Q{recent[-1]['quarter']}" if len(recent) == 4 else None
+    result["inputAudit"] = {
+        "price": {"origin": price_origin, "sourcePeriod": cutoff, "method": "same_day_close", "source": detail.get("priceSource") or "published_price_series"},
+        "pe": {"origin": pe_origin, "sourcePeriod": cutoff if pe else None, "method": "reported_same_day_pe" if pe_origin == "reported" else "same_day_close / validated_ttm_eps", "source": valuation_current.get("source") or source if pe_origin == "reported" else eps_source},
+        "ttmEps": {"origin": "derived" if eps is not None else "unavailable", "sourcePeriod": period, "method": "sum_four_unique_consecutive_comparable_quarters", "source": eps_source},
+        "earningsGrowth": {"origin": "derived" if growth.get("growth") is not None else "unavailable", "sourcePeriod": f"{growth.get('start_year')}–{growth.get('end_year')}" if growth.get("start_year") else None, "method": growth.get("method"), "source": eps_source},
+        "dividendYield": dividend["audit"],
+    }
+    missing = [key for key, audit in result["inputAudit"].items() if audit["origin"] in {"unavailable", "proxy"}]
+    result["missingReasons"] = missing
+    result["inputsComplete"] = not missing
+    result["inferredEpsCrossCheck"] = current_price / reported_pe if current_price and reported_pe and reported_pe > 0 and same_day_pe else None
     return result
 
 
@@ -771,6 +837,9 @@ def _revenue_growth_from_public_inputs(public_inputs: dict[str, Any] | None) -> 
     if len(months) < 3:
         return None
     latest = months[-3:]
+    month_indices = [int(month[:4]) * 12 + int(month[5:7]) for month in latest]
+    if any(current != previous + 1 for previous, current in zip(month_indices, month_indices[1:])):
+        return None
     prior = [f"{int(month[:4]) - 1:04d}-{month[5:7]}" for month in latest]
     if any(month not in by_month or not isinstance(by_month[month], (int, float)) for month in prior):
         return None
@@ -782,6 +851,8 @@ def _revenue_growth_from_public_inputs(public_inputs: dict[str, Any] | None) -> 
 def _health_inputs_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
     existing = detail.get("healthInputs")
     if isinstance(existing, dict) and (existing.get("incomeQuarterly") or existing.get("monthlyRevenueOfficial")):
+        if existing.get("source") == TWSE_SOURCE:
+            return {**existing, "incomeQuarterly": [{**row, "periodType": "ytd", "source": TWSE_SOURCE} if isinstance(row, dict) and not row.get("periodType") and not row.get("source") else row for row in existing.get("incomeQuarterly", [])]}
         return existing
     financial_inputs = detail.get("financialInputs") if isinstance(detail.get("financialInputs"), dict) else {}
     revenue_rows = detail.get("revenueMonthly") if isinstance(detail.get("revenueMonthly"), list) else []
@@ -789,6 +860,7 @@ def _health_inputs_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
 
 
 def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, public_inputs: dict[str, Any] | None = None) -> tuple[dict[str, Any], list[str]]:
+    detail = copy.deepcopy(detail)
     code = str(detail.get("code") or "")
     market = str(detail.get("market") or "TWSE")
     # Offline recalculation and FinMind-first CI runs keep historical health
@@ -847,13 +919,6 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
     revenue_growth = detail.get("revenueGrowth3m") if detail.get("revenueGrowth3m") is not None else detail.get("revenueGrowthProxy")
     if revenue_growth is None:
         revenue_growth = _revenue_growth_from_public_inputs(source_inputs)
-    if revenue_growth is None and isinstance(source_inputs, dict):
-        latest_rows = [row for row in source_inputs.get("monthlyRevenueOfficial", []) if isinstance(row, dict)]
-        latest_row = latest_rows[-1] if latest_rows else {}
-        current = latest_row.get("revenue")
-        prior = latest_row.get("priorYearRevenue")
-        if isinstance(current, (int, float)) and isinstance(prior, (int, float)) and prior:
-            revenue_growth = (current - prior) / prior
     try:
         revenue_growth = float(revenue_growth) if revenue_growth is not None else None
     except (TypeError, ValueError):
@@ -1021,11 +1086,7 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
         # A source outage must not erase the last successful structured
         # snapshot. Merge non-empty endpoint results and keep prior rows when
         # this run only returns an error or an empty list.
-        previous_inputs = detail.get("healthInputs") if isinstance(detail.get("healthInputs"), dict) else {}
-        merged_inputs = dict(previous_inputs)
-        for key, value in public_inputs.items():
-            if key in {"source", "fetchedAt", "errors"} or value not in (None, [], {}):
-                merged_inputs[key] = value
+        merged_inputs = source_inputs
         detail["healthInputs"] = merged_inputs
         detail["healthInputSummary"] = {
             "source": merged_inputs.get("source", TWSE_SOURCE),
@@ -1135,7 +1196,35 @@ def low_base_gap(results: dict[str, dict[str, Any]], *, label: str, tracked_coun
     }
 
 
-def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None) -> dict[str, Any]:
+def growth_funnel(details: list[dict[str, Any]]) -> dict[str, Any]:
+    """Count the full growth universe at distinct evidence and selection stages."""
+    complete = calculable = threshold = healthy = 0
+    reasons: dict[str, int] = {}
+    for detail in details:
+        if not is_common_stock_code(str(detail.get("code"))):
+            continue
+        valuation = detail.get("growthValuation") or {}
+        complete += bool(valuation.get("inputsComplete"))
+        available = valuation.get("status") == "available"
+        calculable += available
+        passes = available and (number(valuation.get("total_return_pe")) or 0) >= 1.2
+        threshold += passes
+        healthy += passes and detail.get("growthHealthEligible") is True
+        blockers = list(valuation.get("missingReasons") or [])
+        if valuation.get("status") == "extreme":
+            blockers.append("extreme")
+        elif available and not passes:
+            blockers.append("threshold")
+        elif passes and detail.get("growthHealthEligible") is not True:
+            blockers.append("health")
+        for reason in set(blockers):
+            reasons[reason] = reasons.get(reason, 0) + 1
+    return {"growthInputComplete": complete, "growthValuationComplete": calculable,
+            "growthThresholdCandidates": threshold, "growthHealthCandidates": healthy,
+            "growthMissingReasons": [{"reason": reason, "count": count} for reason, count in sorted(reasons.items())]}
+
+
+def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None, recompute_existing: bool = False) -> dict[str, Any]:
     latest_path = data_dir / "latest.json"
     if not latest_path.exists():
         raise FileNotFoundError(f"missing baseline release: {latest_path}")
@@ -1154,11 +1243,11 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     used_sources: list[str] = []
     public_inputs_by_code: dict[str, dict[str, Any]] = {}
     public_errors: list[str] = []
-    if not offline:
+    if not offline and not recompute_existing:
         public_inputs_by_code = build_health_inputs([str(detail.get("code")) for detail in details])
         public_errors = [f"TWSE {code}: {key}" for code, value in public_inputs_by_code.items() for key in (value.get("errors") or {})]
     for detail in details:
-        next_detail, errors = enrich_detail(detail, end=end, offline=offline, public_inputs=public_inputs_by_code.get(str(detail.get("code"))))
+        next_detail, errors = enrich_detail(detail, end=end, offline=offline or recompute_existing, public_inputs=public_inputs_by_code.get(str(detail.get("code"))))
         errors.extend(public_errors)
         enriched.append(next_detail)
         errors_by_code[str(next_detail.get("code"))] = errors
@@ -1352,7 +1441,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         detail["growthHealthTotal"] = growth_total
         detail["growthHealthEligible"] = growth_health_qualified
         detail["lowPositionEvidence"] = low_position_health
-        if growth_health_qualified and growth_status == "pass" and isinstance(growth, (int, float)) and math.isfinite(float(growth)):
+        if growth_health_qualified:
             candidate_codes.add(code)
             growth_rows.append(
                 {
@@ -1360,11 +1449,11 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
                     "code": code,
                     "name": name,
                     "sector": sector,
-                    "value": float(growth) * 100,
-                    "valueLabel": "%",
+                    "value": (detail.get("growthValuation") or {}).get("total_return_pe"),
+                    "valueLabel": "×",
                     "status": "pass",
                     "growthHealth": growth_category,
-                    "reason": f"三月合計營收年增 {float(growth) * 100:+.1f}%；五項成長健康 {growth_pass_count}/{growth_total}，達 4/5 門檻。",
+                    "reason": f"總報酬本益比達 1.2；五項成長健康 {growth_pass_count}/{growth_total}，達 4/5 門檻。",
                 }
             )
         if isinstance(z, (int, float)) and math.isfinite(float(z)):
@@ -1600,9 +1689,13 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             and detail["growthValuation"].get("status") == "available"
         ),
     )
+    funnel.update(growth_funnel(enriched))
     market_dates = [str(detail.get("asOf")) for detail in enriched if detail.get("asOf")]
     market_date = max(market_dates) if market_dates else baseline.get("marketDate")
-    volume_indicator = build_00631l_volume_indicator(market_date)
+    if offline or recompute_existing:
+        volume_indicator = (baseline.get("marketIndicators") or {}).get("volumeMultiple00631L") or {"status": "unavailable", "reason": "cached_recompute_missing_indicator"}
+    else:
+        volume_indicator = build_00631l_volume_indicator(market_date)
     market_indicators = {
         **(baseline.get("marketIndicators") if isinstance(baseline.get("marketIndicators"), dict) else {}),
         "volumeMultiple00631L": volume_indicator,
@@ -1617,7 +1710,10 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     run_id = f"enriched-{datetime.now(TAIPEI).strftime('%Y%m%d-%H%M%S')}-{digest}"
     all_errors = sum(len(values) for values in errors_by_code.values())
     adjusted_count = sum(1 for detail in enriched if detail.get("priceBasis") == "adjusted")
-    if offline:
+    if recompute_existing:
+        freshness = str(baseline.get("freshness") or "degraded")
+        status_message = f"沿用已取得來源快取重算 {tracked_count} 檔；行情日期仍為 {market_date}，未再次呼叫外部來源。"
+    elif offline:
         freshness = "degraded"
         if adjusted_count:
             status_message = f"離線重算 {tracked_count} 檔；沿用已發布的 {adjusted_count} 檔調整價與財務代理，未呼叫外部來源。"
@@ -1681,7 +1777,9 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         "inputCodes": list(codes),
         "marketDate": market_date,
         "generatedAt": generated,
-        "nextExpectedUpdateAt": next_expected_update_for_market_date(market_date),
+        "acquisitionMode": "cached_recompute" if recompute_existing else "offline" if offline else "live",
+        "nextExpectedUpdateAt": release_next_expected_update(data_dir, market_date),
+        "nextExpectedUpdateBasis": "exchange_calendar" if (data_dir / "trading-calendar.json").exists() else "weekday_estimate",
         "freshness": freshness,
         "statusMessage": status_message,
         "sourceRefs": source_refs,
@@ -1764,9 +1862,10 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--codes", default="", help="comma-separated tracked codes; default uses all baseline stocks")
-    parser.add_argument("--as-of", default=None, help="query end date YYYY-MM-DD; default uses latest baseline date")
+    parser.add_argument("--as-of", default=None, help="query end date YYYY-MM-DD; default uses today in Asia/Taipei")
     parser.add_argument("--output", default=str(ROOT / "public" / "data"))
     parser.add_argument("--offline", action="store_true", help="skip network sources and recalculate from the checked-in snapshot")
+    parser.add_argument("--recompute-existing", action="store_true", help="recalculate fresh cached inputs without another network refresh")
     parser.add_argument("--ownership-snapshot", default=None, help="validated ownership cache path; ownership is reference-only")
     args = parser.parse_args()
     codes = list(dict.fromkeys(code.strip() for code in args.codes.split(",") if code.strip()))
@@ -1774,6 +1873,7 @@ def main() -> int:
         result = build_release(
             Path(args.output), codes, as_of=args.as_of, offline=args.offline,
             ownership_snapshot=Path(args.ownership_snapshot) if args.ownership_snapshot else None,
+            recompute_existing=args.recompute_existing,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"snapshot_refresh_failed={type(exc).__name__}: {exc}", file=sys.stderr)

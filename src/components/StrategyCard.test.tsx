@@ -250,7 +250,8 @@ describe('StrategyCard', () => {
       <StrategyCard presentation={strategyPresentations[2]} rows={[unavailableRow]} />,
     )
 
-    expect(markup).toContain('目前共同 A 母體沒有同時具備')
+    expect(markup).toContain('3.5 年回歸 Z ≤ 0')
+    expect(markup).toContain('PEG 缺值不會排除低位觀察')
     expect(markup).not.toContain('9999')
   })
 

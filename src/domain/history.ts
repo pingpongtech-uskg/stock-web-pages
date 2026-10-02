@@ -68,10 +68,14 @@ export async function loadHistoryIndex(): Promise<ScreeningHistoryIndex> {
   try { const index = validateHistoryIndex(await fetchJson('/data/archive/v1/index.json')); try { sessionStorage.setItem(INDEX_CACHE, JSON.stringify(index)) } catch {} return index }
   catch (error) { try { const cached = sessionStorage.getItem(INDEX_CACHE); if (cached) return validateHistoryIndex(JSON.parse(cached)) } catch {} throw error }
 }
-export function loadHistoryMonth(entry: { month: string; path: string }): Promise<ScreeningHistoryMonth> {
-  const existing = monthRequests.get(entry.month); if (existing) return existing
-  const request = fetchJson(entry.path).then(validateHistoryMonth)
-  monthRequests.set(entry.month, request)
+export function loadHistoryMonth(entry: { month: string; path: string; sha256?: string }): Promise<ScreeningHistoryMonth> {
+  const cacheKey = `${entry.path}|${entry.sha256 ?? ''}`
+  const existing = monthRequests.get(cacheKey); if (existing) return existing
+  const request = fetchJson(entry.path).then(validateHistoryMonth).catch((error: unknown) => {
+    monthRequests.delete(cacheKey)
+    throw error
+  })
+  monthRequests.set(cacheKey, request)
   return request
 }
 export function recordsForRange(months: ScreeningHistoryMonth[], from: string, to: string): ScreeningHistoryRecord[] { return months.flatMap((m) => m.records).filter((r) => r.marketDate >= from && r.marketDate <= to).sort((a, b) => a.marketDate.localeCompare(b.marketDate)) }

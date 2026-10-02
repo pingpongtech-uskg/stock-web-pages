@@ -4,7 +4,7 @@ import { trackEventOnce } from '../domain/events'
 import { statusLabels } from './StatusPill'
 
 export function getEffectiveFreshness(release: Pick<Release, 'freshness' | 'nextExpectedUpdateAt'>, now = Date.now()): Freshness {
-  if (release.freshness === 'unavailable' || release.freshness === 'degraded' || release.freshness === 'stale') return release.freshness
+  if (release.freshness === 'unavailable' || release.freshness === 'stale') return release.freshness
   const expected = release.nextExpectedUpdateAt ? Date.parse(release.nextExpectedUpdateAt) : NaN
   return Number.isFinite(expected) && now > expected ? 'stale' : release.freshness
 }
@@ -17,11 +17,18 @@ export function overdueLabel(release: Pick<Release, 'nextExpectedUpdateAt'>, now
 }
 
 function freshnessLabel(freshness: Freshness): string {
-  return { current: '資料正常', stale: '資料逾期', degraded: '降級發布', unavailable: '資料不可用' }[freshness]
+  return freshness === 'stale' ? '逾期' : freshness === 'unavailable' ? '不可用' : '正常'
 }
 
 function freshnessClass(freshness: Freshness): string {
-  return `freshness-${freshness}`
+  return `freshness-${freshness === 'stale' || freshness === 'unavailable' ? freshness : 'current'}`
+}
+
+function formatGeneratedAt(value: string): string {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? '—'
+    : date.toLocaleString('zh-TW', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Taipei' })
 }
 
 function formatCompletenessPct(value: number | null | undefined): string {
@@ -32,21 +39,15 @@ function formatCount(value: number | undefined): string {
   return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString('zh-TW') : '—'
 }
 
-export function DataStatus({ release, compact = false, now = Date.now() }: { release: Release; compact?: boolean; now?: number }) {
+export function DataStatus({ release, compact = false, now = Date.now(), source = 'network' }: { release: Release; compact?: boolean; now?: number; source?: 'network' | 'cache' }) {
   const coverage: Coverage = release.coverage
   const effectiveFreshness = getEffectiveFreshness(release, now)
   const overdue = overdueLabel(release, now)
-  const staleFromCurrent = effectiveFreshness === 'stale' && release.freshness === 'current'
-  const statusMessage = staleFromCurrent
-    ? `發布快照已逾期${overdue ? `（${overdue}）` : ''}`
-    : release.statusMessage
+  const quality = release.freshness === 'degraded' ? '降級發布' : release.freshness === 'unavailable' ? '不可用' : '正常'
   const trustSignalSummary = !compact && typeof release.summary.trustSignalCount === 'number'
     ? ` · 投信 Top10 ${formatCount(release.summary.trustSignalCount)} 檔／新進榜 ${formatCount(release.summary.trustNewEntryCount)} 檔／PEG 可顯示 ${formatCount(release.summary.trustValuationVisibleCount ?? release.summary.candidateRouteCounts.trust)} 檔`
     : ''
-  // Data quality (degraded/stale) and time freshness are separate dimensions:
-  // a degraded release that is also past its expected update still shows how
-  // long ago the market data should have been refreshed.
-  const showOverdue = Boolean(overdue) && !staleFromCurrent && effectiveFreshness !== 'current'
+  const showOverdue = Boolean(overdue)
   useEffect(() => {
     if (effectiveFreshness === 'stale' || effectiveFreshness === 'degraded') {
       trackEventOnce(`banner:${effectiveFreshness}`, 'stale_or_degraded_banner_view', { freshness: effectiveFreshness })
@@ -56,19 +57,21 @@ export function DataStatus({ release, compact = false, now = Date.now() }: { rel
     <div className={`data-status ${compact ? 'data-status-compact' : ''}`}>
       <div className={`freshness-dot ${freshnessClass(effectiveFreshness)}`} aria-hidden="true" />
       <div>
-        <strong>{freshnessLabel(effectiveFreshness)}</strong>
+        <strong>新鮮度：{freshnessLabel(effectiveFreshness)}</strong>
         {!compact && (
           <span>
-            {statusMessage}
+            資料品質：{quality} · {release.statusMessage}
             {showOverdue && <em className="overdue-note">（{overdue}）</em>}
+            {source === 'cache' && <em className="cache-note"> · 瀏覽器快取（網路讀取失敗）</em>}
             {coverage.scopeLabel ? ` · ${coverage.scopeLabel}` : ''}{trustSignalSummary}
           </span>
         )}
       </div>
       <div className="data-status-meta">
         <span>資料日 {release.marketDate ?? '—'}</span>
+        <span>更新 UTC+8 {formatGeneratedAt(release.generatedAt)}</span>
         <span>Run {release.runId}</span>
-        {!compact && <span>完整度 {formatCompletenessPct(coverage.completenessPct)}</span>}
+        {!compact && <span>追蹤行情完整度 {formatCompletenessPct(coverage.completenessPct)}</span>}
       </div>
     </div>
   )

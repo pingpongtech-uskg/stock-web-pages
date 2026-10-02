@@ -349,6 +349,10 @@ export interface ReleaseFunnel {
   priceComplete: number
   valuationComplete: number
   growthValuationComplete?: number
+  growthInputComplete?: number
+  growthThresholdCandidates?: number
+  growthHealthCandidates?: number
+  growthMissingReasons?: Array<{ reason: string; count: number }>
   pegCandidates: number
   growthCandidates?: number
   strategyCandidates: { trust: number; growth: number; lowPosition: number }

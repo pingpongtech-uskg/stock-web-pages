@@ -42,3 +42,24 @@ def test_month_filename_uses_hash_prefix():
     payload = canonical_json_bytes({"month":"2026-09","records":[]})
     assert month_filename("2026-09", payload).startswith("2026-09.")
     assert month_filename("2026-09", payload).endswith(".json")
+
+
+def test_revisions_preserve_original_immutable_bytes(tmp_path):
+    from pipeline.history_archive import write_archive_atomic
+    from scripts.verify_history_archive import verify_archive
+    first = project_release_to_history(release())
+    archive = tmp_path / 'archive'
+    write_archive_atomic(tmp_path / 'staging', archive, {'2026-09': [first]})
+    path = archive / 'revisions' / f'{first["marketDate"]}.{first["revision"]}.json'
+    original = path.read_bytes()
+    index = json.loads((archive / 'index.json').read_bytes())
+    active = json.loads((archive / 'months' / index['months'][0]['path'].split('/')[-1]).read_bytes())['records']
+    corrected = project_release_to_history(release(run='corrected'))
+    updated = merge_month(active, corrected)
+    write_archive_atomic(tmp_path / 'staging', archive, {'2026-09': updated})
+    assert path.read_bytes() == original
+    index = json.loads((archive / 'index.json').read_bytes())
+    active = json.loads((archive / 'months' / index['months'][0]['path'].split('/')[-1]).read_bytes())['records'][0]
+    assert active['runId'] == 'corrected'
+    assert len(active['revisionRefs']) == 2
+    assert verify_archive(archive) == []

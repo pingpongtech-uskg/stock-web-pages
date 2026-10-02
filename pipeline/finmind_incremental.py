@@ -1,0 +1,302 @@
+"""Durable, gap-directed supplements to an existing official public snapshot.
+
+The checkpoint is written before each HTTP attempt. Actions must retain the
+whole cache directory even when subsequent refresh or publication fails.
+"""
+from __future__ import annotations
+
+import json
+import math
+import os
+import re
+import time
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any
+
+from pipeline.finmind_client import BudgetExceeded, FinMindClient, FinMindError, SourceBlocked
+from pipeline.financial_periods import dividend_period, normalized_period
+from pipeline.growth_health import evaluate_growth_health
+from pipeline.health_inputs import merge_health_inputs, normalize_finmind_health_inputs
+from pipeline.valuation import derive_stable_eps_growth, derive_ttm_eps
+
+FINANCIAL = 'TaiwanStockFinancialStatements'
+REVENUE = 'TaiwanStockMonthRevenue'
+PER = 'TaiwanStockPER'
+DIVIDEND = 'TaiwanStockDividend'
+
+
+def atomic_json(path: Path, payload: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + '.tmp')
+    temporary.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True), encoding='utf-8')
+    temporary.replace(path)
+
+
+def read_json(path: Path, default: Any) -> Any:
+    if not path.exists():
+        return default
+    try:
+        return json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError) as exc:
+        raise FinMindError('FinMind checkpoint cannot be read; supplemental requests disabled') from exc
+
+
+class DailyBudget:
+    """Project daily budget retained across retries, reruns, and later jobs."""
+    def __init__(self, path: Path, budget_date: str, *, hard_cap: int = 300) -> None:
+        date.fromisoformat(budget_date)
+        if not 1 <= hard_cap <= 300:
+            raise ValueError('FinMind project daily cap must be between 1 and 300')
+        self.path, self.day, self.hard_cap = path, budget_date, hard_cap
+        self.state = read_json(path, {'version': 2, 'days': {}, 'queue': []})
+        if not isinstance(self.state, dict) or not isinstance(self.state.get('days'), dict):
+            raise FinMindError('Invalid FinMind budget checkpoint; supplemental requests disabled')
+        self.record = self.state['days'].get(budget_date, {'attempts': 0, 'ceiling': hard_cap, 'quotaKnown': False})
+        if not isinstance(self.record, dict) or not isinstance(self.record.get('attempts'), int) or self.record['attempts'] < 0:
+            raise FinMindError('Invalid FinMind attempt checkpoint; supplemental requests disabled')
+        legacy = self.state.get('version') == 1
+        ceiling = self.record.get('projectCap', hard_cap) if legacy else self.record.get('ceiling', hard_cap)
+        self.record = {**self.record, 'ceiling': min(hard_cap, ceiling), 'projectCap': min(hard_cap, ceiling)}
+        if legacy and self.record.get('quotaKnown'):
+            self.record = {**self.record, 'accountCeiling': self.state['days'][budget_date]['ceiling']}
+        self.state = {**self.state, 'version': 2}
+        self.save()
+
+    @property
+    def used(self) -> int:
+        return self.record['attempts']
+
+    def save(self) -> None:
+        self.state = {**self.state, 'days': {**self.state['days'], self.day: self.record}}
+        atomic_json(self.path, self.state)
+
+    @property
+    def allowance(self) -> int:
+        return min(self.record['ceiling'], self.record.get('accountCeiling', self.record['ceiling']))
+
+    def consume(self, *, require_known: bool = False) -> None:
+        if self.used >= self.record['ceiling']:
+            raise BudgetExceeded('FinMind project daily request allowance exhausted')
+        deferred = time.time() < self.state.get('retryNotBefore', 0)
+        # A known server backoff permits only a quota check after expiry.
+        blocked = self.record.get('blocked') and (require_known or self.record.get('retryAfterSeconds') is None)
+        if blocked or deferred:
+            raise SourceBlocked('FinMind quota/rate-limit checkpoint remains blocked')
+        if require_known and not self.record.get('quotaKnown'):
+            raise FinMindError('FinMind account quota unavailable; supplemental requests disabled')
+        if require_known and self.used >= self.allowance:
+            raise BudgetExceeded('FinMind account window allowance exhausted')
+        self.record = {**self.record, 'attempts': self.used + 1}
+        self.save()
+
+    def configure(self, account_limit: int, account_used: int, *, checks_started_at: int = 0) -> None:
+        remaining = max(0, account_limit - account_used)
+        candidate = checks_started_at + math.floor(remaining * 0.8)
+        # A reported decrease in user_count verifies a reset. Rechecking or
+        # retrying an unchanged usage window never creates a fresh allowance.
+        reset = self.record.get('quotaKnown') and account_used < self.record.get('accountUsed', account_used)
+        previous = self.record.get('accountCeiling')
+        ceiling = candidate if previous is None or reset else min(previous, candidate)
+        self.record = {**self.record, 'quotaKnown': True, 'accountLimit': account_limit,
+                       'accountUsed': account_used, 'accountCeiling': ceiling,
+                       'quotaCheckedAt': datetime.now(timezone.utc).isoformat()}
+        if reset:
+            self.record = {**self.record, 'windowStartedAtAttempt': checks_started_at}
+        if remaining > 0:
+            self.record = {**self.record, 'blocked': None, 'retryAfterSeconds': None}
+        self.save()
+
+    def block(self, reason: str, retry_after: float | None = None) -> None:
+        self.record = {**self.record, 'blocked': reason, 'retryAfterSeconds': retry_after}
+        if retry_after is not None:
+            self.state = {**self.state, 'retryNotBefore': max(self.state.get('retryNotBefore', 0), time.time() + retry_after)}
+        self.save()
+
+    def queue(self, jobs: list[dict[str, str]]) -> None:
+        self.state = {**self.state, 'queue': jobs}
+        self.save()
+
+
+def financial_period(end: date) -> str:
+    """Latest period whose ordinary filing deadline has passed."""
+    for month, day, quarter in ((11, 15, 3), (8, 15, 2), (5, 15, 1), (3, 31, 4)):
+        if (end.month, end.day) >= (month, day):
+            return f'{end.year if quarter != 4 else end.year - 1}-Q{quarter}'
+    return f'{end.year - 1}-Q3'
+
+
+def merge_raw_rows(base: list[dict[str, Any]], overlay: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows = {}
+    for row in [*base, *overlay]:
+        if not isinstance(row, dict):
+            continue
+        key = (str(row.get('date') or ''), str(row.get('type') or ''), str(row.get('revenue_year') or ''), str(row.get('revenue_month') or ''), str(row.get('year') or ''))
+        rows[key] = {**rows.get(key, {}), **row}
+    return [rows[key] for key in sorted(rows)]
+
+
+def number(value: Any) -> float | None:
+    try:
+        result = float(value)
+    except (ValueError, TypeError):
+        return None
+    return result if math.isfinite(result) else None
+
+
+def complete_dividend(rows: list[dict[str, Any]], year: int, as_of: str) -> bool:
+    periods = set()
+    for row in rows:
+        parsed = dividend_period(row.get('period'), row.get('year'))
+        if row.get('confirmed') is not True or number(row.get('cashPerShare')) is None or parsed is None:
+            continue
+        if parsed[0] == year and str(row.get('availableAt') or '') <= as_of:
+            periods.add(parsed[1])
+    return 'annual' in periods or periods == {'Q1', 'Q2', 'Q3', 'Q4'} or periods == {'H1', 'H2'}
+
+
+def plan_gaps(details: list[dict[str, Any]], cache: dict[str, Any], as_of: str) -> list[dict[str, str]]:
+    end = date.fromisoformat(as_of)
+    jobs = []
+    for detail in sorted(details, key=lambda item: item['code']):
+        code, health = detail['code'], detail.get('healthInputs') or {}
+        income = health.get('incomeQuarterly') or []
+        growth_health = evaluate_growth_health(health.get('monthlyRevenueOfficial') or [], income)
+        due_year, due_quarter = financial_period(end).split('-Q')
+        latest_period = max((normalized_period(row) for row in income if normalized_period(row) is not None), default=(0, 0))
+        financial_missing = (latest_period < (int(due_year), int(due_quarter)) or derive_ttm_eps(income, as_of=as_of) is None or derive_stable_eps_growth(income, as_of=as_of).get('growth') is None
+                             or any(check['status'] == 'unknown' for check in growth_health['checks'][1:]))
+        requests = [
+            (FINANCIAL, financial_missing, financial_period(end), f'{end.year - 4}-01-01'),
+            (PER, number((health.get('valuationCurrent') or {}).get('pe')) is None or str((health.get('valuationCurrent') or {}).get('date') or '') != as_of, as_of, (end - timedelta(days=10)).isoformat()),
+            (DIVIDEND, not complete_dividend(health.get('dividends') or [], end.year - 1, as_of), str(end.year), f'{end.year - 1}-01-01'),
+            (REVENUE, growth_health['checks'][0]['status'] == 'unknown', as_of[:7], (end - timedelta(days=550)).isoformat()),
+        ]
+        for priority, (dataset, missing, period, start) in enumerate(requests):
+            stored = cache.get(f'{code}:{dataset}') or {}
+            checked = stored.get('checkedPeriod') == period
+            due_retry = stored.get('nextCheckAt') and stored['nextCheckAt'] <= as_of
+            if not missing or (checked and not due_retry):
+                continue
+            history_complete = derive_stable_eps_growth(income, as_of=as_of).get('valid_years', 0) >= 4
+            if dataset == FINANCIAL and history_complete and stored.get('rows'):
+                dates = [row['date'] for row in stored['rows'] if isinstance(row, dict) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', str(row.get('date') or ''))]
+                if dates:
+                    start = max(dates)
+            jobs.append({'code': code, 'dataset': dataset, 'period': period, 'start_date': start,
+                         'end_date': as_of, 'priority': str(priority)})
+    return sorted(jobs, key=lambda job: (job['priority'], job['code']))
+
+
+def normalize_supplement(detail: dict[str, Any], cache: dict[str, Any], as_of: str) -> dict[str, Any]:
+    code = detail['code']
+    financial = detail.get('financialInputs') or {}
+    income = (cache.get(f'{code}:{FINANCIAL}') or {}).get('rows') or []
+    financial = {**financial, 'incomeStatement': merge_raw_rows(financial.get('incomeStatement') or [], income)}
+    revenue = (cache.get(f'{code}:{REVENUE}') or {}).get('rows') or []
+    retrieved = max((str(entry.get('fetchedAt') or '') for key, entry in cache.items() if key.startswith(f'{code}:')), default='') or None
+    normalized = normalize_finmind_health_inputs(financial, [*(detail.get('revenueMonthly') or []), *revenue], fetched_at=retrieved)
+    health = merge_health_inputs(detail.get('healthInputs'), normalized)
+    per = (cache.get(f'{code}:{PER}') or {}).get('rows') or []
+    usable = [row for row in per if number(row.get('PER')) is not None and str(row.get('date') or '') <= as_of]
+    existing = health.get('valuationCurrent') or {}
+    if usable and (number(existing.get('pe')) is None or str(existing.get('date') or '') < max(str(row.get('date') or '') for row in usable)):
+        row = max(usable, key=lambda item: str(item.get('date') or ''))
+        health = {**health, 'valuationCurrent': {'date': row['date'], 'pe': number(row.get('PER')),
+                  'pb': number(row.get('PBR')), 'dividendYield': number(row.get('dividend_yield')), 'source': f'FinMind:{PER}'}}
+    raw_dividends = (cache.get(f'{code}:{DIVIDEND}') or {}).get('rows') or []
+    if raw_dividends:
+        financial = {**financial, 'dividend': merge_raw_rows(financial.get('dividend') or [], raw_dividends)}
+    dividends = []
+    for row in (cache.get(f'{code}:{DIVIDEND}') or {}).get('rows') or []:
+        earnings, surplus = number(row.get('CashEarningsDistribution')), number(row.get('CashStatutorySurplus'))
+        announced = str(row.get('AnnouncementDate') or '')
+        ex_date = str(row.get('CashExDividendTradingDate') or '')
+        if earnings is None or surplus is None or not announced or announced > as_of or not ex_date:
+            continue
+        parsed_period = dividend_period(row.get('year'))
+        if parsed_period is None:
+            continue
+        year, period = parsed_period
+        dividends.append({'year': str(year), 'period': period, 'cashPerShare': earnings + surplus,
+                          'stockPerShare': (number(row.get('StockEarningsDistribution')) or 0) + (number(row.get('StockStatutorySurplus')) or 0),
+                          'availableAt': announced, 'exDividendDate': ex_date, 'source': f'FinMind:{DIVIDEND}', 'confirmed': True})
+    health = merge_health_inputs(health, {'dividends': dividends})
+    return {**detail, 'financialInputs': financial, 'healthInputs': health}
+
+
+def supplement_snapshot(codes: list[str], output: Path, as_of: str | None = None, *, cache_dir: Path,
+                        budget_date: str, token: str | None = None, max_requests: int = 300,
+                        max_runtime_seconds: int = 1500) -> dict[str, Any]:
+    as_of = as_of or budget_date
+    date.fromisoformat(as_of)
+    state = DailyBudget(cache_dir / 'state.json', budget_date, hard_cap=max_requests)
+    cache = read_json(cache_dir / 'rows.json', {})
+    if not isinstance(cache, dict):
+        raise FinMindError('Invalid FinMind row cache; supplemental requests disabled')
+    latest = read_json(output / 'latest.json', {})
+    run_id = latest.get('runId')
+    if not isinstance(run_id, str) or not re.fullmatch(r'[A-Za-z0-9._-]+', run_id):
+        raise FinMindError('Public snapshot missing; run official refresh before FinMind supplement')
+    paths = {code: output / 'releases' / run_id / 'stocks' / f'{code}.json' for code in codes if re.fullmatch(r'\d{4,6}', code)}
+    details = [read_json(path, {}) for path in paths.values() if path.exists()]
+    details = [item for item in details if item.get('code') in paths]
+    # Rehydrate durable cached history before deciding which inputs are missing.
+    merged = [normalize_supplement(item, cache, as_of) for item in details]
+    jobs = plan_gaps(merged, cache, as_of)
+    state.queue(jobs)
+    skipped, completed = None, 0
+    failed_jobs = []
+    token = os.environ.get('FINMIND_TOKEN', '') if token is None else token
+    started = time.monotonic()
+    if not token.strip():
+        skipped = 'missing_token'
+    elif jobs:
+        client = FinMindClient(token, hard_cap=max_requests, daily_budget=state)
+        try:
+            client.configure_account_budget()
+            while jobs:
+                if time.monotonic() - started >= max_runtime_seconds:
+                    skipped = 'runtime_limit'
+                    break
+                job = jobs[0]
+                try:
+                    rows = client.get(job['dataset'], data_id=job['code'], start_date=job['start_date'], end_date=job['end_date'])
+                except (BudgetExceeded, SourceBlocked):
+                    raise
+                except FinMindError:
+                    # Retain unsuccessful jobs for recovery, without a tight retry loop.
+                    skipped = 'dataset_unavailable'
+                    failed_jobs = [*failed_jobs, job]
+                    jobs = jobs[1:]
+                    state.queue([*failed_jobs, *jobs])
+                    continue
+                key = f"{job['code']}:{job['dataset']}"
+                stored = cache.get(key) or {}
+                cache = {**cache, key: {**stored, 'rows': merge_raw_rows(stored.get('rows') or [], rows),
+                         'checkedPeriod': job['period'], 'checkedAt': budget_date, 'fetchedAt': datetime.now(timezone.utc).isoformat()}}
+                if job['dataset'] == FINANCIAL:
+                    due = job['period']
+                    latest = max((str(row.get('date') or '') for row in rows), default='')
+                    observed = f'{latest[:4]}-Q{(int(latest[5:7]) - 1) // 3 + 1}' if re.fullmatch(r'\d{4}-\d{2}-\d{2}', latest) else ''
+                    if observed < due:
+                        cache = {**cache, key: {**cache[key], 'nextCheckAt': (date.fromisoformat(budget_date) + timedelta(days=7)).isoformat()}}
+                atomic_json(cache_dir / 'rows.json', cache)
+                jobs = jobs[1:]
+                state.queue([*failed_jobs, *jobs])
+                completed += 1
+        except (BudgetExceeded, SourceBlocked, FinMindError) as exc:
+            skipped = type(exc).__name__
+    jobs = [*failed_jobs, *jobs]
+    # Never replace the tracked universe with only the subset fetched today.
+    changed = 0
+    for original in details:
+        updated = normalize_supplement(original, cache, as_of)
+        if updated != original and any(key.startswith(f"{original['code']}:") for key in cache):
+            atomic_json(paths[original['code']], updated)
+            changed += 1
+    result = {'run_id': run_id, 'stocks': len(details), 'updated': changed, 'completed': completed,
+              'queued': len(jobs), 'requests': state.used, 'allowed_attempts': state.allowance, 'skipped': skipped}
+    state.state = {**state.state, 'lastResult': result}
+    state.queue(jobs)
+    return result

@@ -189,30 +189,30 @@ def test_daily_workflow_runs_v3_refresh_and_gate() -> None:
     universe_gate = workflow.index(
         "python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json"
     )
-    as_of_assignment = workflow.find("AS_OF=")
-    refresh = workflow.index("python scripts/refresh_snapshot.py")
-    verify = workflow.index("python scripts/verify_snapshot.py")
-    freshness = workflow.index("python scripts/verify_daily_freshness.py")
-    fetch_finmind = workflow.index("python scripts/fetch_finmind.py")
-    pytest_gate = workflow.index("python -m pytest pipeline scripts -q")
-    vitest_gate = workflow.index("npm run test:unit")
-    typecheck_gate = workflow.index("npm run typecheck")
-    build = workflow.index("npm run build")
+    request_date = workflow.index('MARKET_DATE: ${{ inputs.market_date }}')
+    date_gate = workflow.index('python scripts/verify_daily_freshness.py --universe-only --market-date "$MARKET_DATE"')
+    refresh = workflow.index('python scripts/refresh_snapshot.py --as-of "$MARKET_DATE"')
+    supplement = workflow.index('python scripts/fetch_finmind.py --supplement')
+    recompute = workflow.index('python scripts/refresh_snapshot.py --recompute-existing')
+    verify = workflow.index('python scripts/verify_snapshot.py')
+    freshness = workflow.index('python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE"')
+    export = workflow.index('python scripts/build_screening_export.py')
+    pytest_gate = workflow.index('python -m pytest pipeline scripts -q')
+    vitest_gate = workflow.index('npm run test:unit')
+    typecheck_gate = workflow.index('npm run typecheck')
+    build = workflow.index('npm run build')
     final_universe_gate = workflow.index(
-        "python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json --latest public/data/latest.json"
+        'python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json --latest public/data/latest.json'
     )
-    publish = workflow.index("git add config/tracked_symbols.json public/data")
-
-    assert as_of_assignment >= 0, "refresh must pin its query end to the official complete market date"
-    as_of_block = workflow[as_of_assignment:refresh]
-    assert '"config/tracked_symbols.json"' in as_of_block
-    assert '["universe"]["marketDates"][0]' in as_of_block
-    assert 'python scripts/refresh_snapshot.py --as-of "$AS_OF"' in workflow[refresh:verify]
-    assert universe_fetch < universe_gate < as_of_assignment < refresh < verify < freshness
-    assert fetch_finmind < refresh < verify < freshness
-    assert "--offline" not in workflow
+    publish = workflow.index('git add config/tracked_symbols.json public/data')
+    assert request_date < universe_fetch < date_gate < universe_gate < refresh
+    assert refresh < supplement < recompute < verify < freshness < export
+    assert '--budget-date "$BUDGET_DATE"' in workflow
+    assert 'cancel-in-progress: false' in workflow
+    assert 'if: always()' in workflow[workflow.index('Persist FinMind budget'):]
+    assert '--offline' not in workflow
     assert pytest_gate < vitest_gate < typecheck_gate < build < final_universe_gate < publish
-    assert workflow.count("python scripts/verify_tracked_universe.py") == 2
+    assert workflow.count('python scripts/verify_tracked_universe.py') == 2
 
 
 def test_volume_indicator_enforces_two_times_green_boundary() -> None:

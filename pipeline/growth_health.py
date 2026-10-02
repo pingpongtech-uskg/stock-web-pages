@@ -10,6 +10,7 @@ from calendar import monthrange
 from datetime import date
 import math
 from typing import Any, Iterable
+from pipeline.financial_periods import normalized_date, normalized_period, quarterly_income, compatible_rows
 
 CHECK_LABELS = (
     "月營收 YOY 連續三個月大於 0",
@@ -29,7 +30,7 @@ def _number(value: Any) -> float | None:
 
 
 def _month_key(value: Any) -> str | None:
-    text = str(value or "")[:7]
+    text = (normalized_date(value) or "")[:7]
     try:
         year, month = (int(part) for part in text.split("-"))
     except (TypeError, ValueError):
@@ -54,12 +55,7 @@ def _months_are_consecutive(months: list[str]) -> bool:
 
 
 def _period(row: dict[str, Any]) -> tuple[int, int] | None:
-    try:
-        year, quarter = int(row.get("year")), int(row.get("quarter"))
-    except (TypeError, ValueError):
-        return None
-    return (year, quarter) if quarter in (1, 2, 3, 4) else None
-
+    return normalized_period(row)
 
 def _check(label: str, status: str, value: Any, explanation: str) -> dict[str, Any]:
     return {"label": label, "status": status, "value": value, "explanation": explanation}
@@ -85,6 +81,9 @@ def _monthly_check(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
         revenue = _number(row.get("revenue"))
         if month is not None and revenue is not None:
             by_month[month] = revenue
+            prior = _number(row.get("priorYearRevenue"))
+            if prior is not None:
+                by_month.setdefault(_previous_year_month(month), prior)
     months = sorted(by_month)[-3:]
     if len(months) != 3 or not _months_are_consecutive(months):
         return _check(CHECK_LABELS[0], "unknown", None, "最近三個月資料不足或月份不連續，無法完成三個月同月比較。")
@@ -93,7 +92,7 @@ def _monthly_check(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
     current = [by_month[month] for month in months]
     if any(value is None for value in prior):
         return _check(CHECK_LABELS[0], "unknown", None, "缺少至少一個去年同月營收，不能把單月正值視為通過。")
-    rates = [now / before - 1 for now, before in zip(current, prior) if before is not None and before != 0]
+    rates = [now / before - 1 for now, before in zip(current, prior) if before is not None and before > 0]
     if len(rates) != 3:
         return _check(CHECK_LABELS[0], "unknown", None, "去年同月營收為零，無法計算完整 YOY。")
     passed = all(rate > 0 for rate in rates)
@@ -102,7 +101,7 @@ def _monthly_check(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
 
 def _quarter_checks(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     periods: dict[tuple[int, int], dict[str, Any]] = {}
-    for row in rows:
+    for row in quarterly_income(rows):
         if isinstance(row, dict) and (key := _period(row)) is not None:
             periods[key] = row
     latest_period = max(periods, default=None)
@@ -120,7 +119,7 @@ def _quarter_checks(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     for label, fields in labels_fields:
         current = next((_number(latest.get(field)) for field in fields if _number(latest.get(field)) is not None), None)
         previous = next((_number(prior.get(field)) for field in fields if prior and _number(prior.get(field)) is not None), None)
-        if current is None or previous is None or previous == 0:
+        if current is None or previous is None or previous <= 0 or not compatible_rows([latest, prior]):
             checks.append(_check(label, "unknown", None, "缺少同季去年同期數值，最新單期正值不構成通過。"))
             continue
         rate = current / previous - 1

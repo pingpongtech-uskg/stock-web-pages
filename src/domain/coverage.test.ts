@@ -20,7 +20,7 @@ describe('releaseCoverageFunnel', () => {
       },
     } as unknown as Pick<Release, 'funnel'>
 
-    expect(releaseCoverageFunnel(release, 'lowPosition')).toEqual({
+    expect(releaseCoverageFunnel(release, 'lowPosition')).toMatchObject({
       universe: 100,
       priceComplete: 7,
       valuationComplete: 6,
@@ -30,5 +30,25 @@ describe('releaseCoverageFunnel', () => {
       formalValuations: 0,
       proxyValuations: 6,
     })
+  })
+
+  it('keeps growth stages distinct and does not turn absent coverage into zero', () => {
+    const release = { funnel: {
+      universe: 100, priceComplete: 40, valuationComplete: 20,
+      growthInputComplete: 12, growthValuationComplete: 9, growthThresholdCandidates: 7,
+      growthHealthCandidates: 5, growthMissingReasons: [{ reason: 'dividend', count: 18 }],
+      pegCandidates: 2, strategyCandidates: { trust: 1, growth: 4, lowPosition: 3 },
+      formalValuations: 2, proxyValuations: 18,
+    } } as unknown as Pick<Release, 'funnel'>
+    expect(releaseCoverageFunnel(release, 'growth')).toMatchObject({
+      growthInputComplete: 12,
+      growthValuationComplete: 9,
+      growthThresholdCandidates: 7,
+      growthHealthCandidates: 5,
+      strategyCandidates: 4,
+      growthMissingReasons: [{ reason: 'dividend', count: 18 }],
+    })
+    const legacy = { funnel: { universe: 0, priceComplete: 0, valuationComplete: 0, pegCandidates: 0, strategyCandidates: { trust: 0, growth: 0, lowPosition: 0 }, formalValuations: 0, proxyValuations: 0 } } as unknown as Pick<Release, 'funnel'>
+    expect(releaseCoverageFunnel(legacy, 'growth').growthInputComplete).toBeNull()
   })
 })

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from typing import Any, Iterable
+from pipeline.financial_periods import gregorian_year, normalized_date, normalize_row, quarterly_income, dividend_period
 
 
 _INCOME_FIELDS = {
@@ -12,7 +13,8 @@ _INCOME_FIELDS = {
     "OperatingIncome": "operatingProfit",
     "PreTaxIncome": "pretaxProfit",
     "IncomeAfterTaxes": "netIncome",
-    "EquityAttributableToOwnersOfParent": "parentNetIncome",
+    # FinMind EquityAttributableToOwnersOfParent is comprehensive income, not net income.
+    "NetIncomeAttributableToOwnersOfParent": "parentNetIncome",
     "EPS": "eps",
 }
 
@@ -26,7 +28,7 @@ def _number(value: Any) -> float | None:
 
 
 def _period(day: Any) -> tuple[int, int, str] | None:
-    text = str(day or "")[:10]
+    text = normalized_date(day) or ""
     try:
         parsed = date.fromisoformat(text)
     except ValueError:
@@ -35,7 +37,7 @@ def _period(day: Any) -> tuple[int, int, str] | None:
 
 
 def _month_key(row: dict[str, Any]) -> tuple[str, float] | None:
-    month = str(row.get("month") or "")[:7]
+    month = (normalized_date(row.get("month")) or "")[:7]
     revenue = row.get("revenue")
     normalized_revenue = _number(revenue)
     if len(month) == 7 and month[4] == "-" and normalized_revenue is not None:
@@ -45,7 +47,9 @@ def _month_key(row: dict[str, Any]) -> tuple[str, float] | None:
     if raw_year is None or raw_month is None:
         return None
     try:
-        year = int(raw_year)
+        year = gregorian_year(raw_year)
+        if year is None:
+            return None
         number = int(raw_month)
     except (TypeError, ValueError):
         return None
@@ -72,10 +76,11 @@ def normalize_finmind_health_inputs(
         value = _number(row.get("value"))
         if period is None or field is None or value is None:
             continue
-        year, quarter, available_at = period
-        item = grouped.setdefault((year, quarter), {"year": year, "quarter": quarter, "availableAt": available_at})
+        year, quarter, period_end = period
+        item = grouped.setdefault((year, quarter), {"year": year, "quarter": quarter, "periodEnd": period_end, "periodType": "quarter", "source": "FinMind:TaiwanStockFinancialStatements", "inputOrigin": "reported", "amountUnit": "TWD"})
         item[field] = value
-        item["availableAt"] = max(str(item.get("availableAt") or ""), available_at)
+        if row.get("publishedAt") or row.get("availableAt"):
+            item["availableAt"] = normalized_date(row.get("publishedAt") or row.get("availableAt"))
 
     income = [grouped[key] for key in sorted(grouped)]
     monthly: dict[str, dict[str, Any]] = {}
@@ -109,9 +114,15 @@ def _merge_rows(
     for row in [*(base or []), *(overlay or [])]:
         if not isinstance(row, dict):
             continue
-        key = tuple(str(row.get(field) or "") for field in key_fields)
+        normalized = normalize_row(row)
+        key = tuple(str(normalized.get(field) or "") for field in key_fields)
+        if key_fields == ("year", "period"):
+            period = dividend_period(normalized.get("period") or normalized.get("year"), normalized.get("year"))
+            if period is not None:
+                normalized["period"] = period[1]
+                key = (str(period[0]), normalized["period"])
         if all(key):
-            merged[key] = {**merged.get(key, {}), **row}
+            merged[key] = {**merged.get(key, {}), **{field: value for field, value in normalized.items() if value not in (None, "")}}
     return [merged[key] for key in sorted(merged)]
 
 
@@ -122,14 +133,21 @@ def merge_health_inputs(
     """Preserve historical rows while overlaying newer official snapshots."""
     base = base if isinstance(base, dict) else {}
     overlay = overlay if isinstance(overlay, dict) else {}
-    merged = {**base, **overlay}
+    merged = {**base, **{key: value for key, value in overlay.items() if value not in (None, [], {})}}
     for key, fields in (
         ("incomeQuarterly", ("year", "quarter")),
         ("balanceQuarterly", ("year", "quarter")),
         ("monthlyRevenueOfficial", ("month",)),
         ("dividends", ("year", "period")),
     ):
-        rows = _merge_rows(base.get(key), overlay.get(key), fields)
+        if key == "incomeQuarterly":
+            income = [*(base.get(key) or []), *(overlay.get(key) or []), *(base.get("incomeYtd") or []), *(overlay.get("incomeYtd") or [])]
+            cumulative = [row for row in income if isinstance(row, dict) and row.get("periodType") == "ytd"]
+            if cumulative:
+                merged["incomeYtd"] = _merge_rows([], cumulative, fields)
+            rows = quarterly_income(income)
+        else:
+            rows = _merge_rows(base.get(key), overlay.get(key), fields)
         if rows:
             merged[key] = rows
     for key in ("valuationUniverse",):

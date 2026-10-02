@@ -5,7 +5,11 @@ export interface CoverageFunnel {
   universe: number
   priceComplete: number
   valuationComplete: number
-  growthValuationComplete: number
+  growthInputComplete: number | null
+  growthValuationComplete: number | null
+  growthThresholdCandidates: number | null
+  growthHealthCandidates: number | null
+  growthMissingReasons: Array<{ reason: string; count: number }> | null
   pegCandidates: number
   strategyCandidates: number
   formalValuations: number
@@ -24,7 +28,11 @@ export function releaseCoverageFunnel(release: Pick<Release, 'funnel'>, strategy
     universe: funnel.universe,
     priceComplete: funnel.priceComplete,
     valuationComplete: funnel.valuationComplete,
-    growthValuationComplete: funnel.growthValuationComplete ?? 0,
+    growthInputComplete: funnel.growthInputComplete ?? null,
+    growthValuationComplete: funnel.growthValuationComplete ?? null,
+    growthThresholdCandidates: funnel.growthThresholdCandidates ?? null,
+    growthHealthCandidates: funnel.growthHealthCandidates ?? null,
+    growthMissingReasons: funnel.growthMissingReasons ?? null,
     pegCandidates: funnel.pegCandidates,
     strategyCandidates: funnel.strategyCandidates[strategy],
     formalValuations: funnel.formalValuations,

@@ -17,9 +17,10 @@ describe('DataStatus freshness', () => {
   it('downgrades producer-current data after its expected update time', () => {
     expect(getEffectiveFreshness(release, Date.parse('2026-09-18T00:00:00Z'))).toBe('stale')
     const markup = renderToStaticMarkup(<DataStatus release={release} />)
-    expect(markup).toContain('資料逾期')
+    expect(markup).toContain('新鮮度：逾期')
+    expect(markup).toContain('資料品質：正常')
     expect(markup).toContain('逾期')
-    expect(markup).not.toContain('資料正常')
+    expect(markup).toContain('追蹤行情完整度 7.0%')
   })
 
   it('keeps the degraded label and still shows how overdue the data is', () => {
@@ -35,5 +36,15 @@ describe('DataStatus freshness', () => {
     expect(markup).toContain('降級發布')
     expect(markup).toContain('離線重算 100 檔')
     expect(markup).toContain('逾期約 132 小時')
+    expect(markup).toContain('資料品質：降級發布')
+    expect(markup).toContain('新鮮度：逾期')
+  })
+
+  it('labels browser cache separately from freshness and release quality', () => {
+    const markup = renderToStaticMarkup(<DataStatus release={release} source="cache" now={Date.parse('2026-09-12T00:00:00Z')} />)
+    expect(markup).toContain('瀏覽器快取')
+    expect(markup).toContain('新鮮度：正常')
+    expect(markup).toContain('資料品質：正常')
+    expect(markup).toContain('更新 UTC+8')
   })
 })

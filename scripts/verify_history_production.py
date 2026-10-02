@@ -22,6 +22,17 @@ def require_headers(path,headers,index):
   if not m or int(m.group(1))<31536000: raise ValueError(f'cache_age_month:{path}:{cache}')
 def verify(base_url,expected_dir):
  data=Path(expected_dir); expected_latest=json.loads((data/'latest.json').read_text(encoding='utf-8')); expected_index=json.loads((data/'archive/v1/index.json').read_text(encoding='utf-8')); candidate=str(expected_latest.get('runId') or 'candidate')
+ actual_export = None
+ if (data/'screening-export.json').exists():
+  actual_export, eh, eb = get_json(base_url, '/data/screening-export.json', candidate)
+  expected_export_raw = (data/'screening-export.json').read_bytes()
+  if eb != expected_export_raw: raise ValueError('screening_export_payload_mismatch')
+  import sys
+  if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
+  from pipeline.screening_export import validate_export, hash_preimage
+  if validate_export(actual_export): raise ValueError('screening_export_invalid')
+  if hashlib.sha256(hash_preimage(eb)).hexdigest() != actual_export.get('payloadHash'): raise ValueError('screening_export_hash')
+  require_headers('/data/screening-export.json', eh, True)
  actual_latest,lh,lb=get_json(base_url,'/data/latest.json',candidate); actual_index,ih,ib=get_json(base_url,'/data/archive/v1/index.json',candidate); require_headers('/data/latest.json',lh,True); require_headers('/data/archive/v1/index.json',ih,True)
  if actual_latest!=expected_latest: raise ValueError('latest_payload_mismatch')
  if actual_index!=expected_index: raise ValueError('history_index_payload_mismatch')
@@ -40,6 +51,11 @@ def verify(base_url,expected_dir):
  if expected_latest.get('marketDate') in dates:
   record=next(r for r in expected_month['records'] if r.get('marketDate')==expected_latest['marketDate'])
   if record.get('runId')!=expected_latest.get('runId'): raise ValueError('latest_history_run_mismatch')
+  if actual_export and record.get('payloadHash') != actual_export.get('payloadHash'): raise ValueError('history_export_hash_mismatch')
+  for ref in record.get('revisionRefs', []):
+   saved, rh, rb = get_json(base_url, ref['path'], candidate)
+   require_headers(ref['path'], rh, False)
+   if hashlib.sha256(rb).hexdigest() != ref['sha256']: raise ValueError('history_revision_hash_mismatch')
  return {'valid':True,'baseUrl':base_url,'runId':expected_latest.get('runId'),'latestBytes':len(lb),'indexBytes':len(ib),'monthPath':month_path,'monthBytes':len(mb)}
 def main(argv=None):
  p=argparse.ArgumentParser(); p.add_argument('--base-url',required=True); p.add_argument('--expected-dir',type=Path,default=ROOT/'public/data'); a=p.parse_args(argv)

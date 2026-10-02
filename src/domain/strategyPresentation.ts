@@ -33,7 +33,7 @@ export const strategyPresentations: readonly StrategyPresentation[] = [
     selection: '篩選：TPEx 張數先換算成股；只保留 entryStatus=new，隔天不再新進榜即可消失。',
     valuationNote: '投信新進榜訊號與成長訊號分開；有估值資料才顯示 PEG／情境價，缺資料明示「估值資料不足」。',
     valuationFormula: ZULU_VALUATION_FORMULA,
-    emptyBody: '目前共同 A 母體沒有同時具備已知價格、PE 與可推算成長率的候選。',
+    emptyBody: '目前沒有官方投信十日淨買超前 10 新進榜股票。續留標的保留在榜單背景資料，不列為新進候選。',
     accent: 'hot',
   },
   {
@@ -47,7 +47,7 @@ export const strategyPresentations: readonly StrategyPresentation[] = [
     selection: '篩選：使用可得完整年度 EPS 的多年度 CAGR；營收成長不代替獲利成長。缺已確認股利、多年度 EPS 或遇極端外推時不列為合理價候選。',
     valuationNote: '主估值使用總報酬本益比（本站整理）；祖魯 PEG 保留為交叉參考，不參與成長股主排序。成長股頁不顯示籌碼參考。',
     valuationFormula: GROWTH_TOTAL_RETURN_FORMULA,
-    emptyBody: '目前共同 A 母體沒有同時具備多年度 EPS、已確認股利與總報酬本益比（本站整理） ≥ 1.2 的候選。',
+    emptyBody: '目前沒有可列入成長股策略的候選；查看上方漏斗，區分缺少估值輸入、門檻未達與成長健康未達 4/5。',
     accent: 'growth',
   },
   {
@@ -61,7 +61,7 @@ export const strategyPresentations: readonly StrategyPresentation[] = [
     selection: '篩選：先計算 3.5 年回歸 Z 與 slope；成長健康未達 4/5 不列入低位觀察，資料不足只作空狀態，不冒充候選。',
     valuationNote: '股票列顯示 3.5 年回歸與成長健康狀態；有可追溯正式／代理成長輸入才顯示 PEG 數值，代理明示估算／代理，缺資料顯示「PEG 不可用」。',
     valuationFormula: ZULU_VALUATION_FORMULA,
-    emptyBody: '目前共同 A 母體沒有同時具備 3.5 年低位條件與可推算 PEG 的候選。',
+    emptyBody: '目前沒有同時符合 3.5 年回歸 Z ≤ 0、slope > 0 與成長健康至少 4/5 的股票。PEG 缺值不會排除低位觀察。',
     accent: 'low',
   },
 ]
