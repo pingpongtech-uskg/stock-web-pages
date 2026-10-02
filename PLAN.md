@@ -284,14 +284,14 @@ manifest 帶 `next_expected_update_at` 與預期交易日；前端用目前時�
 
 - 前端：React＋TypeScript＋Vite，靜態輸出 `dist/`；表格用 TanStack Table，圖表用按需載入的 ECharts；狀態盡量用 URL、React 與 IndexedDB，不加入大型全域狀態系統。
 - 批次：Python 3.12、pandas／NumPy、PyArrow、httpx、Pydantic、pytest；版本於實作啟動時鎖定並提交 lockfile。
-- 排程／CI：GitHub Actions 標準 Linux runner。CI 用錄製且去識別的 fixtures，不在每個 PR 抓完整金融資料。
-- 發布：Pages Direct Upload，Actions 完成計算與 build 後用鎖定版本的 Wrangler 部署。程式碼仍放 GitHub；不是要求在 Pages 機器上跑 Python cron。
-- 日常资料状态：建議私有 Cloudflare R2 Standard，存分割的 Parquet 與原始回應；只作儲存。預期小型個人使用可在免費額度內，但不承諾永遠零費。
-- 如果不想啟用 R2：原型可用私有 Git 資料 repo 保存分日增量與小型索引，單檔 <20 MiB、總量接近 500 MiB 時先遷移儲存。不要每天 commit 整個 SQLite／3.5 年大檔，也不把 Actions cache／短期 artifact 當唯一資料庫。正式長期版仍建議物件儲存。
+- 排程／CI：n8n 負責平日台北 18:00 排程；GitHub Actions 標準 Linux runner 執行資料管線與 CI。CI 用錄製且去識別的 fixtures，不在每個 PR 抓完整金融資料。
+- 發布：沿用現有 Cloudflare Pages 與 GitHub `main` 的 Git integration。Actions 驗證資料、測試與 build 後將同一份快照提交到 `main`，Cloudflare 自動建置並部署；驗收必須核對公開 export 與該 Actions 產物的 hash。停用舊 Direct Upload 工作流程，避免雙路部署。
+- 日常資料狀態：已驗證網站快照與不可變歷史摘要保存在現有 Git repo；FinMind 預算、補庫隊列與資料列保存在持久化 cache，失敗時另存 checkpoint artifact 並於同日重跑恢復。完整快取不是網站公開資料，也不把短期 artifact 當唯一長期資料庫。
+- 長期研究原始資料超過現有儲存規模時，再另行評估私有物件儲存；本次部署不建立 R2、不新增付費方案或部署 secrets。
 
-R2 保留去重後公司事件與財務版本、日價與法人增量；原始完整 payload 保留 90 日，必要研究證據在到期前轉存不可變研究資料包，不因一般生命周期刪掉。`latest-state.json` 只在所有引用物件驗證後更新；恢復時驗 hash，缺檔則回退前版。避免每天複製全庫造成 N 倍成長。
+若未來採用物件儲存，應保留去重後公司事件與財務版本、日價與法人增量；原始完整 payload 保留 90 日，必要研究證據在到期前轉存不可變研究資料包，不因一般生命周期刪掉。版本指標只在所有引用物件驗證後更新；恢復時驗 hash，缺檔則回退前版。避免每天複製全庫造成 N 倍成長。
 
-GitHub secrets 只記名稱：`FINMIND_TOKEN`（免費登入 token）、`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`，使用 R2 時另有 `R2_ACCESS_KEY_ID`、`R2_SECRET_ACCESS_KEY` 與 bucket 設定。任何值都不進 `answers.key`、前端、公開日誌或 Git。
+本次資料管線只沿用 GitHub secret `FINMIND_TOKEN`（免費登入 token）；GitHub 寫入使用 Actions 內建 token，Cloudflare 沿用現有 Git integration，不要求 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 或 R2 credentials。任何 secret 值都不進 `answers.key`、前端、公開日誌或 Git。
 
 ### 免費選項比較（2026-09-08 查核）
 
@@ -304,17 +304,17 @@ GitHub secrets 只記名稱：`FINMIND_TOKEN`（免費登入 token）、`CLOUDFL
 
 GitHub Free 私有 repo 目前每月包含 2,000 Actions 分鐘；公開 repo 標準 runner 有免費使用，但不能為省分鐘而公開不適合散布的資料。估算穩態 25 分鐘×31日=775 分鐘，另保留 CI、重試、初次建庫；這是預算目標，必須實測，且額度由帳號共用。
 
-Pages Free 的官方 build 額度為每月 500 次、單檔最大 25 MiB、檔案最多 20,000；本方案預先在 Actions build，不把該 build 次數宣稱為 Direct Upload 每月部署限額。自訂網域註冊不包含在免費託管內，可先用 pages.dev。
+Pages Free 的官方 build 額度為每月 500 次、單檔最大 25 MiB、檔案最多 20,000；現有 Git integration 的 main 部署會消耗 Cloudflare build 額度，Actions build 則作為發布前驗證。自訂網域註冊不包含在免費託管內。
 
-R2 Standard 免費額度目前含 10 GB-month、100 萬 Class A、1,000 萬 Class B／月；超額可能收費。內部預算以儲存 5 GB、每月 1 萬次寫入為預警值，記錄用量與成本，不自動升級付費資料方案。
+R2 Standard 額度是未來儲存評估資料：免費額度目前含 10 GB-month、100 萬 Class A、1,000 萬 Class B／月；超額可能收費。本次不啟用 R2，也不自動升級付費資料方案。
 
 ### 部署細節
 
-新 Pages 專案選 Direct Upload 前先確認模式；官方有 Git integration／Direct Upload 類型切換限制，不能事後假設隨意互換。Git integration 專案另有停用自動 build、再用 Wrangler 的官方路徑，但本新專案不需要雙路發布。
+現有 Pages 專案維持 main Git integration；不切換專案類型、不另用 Wrangler 或 Direct Upload 發布。Cloudflare 部署需核對 main commit、公開 export hash 與歷史索引，失敗時保留上一成功站點並針對同一已驗證 commit 重試。
 
 `daily.yml` 只提供帶 `request_id`、`market_date` 的 workflow_dispatch；n8n 負責台北時間平日 18:00 排程與官方休市驗證，使用 `concurrency` 防重疊且不取消正在寫狀態的 run。排程可能延遲／漏跑；下次根據資料水位補日，支援手動重跑；公開 repo 長期無活動也可能停用排程。前端以過期狀態顯示，不承諾準時 SLA。
 
-`ci.yml` 跑 PR 驗證，不對未信任 PR 暴露秘密。`deploy.yml` 在 main 程式更新時用最新已驗證資料發布，不觸發第二次每日抓取；禁止 data 更新造成自我觸發部署迴圈。讀取同一 pending/validated run 的重試必須冪等。
+`ci.yml` 跑 PR 與 main 驗證，不對未信任 PR 暴露秘密，包含 n8n regression tests。舊 `deploy.yml` 已移除；main 程式或已驗證資料更新由 Cloudflare Git integration 部署，不觸發第二次每日抓取。讀取同一 pending/validated run 的重試必須冪等。
 
 Cloudflare 支援 SPA 路由時檢驗深連結刷新；GitHub Pages 替代模式採 hash routing 或預生成路由與正確 base，不能用首頁成功冒充所有個股頁可刷新。
 
