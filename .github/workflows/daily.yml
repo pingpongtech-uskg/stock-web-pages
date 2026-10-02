@@ -36,6 +36,8 @@ jobs:
             fi
           done
           exit 1
+      - name: Verify fetched official universe
+        run: python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json
       - name: Refresh FinMind seed when token is available
         shell: bash
         env:
@@ -67,7 +69,11 @@ jobs:
       - run: python scripts/verify_history_archive.py --archive public/data/archive/v1
       - run: python scripts/verify_neutral_copy.py --paths src public/data
       - run: python -m pytest pipeline scripts -q
+      - run: npm run test:unit
+      - run: npm run typecheck
       - run: npm run build
+      - name: Recheck tracked universe before publish
+        run: python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json --latest public/data/latest.json
       - name: Publish validated release to main
         shell: bash
         run: |

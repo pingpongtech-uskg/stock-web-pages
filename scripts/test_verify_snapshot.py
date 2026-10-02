@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
+import pytest
+
 from scripts.refresh_snapshot import clean_detail_limitations
 from scripts.verify_snapshot import (
     compute_input_hash,
@@ -54,6 +56,100 @@ def test_adjusted_regression_requires_complete_observation_contract() -> None:
     assert regression_contract_error(regression, "2330", date(2026, 9, 11)) == "regression_observations_mismatch:2330"
 
 
+def test_recent_ineligible_short_history_is_valid() -> None:
+    regression = {
+        "priceBasis": "adjusted",
+        "historyStart": "2026-09-22",
+        "historyEnd": "2026-10-01",
+        "observations": 8,
+        "expectedObservations": 8,
+        "coveragePct": 100.0,
+        "signalEligible": False,
+    }
+
+    assert regression_contract_error(regression, "7856", date(2026, 10, 1)) is None
+
+
+def test_short_history_cannot_be_eligible() -> None:
+    regression = {
+        "priceBasis": "adjusted",
+        "historyStart": "2026-09-22",
+        "historyEnd": "2026-10-01",
+        "observations": 8,
+        "expectedObservations": 8,
+        "coveragePct": 100.0,
+        "signalEligible": True,
+    }
+    assert regression_contract_error(regression, "7856", date(2026, 10, 1)) == "regression_window_start:7856"
+
+
+def test_short_history_requires_boolean_false_eligibility() -> None:
+    regression = {
+        "priceBasis": "adjusted",
+        "historyStart": "2026-09-22",
+        "historyEnd": "2026-10-01",
+        "observations": 8,
+        "expectedObservations": 8,
+        "coveragePct": 100.0,
+        "signalEligible": "false",
+    }
+    assert regression_contract_error(regression, "7856", date(2026, 10, 1)) == "regression_signal_eligible_type:7856"
+
+
+def test_complete_eligible_regression_window_is_valid() -> None:
+    regression = {
+        "priceBasis": "adjusted",
+        "historyStart": "2023-04-02",
+        "historyEnd": "2026-10-01",
+        "observations": 853,
+        "expectedObservations": 853,
+        "coveragePct": 100.0,
+        "signalEligible": True,
+    }
+    assert regression_contract_error(regression, "2330", date(2026, 10, 1)) is None
+
+
+def test_ineligible_regression_cannot_start_after_market_end() -> None:
+    regression = {
+        "priceBasis": "adjusted",
+        "historyStart": "2026-10-02",
+        "historyEnd": "2026-10-03",
+        "observations": 2,
+        "expectedObservations": 2,
+        "coveragePct": 100.0,
+        "signalEligible": False,
+    }
+    assert regression_contract_error(regression, "7856", date(2026, 10, 1)) == "regression_window_start:7856"
+
+
+def test_ineligible_regression_cannot_use_pre_window_history() -> None:
+    regression = {
+        "priceBasis": "adjusted",
+        "historyStart": "2023-03-18",
+        "historyEnd": "2026-10-01",
+        "observations": 2,
+        "expectedObservations": 2,
+        "coveragePct": 100.0,
+        "signalEligible": False,
+    }
+    assert regression_contract_error(regression, "7856", date(2026, 10, 1)) == "regression_window_start:7856"
+
+
+@pytest.mark.parametrize("signal_eligible", [False, True])
+def test_reversed_regression_dates_are_rejected(signal_eligible: bool) -> None:
+    regression = {
+        "priceBasis": "adjusted",
+        "historyStart": "2026-09-30",
+        "historyEnd": "2026-09-29",
+        "observations": 2,
+        "expectedObservations": 2,
+        "coveragePct": 100.0,
+        "signalEligible": signal_eligible,
+    }
+
+    assert regression_contract_error(regression, "7856", date(2026, 10, 1)) == "regression_date_order:7856"
+
+
 def test_missing_regression_object_is_rejected() -> None:
     assert regression_contract_error(None, "2330", date(2026, 9, 11)) == "regression_missing:2330"
 
@@ -89,13 +185,28 @@ def test_stale_four_year_limitations_are_removed() -> None:
 
 def test_daily_workflow_runs_v3_refresh_and_gate() -> None:
     workflow = (ROOT / ".github" / "workflows" / "daily.yml").read_text(encoding="utf-8")
+    universe_fetch = workflow.index("python scripts/fetch_research_universe.py --source official")
+    universe_gate = workflow.index(
+        "python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json"
+    )
     refresh = workflow.index("python scripts/refresh_snapshot.py")
     verify = workflow.index("python scripts/verify_snapshot.py")
-    fetch = workflow.index("python scripts/fetch_finmind.py")
-    assert fetch < refresh < verify
-    assert "python -m pytest pipeline scripts -q" in workflow
+    freshness = workflow.index("python scripts/verify_daily_freshness.py")
+    fetch_finmind = workflow.index("python scripts/fetch_finmind.py")
+    pytest_gate = workflow.index("python -m pytest pipeline scripts -q")
+    vitest_gate = workflow.index("npm run test:unit")
+    typecheck_gate = workflow.index("npm run typecheck")
+    build = workflow.index("npm run build")
+    final_universe_gate = workflow.index(
+        "python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json --latest public/data/latest.json"
+    )
+    publish = workflow.index("git add config/tracked_symbols.json public/data")
+
+    assert fetch_finmind < refresh < verify < freshness
+    assert universe_fetch < universe_gate < refresh
     assert "--offline" not in workflow
-    assert "python scripts/verify_daily_freshness.py" in workflow
+    assert pytest_gate < vitest_gate < typecheck_gate < build < final_universe_gate < publish
+    assert workflow.count("python scripts/verify_tracked_universe.py") == 2
 
 
 def test_volume_indicator_enforces_two_times_green_boundary() -> None:

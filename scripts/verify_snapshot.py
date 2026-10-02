@@ -5,7 +5,8 @@ Beyond the v1 key-presence checks this script verifies the contracts the
 second product review asked for:
 
 * the published funnel must conserve and match the stock summaries;
-* every regression history window must sit inside the fixed 3.5-year frame;
+* eligible regressions must satisfy the fixed 3.5-year frame; an explicitly
+  ineligible recent listing may expose a shorter history without a signal;
 * the manifest must carry a code commit, four formula versions, and hashes
   for both the input details and rankings;
 * every parsed JSON number must be finite and every regression object must
@@ -102,7 +103,11 @@ def regression_contract_error(
     code: str,
     market_end: date,
 ) -> str | None:
-    """Return a fail-closed regression contract error, if any."""
+    """Return a fail-closed regression contract error, if any.
+
+    Only an explicitly ineligible signal may have a recent start after the
+    fixed regression window; date order and current-end bounds still apply.
+    """
 
     if not isinstance(regression, dict):
         return "regression_missing:" + code
@@ -141,26 +146,40 @@ def regression_contract_error(
     earliest_start = window_start - timedelta(days=WINDOW_START_TOLERANCE_DAYS)
     latest_end = market_end + timedelta(days=WINDOW_END_TOLERANCE_DAYS)
     history_start = regression.get("historyStart")
+    start_day: date | None = None
     if history_start is not None:
         try:
             start_day = date.fromisoformat(str(history_start)[:10])
         except (TypeError, ValueError):
             return "regression_start_unparsed:" + code
-        if start_day < earliest_start or start_day > window_start + timedelta(days=WINDOW_END_TOLERANCE_DAYS):
-            return "regression_window_start:" + code
     elif basis == "adjusted":
         return "regression_field_missing:historyStart:" + code
 
     history_end = regression.get("historyEnd")
+    end_day: date | None = None
     if history_end is not None:
         try:
             end_day = date.fromisoformat(str(history_end)[:10])
         except (TypeError, ValueError):
             return "regression_end_unparsed:" + code
-        if end_day < market_end - timedelta(days=WINDOW_END_TOLERANCE_DAYS) or end_day > latest_end:
-            return "regression_window_end:" + code
     elif basis == "adjusted":
         return "regression_field_missing:historyEnd:" + code
+
+    if start_day is not None and end_day is not None and start_day > end_day:
+        return "regression_date_order:" + code
+
+    if start_day is not None:
+        if start_day < earliest_start:
+            return "regression_window_start:" + code
+        latest_window_start = window_start + timedelta(days=WINDOW_END_TOLERANCE_DAYS)
+        if start_day > latest_window_start:
+            # A short recent history is visible only as an ineligible observation.
+            if regression.get("signalEligible") is not False or start_day > market_end:
+                return "regression_window_start:" + code
+
+    if end_day is not None:
+        if end_day < market_end - timedelta(days=WINDOW_END_TOLERANCE_DAYS) or end_day > latest_end:
+            return "regression_window_end:" + code
     return None
 
 
