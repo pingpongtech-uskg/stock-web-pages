@@ -1,0 +1,1058 @@
+{
+  "id": "huDBNJDss4KuPmn4",
+  "name": "Stockscreener",
+  "active": false,
+  "nodes": [
+    {
+      "name": "Weekdays 18:00 Taipei",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * 1-5"
+            }
+          ]
+        },
+        "misfirePolicy": "coalesce",
+        "misfireGraceSeconds": 300
+      },
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Evening recovery checkpoints",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/10 18-20 * * 1-5"
+            }
+          ]
+        },
+        "misfirePolicy": "coalesce",
+        "misfireGraceSeconds": 300
+      },
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "name": "Manual operator test or recovery",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "name": "Operator inputs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "mode",
+              "name": "mode",
+              "value": "diagnose",
+              "type": "string"
+            },
+            {
+              "id": "run_kind",
+              "name": "run_kind",
+              "value": "manual",
+              "type": "string"
+            },
+            {
+              "id": "market_date",
+              "name": "market_date",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "request_id",
+              "name": "request_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "actions_run_id",
+              "name": "actions_run_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "site_url",
+              "name": "site_url",
+              "value": "https://stockscreener.andyshih.uk",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Manual default is read-only diagnose. screen runs current market date; resume retrieves existing exact request/run without rescreening. revision requires new request_id for a correction. legacy_archive reads authenticated immutable retained history for the six authorized backfill dates; no screening is dispatched. Set market_date YYYY-MM-DD and actions_run_id for exact-run backfill."
+    },
+    {
+      "name": "Scheduled inputs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "mode",
+              "name": "mode",
+              "value": "screen",
+              "type": "string"
+            },
+            {
+              "id": "run_kind",
+              "name": "run_kind",
+              "value": "scheduled",
+              "type": "string"
+            },
+            {
+              "id": "market_date",
+              "name": "market_date",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "request_id",
+              "name": "request_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "actions_run_id",
+              "name": "actions_run_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "site_url",
+              "name": "site_url",
+              "value": "https://stockscreener.andyshih.uk",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "name": "Validate operator and market date",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Embedded in n8n Code nodes. No network calls or credential access.\nconst STRATEGIES = ['trust', 'growth', 'lowPosition'];\nconst METRICS = ['currentPrice','zScore','slope','currentPeg','currentPe','ttmEps','earningsGrowth','dividendYield','growthTotalReturnPe','growthFairPrice','growthBuyZonePrice','growthYears','growthValidYears','growthHealthPassCount','institutionNetShares10','participation10'];\nfunction sha256(text) {\n  const bytes = Buffer.from(text, 'utf8');\n  const primes = []; const initial = []; const constants = [];\n  for (let n = 2; primes.length < 64; n++) {\n    if (primes.every(p => n % p)) {\n      primes.push(n); constants.push((Math.cbrt(n) % 1 * 0x100000000) | 0);\n      if (initial.length < 8) initial.push((Math.sqrt(n) % 1 * 0x100000000) | 0);\n    }\n  }\n  const length = bytes.length; const padded = Buffer.alloc(Math.ceil((length + 9) / 64) * 64);\n  bytes.copy(padded); padded[length] = 128; padded.writeUInt32BE(length * 8 >>> 0, padded.length - 4);\n  const rotate = (x, n) => x >>> n | x << (32 - n);\n  let hash = initial;\n  for (let offset = 0; offset < padded.length; offset += 64) {\n    const words = Array.from({length:64}, (_,i) => i < 16 ? padded.readUInt32BE(offset + 4*i) : 0);\n    for (let i=16;i<64;i++) {\n      const a=words[i-15], b=words[i-2];\n      words[i]=(words[i-16]+(rotate(a,7)^rotate(a,18)^a>>>3)+words[i-7]+(rotate(b,17)^rotate(b,19)^b>>>10))|0;\n    }\n    let [a,b,c,d,e,f,g,h]=hash;\n    for(let i=0;i<64;i++) {\n      const t1=(h+(rotate(e,6)^rotate(e,11)^rotate(e,25))+(e&f^~e&g)+constants[i]+words[i])|0;\n      const t2=((rotate(a,2)^rotate(a,13)^rotate(a,22))+(a&b^a&c^b&c))|0;\n      [a,b,c,d,e,f,g,h]=[(t1+t2)|0,a,b,c,(d+t1)|0,e,f,g];\n    }\n    hash=hash.map((value,i)=>(value+[a,b,c,d,e,f,g,h][i])|0);\n  }\n  return hash.map(value=>(value>>>0).toString(16).padStart(8,'0')).join('');\n}\nfunction validateExport(raw, expected) {\n  if (typeof raw !== 'string' || Buffer.byteLength(raw)>3000000) throw Error('export_size');\n  const suffix = /,\"payloadHash\":\"([a-f0-9]{64})\"}$/;\n  const match = raw.match(suffix);\n  if (!match || sha256(raw.replace(suffix,'}')) !== match[1]) throw Error('payload_hash_mismatch');\n  const value=JSON.parse(raw);\n  if (value.schemaVersion!=='screening-export-v1' || value.legacy!==false || !/^[a-f0-9]{12}$/.test(value.revision)) throw Error('export_schema');\n  for(const field of ['marketDate','requestId','actionsRunId']) if(value[field]!==expected[field]) throw Error('export_lineage:'+field);\n  if(!/^[a-f0-9]{40}$/.test(value.sourceGitCommit) || !value.runId || !value.generatedAt || !value.formulaVersions || !value.coverage || !value.funnel) throw Error('export_lineage');\n  if(!['current','degraded'].includes(value.freshness) || value.coverage.universeStale) throw Error('stale_export');\n  if(!Array.isArray(value.selectedStocks) || value.selectedStocks.length>3000 || Object.keys(value.strategies||{}).sort().join(',')!==[...STRATEGIES].sort().join(',')) throw Error('export_schema');\n  const codes=value.selectedStocks.map(stock=>stock.code);\n  if(codes.some(code=>typeof code!=='string'||!/^\\d{4,6}$/.test(code)) || new Set(codes).size!==codes.length) throw Error('selected_stock_duplicates');\n  const union=new Set();\n  for(const strategy of STRATEGIES) {\n    const rows=value.strategies[strategy]; if(!Array.isArray(rows)) throw Error('strategy_rows');\n    const members=rows.map(row=>`${row.code}:${row.rank}`);\n    if(new Set(members).size!==members.length||new Set(rows.map(row=>row.code)).size!==rows.length||new Set(rows.map(row=>row.rank)).size!==rows.length||rows.some(row=>!Number.isInteger(row.rank)||row.rank<1)) throw Error('strategy_duplicates');\n    rows.forEach(row=>union.add(row.code));\n    const actual=value.selectedStocks.flatMap(stock=>(stock.strategies||[]).filter(entry=>entry.strategy===strategy).map(entry=>`${stock.code}:${entry.rank}`));\n    if(actual.sort().join(',')!==members.sort().join(',')) throw Error('strategy_union_mismatch');\n  }\n  if([...union].sort().join(',')!==[...codes].sort().join(',')) throw Error('selected_union_mismatch');\n  for(const stock of value.selectedStocks) {\n    if(typeof stock.name!=='string'||typeof stock.sector!=='string'||!stock.metrics||!stock.provenance||stock.provenance.marketDate!==value.marketDate) throw Error('stock_schema');\n    if(stock.strategies.some(entry=>!STRATEGIES.includes(entry.strategy)||typeof entry.status!=='string'||typeof entry.reason!=='string')) throw Error('stock_strategy_schema');\n    if(METRICS.some(name=>stock.metrics[name]!==undefined&&stock.metrics[name]!==null&&(typeof stock.metrics[name]!=='number'||!Number.isFinite(stock.metrics[name])))) throw Error('stock_metric_schema');\n    if(stock.metrics.growthMethod!==undefined&&stock.metrics.growthMethod!==null&&typeof stock.metrics.growthMethod!=='string') throw Error('stock_metric_schema');\n  }\n  return value;\n}\nfunction richText(content) {\n  const text=String(content); const parts=[];\n  for(let i=0;i<text.length;i+=1900) parts.push({type:'text',text:{content:text.slice(i,i+1900)}});\n  if(parts.length>100) throw Error('notion_text_too_large');\n  return parts;\n}\nfunction stockSchema() {\n  return {'名稱':{title:{}},'股票代號':{rich_text:{}},'產業':{rich_text:{}},'策略':{multi_select:{options:STRATEGIES.map(name=>({name}))}},'投信排名':{number:{}},'成長排名':{number:{}},'低位階排名':{number:{}},'指標':{rich_text:{}},'來源':{rich_text:{}},'策略狀態':{rich_text:{}},'Revision':{rich_text:{}},'Payload Hash':{rich_text:{}},'Row Key':{rich_text:{}},...Object.fromEntries(METRICS.map(name=>[name,{number:{}}]))};\n}\nfunction stockProperties(stock, payload) {\n  const rank = name => stock.strategies.find(entry=>entry.strategy===name)?.rank??null;\n  return {'名稱':{title:richText(stock.name||stock.code)},'股票代號':{rich_text:richText(stock.code)},'產業':{rich_text:richText(stock.sector)},'策略':{multi_select:stock.strategies.map(entry=>({name:entry.strategy}))},'投信排名':{number:rank('trust')},'成長排名':{number:rank('growth')},'低位階排名':{number:rank('lowPosition')},'指標':{rich_text:richText(JSON.stringify(stock.metrics))},'來源':{rich_text:richText(JSON.stringify(stock.provenance))},'策略狀態':{rich_text:richText(JSON.stringify(stock.strategies))},'Revision':{rich_text:richText(payload.revision)},'Payload Hash':{rich_text:richText(payload.payloadHash)},'Row Key':{rich_text:richText(`${payload.payloadHash}:${stock.code}`)},...Object.fromEntries(METRICS.map(name=>[name,{number:stock.metrics[name]??null}]))};\n}\nfunction retrySeconds(value,now=Date.now()) {\n  if(value!==undefined&&String(value).trim()!==''&&Number.isFinite(Number(value))) return Math.max(0.5,Number(value));\n  const timestamp=Date.parse(value); return Number.isFinite(timestamp)?Math.max(0.5,(timestamp-now)/1000):2;\n}\nfunction claimState(existing, owner) {\n  if(existing?.owner&&existing.owner!==owner&&!existing.released) throw Error('writer_busy');\n  return {...(existing||{}),owner,released:false};\n}\n\n// Explicit projection of immutable retained history; original lineage stays unknown.\nfunction validateLegacyArchive(raw,expected) {\n  if(typeof raw!=='string'||Buffer.byteLength(raw)>3000000||sha256(raw)!==expected.sha256)throw Error('legacy_hash_mismatch');\n  const record=JSON.parse(raw);const names=['trust','growth','lowPosition'];\n  if((record.schemaVersion!==undefined&&record.schemaVersion!=='screening-history-record-v1')||record.legacy!==true||!/^[a-f0-9]{12}$/.test(record.revision)||!/^[a-f0-9]{40}$/.test(expected.archiveCommit))throw Error('legacy_schema');\n  for(const name of ['marketDate','revision','runId'])if(record[name]!==expected[name])throw Error('legacy_lineage:'+name);\n  if(Object.keys(record.strategies||{}).sort().join(',')!==[...names].sort().join(','))throw Error('legacy_strategy_schema');\n  const metricNames=['currentPrice','zScore','slope','currentPeg','currentPe','ttmEps','earningsGrowth','dividendYield','growthTotalReturnPe','growthFairPrice','growthBuyZonePrice','growthYears','growthValidYears','growthHealthPassCount','institutionNetShares10','participation10'];\n  let selected={};const strategies={};\n  for(const strategy of names) {\n    const rows=record.strategies[strategy];if(!Array.isArray(rows)||rows.length>3000)throw Error('legacy_strategy_schema');\n    if(new Set(rows.map(row=>row.code)).size!==rows.length||new Set(rows.map(row=>row.rank)).size!==rows.length)throw Error('legacy_strategy_duplicates');\n    strategies[strategy]=rows.map(row=>({code:row.code,rank:row.rank}));\n    for(const row of rows) {\n      if(typeof row.code!=='string'||!/^\\d{4,6}$/.test(row.code)||!Number.isInteger(row.rank)||row.rank<1||typeof row.name!=='string')throw Error('legacy_stock_schema');\n      if(metricNames.some(name=>row[name]!==undefined&&row[name]!==null&&(typeof row[name]!=='number'||!Number.isFinite(row[name]))))throw Error('legacy_metric_schema');\n      const previous=selected[row.code];\n      const metrics=Object.fromEntries(metricNames.map(name=>[name,previous?.metrics[name]??row[name]??null]));\n      const provenance={marketDate:record.marketDate,sourceRefs:record.sourceRefs||[],inputOrigins:'legacy_archive',dataStatus:'legacy_archive',financialCutoff:'unknown',valuationEvidenceLevel:'legacy_archive',archiveSourceGitCommit:expected.archiveCommit,archiveRevisionSha256:expected.sha256,legacyReason:record.legacyReason||'Original Actions and source commit lineage unavailable.',strategyRows:{...(previous?.provenance.strategyRows||{}),[strategy]:row}};\n      selected={...selected,[row.code]:{code:row.code,name:row.name,sector:typeof row.sector==='string'?row.sector:'',metrics,strategies:[...(previous?.strategies||[]),{strategy,rank:row.rank,status:String(row.status||'unknown'),reason:String(row.reason||'')}],provenance}};\n    }\n  }\n  return {schemaVersion:'legacy-archive-projection-v1',marketDate:record.marketDate,generatedAt:record.generatedAt,runId:record.runId,requestId:`legacy:${record.marketDate}:${record.revision}`,sourceGitCommit:'',actionsRunId:'',revision:record.revision,formulaVersions:record.formulaVersions||{},legacy:true,freshness:'legacy_archive',coverage:{legacyArchive:true,originalFreshness:record.freshness||'unknown'},funnel:record.funnel||{},strategies,selectedStocks:Object.values(selected).sort((a,b)=>a.code.localeCompare(b.code)),payloadHash:expected.sha256};\n}\n\n// Pure state transitions; all requests execute through n8n credential nodes.\nconst REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nconst ROOT_SOURCE='3ed6fb57-ff38-803d-815a-000b148c6b6e';\nconst ROOT_DATABASE='3ed6fb57-ff38-8032-97cc-f017b6104300';\nconst CALENDAR='https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule';\nconst ROOT_FIELDS={ 'Market Date':{date:{}},'Request ID':{rich_text:{}},'Run ID':{rich_text:{}},'Actions Run ID':{rich_text:{}},'Source Commit':{rich_text:{}},'Payload Hash':{rich_text:{}},'Active Revision':{rich_text:{}},'Screening Status':{rich_text:{}},'Notion Status':{rich_text:{}},'Deploy Status':{rich_text:{}},'Summary':{rich_text:{}},'Selected Count':{number:{}},'Trust Count':{number:{}},'Growth Count':{number:{}},'Low Position Count':{number:{}} };\nconst OPERATION_FIELDS={'Generated At':{date:{}},'Quality':{rich_text:{}},'Archive Method':{rich_text:{}},'Archive Source Commit':{rich_text:{}},'Expected Count':{number:{}},'Archived Count':{number:{}},'Child Database ID':{rich_text:{}},'Child Data Source ID':{rich_text:{}},'Actions URL':{url:{}},'Archive URL':{url:{}},'Error Summary':{rich_text:{}},'Financial Cutoff':{rich_text:{}},'Coverage':{rich_text:{}},'Formula Versions':{rich_text:{}}};\nconst ALL_ROOT_FIELDS={...ROOT_FIELDS,...OPERATION_FIELDS};\nfunction calendarOpen(rows,day) {\n  if(!Array.isArray(rows)||!rows.length) throw Error('calendar_empty');\n  const dates=rows.map(row=>{\n    if(!/^\\d{7}$/.test(row.Date)||typeof row.Name!=='string') throw Error('calendar_schema');\n    return {...row,iso:`${Number(row.Date.slice(0,3))+1911}-${row.Date.slice(3,5)}-${row.Date.slice(5,7)}`};\n  });\n  if(dates.some(row=>row.iso.slice(0,4)!==day.slice(0,4))) throw Error('calendar_year');\n  if([0,6].includes(new Date(`${day}T00:00:00Z`).getUTCDay())) return false;\n  const events=dates.filter(row=>row.iso===day);\n  return !events.some(row=>!['開始交易日','最後交易日','國曆新年開始交易日','農曆春節前最後交易日','農曆春節後開始交易日'].includes(row.Name));\n}\nfunction selectRun(runs,state) {\n  const title=`Daily screening | ${state.requestId} | ${state.marketDate}`;\n  const matches=runs.filter(run=>run.display_title===title);\n  if(matches.length>1) throw Error('ambiguous_actions_runs');\n  return matches[0]||null;\n}\nfunction result(state,op,delaySeconds=0.5) {\n  return {state:{...state,op},op,route:op?.target||'done',delaySeconds};\n}\nfunction request(state,stage,target,method,url,body,delaySeconds=0.5) {\n  return result({...state,stage},{target,method,url,body:body||{}},delaySeconds);\n}\nfunction done(state) {return result({...state,stage:'done'},null,0.5);}\nfunction durable(state) {\n  const {op,payload,rawExport,archiveRows,pendingStocks,children,runMatches,...rest}=state;\n  return rest;\n}\nfunction contents(state) {return `${REPO}/contents/operations/days/${state.marketDate}.json`;}\nfunction archiveContents(state,stage,path){return request(state,stage,'github','GET',`${REPO}/contents/public${path}?ref=${state.archiveCommit}`);}\nfunction contentBytes(body){if(body.encoding!=='base64'||typeof body.content!=='string'||body.size>3000000)throw Error('archive_contents_schema');return Buffer.from(body.content,'base64').toString('utf8');}\nfunction checkpoint(state,nextStage) {\n  const saved={...durable(state),stage:nextStage};\n  const body={message:`[CF-Pages-Skip] chore: checkpoint Stockscreener ${state.marketDate}`,branch:'n8n-state',content:Buffer.from(JSON.stringify(saved)).toString('base64'),...(state.lockSha?{sha:state.lockSha}:{})};\n  return request({...state,nextStage},'checkpoint','github','PUT',contents(state),body);\n}\nfunction fail(state,category,message) {\n  const updated={...state,...(state.op?.target==='notion'?{notionStatus:'failed'}:{}),errorCategory:category,errorMessage:String(message||category).slice(0,1000)};\n  if(!state.lockSha||category==='writer_busy'||category==='writer_deadline'||category==='writer_conflict') return done(updated);\n  return checkpoint({...updated,released:true},'done');\n}\nfunction findDaily(state) {return request(state,'findDaily','notion','POST',`https://api.notion.com/v1/data_sources/${ROOT_SOURCE}/query`,{filter:{property:'名稱',title:{equals:state.marketDate.replaceAll('-','')}},page_size:100});}\nfunction findDatabase(state) {return request(state,'findDatabase','notion','GET',`https://api.notion.com/v1/blocks/${state.pageId}/children?page_size=100${state.cursor?'&start_cursor='+encodeURIComponent(state.cursor):''}`);}\nfunction queryRows(state,stage='queryRows') {return request(state,stage,'notion','POST',`https://api.notion.com/v1/data_sources/${state.dataSourceId}/query`,{filter:{property:'Payload Hash',rich_text:{equals:state.payload.payloadHash}},page_size:100,...(state.cursor?{start_cursor:state.cursor}:{})});}\nfunction findRuns(state,delay=0.5) {return request(state,'findRun','github','GET',`${REPO}/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=100&page=${state.runPage||1}`,null,delay);}\nfunction rootProperties(state,status) {\n  const payload=state.payload;\n  if(!payload) return {'Market Date':{date:{start:state.marketDate}},'Request ID':{rich_text:richText(state.requestId)},'Actions Run ID':{rich_text:richText(state.actionsRunId||'')},'Actions URL':{url:state.actionsRunId?`https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/${state.actionsRunId}`:null},'Screening Status':{rich_text:richText('failed')},'Notion Status':{rich_text:richText('failure_metadata')},'Error Summary':{rich_text:richText(`${state.errorCategory||'screening_failed'}: ${state.errorMessage||'Screening failed; no child stock database was created.'}`)}};\n  return {'Market Date':{date:{start:state.marketDate}},'Request ID':{rich_text:richText(state.requestId)},'Run ID':{rich_text:richText(payload.runId)},'Actions Run ID':{rich_text:richText(state.actionsRunId)},'Source Commit':{rich_text:richText(payload.sourceGitCommit)},'Payload Hash':{rich_text:richText(payload.payloadHash)},'Screening Status':{rich_text:richText('complete')},'Notion Status':{rich_text:richText(status)},'Deploy Status':{rich_text:richText(state.deployStatus||'pending')},'Selected Count':{number:payload.selectedStocks.length},'Trust Count':{number:payload.strategies.trust.length},'Growth Count':{number:payload.strategies.growth.length},'Low Position Count':{number:payload.strategies.lowPosition.length},'Generated At':{date:{start:payload.generatedAt}},'Quality':{rich_text:richText(payload.freshness)},'Expected Count':{number:payload.selectedStocks.length},'Archived Count':{number:status==='complete'?payload.selectedStocks.length:0},'Actions URL':{url:state.actionsRunId?`https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/${state.actionsRunId}`:null},'Archive Method':{rich_text:richText(state.archiveMethod||'actions_artifact')},'Archive Source Commit':{rich_text:richText(state.archiveCommit||'')},'Archive URL':{url:state.databaseId?`https://www.notion.so/${state.databaseId.replaceAll('-','')}`:null},'Child Database ID':{rich_text:richText(state.databaseId||'')},'Child Data Source ID':{rich_text:richText(state.dataSourceId||'')},'Error Summary':{rich_text:richText(state.deployError||'')},'Coverage':{rich_text:richText(JSON.stringify(payload.coverage))},'Formula Versions':{rich_text:richText(JSON.stringify(payload.formulaVersions))},'Financial Cutoff':{rich_text:richText([...new Set(payload.selectedStocks.map(stock=>stock.provenance.financialCutoff).filter(Boolean))].join(', '))},...(status==='complete'?{'Active Revision':{rich_text:richText(payload.revision)}}:{})};\n}\nfunction summary(state) {\n  const p=state.payload;\n  return `Archive ${p.marketDate}; revision ${p.revision}; selected ${p.selectedStocks.length}; trust ${p.strategies.trust.length}; growth ${p.strategies.growth.length}; lowPosition ${p.strategies.lowPosition.length}; run ${p.runId}; Actions ${p.actionsRunId}; request ${p.requestId}; source ${p.sourceGitCommit}; payload ${p.payloadHash}; coverage ${JSON.stringify(p.coverage)}; formula ${JSON.stringify(p.formulaVersions)}; deploy ${state.deployStatus||'pending'}.`;\n}\nfunction start(input,now=Date.now()) {\n  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(input.marketDate)||new Date(`${input.marketDate}T00:00:00Z`).toISOString().slice(0,10)!==input.marketDate) throw Error('invalid_market_date');\n  if(!/^[a-zA-Z0-9_.:-]{1,160}$/.test(input.requestId)||!['screen','resume','diagnose','revision','legacy_archive'].includes(input.mode)) throw Error('invalid_operator_input');\n  if(input.mode==='legacy_archive'&&(input.runKind!=='manual'||!['2026-09-08','2026-09-11','2026-09-18','2026-09-23','2026-09-24','2026-10-01'].includes(input.marketDate)))throw Error('legacy_operator_scope');\n  if(input.actionsRunId!==undefined&&!/^\\d{1,24}$/.test(String(input.actionsRunId))) throw Error('invalid_actions_run_id');\n  if(input.siteUrl!=='https://stockscreener.andyshih.uk') throw Error('invalid_site_url');\n  const overdueAt=Date.parse(input.marketDate+'T11:30:00Z');\n  const operationDeadline=input.runKind==='scheduled'?overdueAt:now+90*60000;\n  return request({...input,startedAt:now,operationDeadline,deadline:Math.min(now+59*60000,operationDeadline),targetAt:Date.parse(input.marketDate+'T10:45:00Z'),overdueAt,screeningStatus:'pending',notionStatus:'pending',deployStatus:'pending',released:false},'calendar','public','GET',CALENDAR);\n}\nfunction next(state,now) {\n  switch(state.stage) {\n    case 'done':return done(state);\n    case 'holiday':return checkpoint({...state,released:true,screeningStatus:'skipped_non_trading',notionStatus:'skipped',deployStatus:'skipped'},'done');\n    case 'findRun':return findRuns(state);\n    case 'dispatch':return request({...state,dispatchIntent:true},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate}});\n    case 'pollRun':return request(state,'pollRun','github','GET',`${REPO}/actions/runs/${state.actionsRunId}`,null,15);\n    case 'artifactList':return request(state,'artifactList','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);\n    case 'legacyRef':return state.archiveCommit?archiveContents(state,'legacyIndex','/data/archive/v1/index.json'):request(state,'legacyRef','github','GET',`${REPO}/git/ref/heads/main`);\n    case 'legacyExport':return archiveContents(state,'legacyExport',state.archivePath);\n    case 'rootSchema':return request(state,'rootSchema','notion','GET',`https://api.notion.com/v1/data_sources/${ROOT_SOURCE}`);\n    case 'findDaily':return findDaily(state);\n    case 'writeFailure':return request(state,'writeFailure','notion','PATCH',`https://api.notion.com/v1/pages/${state.pageId}`,{properties:rootProperties(state,'failure_metadata')});\n    case 'findDatabase':return findDatabase({...state,cursor:undefined,children:[]});\n    case 'queryRows':return queryRows({...state,cursor:undefined,archiveRows:[]});\n    case 'verifyRows':return queryRows({...state,cursor:undefined,archiveRows:[]},'verifyRows');\n    case 'summaryRead':return request(state,'summaryRead','notion','GET',`https://api.notion.com/v1/blocks/${state.pageId}/children?page_size=100${state.cursor?'&start_cursor='+encodeURIComponent(state.cursor):''}`);\n    case 'liveProbe':\n    case 'liveVerify':return request(state,state.stage,'public','GET',liveUrl(state,now));\n    default:throw Error('unknown_stage:'+state.stage);\n  }\n}\nfunction advance(original,response,now=Date.now()) {\n  const state={...original}; const status=Number(response?.statusCode??200); let body=response?.body??response?.data;\n  if(typeof body==='string'&&!['liveProbe','liveVerify'].includes(state.stage)) {try{body=JSON.parse(body);}catch{/* Redirects may have no JSON body. */}}\n  if(state.lockSha&&now>state.deadline) return fail(state,'writer_deadline');\n  if(status===429) {\n    if((state.retry||0)>=8) return fail(state,'rate_limit_exhausted');\n    return result({...state,retry:(state.retry||0)+1},state.op,retrySeconds(response.headers?.['retry-after'],now));\n  }\n  if(state.stage==='checkpoint') {\n    if([409,422].includes(status)) return fail({...state,lockSha:undefined},'writer_conflict');\n    if(status<200||status>=300) return done({...state,errorCategory:'checkpoint_failed',errorMessage:'State write ambiguous; resume reads GitHub state before any write.'});\n    return next({...state,lockSha:body.content.sha,stage:state.nextStage,retry:0},now);\n  }\n  if(status>=500||response?.error) {\n    const readStage={createDaily:'findDaily',createDatabase:'findDatabase',createStock:'queryRows',appendSummary:'summaryRead'}[state.stage];\n    if(readStage) return next({...state,stage:readStage,retry:(state.retry||0)+1},now);\n    if(state.stage==='dispatch') return findRuns({...state,dispatchIntent:true,runPage:1},15);\n    if(['liveProbe','liveVerify'].includes(state.stage)) return deploymentResult(state,'failed','live_http_'+status,now);\n    if((state.retry||0)<3&&state.op?.method==='GET') return result({...state,retry:(state.retry||0)+1},state.op,2**((state.retry||0)+1));\n    return fail(state,'external_http_'+status);\n  }\n  if(['liveProbe','liveVerify'].includes(state.stage)&&status>=400) return deploymentResult(state,'failed','live_http_'+status,now);\n  if(state.stage==='createBranch'&&status===422) return request(state,'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);\n  const allow404=['branch','state'];\n  if(status>=400&&!allow404.includes(state.stage)) return fail(state,'external_http_'+status,body?.message);\n  try {return advanceSuccess(state,body,status,response,now);} catch(error){return fail(state,error.message.split(':')[0],error.message);}\n}\nfunction advanceSuccess(state,body,status,response,now) {\n  switch(state.stage) {\n    case 'calendar': {\n      const isOpen=calendarOpen(body,state.marketDate);\n      if(state.mode==='diagnose') return request({...state,isOpen},'diagnoseDatabase','notion','GET',`https://api.notion.com/v1/databases/${ROOT_DATABASE}`);\n      if(state.runKind==='scheduled'&&now>=state.operationDeadline) return done({...state,isOpen,errorCategory:'operation_overdue',errorMessage:'19:30 Asia/Taipei deadline passed; explicit manual resume is required.'});\n      return request({...state,isOpen},'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);\n    }\n    case 'diagnoseDatabase':\n      if(!body.data_sources?.some(source=>source.id===ROOT_SOURCE)) throw Error('notion_database_source_mismatch');\n      return request(state,'diagnoseSource','notion','GET',`https://api.notion.com/v1/data_sources/${ROOT_SOURCE}`);\n    case 'diagnoseSource':\n      if(body.properties?.['名稱']?.type!=='title') throw Error('notion_title_property');\n      return done({...state,screeningStatus:'diagnostic_verified',notionStatus:'credential_verified',deployStatus:'not_tested',notionDatabaseId:ROOT_DATABASE,notionDataSourceId:ROOT_SOURCE});\n    case 'branch':\n      if(status===404) return request(state,'mainRef','github','GET',`${REPO}/git/ref/heads/main`);\n      return request(state,'state','github','GET',contents(state)+'?ref=n8n-state');\n    case 'mainRef':return request(state,'createBranch','github','POST',`${REPO}/git/refs`,{ref:'refs/heads/n8n-state',sha:body.object.sha});\n    case 'createBranch':return request(state,'state','github','GET',contents(state)+'?ref=n8n-state');\n    case 'state': {\n      const existing=status===404?null:JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));\n      if(existing?.owner!==state.owner&&!existing?.released&&existing?.owner&&now<Number(existing.deadline)+60000) return fail(state,'writer_busy');\n      const sameRequest=existing?.requestId===state.requestId||(state.mode==='legacy_archive'&&existing?.archiveMethod==='legacy_archive');\n      if(existing?.requestId&&!sameRequest&&state.mode!=='revision') throw Error('request_correction_requires_revision');\n      if(existing?.released&&sameRequest&&existing.screeningStatus==='complete'&&existing.notionStatus==='complete'&&existing.deployStatus==='verified') return done({...existing,owner:state.owner,screeningStatus:'already_complete'});\n      const resume=sameRequest?existing:{};\n      const manualOverride=state.runKind==='manual'&&['resume','legacy_archive'].includes(state.mode)&&!!resume.requestId;\n      const operationDeadline=manualOverride?state.operationDeadline:(resume.operationDeadline||state.operationDeadline);\n      const audit=manualOverride?{scheduledCutoff:resume.scheduledCutoff||resume.overdueAt,manualDeadlineOverride:true,manualResumedAt:now}:{};\n      const saved={...state,...resume,...audit,owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl};\n      const stage=!state.isOpen?'holiday':state.mode==='legacy_archive'?'legacyRef':saved.actionsRunId?'pollRun':'findRun';\n      return checkpoint(saved,stage);\n    }\n    case 'findRun': {\n      const runs=body.workflow_runs;if(!Array.isArray(runs)) throw Error('actions_schema');\n      const matches=[...(state.runMatches||[]),...runs.filter(run=>run.display_title===`Daily screening | ${state.requestId} | ${state.marketDate}`)];\n      const match=selectRun(matches,state);\n      if(runs.length===100) {\n        if((state.runPage||1)>=10) throw Error('actions_scan_limit');\n        return findRuns({...state,runPage:(state.runPage||1)+1,runMatches:matches});\n      }\n      if(match) return checkpoint({...state,actionsRunId:String(match.id),runHeadSha:match.head_sha,runPage:1,runMatches:[]},'pollRun');\n      if(state.dispatchIntent) {\n        if(now-state.startedAt>5*60000) return fail(state,'dispatch_run_not_found','Dispatch was attempted; never resend without new operator request ID.');\n        return findRuns({...state,runPage:1},15);\n      }\n      if(state.mode==='resume') return fail(state,'resume_run_not_found');\n      return checkpoint({...state,dispatchIntent:true},'dispatch');\n    }\n    case 'dispatch':return findRuns({...state,dispatchIntent:true,runPage:1},15);\n    case 'pollRun': {\n      if(!selectRun([body],state)||String(body.id)!==state.actionsRunId) throw Error('actions_run_lineage');\n      if(body.status!=='completed') return next({...state,stage:'pollRun'},now);\n      if(body.conclusion!=='success') return checkpoint({...state,screeningStatus:'failed',recordFailure:true,errorCategory:'screening_failed',errorMessage:String(body.conclusion)},'rootSchema');\n      return checkpoint({...state,screeningStatus:'complete',runHeadSha:body.head_sha},'artifactList');\n    }\n    case 'artifactList': {\n      const artifacts=body.artifacts?.filter(artifact=>artifact.name==='screening-export'&&!artifact.expired);\n      if(artifacts?.length!==1) throw Error('artifact_missing_or_ambiguous');\n      const artifact=artifacts[0];\n      if(artifact.workflow_run&&(String(artifact.workflow_run.id)!==state.actionsRunId||artifact.workflow_run.head_sha!==state.runHeadSha)) throw Error('artifact_lineage');\n      return request({...state,artifactId:String(artifact.id)},'artifactRedirect','github','GET',`${REPO}/actions/artifacts/${artifact.id}/zip`);\n    }\n    case 'artifactRedirect': {\n      const location=response.headers?.location;\n      if(status!==302||typeof location!=='string'||!/^https:\\/\\/[a-zA-Z0-9.-]+\\.(blob\\.core\\.windows\\.net|actions\\.githubusercontent\\.com|githubusercontent\\.com)\\//.test(location)) throw Error('artifact_redirect');\n      return request(state,'artifactZip','zip','GET',location);\n    }\n    case 'artifactZip': {\n      const payload=validateExport(body.rawExport,{marketDate:state.marketDate,requestId:state.requestId,actionsRunId:state.actionsRunId});\n      const publication=body.publication;\n      if(payload.sourceGitCommit!==state.runHeadSha) throw Error('source_commit_lineage');\n      for(const field of ['requestId','marketDate','runId','payloadHash','sourceGitCommit','actionsRunId']) if(publication[field]!==payload[field]) throw Error('publication_lineage:'+field);\n      if(!/^[a-f0-9]{40}$/.test(publication.publishedGitCommit)) throw Error('publication_commit');\n      return checkpoint({...state,payload,publication,payloadHash:payload.payloadHash,runId:payload.runId,revision:payload.revision},'liveProbe');\n    }\n    case 'legacyRef': {\n      if(!/^[a-f0-9]{40}$/.test(body.object?.sha))throw Error('archive_source_commit');\n      return archiveContents({...state,archiveCommit:body.object.sha,archiveMethod:'legacy_archive'},'legacyIndex','/data/archive/v1/index.json');\n    }\n    case 'legacyIndex': {\n      const index=JSON.parse(contentBytes(body));\n      if(index.schemaVersion!=='screening-history-index-v1'||!Array.isArray(index.months))throw Error('archive_index_schema');\n      const matches=index.months.filter(month=>month.month===state.marketDate.slice(0,7)&&month.marketDates?.includes(state.marketDate));\n      if(matches.length!==1||!/^\\/data\\/archive\\/v1\\/months\\/\\d{4}-\\d{2}\\.[a-f0-9]{12}\\.json$/.test(matches[0].path)||!/^[a-f0-9]{64}$/.test(matches[0].sha256))throw Error('archive_month_ref');\n      return archiveContents({...state,archiveMonth:matches[0]},'legacyMonth',matches[0].path);\n    }\n    case 'legacyMonth': {\n      const raw=contentBytes(body);if(sha256(raw)!==state.archiveMonth.sha256||Buffer.byteLength(raw)!==state.archiveMonth.bytes)throw Error('archive_month_hash');\n      const month=JSON.parse(raw);if(month.schemaVersion!=='screening-history-month-v1'||month.month!==state.marketDate.slice(0,7)||!Array.isArray(month.records))throw Error('archive_month_schema');\n      const records=month.records.filter(record=>record.marketDate===state.marketDate);if(records.length!==1||records[0].legacy!==true)throw Error('archive_legacy_record');\n      const record=records[0];const refs=record.revisionRefs?.filter(ref=>ref.revision===record.revision&&ref.legacy===true);\n      if(!/^[a-f0-9]{12}$/.test(record.revision)||refs?.length!==1||refs[0].path!==`/data/archive/v1/revisions/${state.marketDate}.${record.revision}.json`||!/^[a-f0-9]{64}$/.test(refs[0].sha256)||refs[0].runId!==record.runId)throw Error('archive_revision_ref');\n      return checkpoint({...state,requestId:`legacy:${state.marketDate}:${record.revision}`,archivePath:refs[0].path,archiveExpected:{marketDate:state.marketDate,revision:record.revision,runId:record.runId,sha256:refs[0].sha256,archiveCommit:state.archiveCommit},archiveMethod:'legacy_archive'},'legacyExport');\n    }\n    case 'legacyExport': {\n      const payload=validateLegacyArchive(contentBytes(body),state.archiveExpected);\n      return checkpoint({...state,payload,payloadHash:payload.payloadHash,runId:payload.runId,revision:payload.revision,screeningStatus:'complete'},'liveProbe');\n    }\n    case 'rootSchema': {\n      if(body.properties?.['名稱']?.type!=='title') throw Error('notion_root_title');\n      const missing=Object.fromEntries(Object.entries(ALL_ROOT_FIELDS).filter(([name])=>!body.properties[name]));\n      for(const [name,definition] of Object.entries(ALL_ROOT_FIELDS)) if(body.properties[name]&&body.properties[name].type!==Object.keys(definition)[0]) throw Error('notion_root_schema:'+name);\n      if(Object.keys(missing).length) return request(state,'rootSchemaUpdate','notion','PATCH',`https://api.notion.com/v1/data_sources/${ROOT_SOURCE}`,{properties:missing});\n      return findDaily(state);\n    }\n    case 'rootSchemaUpdate':return findDaily(state);\n    case 'findDaily': {\n      if(body.has_more||body.results?.length>1) throw Error('duplicate_daily_page');\n      const page=body.results?.[0];\n      if(page) return checkpoint({...state,pageId:page.id,notionPageId:page.id},state.recordFailure?'writeFailure':'findDatabase');\n      return request(state,'createDaily','notion','POST','https://api.notion.com/v1/pages',{parent:{type:'data_source_id',data_source_id:ROOT_SOURCE},properties:{'名稱':{title:richText(state.marketDate.replaceAll('-',''))},...rootProperties(state,'pending')}});\n    }\n    case 'createDaily':return checkpoint({...state,pageId:body.id,notionPageId:body.id},state.recordFailure?'writeFailure':'findDatabase');\n    case 'writeFailure':return checkpoint({...state,notionStatus:'failure_metadata',released:true},'done');\n    case 'findDatabase': {\n      const children=[...(state.children||[]),...(body.results||[])];\n      if(body.has_more) return findDatabase({...state,children,cursor:body.next_cursor});\n      const databases=children.filter(block=>block.type==='child_database'&&block.child_database.title===state.marketDate.replaceAll('-',''));\n      if(databases.length>1) throw Error('duplicate_daily_database');\n      if(databases.length) return request({...state,databaseId:databases[0].id},'databaseMetadata','notion','GET',`https://api.notion.com/v1/databases/${databases[0].id}`);\n      return request(state,'createDatabase','notion','POST','https://api.notion.com/v1/databases',{parent:{type:'page_id',page_id:state.pageId},title:richText(state.marketDate.replaceAll('-','')),is_inline:true,initial_data_source:{properties:stockSchema()}});\n    }\n    case 'createDatabase':\n    case 'databaseMetadata': {\n      if(body.data_sources?.length!==1||!body.data_sources[0].id) throw Error('notion_child_source');\n      return checkpoint({...state,databaseId:body.id,dataSourceId:body.data_sources[0].id,notionDatabaseId:body.id,notionDataSourceId:body.data_sources[0].id},'queryRows');\n    }\n    case 'queryRows':\n    case 'verifyRows':return handleRows(state,body);\n    case 'createStock': {\n      const remaining=(state.pendingStocks||[]).slice(1);\n      if(remaining.length) return createStock({...state,pendingStocks:remaining});\n      return next({...state,stage:'verifyRows'},now);\n    }\n    case 'archiveDuplicate':return next({...state,stage:'queryRows'},now);\n    case 'summaryRead': {\n      const marker=`Payload ${state.payload.payloadHash}`;\n      const found=(body.results||[]).some(block=>block.type==='paragraph'&&block.paragraph.rich_text?.map(part=>part.plain_text||part.text?.content||'').join('').includes(marker));\n      if(found) return next({...state,stage:'liveVerify'},now);\n      if(body.has_more) return next({...state,stage:'summaryRead',cursor:body.next_cursor},now);\n      return request(state,'appendSummary','notion','PATCH',`https://api.notion.com/v1/blocks/${state.pageId}/children`,{children:[{object:'block',type:'paragraph',paragraph:{rich_text:richText(`Payload ${state.payload.payloadHash}\\n${summary(state)}`)}}]});\n    }\n    case 'appendSummary':return next({...state,stage:'liveVerify'},now);\n    case 'liveProbe':\n    case 'liveVerify': {\n      let deployStatus='failed',deployError='live_payload_mismatch';\n      try {\n        const live=state.archiveMethod==='legacy_archive'?validateLegacyArchive(body,state.archiveExpected):validateExport(body,{marketDate:state.marketDate,requestId:state.requestId,actionsRunId:state.actionsRunId});\n        if(live.payloadHash===state.payload.payloadHash&&live.runId===state.payload.runId&&live.sourceGitCommit===state.payload.sourceGitCommit) {deployStatus='verified';deployError=undefined;}\n      }catch(error){deployError=error.message;}\n      return deploymentResult(state,deployStatus,deployError,now);\n    }\n    case 'finishNotion':return checkpoint({...state,notionStatus:'complete',released:true,errorCategory:state.deployStatus==='verified'?undefined:'deploy_pending',errorMessage:state.deployError},'done');\n    default:throw Error('unknown_stage:'+state.stage);\n  }\n}\nfunction readProperty(value) {return value?.rich_text?.map(part=>part.plain_text||part.text?.content||'').join('')||'';}\nfunction handleRows(state,body) {\n  const rows=[...(state.archiveRows||[]),...(body.results||[])];\n  if(body.has_more) return queryRows({...state,archiveRows:rows,cursor:body.next_cursor},state.stage);\n  const keys=rows.map(row=>readProperty(row.properties['Row Key']));\n  const selected=state.payload.selectedStocks;\n  const expectedKeys=selected.map(stock=>`${state.payload.payloadHash}:${stock.code}`);\n  if(keys.some(key=>!expectedKeys.includes(key))) throw Error('extra_stock_rows');\n  for(const row of rows) {\n    const stock=selected.find(item=>`${state.payload.payloadHash}:${item.code}`===readProperty(row.properties['Row Key']));\n    const expected=stockProperties(stock,state.payload);\n    for(const [name,property] of Object.entries(expected)) {\n      const actual=row.properties[name]; const type=Object.keys(property)[0];\n      if(type==='title'&&actual?.title?.map(part=>part.plain_text||part.text?.content||'').join('')!==property.title.map(part=>part.text.content).join(''))throw Error('archive_title_mismatch');\n      if(type==='number'&&actual?.number!==property.number) throw Error('archive_metric_mismatch:'+name);\n      if(type==='rich_text'&&readProperty(actual)!==readProperty(property)) throw Error('archive_text_mismatch:'+name);\n      if(type==='multi_select'&&actual?.multi_select?.map(item=>item.name).sort().join(',')!==property.multi_select.map(item=>item.name).sort().join(',')) throw Error('archive_strategy_mismatch');\n    }\n  }\n  if(new Set(keys).size!==keys.length) {\n    const ordered=[...rows].sort((a,b)=>String(a.created_time).localeCompare(String(b.created_time))||a.id.localeCompare(b.id));\n    const duplicate=ordered.find((row,index)=>ordered.slice(0,index).some(prior=>readProperty(prior.properties['Row Key'])===readProperty(row.properties['Row Key'])));\n    return request(state,'archiveDuplicate','notion','PATCH',`https://api.notion.com/v1/pages/${duplicate.id}`,{archived:true});\n  }\n  const pendingStocks=selected.filter(stock=>!keys.includes(`${state.payload.payloadHash}:${stock.code}`));\n  if(state.stage==='verifyRows'&&pendingStocks.length) throw Error('archive_incomplete');\n  if(pendingStocks.length) return createStock({...state,pendingStocks,archiveRows:[],cursor:undefined});\n  return checkpoint({...state,archiveRows:[],cursor:undefined,notionStatus:'rows_verified'},'summaryRead');\n}\nfunction createStock(state) {return request(state,'createStock','notion','POST','https://api.notion.com/v1/pages',{parent:{type:'data_source_id',data_source_id:state.dataSourceId},properties:stockProperties(state.pendingStocks[0],state.payload)});}\nfunction finishNotion(state) {return request(state,'finishNotion','notion','PATCH',`https://api.notion.com/v1/pages/${state.pageId}`,{properties:{...rootProperties(state,'complete'),'Summary':{rich_text:richText(summary(state))}}});}\nfunction deploymentResult(state,deployStatus,deployError,now) {\n  const updated={...state,deployStatus,deployError};\n  if(state.stage==='liveProbe') return checkpoint(updated,'rootSchema');\n  if(deployStatus!=='verified'&&(state.deployAttempts||0)<20&&now+15000<state.deadline) return request({...updated,deployAttempts:(state.deployAttempts||0)+1},'liveVerify','public','GET',liveUrl(state,now),null,15);\n  return finishNotion(updated);\n}\nfunction liveUrl(state,now){return `${state.siteUrl}${state.archiveMethod==='legacy_archive'?state.archivePath:'/data/screening-export.json'}?run=${encodeURIComponent(state.actionsRunId||state.revision||'')}&t=${now}`;}\n\nconst source=$input.first().json;\nconst marketDate=source.market_date||$now.setZone('Asia/Taipei').toISODate();\nconst output=start({marketDate,requestId:source.request_id||'stockscreener:'+marketDate.replaceAll('-','')+':v1',mode:source.mode||'diagnose',runKind:source.run_kind||'manual',siteUrl:source.site_url,owner:String($execution.id),...(source.actions_run_id?{actionsRunId:source.actions_run_id}:{})});\nreturn [{json:output}];"
+      },
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "name": "Throttle and bounded waits",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": "={{ $json.delaySeconds }}",
+        "unit": "seconds"
+      },
+      "position": [
+        1440,
+        0
+      ]
+    },
+    {
+      "name": "Gate owner deadline and request origin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const item=$input.first();const {state,op,route}=item.json;\nif(state.lockSha&&Date.now()>=state.deadline) return [{json:{...item.json,state:{...state,stage:'done',errorCategory:'writer_deadline',errorMessage:'Resume exact stored Actions run after lease expiration.'},op:null,route:'done'}}];\nif(op){const allowed=(route==='github'&&op.url.startsWith('https://api.github.com/repos/pingpongtech-uskg/stock-web-pages/'))||(route==='notion'&&op.url.startsWith('https://api.notion.com/v1/'))||(route==='public'&&((op.url.startsWith(state.siteUrl+'/data/screening-export.json?')||(state.archiveMethod==='legacy_archive'&&op.url.startsWith(state.siteUrl+state.archivePath+'?')))||op.url==='https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'))||(route==='zip'&&/^https:\\/\\/[a-zA-Z0-9.-]+\\.(blob\\.core\\.windows\\.net|actions\\.githubusercontent\\.com|githubusercontent\\.com)\\//.test(op.url));if(!allowed)throw Error('request_origin_rejected');}\nreturn [item];"
+      },
+      "position": [
+        1680,
+        0
+      ]
+    },
+    {
+      "name": "Dispatch credential HTTP operation",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 7,
+        "output": "={{ $json.route === 'github' ? ($json.op.method === 'GET' ? 0 : 1) : $json.route === 'notion' ? ($json.op.method === 'GET' ? 2 : 3) : ({public:4,zip:5,done:6})[$json.route] }}"
+      },
+      "position": [
+        1920,
+        0
+      ]
+    },
+    {
+      "name": "GitHub read with existing credential",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": false,
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        2160,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "name": "GitHub CAS and dispatch writes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.op.body }}",
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        2400,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "name": "Notion read pinned API version",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2025-09-03"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": false,
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        2640,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "notionApi": {
+          "id": "A38pYEXrji3EOGzU",
+          "name": "Notion account 2"
+        }
+      }
+    },
+    {
+      "name": "Notion archive writes pinned API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2025-09-03"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.op.body }}",
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        2880,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "notionApi": {
+          "id": "A38pYEXrji3EOGzU",
+          "name": "Notion account 2"
+        }
+      }
+    },
+    {
+      "name": "Official calendar and live deployment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "none",
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        3120,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Restore GitHub operation state",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{state:$('Dispatch credential HTTP operation').item.json.state,response:$input.first().json}}];"
+      },
+      "position": [
+        3360,
+        0
+      ]
+    },
+    {
+      "name": "Restore Notion operation state",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{state:$('Dispatch credential HTTP operation').item.json.state,response:$input.first().json}}];"
+      },
+      "position": [
+        3600,
+        0
+      ]
+    },
+    {
+      "name": "Restore public operation state",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{state:$('Dispatch credential HTTP operation').item.json.state,response:$input.first().json}}];"
+      },
+      "position": [
+        3840,
+        0
+      ]
+    },
+    {
+      "name": "Download exact Actions artifact without credentials",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "url": "={{ $json.op.url }}",
+        "authentication": "none",
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          },
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "position": [
+        4080,
+        0
+      ]
+    },
+    {
+      "name": "Extract exact Actions artifact zip",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "parameters": {
+        "operation": "decompress",
+        "outputPrefix": "artifact_"
+      },
+      "position": [
+        4320,
+        0
+      ]
+    },
+    {
+      "name": "Read export and publication bytes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const input=$input.first();const files=Object.entries(input.binary||{});\nconst names=['screening-export.json','publication.json'];const values={};\nfor(const name of names){const matches=files.filter(([key,file])=>file.fileName===name||file.fileName?.endsWith('/'+name));if(matches.length!==1)throw Error('artifact_file_missing_or_ambiguous:'+name);const buffer=await this.helpers.getBinaryDataBuffer(0,matches[0][0]);if(buffer.length>3000000)throw Error('artifact_file_too_large');values[name]=buffer.toString('utf8');}\nreturn [{json:{state:$('Dispatch credential HTTP operation').item.json.state,response:{statusCode:200,body:{rawExport:values['screening-export.json'],publication:JSON.parse(values['publication.json'])}}}}];"
+      },
+      "position": [
+        4560,
+        0
+      ]
+    },
+    {
+      "name": "Advance durable screening and archive state",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Embedded in n8n Code nodes. No network calls or credential access.\nconst STRATEGIES = ['trust', 'growth', 'lowPosition'];\nconst METRICS = ['currentPrice','zScore','slope','currentPeg','currentPe','ttmEps','earningsGrowth','dividendYield','growthTotalReturnPe','growthFairPrice','growthBuyZonePrice','growthYears','growthValidYears','growthHealthPassCount','institutionNetShares10','participation10'];\nfunction sha256(text) {\n  const bytes = Buffer.from(text, 'utf8');\n  const primes = []; const initial = []; const constants = [];\n  for (let n = 2; primes.length < 64; n++) {\n    if (primes.every(p => n % p)) {\n      primes.push(n); constants.push((Math.cbrt(n) % 1 * 0x100000000) | 0);\n      if (initial.length < 8) initial.push((Math.sqrt(n) % 1 * 0x100000000) | 0);\n    }\n  }\n  const length = bytes.length; const padded = Buffer.alloc(Math.ceil((length + 9) / 64) * 64);\n  bytes.copy(padded); padded[length] = 128; padded.writeUInt32BE(length * 8 >>> 0, padded.length - 4);\n  const rotate = (x, n) => x >>> n | x << (32 - n);\n  let hash = initial;\n  for (let offset = 0; offset < padded.length; offset += 64) {\n    const words = Array.from({length:64}, (_,i) => i < 16 ? padded.readUInt32BE(offset + 4*i) : 0);\n    for (let i=16;i<64;i++) {\n      const a=words[i-15], b=words[i-2];\n      words[i]=(words[i-16]+(rotate(a,7)^rotate(a,18)^a>>>3)+words[i-7]+(rotate(b,17)^rotate(b,19)^b>>>10))|0;\n    }\n    let [a,b,c,d,e,f,g,h]=hash;\n    for(let i=0;i<64;i++) {\n      const t1=(h+(rotate(e,6)^rotate(e,11)^rotate(e,25))+(e&f^~e&g)+constants[i]+words[i])|0;\n      const t2=((rotate(a,2)^rotate(a,13)^rotate(a,22))+(a&b^a&c^b&c))|0;\n      [a,b,c,d,e,f,g,h]=[(t1+t2)|0,a,b,c,(d+t1)|0,e,f,g];\n    }\n    hash=hash.map((value,i)=>(value+[a,b,c,d,e,f,g,h][i])|0);\n  }\n  return hash.map(value=>(value>>>0).toString(16).padStart(8,'0')).join('');\n}\nfunction validateExport(raw, expected) {\n  if (typeof raw !== 'string' || Buffer.byteLength(raw)>3000000) throw Error('export_size');\n  const suffix = /,\"payloadHash\":\"([a-f0-9]{64})\"}$/;\n  const match = raw.match(suffix);\n  if (!match || sha256(raw.replace(suffix,'}')) !== match[1]) throw Error('payload_hash_mismatch');\n  const value=JSON.parse(raw);\n  if (value.schemaVersion!=='screening-export-v1' || value.legacy!==false || !/^[a-f0-9]{12}$/.test(value.revision)) throw Error('export_schema');\n  for(const field of ['marketDate','requestId','actionsRunId']) if(value[field]!==expected[field]) throw Error('export_lineage:'+field);\n  if(!/^[a-f0-9]{40}$/.test(value.sourceGitCommit) || !value.runId || !value.generatedAt || !value.formulaVersions || !value.coverage || !value.funnel) throw Error('export_lineage');\n  if(!['current','degraded'].includes(value.freshness) || value.coverage.universeStale) throw Error('stale_export');\n  if(!Array.isArray(value.selectedStocks) || value.selectedStocks.length>3000 || Object.keys(value.strategies||{}).sort().join(',')!==[...STRATEGIES].sort().join(',')) throw Error('export_schema');\n  const codes=value.selectedStocks.map(stock=>stock.code);\n  if(codes.some(code=>typeof code!=='string'||!/^\\d{4,6}$/.test(code)) || new Set(codes).size!==codes.length) throw Error('selected_stock_duplicates');\n  const union=new Set();\n  for(const strategy of STRATEGIES) {\n    const rows=value.strategies[strategy]; if(!Array.isArray(rows)) throw Error('strategy_rows');\n    const members=rows.map(row=>`${row.code}:${row.rank}`);\n    if(new Set(members).size!==members.length||new Set(rows.map(row=>row.code)).size!==rows.length||new Set(rows.map(row=>row.rank)).size!==rows.length||rows.some(row=>!Number.isInteger(row.rank)||row.rank<1)) throw Error('strategy_duplicates');\n    rows.forEach(row=>union.add(row.code));\n    const actual=value.selectedStocks.flatMap(stock=>(stock.strategies||[]).filter(entry=>entry.strategy===strategy).map(entry=>`${stock.code}:${entry.rank}`));\n    if(actual.sort().join(',')!==members.sort().join(',')) throw Error('strategy_union_mismatch');\n  }\n  if([...union].sort().join(',')!==[...codes].sort().join(',')) throw Error('selected_union_mismatch');\n  for(const stock of value.selectedStocks) {\n    if(typeof stock.name!=='string'||typeof stock.sector!=='string'||!stock.metrics||!stock.provenance||stock.provenance.marketDate!==value.marketDate) throw Error('stock_schema');\n    if(stock.strategies.some(entry=>!STRATEGIES.includes(entry.strategy)||typeof entry.status!=='string'||typeof entry.reason!=='string')) throw Error('stock_strategy_schema');\n    if(METRICS.some(name=>stock.metrics[name]!==undefined&&stock.metrics[name]!==null&&(typeof stock.metrics[name]!=='number'||!Number.isFinite(stock.metrics[name])))) throw Error('stock_metric_schema');\n    if(stock.metrics.growthMethod!==undefined&&stock.metrics.growthMethod!==null&&typeof stock.metrics.growthMethod!=='string') throw Error('stock_metric_schema');\n  }\n  return value;\n}\nfunction richText(content) {\n  const text=String(content); const parts=[];\n  for(let i=0;i<text.length;i+=1900) parts.push({type:'text',text:{content:text.slice(i,i+1900)}});\n  if(parts.length>100) throw Error('notion_text_too_large');\n  return parts;\n}\nfunction stockSchema() {\n  return {'名稱':{title:{}},'股票代號':{rich_text:{}},'產業':{rich_text:{}},'策略':{multi_select:{options:STRATEGIES.map(name=>({name}))}},'投信排名':{number:{}},'成長排名':{number:{}},'低位階排名':{number:{}},'指標':{rich_text:{}},'來源':{rich_text:{}},'策略狀態':{rich_text:{}},'Revision':{rich_text:{}},'Payload Hash':{rich_text:{}},'Row Key':{rich_text:{}},...Object.fromEntries(METRICS.map(name=>[name,{number:{}}]))};\n}\nfunction stockProperties(stock, payload) {\n  const rank = name => stock.strategies.find(entry=>entry.strategy===name)?.rank??null;\n  return {'名稱':{title:richText(stock.name||stock.code)},'股票代號':{rich_text:richText(stock.code)},'產業':{rich_text:richText(stock.sector)},'策略':{multi_select:stock.strategies.map(entry=>({name:entry.strategy}))},'投信排名':{number:rank('trust')},'成長排名':{number:rank('growth')},'低位階排名':{number:rank('lowPosition')},'指標':{rich_text:richText(JSON.stringify(stock.metrics))},'來源':{rich_text:richText(JSON.stringify(stock.provenance))},'策略狀態':{rich_text:richText(JSON.stringify(stock.strategies))},'Revision':{rich_text:richText(payload.revision)},'Payload Hash':{rich_text:richText(payload.payloadHash)},'Row Key':{rich_text:richText(`${payload.payloadHash}:${stock.code}`)},...Object.fromEntries(METRICS.map(name=>[name,{number:stock.metrics[name]??null}]))};\n}\nfunction retrySeconds(value,now=Date.now()) {\n  if(value!==undefined&&String(value).trim()!==''&&Number.isFinite(Number(value))) return Math.max(0.5,Number(value));\n  const timestamp=Date.parse(value); return Number.isFinite(timestamp)?Math.max(0.5,(timestamp-now)/1000):2;\n}\nfunction claimState(existing, owner) {\n  if(existing?.owner&&existing.owner!==owner&&!existing.released) throw Error('writer_busy');\n  return {...(existing||{}),owner,released:false};\n}\n\n// Explicit projection of immutable retained history; original lineage stays unknown.\nfunction validateLegacyArchive(raw,expected) {\n  if(typeof raw!=='string'||Buffer.byteLength(raw)>3000000||sha256(raw)!==expected.sha256)throw Error('legacy_hash_mismatch');\n  const record=JSON.parse(raw);const names=['trust','growth','lowPosition'];\n  if((record.schemaVersion!==undefined&&record.schemaVersion!=='screening-history-record-v1')||record.legacy!==true||!/^[a-f0-9]{12}$/.test(record.revision)||!/^[a-f0-9]{40}$/.test(expected.archiveCommit))throw Error('legacy_schema');\n  for(const name of ['marketDate','revision','runId'])if(record[name]!==expected[name])throw Error('legacy_lineage:'+name);\n  if(Object.keys(record.strategies||{}).sort().join(',')!==[...names].sort().join(','))throw Error('legacy_strategy_schema');\n  const metricNames=['currentPrice','zScore','slope','currentPeg','currentPe','ttmEps','earningsGrowth','dividendYield','growthTotalReturnPe','growthFairPrice','growthBuyZonePrice','growthYears','growthValidYears','growthHealthPassCount','institutionNetShares10','participation10'];\n  let selected={};const strategies={};\n  for(const strategy of names) {\n    const rows=record.strategies[strategy];if(!Array.isArray(rows)||rows.length>3000)throw Error('legacy_strategy_schema');\n    if(new Set(rows.map(row=>row.code)).size!==rows.length||new Set(rows.map(row=>row.rank)).size!==rows.length)throw Error('legacy_strategy_duplicates');\n    strategies[strategy]=rows.map(row=>({code:row.code,rank:row.rank}));\n    for(const row of rows) {\n      if(typeof row.code!=='string'||!/^\\d{4,6}$/.test(row.code)||!Number.isInteger(row.rank)||row.rank<1||typeof row.name!=='string')throw Error('legacy_stock_schema');\n      if(metricNames.some(name=>row[name]!==undefined&&row[name]!==null&&(typeof row[name]!=='number'||!Number.isFinite(row[name]))))throw Error('legacy_metric_schema');\n      const previous=selected[row.code];\n      const metrics=Object.fromEntries(metricNames.map(name=>[name,previous?.metrics[name]??row[name]??null]));\n      const provenance={marketDate:record.marketDate,sourceRefs:record.sourceRefs||[],inputOrigins:'legacy_archive',dataStatus:'legacy_archive',financialCutoff:'unknown',valuationEvidenceLevel:'legacy_archive',archiveSourceGitCommit:expected.archiveCommit,archiveRevisionSha256:expected.sha256,legacyReason:record.legacyReason||'Original Actions and source commit lineage unavailable.',strategyRows:{...(previous?.provenance.strategyRows||{}),[strategy]:row}};\n      selected={...selected,[row.code]:{code:row.code,name:row.name,sector:typeof row.sector==='string'?row.sector:'',metrics,strategies:[...(previous?.strategies||[]),{strategy,rank:row.rank,status:String(row.status||'unknown'),reason:String(row.reason||'')}],provenance}};\n    }\n  }\n  return {schemaVersion:'legacy-archive-projection-v1',marketDate:record.marketDate,generatedAt:record.generatedAt,runId:record.runId,requestId:`legacy:${record.marketDate}:${record.revision}`,sourceGitCommit:'',actionsRunId:'',revision:record.revision,formulaVersions:record.formulaVersions||{},legacy:true,freshness:'legacy_archive',coverage:{legacyArchive:true,originalFreshness:record.freshness||'unknown'},funnel:record.funnel||{},strategies,selectedStocks:Object.values(selected).sort((a,b)=>a.code.localeCompare(b.code)),payloadHash:expected.sha256};\n}\n\n// Pure state transitions; all requests execute through n8n credential nodes.\nconst REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nconst ROOT_SOURCE='3ed6fb57-ff38-803d-815a-000b148c6b6e';\nconst ROOT_DATABASE='3ed6fb57-ff38-8032-97cc-f017b6104300';\nconst CALENDAR='https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule';\nconst ROOT_FIELDS={ 'Market Date':{date:{}},'Request ID':{rich_text:{}},'Run ID':{rich_text:{}},'Actions Run ID':{rich_text:{}},'Source Commit':{rich_text:{}},'Payload Hash':{rich_text:{}},'Active Revision':{rich_text:{}},'Screening Status':{rich_text:{}},'Notion Status':{rich_text:{}},'Deploy Status':{rich_text:{}},'Summary':{rich_text:{}},'Selected Count':{number:{}},'Trust Count':{number:{}},'Growth Count':{number:{}},'Low Position Count':{number:{}} };\nconst OPERATION_FIELDS={'Generated At':{date:{}},'Quality':{rich_text:{}},'Archive Method':{rich_text:{}},'Archive Source Commit':{rich_text:{}},'Expected Count':{number:{}},'Archived Count':{number:{}},'Child Database ID':{rich_text:{}},'Child Data Source ID':{rich_text:{}},'Actions URL':{url:{}},'Archive URL':{url:{}},'Error Summary':{rich_text:{}},'Financial Cutoff':{rich_text:{}},'Coverage':{rich_text:{}},'Formula Versions':{rich_text:{}}};\nconst ALL_ROOT_FIELDS={...ROOT_FIELDS,...OPERATION_FIELDS};\nfunction calendarOpen(rows,day) {\n  if(!Array.isArray(rows)||!rows.length) throw Error('calendar_empty');\n  const dates=rows.map(row=>{\n    if(!/^\\d{7}$/.test(row.Date)||typeof row.Name!=='string') throw Error('calendar_schema');\n    return {...row,iso:`${Number(row.Date.slice(0,3))+1911}-${row.Date.slice(3,5)}-${row.Date.slice(5,7)}`};\n  });\n  if(dates.some(row=>row.iso.slice(0,4)!==day.slice(0,4))) throw Error('calendar_year');\n  if([0,6].includes(new Date(`${day}T00:00:00Z`).getUTCDay())) return false;\n  const events=dates.filter(row=>row.iso===day);\n  return !events.some(row=>!['開始交易日','最後交易日','國曆新年開始交易日','農曆春節前最後交易日','農曆春節後開始交易日'].includes(row.Name));\n}\nfunction selectRun(runs,state) {\n  const title=`Daily screening | ${state.requestId} | ${state.marketDate}`;\n  const matches=runs.filter(run=>run.display_title===title);\n  if(matches.length>1) throw Error('ambiguous_actions_runs');\n  return matches[0]||null;\n}\nfunction result(state,op,delaySeconds=0.5) {\n  return {state:{...state,op},op,route:op?.target||'done',delaySeconds};\n}\nfunction request(state,stage,target,method,url,body,delaySeconds=0.5) {\n  return result({...state,stage},{target,method,url,body:body||{}},delaySeconds);\n}\nfunction done(state) {return result({...state,stage:'done'},null,0.5);}\nfunction durable(state) {\n  const {op,payload,rawExport,archiveRows,pendingStocks,children,runMatches,...rest}=state;\n  return rest;\n}\nfunction contents(state) {return `${REPO}/contents/operations/days/${state.marketDate}.json`;}\nfunction archiveContents(state,stage,path){return request(state,stage,'github','GET',`${REPO}/contents/public${path}?ref=${state.archiveCommit}`);}\nfunction contentBytes(body){if(body.encoding!=='base64'||typeof body.content!=='string'||body.size>3000000)throw Error('archive_contents_schema');return Buffer.from(body.content,'base64').toString('utf8');}\nfunction checkpoint(state,nextStage) {\n  const saved={...durable(state),stage:nextStage};\n  const body={message:`[CF-Pages-Skip] chore: checkpoint Stockscreener ${state.marketDate}`,branch:'n8n-state',content:Buffer.from(JSON.stringify(saved)).toString('base64'),...(state.lockSha?{sha:state.lockSha}:{})};\n  return request({...state,nextStage},'checkpoint','github','PUT',contents(state),body);\n}\nfunction fail(state,category,message) {\n  const updated={...state,...(state.op?.target==='notion'?{notionStatus:'failed'}:{}),errorCategory:category,errorMessage:String(message||category).slice(0,1000)};\n  if(!state.lockSha||category==='writer_busy'||category==='writer_deadline'||category==='writer_conflict') return done(updated);\n  return checkpoint({...updated,released:true},'done');\n}\nfunction findDaily(state) {return request(state,'findDaily','notion','POST',`https://api.notion.com/v1/data_sources/${ROOT_SOURCE}/query`,{filter:{property:'名稱',title:{equals:state.marketDate.replaceAll('-','')}},page_size:100});}\nfunction findDatabase(state) {return request(state,'findDatabase','notion','GET',`https://api.notion.com/v1/blocks/${state.pageId}/children?page_size=100${state.cursor?'&start_cursor='+encodeURIComponent(state.cursor):''}`);}\nfunction queryRows(state,stage='queryRows') {return request(state,stage,'notion','POST',`https://api.notion.com/v1/data_sources/${state.dataSourceId}/query`,{filter:{property:'Payload Hash',rich_text:{equals:state.payload.payloadHash}},page_size:100,...(state.cursor?{start_cursor:state.cursor}:{})});}\nfunction findRuns(state,delay=0.5) {return request(state,'findRun','github','GET',`${REPO}/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=100&page=${state.runPage||1}`,null,delay);}\nfunction rootProperties(state,status) {\n  const payload=state.payload;\n  if(!payload) return {'Market Date':{date:{start:state.marketDate}},'Request ID':{rich_text:richText(state.requestId)},'Actions Run ID':{rich_text:richText(state.actionsRunId||'')},'Actions URL':{url:state.actionsRunId?`https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/${state.actionsRunId}`:null},'Screening Status':{rich_text:richText('failed')},'Notion Status':{rich_text:richText('failure_metadata')},'Error Summary':{rich_text:richText(`${state.errorCategory||'screening_failed'}: ${state.errorMessage||'Screening failed; no child stock database was created.'}`)}};\n  return {'Market Date':{date:{start:state.marketDate}},'Request ID':{rich_text:richText(state.requestId)},'Run ID':{rich_text:richText(payload.runId)},'Actions Run ID':{rich_text:richText(state.actionsRunId)},'Source Commit':{rich_text:richText(payload.sourceGitCommit)},'Payload Hash':{rich_text:richText(payload.payloadHash)},'Screening Status':{rich_text:richText('complete')},'Notion Status':{rich_text:richText(status)},'Deploy Status':{rich_text:richText(state.deployStatus||'pending')},'Selected Count':{number:payload.selectedStocks.length},'Trust Count':{number:payload.strategies.trust.length},'Growth Count':{number:payload.strategies.growth.length},'Low Position Count':{number:payload.strategies.lowPosition.length},'Generated At':{date:{start:payload.generatedAt}},'Quality':{rich_text:richText(payload.freshness)},'Expected Count':{number:payload.selectedStocks.length},'Archived Count':{number:status==='complete'?payload.selectedStocks.length:0},'Actions URL':{url:state.actionsRunId?`https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/${state.actionsRunId}`:null},'Archive Method':{rich_text:richText(state.archiveMethod||'actions_artifact')},'Archive Source Commit':{rich_text:richText(state.archiveCommit||'')},'Archive URL':{url:state.databaseId?`https://www.notion.so/${state.databaseId.replaceAll('-','')}`:null},'Child Database ID':{rich_text:richText(state.databaseId||'')},'Child Data Source ID':{rich_text:richText(state.dataSourceId||'')},'Error Summary':{rich_text:richText(state.deployError||'')},'Coverage':{rich_text:richText(JSON.stringify(payload.coverage))},'Formula Versions':{rich_text:richText(JSON.stringify(payload.formulaVersions))},'Financial Cutoff':{rich_text:richText([...new Set(payload.selectedStocks.map(stock=>stock.provenance.financialCutoff).filter(Boolean))].join(', '))},...(status==='complete'?{'Active Revision':{rich_text:richText(payload.revision)}}:{})};\n}\nfunction summary(state) {\n  const p=state.payload;\n  return `Archive ${p.marketDate}; revision ${p.revision}; selected ${p.selectedStocks.length}; trust ${p.strategies.trust.length}; growth ${p.strategies.growth.length}; lowPosition ${p.strategies.lowPosition.length}; run ${p.runId}; Actions ${p.actionsRunId}; request ${p.requestId}; source ${p.sourceGitCommit}; payload ${p.payloadHash}; coverage ${JSON.stringify(p.coverage)}; formula ${JSON.stringify(p.formulaVersions)}; deploy ${state.deployStatus||'pending'}.`;\n}\nfunction start(input,now=Date.now()) {\n  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(input.marketDate)||new Date(`${input.marketDate}T00:00:00Z`).toISOString().slice(0,10)!==input.marketDate) throw Error('invalid_market_date');\n  if(!/^[a-zA-Z0-9_.:-]{1,160}$/.test(input.requestId)||!['screen','resume','diagnose','revision','legacy_archive'].includes(input.mode)) throw Error('invalid_operator_input');\n  if(input.mode==='legacy_archive'&&(input.runKind!=='manual'||!['2026-09-08','2026-09-11','2026-09-18','2026-09-23','2026-09-24','2026-10-01'].includes(input.marketDate)))throw Error('legacy_operator_scope');\n  if(input.actionsRunId!==undefined&&!/^\\d{1,24}$/.test(String(input.actionsRunId))) throw Error('invalid_actions_run_id');\n  if(input.siteUrl!=='https://stockscreener.andyshih.uk') throw Error('invalid_site_url');\n  const overdueAt=Date.parse(input.marketDate+'T11:30:00Z');\n  const operationDeadline=input.runKind==='scheduled'?overdueAt:now+90*60000;\n  return request({...input,startedAt:now,operationDeadline,deadline:Math.min(now+59*60000,operationDeadline),targetAt:Date.parse(input.marketDate+'T10:45:00Z'),overdueAt,screeningStatus:'pending',notionStatus:'pending',deployStatus:'pending',released:false},'calendar','public','GET',CALENDAR);\n}\nfunction next(state,now) {\n  switch(state.stage) {\n    case 'done':return done(state);\n    case 'holiday':return checkpoint({...state,released:true,screeningStatus:'skipped_non_trading',notionStatus:'skipped',deployStatus:'skipped'},'done');\n    case 'findRun':return findRuns(state);\n    case 'dispatch':return request({...state,dispatchIntent:true},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate}});\n    case 'pollRun':return request(state,'pollRun','github','GET',`${REPO}/actions/runs/${state.actionsRunId}`,null,15);\n    case 'artifactList':return request(state,'artifactList','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);\n    case 'legacyRef':return state.archiveCommit?archiveContents(state,'legacyIndex','/data/archive/v1/index.json'):request(state,'legacyRef','github','GET',`${REPO}/git/ref/heads/main`);\n    case 'legacyExport':return archiveContents(state,'legacyExport',state.archivePath);\n    case 'rootSchema':return request(state,'rootSchema','notion','GET',`https://api.notion.com/v1/data_sources/${ROOT_SOURCE}`);\n    case 'findDaily':return findDaily(state);\n    case 'writeFailure':return request(state,'writeFailure','notion','PATCH',`https://api.notion.com/v1/pages/${state.pageId}`,{properties:rootProperties(state,'failure_metadata')});\n    case 'findDatabase':return findDatabase({...state,cursor:undefined,children:[]});\n    case 'queryRows':return queryRows({...state,cursor:undefined,archiveRows:[]});\n    case 'verifyRows':return queryRows({...state,cursor:undefined,archiveRows:[]},'verifyRows');\n    case 'summaryRead':return request(state,'summaryRead','notion','GET',`https://api.notion.com/v1/blocks/${state.pageId}/children?page_size=100${state.cursor?'&start_cursor='+encodeURIComponent(state.cursor):''}`);\n    case 'liveProbe':\n    case 'liveVerify':return request(state,state.stage,'public','GET',liveUrl(state,now));\n    default:throw Error('unknown_stage:'+state.stage);\n  }\n}\nfunction advance(original,response,now=Date.now()) {\n  const state={...original}; const status=Number(response?.statusCode??200); let body=response?.body??response?.data;\n  if(typeof body==='string'&&!['liveProbe','liveVerify'].includes(state.stage)) {try{body=JSON.parse(body);}catch{/* Redirects may have no JSON body. */}}\n  if(state.lockSha&&now>state.deadline) return fail(state,'writer_deadline');\n  if(status===429) {\n    if((state.retry||0)>=8) return fail(state,'rate_limit_exhausted');\n    return result({...state,retry:(state.retry||0)+1},state.op,retrySeconds(response.headers?.['retry-after'],now));\n  }\n  if(state.stage==='checkpoint') {\n    if([409,422].includes(status)) return fail({...state,lockSha:undefined},'writer_conflict');\n    if(status<200||status>=300) return done({...state,errorCategory:'checkpoint_failed',errorMessage:'State write ambiguous; resume reads GitHub state before any write.'});\n    return next({...state,lockSha:body.content.sha,stage:state.nextStage,retry:0},now);\n  }\n  if(status>=500||response?.error) {\n    const readStage={createDaily:'findDaily',createDatabase:'findDatabase',createStock:'queryRows',appendSummary:'summaryRead'}[state.stage];\n    if(readStage) return next({...state,stage:readStage,retry:(state.retry||0)+1},now);\n    if(state.stage==='dispatch') return findRuns({...state,dispatchIntent:true,runPage:1},15);\n    if(['liveProbe','liveVerify'].includes(state.stage)) return deploymentResult(state,'failed','live_http_'+status,now);\n    if((state.retry||0)<3&&state.op?.method==='GET') return result({...state,retry:(state.retry||0)+1},state.op,2**((state.retry||0)+1));\n    return fail(state,'external_http_'+status);\n  }\n  if(['liveProbe','liveVerify'].includes(state.stage)&&status>=400) return deploymentResult(state,'failed','live_http_'+status,now);\n  if(state.stage==='createBranch'&&status===422) return request(state,'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);\n  const allow404=['branch','state'];\n  if(status>=400&&!allow404.includes(state.stage)) return fail(state,'external_http_'+status,body?.message);\n  try {return advanceSuccess(state,body,status,response,now);} catch(error){return fail(state,error.message.split(':')[0],error.message);}\n}\nfunction advanceSuccess(state,body,status,response,now) {\n  switch(state.stage) {\n    case 'calendar': {\n      const isOpen=calendarOpen(body,state.marketDate);\n      if(state.mode==='diagnose') return request({...state,isOpen},'diagnoseDatabase','notion','GET',`https://api.notion.com/v1/databases/${ROOT_DATABASE}`);\n      if(state.runKind==='scheduled'&&now>=state.operationDeadline) return done({...state,isOpen,errorCategory:'operation_overdue',errorMessage:'19:30 Asia/Taipei deadline passed; explicit manual resume is required.'});\n      return request({...state,isOpen},'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);\n    }\n    case 'diagnoseDatabase':\n      if(!body.data_sources?.some(source=>source.id===ROOT_SOURCE)) throw Error('notion_database_source_mismatch');\n      return request(state,'diagnoseSource','notion','GET',`https://api.notion.com/v1/data_sources/${ROOT_SOURCE}`);\n    case 'diagnoseSource':\n      if(body.properties?.['名稱']?.type!=='title') throw Error('notion_title_property');\n      return done({...state,screeningStatus:'diagnostic_verified',notionStatus:'credential_verified',deployStatus:'not_tested',notionDatabaseId:ROOT_DATABASE,notionDataSourceId:ROOT_SOURCE});\n    case 'branch':\n      if(status===404) return request(state,'mainRef','github','GET',`${REPO}/git/ref/heads/main`);\n      return request(state,'state','github','GET',contents(state)+'?ref=n8n-state');\n    case 'mainRef':return request(state,'createBranch','github','POST',`${REPO}/git/refs`,{ref:'refs/heads/n8n-state',sha:body.object.sha});\n    case 'createBranch':return request(state,'state','github','GET',contents(state)+'?ref=n8n-state');\n    case 'state': {\n      const existing=status===404?null:JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));\n      if(existing?.owner!==state.owner&&!existing?.released&&existing?.owner&&now<Number(existing.deadline)+60000) return fail(state,'writer_busy');\n      const sameRequest=existing?.requestId===state.requestId||(state.mode==='legacy_archive'&&existing?.archiveMethod==='legacy_archive');\n      if(existing?.requestId&&!sameRequest&&state.mode!=='revision') throw Error('request_correction_requires_revision');\n      if(existing?.released&&sameRequest&&existing.screeningStatus==='complete'&&existing.notionStatus==='complete'&&existing.deployStatus==='verified') return done({...existing,owner:state.owner,screeningStatus:'already_complete'});\n      const resume=sameRequest?existing:{};\n      const manualOverride=state.runKind==='manual'&&['resume','legacy_archive'].includes(state.mode)&&!!resume.requestId;\n      const operationDeadline=manualOverride?state.operationDeadline:(resume.operationDeadline||state.operationDeadline);\n      const audit=manualOverride?{scheduledCutoff:resume.scheduledCutoff||resume.overdueAt,manualDeadlineOverride:true,manualResumedAt:now}:{};\n      const saved={...state,...resume,...audit,owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl};\n      const stage=!state.isOpen?'holiday':state.mode==='legacy_archive'?'legacyRef':saved.actionsRunId?'pollRun':'findRun';\n      return checkpoint(saved,stage);\n    }\n    case 'findRun': {\n      const runs=body.workflow_runs;if(!Array.isArray(runs)) throw Error('actions_schema');\n      const matches=[...(state.runMatches||[]),...runs.filter(run=>run.display_title===`Daily screening | ${state.requestId} | ${state.marketDate}`)];\n      const match=selectRun(matches,state);\n      if(runs.length===100) {\n        if((state.runPage||1)>=10) throw Error('actions_scan_limit');\n        return findRuns({...state,runPage:(state.runPage||1)+1,runMatches:matches});\n      }\n      if(match) return checkpoint({...state,actionsRunId:String(match.id),runHeadSha:match.head_sha,runPage:1,runMatches:[]},'pollRun');\n      if(state.dispatchIntent) {\n        if(now-state.startedAt>5*60000) return fail(state,'dispatch_run_not_found','Dispatch was attempted; never resend without new operator request ID.');\n        return findRuns({...state,runPage:1},15);\n      }\n      if(state.mode==='resume') return fail(state,'resume_run_not_found');\n      return checkpoint({...state,dispatchIntent:true},'dispatch');\n    }\n    case 'dispatch':return findRuns({...state,dispatchIntent:true,runPage:1},15);\n    case 'pollRun': {\n      if(!selectRun([body],state)||String(body.id)!==state.actionsRunId) throw Error('actions_run_lineage');\n      if(body.status!=='completed') return next({...state,stage:'pollRun'},now);\n      if(body.conclusion!=='success') return checkpoint({...state,screeningStatus:'failed',recordFailure:true,errorCategory:'screening_failed',errorMessage:String(body.conclusion)},'rootSchema');\n      return checkpoint({...state,screeningStatus:'complete',runHeadSha:body.head_sha},'artifactList');\n    }\n    case 'artifactList': {\n      const artifacts=body.artifacts?.filter(artifact=>artifact.name==='screening-export'&&!artifact.expired);\n      if(artifacts?.length!==1) throw Error('artifact_missing_or_ambiguous');\n      const artifact=artifacts[0];\n      if(artifact.workflow_run&&(String(artifact.workflow_run.id)!==state.actionsRunId||artifact.workflow_run.head_sha!==state.runHeadSha)) throw Error('artifact_lineage');\n      return request({...state,artifactId:String(artifact.id)},'artifactRedirect','github','GET',`${REPO}/actions/artifacts/${artifact.id}/zip`);\n    }\n    case 'artifactRedirect': {\n      const location=response.headers?.location;\n      if(status!==302||typeof location!=='string'||!/^https:\\/\\/[a-zA-Z0-9.-]+\\.(blob\\.core\\.windows\\.net|actions\\.githubusercontent\\.com|githubusercontent\\.com)\\//.test(location)) throw Error('artifact_redirect');\n      return request(state,'artifactZip','zip','GET',location);\n    }\n    case 'artifactZip': {\n      const payload=validateExport(body.rawExport,{marketDate:state.marketDate,requestId:state.requestId,actionsRunId:state.actionsRunId});\n      const publication=body.publication;\n      if(payload.sourceGitCommit!==state.runHeadSha) throw Error('source_commit_lineage');\n      for(const field of ['requestId','marketDate','runId','payloadHash','sourceGitCommit','actionsRunId']) if(publication[field]!==payload[field]) throw Error('publication_lineage:'+field);\n      if(!/^[a-f0-9]{40}$/.test(publication.publishedGitCommit)) throw Error('publication_commit');\n      return checkpoint({...state,payload,publication,payloadHash:payload.payloadHash,runId:payload.runId,revision:payload.revision},'liveProbe');\n    }\n    case 'legacyRef': {\n      if(!/^[a-f0-9]{40}$/.test(body.object?.sha))throw Error('archive_source_commit');\n      return archiveContents({...state,archiveCommit:body.object.sha,archiveMethod:'legacy_archive'},'legacyIndex','/data/archive/v1/index.json');\n    }\n    case 'legacyIndex': {\n      const index=JSON.parse(contentBytes(body));\n      if(index.schemaVersion!=='screening-history-index-v1'||!Array.isArray(index.months))throw Error('archive_index_schema');\n      const matches=index.months.filter(month=>month.month===state.marketDate.slice(0,7)&&month.marketDates?.includes(state.marketDate));\n      if(matches.length!==1||!/^\\/data\\/archive\\/v1\\/months\\/\\d{4}-\\d{2}\\.[a-f0-9]{12}\\.json$/.test(matches[0].path)||!/^[a-f0-9]{64}$/.test(matches[0].sha256))throw Error('archive_month_ref');\n      return archiveContents({...state,archiveMonth:matches[0]},'legacyMonth',matches[0].path);\n    }\n    case 'legacyMonth': {\n      const raw=contentBytes(body);if(sha256(raw)!==state.archiveMonth.sha256||Buffer.byteLength(raw)!==state.archiveMonth.bytes)throw Error('archive_month_hash');\n      const month=JSON.parse(raw);if(month.schemaVersion!=='screening-history-month-v1'||month.month!==state.marketDate.slice(0,7)||!Array.isArray(month.records))throw Error('archive_month_schema');\n      const records=month.records.filter(record=>record.marketDate===state.marketDate);if(records.length!==1||records[0].legacy!==true)throw Error('archive_legacy_record');\n      const record=records[0];const refs=record.revisionRefs?.filter(ref=>ref.revision===record.revision&&ref.legacy===true);\n      if(!/^[a-f0-9]{12}$/.test(record.revision)||refs?.length!==1||refs[0].path!==`/data/archive/v1/revisions/${state.marketDate}.${record.revision}.json`||!/^[a-f0-9]{64}$/.test(refs[0].sha256)||refs[0].runId!==record.runId)throw Error('archive_revision_ref');\n      return checkpoint({...state,requestId:`legacy:${state.marketDate}:${record.revision}`,archivePath:refs[0].path,archiveExpected:{marketDate:state.marketDate,revision:record.revision,runId:record.runId,sha256:refs[0].sha256,archiveCommit:state.archiveCommit},archiveMethod:'legacy_archive'},'legacyExport');\n    }\n    case 'legacyExport': {\n      const payload=validateLegacyArchive(contentBytes(body),state.archiveExpected);\n      return checkpoint({...state,payload,payloadHash:payload.payloadHash,runId:payload.runId,revision:payload.revision,screeningStatus:'complete'},'liveProbe');\n    }\n    case 'rootSchema': {\n      if(body.properties?.['名稱']?.type!=='title') throw Error('notion_root_title');\n      const missing=Object.fromEntries(Object.entries(ALL_ROOT_FIELDS).filter(([name])=>!body.properties[name]));\n      for(const [name,definition] of Object.entries(ALL_ROOT_FIELDS)) if(body.properties[name]&&body.properties[name].type!==Object.keys(definition)[0]) throw Error('notion_root_schema:'+name);\n      if(Object.keys(missing).length) return request(state,'rootSchemaUpdate','notion','PATCH',`https://api.notion.com/v1/data_sources/${ROOT_SOURCE}`,{properties:missing});\n      return findDaily(state);\n    }\n    case 'rootSchemaUpdate':return findDaily(state);\n    case 'findDaily': {\n      if(body.has_more||body.results?.length>1) throw Error('duplicate_daily_page');\n      const page=body.results?.[0];\n      if(page) return checkpoint({...state,pageId:page.id,notionPageId:page.id},state.recordFailure?'writeFailure':'findDatabase');\n      return request(state,'createDaily','notion','POST','https://api.notion.com/v1/pages',{parent:{type:'data_source_id',data_source_id:ROOT_SOURCE},properties:{'名稱':{title:richText(state.marketDate.replaceAll('-',''))},...rootProperties(state,'pending')}});\n    }\n    case 'createDaily':return checkpoint({...state,pageId:body.id,notionPageId:body.id},state.recordFailure?'writeFailure':'findDatabase');\n    case 'writeFailure':return checkpoint({...state,notionStatus:'failure_metadata',released:true},'done');\n    case 'findDatabase': {\n      const children=[...(state.children||[]),...(body.results||[])];\n      if(body.has_more) return findDatabase({...state,children,cursor:body.next_cursor});\n      const databases=children.filter(block=>block.type==='child_database'&&block.child_database.title===state.marketDate.replaceAll('-',''));\n      if(databases.length>1) throw Error('duplicate_daily_database');\n      if(databases.length) return request({...state,databaseId:databases[0].id},'databaseMetadata','notion','GET',`https://api.notion.com/v1/databases/${databases[0].id}`);\n      return request(state,'createDatabase','notion','POST','https://api.notion.com/v1/databases',{parent:{type:'page_id',page_id:state.pageId},title:richText(state.marketDate.replaceAll('-','')),is_inline:true,initial_data_source:{properties:stockSchema()}});\n    }\n    case 'createDatabase':\n    case 'databaseMetadata': {\n      if(body.data_sources?.length!==1||!body.data_sources[0].id) throw Error('notion_child_source');\n      return checkpoint({...state,databaseId:body.id,dataSourceId:body.data_sources[0].id,notionDatabaseId:body.id,notionDataSourceId:body.data_sources[0].id},'queryRows');\n    }\n    case 'queryRows':\n    case 'verifyRows':return handleRows(state,body);\n    case 'createStock': {\n      const remaining=(state.pendingStocks||[]).slice(1);\n      if(remaining.length) return createStock({...state,pendingStocks:remaining});\n      return next({...state,stage:'verifyRows'},now);\n    }\n    case 'archiveDuplicate':return next({...state,stage:'queryRows'},now);\n    case 'summaryRead': {\n      const marker=`Payload ${state.payload.payloadHash}`;\n      const found=(body.results||[]).some(block=>block.type==='paragraph'&&block.paragraph.rich_text?.map(part=>part.plain_text||part.text?.content||'').join('').includes(marker));\n      if(found) return next({...state,stage:'liveVerify'},now);\n      if(body.has_more) return next({...state,stage:'summaryRead',cursor:body.next_cursor},now);\n      return request(state,'appendSummary','notion','PATCH',`https://api.notion.com/v1/blocks/${state.pageId}/children`,{children:[{object:'block',type:'paragraph',paragraph:{rich_text:richText(`Payload ${state.payload.payloadHash}\\n${summary(state)}`)}}]});\n    }\n    case 'appendSummary':return next({...state,stage:'liveVerify'},now);\n    case 'liveProbe':\n    case 'liveVerify': {\n      let deployStatus='failed',deployError='live_payload_mismatch';\n      try {\n        const live=state.archiveMethod==='legacy_archive'?validateLegacyArchive(body,state.archiveExpected):validateExport(body,{marketDate:state.marketDate,requestId:state.requestId,actionsRunId:state.actionsRunId});\n        if(live.payloadHash===state.payload.payloadHash&&live.runId===state.payload.runId&&live.sourceGitCommit===state.payload.sourceGitCommit) {deployStatus='verified';deployError=undefined;}\n      }catch(error){deployError=error.message;}\n      return deploymentResult(state,deployStatus,deployError,now);\n    }\n    case 'finishNotion':return checkpoint({...state,notionStatus:'complete',released:true,errorCategory:state.deployStatus==='verified'?undefined:'deploy_pending',errorMessage:state.deployError},'done');\n    default:throw Error('unknown_stage:'+state.stage);\n  }\n}\nfunction readProperty(value) {return value?.rich_text?.map(part=>part.plain_text||part.text?.content||'').join('')||'';}\nfunction handleRows(state,body) {\n  const rows=[...(state.archiveRows||[]),...(body.results||[])];\n  if(body.has_more) return queryRows({...state,archiveRows:rows,cursor:body.next_cursor},state.stage);\n  const keys=rows.map(row=>readProperty(row.properties['Row Key']));\n  const selected=state.payload.selectedStocks;\n  const expectedKeys=selected.map(stock=>`${state.payload.payloadHash}:${stock.code}`);\n  if(keys.some(key=>!expectedKeys.includes(key))) throw Error('extra_stock_rows');\n  for(const row of rows) {\n    const stock=selected.find(item=>`${state.payload.payloadHash}:${item.code}`===readProperty(row.properties['Row Key']));\n    const expected=stockProperties(stock,state.payload);\n    for(const [name,property] of Object.entries(expected)) {\n      const actual=row.properties[name]; const type=Object.keys(property)[0];\n      if(type==='title'&&actual?.title?.map(part=>part.plain_text||part.text?.content||'').join('')!==property.title.map(part=>part.text.content).join(''))throw Error('archive_title_mismatch');\n      if(type==='number'&&actual?.number!==property.number) throw Error('archive_metric_mismatch:'+name);\n      if(type==='rich_text'&&readProperty(actual)!==readProperty(property)) throw Error('archive_text_mismatch:'+name);\n      if(type==='multi_select'&&actual?.multi_select?.map(item=>item.name).sort().join(',')!==property.multi_select.map(item=>item.name).sort().join(',')) throw Error('archive_strategy_mismatch');\n    }\n  }\n  if(new Set(keys).size!==keys.length) {\n    const ordered=[...rows].sort((a,b)=>String(a.created_time).localeCompare(String(b.created_time))||a.id.localeCompare(b.id));\n    const duplicate=ordered.find((row,index)=>ordered.slice(0,index).some(prior=>readProperty(prior.properties['Row Key'])===readProperty(row.properties['Row Key'])));\n    return request(state,'archiveDuplicate','notion','PATCH',`https://api.notion.com/v1/pages/${duplicate.id}`,{archived:true});\n  }\n  const pendingStocks=selected.filter(stock=>!keys.includes(`${state.payload.payloadHash}:${stock.code}`));\n  if(state.stage==='verifyRows'&&pendingStocks.length) throw Error('archive_incomplete');\n  if(pendingStocks.length) return createStock({...state,pendingStocks,archiveRows:[],cursor:undefined});\n  return checkpoint({...state,archiveRows:[],cursor:undefined,notionStatus:'rows_verified'},'summaryRead');\n}\nfunction createStock(state) {return request(state,'createStock','notion','POST','https://api.notion.com/v1/pages',{parent:{type:'data_source_id',data_source_id:state.dataSourceId},properties:stockProperties(state.pendingStocks[0],state.payload)});}\nfunction finishNotion(state) {return request(state,'finishNotion','notion','PATCH',`https://api.notion.com/v1/pages/${state.pageId}`,{properties:{...rootProperties(state,'complete'),'Summary':{rich_text:richText(summary(state))}}});}\nfunction deploymentResult(state,deployStatus,deployError,now) {\n  const updated={...state,deployStatus,deployError};\n  if(state.stage==='liveProbe') return checkpoint(updated,'rootSchema');\n  if(deployStatus!=='verified'&&(state.deployAttempts||0)<20&&now+15000<state.deadline) return request({...updated,deployAttempts:(state.deployAttempts||0)+1},'liveVerify','public','GET',liveUrl(state,now),null,15);\n  return finishNotion(updated);\n}\nfunction liveUrl(state,now){return `${state.siteUrl}${state.archiveMethod==='legacy_archive'?state.archivePath:'/data/screening-export.json'}?run=${encodeURIComponent(state.actionsRunId||state.revision||'')}&t=${now}`;}\n\nconst input=$input.first().json;const output=advance(input.state,input.response);return [{json:output}];"
+      },
+      "position": [
+        4800,
+        0
+      ]
+    },
+    {
+      "name": "Append durable operation ledger",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "JWOzPb7PlUVqGC1g"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "record_key": "={{ $json.state.marketDate + ':' + $json.state.requestId + ':' + $json.state.owner }}",
+            "market_date": "={{ $json.state.marketDate }}",
+            "request_id": "={{ $json.state.requestId }}",
+            "actions_run_id": "={{ $json.state.actionsRunId || '' }}",
+            "run_id": "={{ $json.state.runId || '' }}",
+            "payload_hash": "={{ $json.state.payloadHash || '' }}",
+            "screening_status": "={{ $json.state.screeningStatus || '' }}",
+            "notion_status": "={{ $json.state.notionStatus || '' }}",
+            "deploy_status": "={{ $json.state.deployStatus || '' }}",
+            "error_category": "={{ $json.state.errorCategory || '' }}",
+            "error_message": "={{ $json.state.errorMessage || '' }}",
+            "notion_page_id": "={{ $json.state.notionPageId || '' }}",
+            "notion_database_id": "={{ $json.state.notionDatabaseId || '' }}",
+            "notion_data_source_id": "={{ $json.state.notionDataSourceId || '' }}",
+            "state_json": "={{ JSON.stringify({stage:$json.state.stage,owner:$json.state.owner,deadline:$json.state.deadline,publication:$json.state.publication||null,isOpen:$json.state.isOpen,errorCategory:$json.state.errorCategory||null}) }}"
+          },
+          "schema": [
+            {
+              "id": "record_key",
+              "displayName": "record_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "market_date",
+              "displayName": "market_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actions_run_id",
+              "displayName": "actions_run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payload_hash",
+              "displayName": "payload_hash",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screening_status",
+              "displayName": "screening_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_status",
+              "displayName": "notion_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deploy_status",
+              "displayName": "deploy_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_category",
+              "displayName": "error_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_page_id",
+              "displayName": "notion_page_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_database_id",
+              "displayName": "notion_database_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_data_source_id",
+              "displayName": "notion_data_source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "state_json",
+              "displayName": "state_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        5040,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Weekdays 18:00 Taipei": {
+      "main": [
+        [
+          {
+            "node": "Scheduled inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evening recovery checkpoints": {
+      "main": [
+        [
+          {
+            "node": "Scheduled inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual operator test or recovery": {
+      "main": [
+        [
+          {
+            "node": "Operator inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operator inputs": {
+      "main": [
+        [
+          {
+            "node": "Validate operator and market date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scheduled inputs": {
+      "main": [
+        [
+          {
+            "node": "Validate operator and market date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate operator and market date": {
+      "main": [
+        [
+          {
+            "node": "Throttle and bounded waits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Throttle and bounded waits": {
+      "main": [
+        [
+          {
+            "node": "Gate owner deadline and request origin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate owner deadline and request origin": {
+      "main": [
+        [
+          {
+            "node": "Dispatch credential HTTP operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch credential HTTP operation": {
+      "main": [
+        [
+          {
+            "node": "GitHub read with existing credential",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GitHub CAS and dispatch writes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notion read pinned API version",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notion archive writes pinned API",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Official calendar and live deployment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download exact Actions artifact without credentials",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append durable operation ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub read with existing credential": {
+      "main": [
+        [
+          {
+            "node": "Restore GitHub operation state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub CAS and dispatch writes": {
+      "main": [
+        [
+          {
+            "node": "Restore GitHub operation state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion read pinned API version": {
+      "main": [
+        [
+          {
+            "node": "Restore Notion operation state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion archive writes pinned API": {
+      "main": [
+        [
+          {
+            "node": "Restore Notion operation state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Official calendar and live deployment": {
+      "main": [
+        [
+          {
+            "node": "Restore public operation state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore GitHub operation state": {
+      "main": [
+        [
+          {
+            "node": "Advance durable screening and archive state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore Notion operation state": {
+      "main": [
+        [
+          {
+            "node": "Advance durable screening and archive state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore public operation state": {
+      "main": [
+        [
+          {
+            "node": "Advance durable screening and archive state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download exact Actions artifact without credentials": {
+      "main": [
+        [
+          {
+            "node": "Extract exact Actions artifact zip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract exact Actions artifact zip": {
+      "main": [
+        [
+          {
+            "node": "Read export and publication bytes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read export and publication bytes": {
+      "main": [
+        [
+          {
+            "node": "Advance durable screening and archive state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Advance durable screening and archive state": {
+      "main": [
+        [
+          {
+            "node": "Throttle and bounded waits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [
+    {
+      "name": "Durable operation state machine",
+      "description": "CAS single writer, exact Actions correlation/artifact validation, independent Notion and live deployment verification.",
+      "nodeNames": [
+        "Throttle and bounded waits",
+        "Gate owner deadline and request origin",
+        "Dispatch credential HTTP operation",
+        "GitHub read with existing credential",
+        "GitHub CAS and dispatch writes",
+        "Notion read pinned API version",
+        "Notion archive writes pinned API",
+        "Official calendar and live deployment",
+        "Restore GitHub operation state",
+        "Restore Notion operation state",
+        "Restore public operation state",
+        "Download exact Actions artifact without credentials",
+        "Extract exact Actions artifact zip",
+        "Read export and publication bytes",
+        "Advance durable screening and archive state",
+        "Append durable operation ledger"
+      ]
+    }
+  ],
+  "settings": {
+    "timezone": "Asia/Taipei",
+    "executionOrder": "v1",
+    "executionTimeout": 3600,
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  }
+}

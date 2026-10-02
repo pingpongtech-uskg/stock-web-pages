@@ -11,7 +11,7 @@
 
 正式部署沿用現有 Cloudflare Pages 的 `main` Git integration。`daily.yml` 將通過驗證的資料推送到 `main`，Cloudflare 從已接上的分支建置及發布；n8n 再讀取正式網站，核對相同的 run、payload hash 與來源 commit，通過後才記 deploy verified。
 
-`.github/workflows/deploy.yml` 的 Direct Upload 僅為手動 fallback。只有選擇這條 fallback 時，才設定 `CLOUDFLARE_PAGES_ENABLED=true` 與該 workflow 所需的三個 Actions secrets；正常 Git integration 不以這些 Direct Upload secrets 為前置條件。
+Cloudflare Pages 的 `main` Git integration 是唯一正式發布路徑。舊 Direct Upload workflow 已移除；不需要 `CLOUDFLARE_PAGES_ENABLED` 或該舊 workflow 的 Direct Upload secrets。程式更新與已驗證資料更新都經 `main`，並以正式網站內容核對作為發布驗收。
 
 ```bash
 python3 scripts/refresh_snapshot.py --as-of YYYY-MM-DD --output public/data

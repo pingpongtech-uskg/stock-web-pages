@@ -1,0 +1,81 @@
+{
+  "recordedAt": "2026-10-02T14:52:30Z",
+  "workflowId": "huDBNJDss4KuPmn4",
+  "active": false,
+  "draftVerification": {
+    "versionId": "1f1f9102-0ba0-4a87-ae72-353335e3254b",
+    "nodeCount": 22,
+    "parameterDriftAgainstGeneratedWorkflow": [],
+    "existingCredentialsVerified": true
+  },
+  "calendarNotionDiagnostic": {
+    "executionId": "707",
+    "status": "success",
+    "calendarIsOpen": true,
+    "notionDatabaseId": "3ed6fb57-ff38-8032-97cc-f017b6104300",
+    "notionDataSourceId": "3ed6fb57-ff38-803d-815a-000b148c6b6e",
+    "titleProperty": "名稱",
+    "notionApiVersion": "2025-09-03",
+    "ledgerTableId": "JWOzPb7PlUVqGC1g",
+    "ledgerRowId": 2
+  },
+  "atomicStateDiagnostic": {
+    "workflowId": "6eYfJKV7UsXYCd3A",
+    "executionId": "708",
+    "status": "success",
+    "projectType": "personal",
+    "archived": true,
+    "branch": "n8n-state",
+    "createStatus": 201,
+    "competingCreateStatus": 422,
+    "exactShaUpdateStatus": 200,
+    "staleShaStatus": 409,
+    "diagnosticCleanupStatus": 404
+  },
+  "screeningAndArchiveEndToEnd": {
+    "status": "pending_backend_exact_run_artifact",
+    "fixtureOnly": false
+  },
+  "localValidation": {
+    "tests": 39,
+    "lineCoverage": 98.02,
+    "branchCoverage": 88.69
+  },
+  "retentionDiagnostic": {
+    "executionId": "709",
+    "ledgerRowId": 3,
+    "screeningStatus": "diagnostic_verified",
+    "notionStatus": "credential_verified",
+    "errorCategory": "",
+    "executionDetailsAfterCompletion": "not_found",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none"
+  },
+  "legacyArchiveEndToEnd": {
+    "status": "pending_backend_promotion_and_authoritative_remote_writes",
+    "retainedDatesValidatedLocally": [
+      "2026-09-08",
+      "2026-09-11",
+      "2026-09-18",
+      "2026-09-23",
+      "2026-09-24",
+      "2026-10-01"
+    ],
+    "remoteArchiveVerified": false
+  },
+  "authoritativeCountAudit": {
+    "workflowId": "TIgXL66Fg0bw5NqQ",
+    "status": "prepared_not_executed",
+    "notionWrites": false,
+    "ledgerWrites": true,
+    "project": "personal",
+    "nodeCount": 7
+  },
+  "independentReview": {
+    "reviewer": "pipeline_findings",
+    "unresolvedP0P1": 0,
+    "status": "passed_before_production_proof"
+  }
+}

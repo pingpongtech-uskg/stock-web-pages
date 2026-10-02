@@ -1,0 +1,383 @@
+{
+  "name": "Stockscreener temporary authoritative archive audit",
+  "nodes": [
+    {
+      "name": "Manual authoritative archive audit",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Initialize seven real archive dates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Read-only verification; only the workflow's outcome ledger is appended.\nfunction auditText(property){return property?.rich_text?.map(part=>part.plain_text||part.text?.content||'').join('')||'';}\nfunction auditRequest(state,url,body){return {state,op:{method:'POST',url,body},route:'read',delaySeconds:0.5};}\nfunction auditDaily(state){return auditRequest({...state,stage:'daily'},'https://api.notion.com/v1/data_sources/3ed6fb57-ff38-803d-815a-000b148c6b6e/query',{filter:{property:'名稱',title:{equals:state.dates[state.index].replaceAll('-','')}},page_size:100});}\nfunction auditNext(state,result){const next={...state,index:state.index+1,results:[...state.results,result],rows:[]};return next.index<next.dates.length?auditDaily(next):{state:{...next,stage:'done'},op:null,route:'done',delaySeconds:0.5};}\nfunction auditStart(dates,owner){if(!Array.isArray(dates)||!dates.length||dates.some(date=>!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)))throw Error('audit_dates');return auditDaily({dates,index:0,owner,results:[],rows:[]});}\nfunction auditRows(state,cursor){return auditRequest({...state,stage:'rows'},`https://api.notion.com/v1/data_sources/${state.current.dataSourceId}/query`,{filter:{property:'Payload Hash',rich_text:{equals:state.current.payloadHash}},page_size:100,...(cursor?{start_cursor:cursor}:{})});}\nfunction auditAdvance(state,response){\n const date=state.dates[state.index];let body=response.body??response.data;\n if(response.statusCode<200||response.statusCode>=300)return auditNext(state,{marketDate:date,status:'failed',error:'notion_http_'+response.statusCode});\n if(typeof body==='string')body=JSON.parse(body);\n if(!Array.isArray(body.results))return auditNext(state,{marketDate:date,status:'failed',error:'response_schema'});\n if(state.stage==='daily'){\n  if(body.results.length!==1||body.has_more)return auditNext(state,{marketDate:date,status:body.results.length?'failed':'missing',error:'daily_page_count',pageCount:body.results.length});\n  const page=body.results[0];const p=page.properties;const current={marketDate:date,pageId:page.id,dataSourceId:auditText(p['Child Data Source ID']),databaseId:auditText(p['Child Database ID']),payloadHash:auditText(p['Payload Hash']),revision:auditText(p['Active Revision']),notionStatus:auditText(p['Notion Status']),expectedCount:p['Expected Count']?.number,archivedCount:p['Archived Count']?.number};\n  if(!/^[a-f0-9-]{36}$/.test(current.dataSourceId)||!/^[a-f0-9]{64}$/.test(current.payloadHash)||!/^[a-f0-9]{12}$/.test(current.revision)||!Number.isInteger(current.expectedCount)||current.expectedCount<0)return auditNext(state,{...current,status:'failed',error:'root_archive_metadata'});\n  return auditRows({...state,current,rows:[]});\n }\n const rows=[...state.rows,...body.results];if(rows.length>3000)return auditNext(state,{marketDate:date,status:'failed',error:'row_limit'});\n if(body.has_more)return auditRows({...state,rows},body.next_cursor);\n const keys=rows.map(row=>auditText(row.properties['Row Key']));const codes=rows.map(row=>auditText(row.properties['股票代號']));\n const valid=state.current.notionStatus==='complete'&&state.current.expectedCount===rows.length&&state.current.archivedCount===rows.length&&new Set(keys).size===rows.length&&new Set(codes).size===rows.length&&rows.every((row,index)=>/^\\d{4,6}$/.test(codes[index])&&keys[index]===state.current.payloadHash+':'+codes[index]&&auditText(row.properties['Revision'])===state.current.revision);\n return auditNext(state,{...state.current,status:valid?'verified':'failed',rowCount:rows.length,uniqueRowKeys:new Set(keys).size,codes});\n}\n\nreturn [{json:auditStart([\"2026-09-08\",\"2026-09-11\",\"2026-09-18\",\"2026-09-23\",\"2026-09-24\",\"2026-10-01\",\"2026-10-02\"],String($execution.id))}];"
+      },
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "name": "Throttle audit reads",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "name": "Dispatch audit HTTP",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 2,
+        "output": "={{ $json.route === 'done' ? 1 : 0 }}"
+      },
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "name": "Read Notion archive with pinned credential",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2025-09-03"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.op.body }}",
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        960,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "notionApi": {
+          "id": "A38pYEXrji3EOGzU",
+          "name": "Notion account 2"
+        }
+      }
+    },
+    {
+      "name": "Check actual rows and continue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Read-only verification; only the workflow's outcome ledger is appended.\nfunction auditText(property){return property?.rich_text?.map(part=>part.plain_text||part.text?.content||'').join('')||'';}\nfunction auditRequest(state,url,body){return {state,op:{method:'POST',url,body},route:'read',delaySeconds:0.5};}\nfunction auditDaily(state){return auditRequest({...state,stage:'daily'},'https://api.notion.com/v1/data_sources/3ed6fb57-ff38-803d-815a-000b148c6b6e/query',{filter:{property:'名稱',title:{equals:state.dates[state.index].replaceAll('-','')}},page_size:100});}\nfunction auditNext(state,result){const next={...state,index:state.index+1,results:[...state.results,result],rows:[]};return next.index<next.dates.length?auditDaily(next):{state:{...next,stage:'done'},op:null,route:'done',delaySeconds:0.5};}\nfunction auditStart(dates,owner){if(!Array.isArray(dates)||!dates.length||dates.some(date=>!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)))throw Error('audit_dates');return auditDaily({dates,index:0,owner,results:[],rows:[]});}\nfunction auditRows(state,cursor){return auditRequest({...state,stage:'rows'},`https://api.notion.com/v1/data_sources/${state.current.dataSourceId}/query`,{filter:{property:'Payload Hash',rich_text:{equals:state.current.payloadHash}},page_size:100,...(cursor?{start_cursor:cursor}:{})});}\nfunction auditAdvance(state,response){\n const date=state.dates[state.index];let body=response.body??response.data;\n if(response.statusCode<200||response.statusCode>=300)return auditNext(state,{marketDate:date,status:'failed',error:'notion_http_'+response.statusCode});\n if(typeof body==='string')body=JSON.parse(body);\n if(!Array.isArray(body.results))return auditNext(state,{marketDate:date,status:'failed',error:'response_schema'});\n if(state.stage==='daily'){\n  if(body.results.length!==1||body.has_more)return auditNext(state,{marketDate:date,status:body.results.length?'failed':'missing',error:'daily_page_count',pageCount:body.results.length});\n  const page=body.results[0];const p=page.properties;const current={marketDate:date,pageId:page.id,dataSourceId:auditText(p['Child Data Source ID']),databaseId:auditText(p['Child Database ID']),payloadHash:auditText(p['Payload Hash']),revision:auditText(p['Active Revision']),notionStatus:auditText(p['Notion Status']),expectedCount:p['Expected Count']?.number,archivedCount:p['Archived Count']?.number};\n  if(!/^[a-f0-9-]{36}$/.test(current.dataSourceId)||!/^[a-f0-9]{64}$/.test(current.payloadHash)||!/^[a-f0-9]{12}$/.test(current.revision)||!Number.isInteger(current.expectedCount)||current.expectedCount<0)return auditNext(state,{...current,status:'failed',error:'root_archive_metadata'});\n  return auditRows({...state,current,rows:[]});\n }\n const rows=[...state.rows,...body.results];if(rows.length>3000)return auditNext(state,{marketDate:date,status:'failed',error:'row_limit'});\n if(body.has_more)return auditRows({...state,rows},body.next_cursor);\n const keys=rows.map(row=>auditText(row.properties['Row Key']));const codes=rows.map(row=>auditText(row.properties['股票代號']));\n const valid=state.current.notionStatus==='complete'&&state.current.expectedCount===rows.length&&state.current.archivedCount===rows.length&&new Set(keys).size===rows.length&&new Set(codes).size===rows.length&&rows.every((row,index)=>/^\\d{4,6}$/.test(codes[index])&&keys[index]===state.current.payloadHash+':'+codes[index]&&auditText(row.properties['Revision'])===state.current.revision);\n return auditNext(state,{...state.current,status:valid?'verified':'failed',rowCount:rows.length,uniqueRowKeys:new Set(keys).size,codes});\n}\n\nreturn [{json:auditAdvance($('Dispatch audit HTTP').item.json.state,$input.first().json)}];"
+      },
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "name": "Record authoritative count audit",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "JWOzPb7PlUVqGC1g"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "record_key": "={{ 'notion-archive-audit:'+$json.state.owner }}",
+            "market_date": "={{ $now.setZone('Asia/Taipei').toISODate() }}",
+            "request_id": "notion-archive-audit",
+            "actions_run_id": "",
+            "run_id": "",
+            "payload_hash": "",
+            "screening_status": "not_tested",
+            "notion_status": "={{ $json.state.results.every(result=>result.status==='verified') ? 'audit_verified' : 'audit_failed' }}",
+            "deploy_status": "not_tested",
+            "error_category": "",
+            "error_message": "",
+            "notion_page_id": "",
+            "notion_database_id": "",
+            "notion_data_source_id": "",
+            "state_json": "={{ JSON.stringify($json.state) }}"
+          },
+          "schema": [
+            {
+              "id": "record_key",
+              "displayName": "record_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "market_date",
+              "displayName": "market_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actions_run_id",
+              "displayName": "actions_run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payload_hash",
+              "displayName": "payload_hash",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screening_status",
+              "displayName": "screening_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_status",
+              "displayName": "notion_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deploy_status",
+              "displayName": "deploy_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_category",
+              "displayName": "error_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_page_id",
+              "displayName": "notion_page_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_database_id",
+              "displayName": "notion_database_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_data_source_id",
+              "displayName": "notion_data_source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "state_json",
+              "displayName": "state_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        1440,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual authoritative archive audit": {
+      "main": [
+        [
+          {
+            "node": "Initialize seven real archive dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize seven real archive dates": {
+      "main": [
+        [
+          {
+            "node": "Throttle audit reads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Throttle audit reads": {
+      "main": [
+        [
+          {
+            "node": "Dispatch audit HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch audit HTTP": {
+      "main": [
+        [
+          {
+            "node": "Read Notion archive with pinned credential",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record authoritative count audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Notion archive with pinned credential": {
+      "main": [
+        [
+          {
+            "node": "Check actual rows and continue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check actual rows and continue": {
+      "main": [
+        [
+          {
+            "node": "Throttle audit reads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Asia/Taipei",
+    "executionOrder": "v1",
+    "executionTimeout": 300,
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  }
+}
