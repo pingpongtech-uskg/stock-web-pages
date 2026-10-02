@@ -38,25 +38,32 @@ def verify(base_url,expected_dir):
  if actual_index!=expected_index: raise ValueError('history_index_payload_mismatch')
  months=expected_index.get('months') or []
  if not months: raise ValueError('history_index_empty')
- meta=max(months,key=lambda x:str(x['month'])); month_path=str(meta['path']); actual_month,mh,mb=get_json(base_url,month_path,candidate); require_headers(month_path,mh,False)
- expected_path=data/'archive/v1/months'/Path(month_path).name; expected_month=json.loads(expected_path.read_bytes())
- if actual_month!=expected_month: raise ValueError('history_month_payload_mismatch')
- digest=hashlib.sha256(mb).hexdigest()
- if digest!=str(meta['sha256']): raise ValueError('history_month_hash_mismatch')
- if len(mb)!=int(meta['bytes']): raise ValueError('history_month_bytes_mismatch')
- if not re.fullmatch(r'\d{4}-\d{2}\.[0-9a-f]{12}\.json',Path(month_path).name): raise ValueError('history_month_filename')
- if Path(month_path).name.split('.')[1]!=digest[:12]: raise ValueError('history_month_filename_hash')
  if actual_latest.get('marketDate')!=expected_index.get('latestMarketDate'): raise ValueError('latest_history_date_mismatch')
- dates=[r.get('marketDate') for r in expected_month.get('records',[])]
- if expected_latest.get('marketDate') in dates:
-  record=next(r for r in expected_month['records'] if r.get('marketDate')==expected_latest['marketDate'])
-  if record.get('runId')!=expected_latest.get('runId'): raise ValueError('latest_history_run_mismatch')
-  if actual_export and record.get('payloadHash') != actual_export.get('payloadHash'): raise ValueError('history_export_hash_mismatch')
-  for ref in record.get('revisionRefs', []):
-   saved, rh, rb = get_json(base_url, ref['path'], candidate)
-   require_headers(ref['path'], rh, False)
-   if hashlib.sha256(rb).hexdigest() != ref['sha256']: raise ValueError('history_revision_hash_mismatch')
- return {'valid':True,'baseUrl':base_url,'runId':expected_latest.get('runId'),'latestBytes':len(lb),'indexBytes':len(ib),'monthPath':month_path,'monthBytes':len(mb)}
+ latest_found=False; latest_meta=max(months,key=lambda x:str(x['month'])); latest_month_bytes=0
+ for meta in months:
+  month_path=str(meta['path'])
+  if not re.fullmatch(r'/data/archive/v1/months/\d{4}-\d{2}\.[0-9a-f]{12}\.json',month_path): raise ValueError('history_month_filename')
+  actual_month,mh,mb=get_json(base_url,month_path,candidate); require_headers(month_path,mh,False)
+  expected_path=data/'archive/v1/months'/Path(month_path).name; expected_month=json.loads(expected_path.read_bytes())
+  if actual_month!=expected_month: raise ValueError('history_month_payload_mismatch')
+  digest=hashlib.sha256(mb).hexdigest()
+  if digest!=str(meta['sha256']): raise ValueError('history_month_hash_mismatch')
+  if len(mb)!=int(meta['bytes']): raise ValueError('history_month_bytes_mismatch')
+  if Path(month_path).name.split('.')[1]!=digest[:12]: raise ValueError('history_month_filename_hash')
+  if meta==latest_meta: latest_month_bytes=len(mb)
+  for record in expected_month.get('records',[]):
+   if record.get('marketDate')==expected_latest.get('marketDate'):
+    latest_found=True
+    if record.get('runId')!=expected_latest.get('runId'): raise ValueError('latest_history_run_mismatch')
+    if actual_export and record.get('payloadHash') != actual_export.get('payloadHash'): raise ValueError('history_export_hash_mismatch')
+   for ref in record.get('revisionRefs', []):
+    if not re.fullmatch(r'/data/archive/v1/revisions/\d{4}-\d{2}-\d{2}\.[0-9a-f]{12}\.json',ref['path']): raise ValueError('history_revision_filename')
+    saved, rh, rb = get_json(base_url, ref['path'], candidate)
+    require_headers(ref['path'], rh, False)
+    if hashlib.sha256(rb).hexdigest() != ref['sha256']: raise ValueError('history_revision_hash_mismatch')
+    if rb!=(data/'archive/v1/revisions'/Path(ref['path']).name).read_bytes(): raise ValueError('history_revision_payload_mismatch')
+ if not latest_found: raise ValueError('latest_history_record_missing')
+ return {'valid':True,'baseUrl':base_url,'runId':expected_latest.get('runId'),'latestBytes':len(lb),'indexBytes':len(ib),'monthPath':latest_meta['path'],'monthBytes':latest_month_bytes,'monthsVerified':len(months)}
 def main(argv=None):
  p=argparse.ArgumentParser(); p.add_argument('--base-url',required=True); p.add_argument('--expected-dir',type=Path,default=ROOT/'public/data'); a=p.parse_args(argv)
  try: result=verify(a.base_url,a.expected_dir)
