@@ -1,10 +1,11 @@
+const {growthFixture}=require('./growth-fixture.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 let runtime = {};
 try { runtime = require('./runtime.cjs'); } catch (error) { if (error.code !== 'MODULE_NOT_FOUND') throw error; }
 function rawExport(changes = {}) {
-  const body = { schemaVersion: 'screening-export-v1', marketDate: '2026-10-02', generatedAt: '2026-10-02T10:00:00Z', runId: 'run-1', requestId: 'test-1', sourceGitCommit: 'a'.repeat(40), actionsRunId: '123', revision: 'b'.repeat(12), formulaVersions: { ranking: 'v1' }, legacy: false, freshness: 'current', coverage: {}, funnel: {}, strategies: { trust: [{ code: '0050', rank: 1 }], growth: [{ code: '0050', rank: 1 }], lowPosition: [] }, selectedStocks: [{ code: '0050', name: 'Test only', sector: '', metrics: { currentPrice: 100 }, strategies: [{ strategy: 'trust', rank: 1, status: 'ok', reason: '' }, { strategy: 'growth', rank: 1, status: 'ok', reason: '' }], provenance: { marketDate: '2026-10-02' } }], ...changes };
+  const body = { schemaVersion: 'screening-export-v1', marketDate: '2026-10-02', generatedAt: '2026-10-02T10:00:00Z', runId: 'run-1', requestId: 'test-1', sourceGitCommit: 'a'.repeat(40), actionsRunId: '123', revision: 'b'.repeat(12), formulaVersions: { ranking: 'v1' }, legacy: false, freshness: 'current', coverage: {}, funnel: growthFixture(1), strategies: { trust: [{ code: '0050', rank: 1 }], growth: [{ code: '0050', rank: 1 }], lowPosition: [] }, selectedStocks: [{ code: '0050', name: 'Test only', sector: '', metrics: { currentPrice: 100 }, strategies: [{ strategy: 'trust', rank: 1, status: 'ok', reason: '' }, { strategy: 'growth', rank: 1, status: 'ok', reason: '' }], provenance: { marketDate: '2026-10-02' } }], ...changes };
   const preimage = JSON.stringify(body);
   return preimage.slice(0,-1) + ',"payloadHash":"' + crypto.createHash('sha256').update(preimage).digest('hex') + '"}';
 }
@@ -25,7 +26,7 @@ test('rejects changed bytes, wrong run/date, stale input, incomplete union', () 
 });
 test('legitimate zero remains an empty complete archive', () => {
   assert.equal(typeof runtime.validateExport, 'function');
-  const data = runtime.validateExport(rawExport({strategies:{trust:[],growth:[],lowPosition:[]},selectedStocks:[]}),expected);
+  const data = runtime.validateExport(rawExport({strategies:{trust:[],growth:[],lowPosition:[]},selectedStocks:[],funnel:growthFixture()}),expected);
   assert.equal(data.selectedStocks.length,0);
 });
 test('Notion child schema records text codes, tags, ranks, metrics and provenance', () => {

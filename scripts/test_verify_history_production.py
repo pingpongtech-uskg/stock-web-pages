@@ -9,6 +9,7 @@ from pipeline.history_archive import project_release_to_history, write_archive_a
 from pipeline.history_archive import project_export_to_history
 from pipeline.screening_export import build_export, export_bytes
 from scripts import verify_history_production as production
+from scripts.build_publication_fingerprint import build_fingerprint
 
 
 INDEX_HEADERS = {'cache-control': 'no-cache, no-store, must-revalidate'}
@@ -37,7 +38,7 @@ def served_candidate(data):
     for path in data.rglob('*.json'):
         public_path = '/data/' + str(path.relative_to(data))
         raw = path.read_bytes()
-        headers = INDEX_HEADERS if path.name in ['latest.json', 'index.json'] else OBJECT_HEADERS
+        headers = INDEX_HEADERS if path.name in ['latest.json', 'index.json', 'publication.json'] else OBJECT_HEADERS
         responses[public_path] = (json.loads(raw), headers, raw)
     return responses
 
@@ -74,8 +75,17 @@ def test_production_reads_all_months_and_all_retained_revisions(candidate):
 
 def add_export(data):
     latest = json.loads((data / 'latest.json').read_bytes())
+    funnel = {'version': 'funnel-v2-independent-trust-low-position', 'universe': 0,
+              'instrumentExcluded': 0, 'growthCandidates': 0,
+              'strategyCandidates': {'trust': 0, 'growth': 0, 'lowPosition': 0},
+              'growthCoverageVersion': 'growth-coverage-v1', 'growthEvaluationState': 'not_evaluable',
+              'growthInputComplete': 0, 'growthValuationComplete': 0,
+              'growthThresholdCandidates': 0, 'growthHealthCandidates': 0,
+              'growthMissingReasons': [], 'growthTerminalOutcomes': {
+                  'universe': 0, 'missing': 0, 'knownInvalid': 0, 'extreme': 0,
+                  'belowThreshold': 0, 'healthBlocked': 0, 'selected': 0}}
     value = build_export({**latest, 'formulaVersion': 'fixture-v1', 'stocks': [],
-                          'coverage': {'universeCount': 0}, 'funnel': {'universe': 0}},
+                          'coverage': {'universeCount': 0}, 'funnel': funnel},
                          request_id='fixture-request', source_git_commit='a' * 40,
                          actions_run_id='123')
     months = {}
@@ -156,3 +166,40 @@ def test_cli_success_reports_verified_month_count(candidate, capsys):
     with patch.object(production, 'get_json', side_effect=lambda base, path, key: responses[path]):
         assert production.main(['--base-url', 'https://example.invalid', '--expected-dir', str(candidate)]) == 0
     assert json.loads(capsys.readouterr().out)['monthsVerified'] == 2
+
+
+def test_new_publication_requires_and_verifies_exact_snapshot_fingerprint(candidate):
+    latest_bytes = (candidate / 'latest.json').read_bytes()
+    fingerprint = build_fingerprint(latest_bytes)
+    (candidate / 'publication.json').write_text(
+        json.dumps(fingerprint, ensure_ascii=False, sort_keys=True, separators=(',', ':')),
+        encoding='utf-8',
+    )
+    responses = served_candidate(candidate)
+    with patch.object(production, 'get_json', side_effect=lambda base, path, key: responses[path]):
+        result = production.verify('https://example.invalid', candidate)
+    assert result['publicationFingerprintVerified'] is True
+
+
+def test_production_requires_fingerprint_for_growth_coverage_v1(candidate):
+    latest_path = candidate / 'latest.json'
+    latest = json.loads(latest_path.read_bytes())
+    latest['funnel'] = {'growthCoverageVersion': 'growth-coverage-v1'}
+    latest_path.write_text(json.dumps(latest), encoding='utf-8')
+    with pytest.raises(ValueError, match='publication_fingerprint_missing'):
+        production.verify('https://example.invalid', candidate)
+
+
+def test_production_detects_fingerprint_that_does_not_cover_served_latest(candidate):
+    latest_bytes = (candidate / 'latest.json').read_bytes()
+    (candidate / 'publication.json').write_text(
+        json.dumps(build_fingerprint(latest_bytes), ensure_ascii=False, sort_keys=True, separators=(',', ':')),
+        encoding='utf-8',
+    )
+    responses = served_candidate(candidate)
+    actual, headers, _ = responses['/data/latest.json']
+    changed = {**actual, 'marketDate': '2026-10-03'}
+    responses['/data/latest.json'] = (changed, headers, json.dumps(changed).encode())
+    with patch.object(production, 'get_json', side_effect=lambda base, path, key: responses[path]):
+        with pytest.raises(ValueError, match='publication_fingerprint_latest_mismatch'):
+            production.verify('https://example.invalid', candidate)

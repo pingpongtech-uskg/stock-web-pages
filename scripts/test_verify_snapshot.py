@@ -14,6 +14,7 @@ from scripts.verify_snapshot import (
     ranking_valuation_error,
     regression_contract_error,
     market_indicator_error,
+    growth_funnel_error,
 )
 
 
@@ -25,6 +26,42 @@ def test_is_number_rejects_non_finite_values() -> None:
     assert not is_number(float("inf"))
     assert not is_number(float("-inf"))
     assert is_number(1.25)
+
+
+def test_growth_coverage_snapshot_contract_allows_growth_above_zero_peg_pool():
+    funnel = {
+        "version": "funnel-v2-independent-trust-low-position",
+        "universe": 2,
+        "instrumentExcluded": 0,
+        "pegCandidates": 0,
+        "growthCandidates": 1,
+        "strategyCandidates": {"trust": 0, "growth": 1, "lowPosition": 0},
+        "growthCoverageVersion": "growth-coverage-v1",
+        "growthEvaluationState": "partial",
+        "growthInputComplete": 1,
+        "growthValuationComplete": 1,
+        "growthThresholdCandidates": 1,
+        "growthHealthCandidates": 1,
+        "growthMissingReasons": [],
+        "growthTerminalOutcomes": {
+            "universe": 2, "missing": 1, "knownInvalid": 0,
+            "extreme": 0, "belowThreshold": 0, "healthBlocked": 0, "selected": 1,
+        },
+    }
+    assert growth_funnel_error(funnel, required=True) is None
+
+
+def test_snapshot_legacy_is_allowed_only_without_partially_present_new_coverage():
+    legacy = {
+        "version": "funnel-v2-independent-trust-low-position",
+        "growthCandidates": 0,
+        "strategyCandidates": {"trust": 0, "growth": 0, "lowPosition": 0},
+        "growthValuationComplete": 0,
+    }
+    assert growth_funnel_error(legacy) is None
+    assert growth_funnel_error(legacy, required=True) == "growth_coverage_required"
+    partial = {**legacy, "growthEvaluationState": "not_evaluable"}
+    assert growth_funnel_error(partial) == "growth_coverage_version"
 
 
 def test_nested_non_finite_values_are_located() -> None:

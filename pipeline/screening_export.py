@@ -6,6 +6,8 @@ import json
 import re
 from datetime import date, datetime
 from typing import Any
+
+from pipeline.release_contract import common_share_universe, growth_coverage_error
 from pipeline.history_archive import STRATEGIES, canonical_json_bytes
 
 SCHEMA_VERSION = 'screening-export-v1'
@@ -127,6 +129,14 @@ def build_export(release: dict[str, Any], *, request_id: str, source_git_commit:
         raise ValueError('stale release cannot be exported')
     if not legacy and (not re.fullmatch(r'[0-9a-f]{40}', source_git_commit) or not actions_run_id.isdigit()):
         raise ValueError('verified Git and Actions lineage required')
+    funnel = release.get('funnel')
+    coverage_error = growth_coverage_error(
+        funnel,
+        required=not legacy,
+        expected_universe=common_share_universe(funnel) if not legacy else None,
+    )
+    if coverage_error:
+        raise ValueError(coverage_error)
     stocks = {str(stock['code']): stock for stock in release.get('stocks', [])}
     strategies: dict[str, list[dict[str, Any]]] = {}
     selected: dict[str, dict[str, Any]] = {}
@@ -155,7 +165,7 @@ def build_export(release: dict[str, Any], *, request_id: str, source_git_commit:
         'runId': str(release['runId']), 'requestId': request_id, 'sourceGitCommit': source_git_commit,
         'actionsRunId': actions_run_id, 'formulaVersions': formula_versions(release),
         'freshness': release.get('freshness', 'degraded'), 'legacy': legacy,
-        'coverage': release.get('coverage', {}), 'funnel': release.get('funnel', {}),
+        'coverage': release.get('coverage', {}), 'funnel': funnel or {},
         'strategies': strategies, 'selectedStocks': [selected[code] for code in sorted(selected)]}
     canonical_json_bytes(value)  # Reject NaN/Infinity before hashing.
     value['revision'] = hashlib.sha256(canonical_json_bytes(value)).hexdigest()[:12]
@@ -234,6 +244,14 @@ def validate_export(value: Any) -> list[str]:
         errors.append('selected_stock_union')
     if not isinstance(value.get('coverage'), dict) or not isinstance(value.get('formulaVersions'), dict):
         return [*errors, 'metadata_shape']
+    funnel = value.get('funnel')
+    coverage_error = growth_coverage_error(
+        funnel,
+        required=not value.get('legacy'),
+        expected_universe=common_share_universe(funnel) if not value.get('legacy') else None,
+    )
+    if coverage_error:
+        errors.append(coverage_error)
     if not value.get('legacy') and (value.get('freshness') not in {'current', 'degraded'} or
                                     (value.get('coverage') or {}).get('universeStale')):
         errors.append('stale_export')

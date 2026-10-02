@@ -14,7 +14,7 @@ describe('strategy presentation', () => {
     expect(ZULU_VALUATION_FORMULA).toContain('營收成長僅為觀察代理')
     expect(ZULU_VALUATION_FORMULA).toContain('估算／代理 PEG')
     expect(strategyPresentations.find((item) => item.key === 'growth')?.condition).toContain('總報酬本益比')
-    expect(strategyPresentations.find((item) => item.key === 'lowPosition')?.condition).toContain('4/5')
+    expect(strategyPresentations.find((item) => item.key === 'lowPosition')?.condition).toContain('健康狀態是旁證')
     expect(strategyPresentations.find((item) => item.key === 'lowPosition')?.valuationNote).toContain('PEG 不可用')
   })
 
@@ -25,7 +25,7 @@ describe('strategy presentation', () => {
     expect(trust.emptyBody).toContain('續留')
     expect(low.emptyBody).toContain('3.5 年回歸 Z ≤ 0')
     expect(low.emptyBody).toContain('slope > 0')
-    expect(low.emptyBody).toContain('至少 4/5')
+    expect(low.emptyBody).not.toContain('至少 4/5')
     expect(low.emptyBody).toContain('PEG 缺值不會排除')
     expect(trust.emptyBody).not.toContain('成長率')
   })

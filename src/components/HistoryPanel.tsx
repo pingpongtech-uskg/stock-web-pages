@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ScreeningHistoryIndex, ScreeningHistoryRecord } from '../domain/types'
-import { filterHistoryRows, loadHistoryIndex, loadHistoryMonth, normalizeHistoryQuery, recordsForRange, type HistoryStrategy } from '../domain/history'
+import { filterHistoryRows, historyGrowthCoverageSummary, loadHistoryIndex, loadHistoryMonth, normalizeHistoryQuery, recordsForRange, type HistoryStrategy } from '../domain/history'
 
-interface Props { index?: ScreeningHistoryIndex | null }
+interface Props { index?: ScreeningHistoryIndex | null; refreshKey?: string }
 const labels: Record<HistoryStrategy, string> = { all: '全部', trust: '投信新進榜', growth: '成長股', lowPosition: '低位觀察' }
 
 function queryUrl(query: ReturnType<typeof normalizeHistoryQuery>): string {
@@ -15,7 +15,7 @@ function queryUrl(query: ReturnType<typeof normalizeHistoryQuery>): string {
   return `${window.location.pathname}?${params}`
 }
 
-export function HistoryPanel({ index: suppliedIndex }: Props) {
+export function HistoryPanel({ index: suppliedIndex, refreshKey }: Props) {
   const [index, setIndex] = useState<ScreeningHistoryIndex | null>(suppliedIndex ?? null)
   const [error, setError] = useState(false)
   const [loadingIndex, setLoadingIndex] = useState(suppliedIndex === undefined)
@@ -39,7 +39,7 @@ export function HistoryPanel({ index: suppliedIndex }: Props) {
       if (!cancelled) setLoadingIndex(false)
     })
     return () => { cancelled = true }
-  }, [suppliedIndex, retryCount])
+  }, [suppliedIndex, retryCount, refreshKey])
 
   useEffect(() => {
     if (!index) return
@@ -91,6 +91,10 @@ export function HistoryPanel({ index: suppliedIndex }: Props) {
     <div className="history-filters"><label>策略<select value={query.strategy} onChange={(event) => update({ strategy: event.target.value as HistoryStrategy })}>{Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>股票代號／名稱<input value={query.code} onChange={(event) => update({ code: event.target.value })} /></label><label>起始日<input type="date" aria-label="選擇歷史起始交易日" aria-invalid={query.invalidRange} aria-describedby="history-date-error" value={query.from} onChange={(event) => update({ from: event.target.value })} /></label><label>結束日<input type="date" aria-label="選擇歷史結束交易日" aria-invalid={query.invalidRange} aria-describedby="history-date-error" value={query.to} onChange={(event) => update({ to: event.target.value })} /></label></div>
     {query.invalidRange && <p id="history-date-error" className="history-error" role="alert">起始日不可晚於結束日，未載入資料。</p>}
     {query.clamped && <p className="history-notice">已限制在可查詢期間</p>}
+    {query.strategy === 'growth' && records.length > 0 && <details className="history-growth-coverage">
+      <summary>逐日成長覆蓋診斷 ({records.length} 日)</summary>
+      <ul>{records.map((record) => <li key={`${record.marketDate}-${record.revision}`}><strong>{record.marketDate} · {record.runId}</strong><span>{historyGrowthCoverageSummary(record)}</span></li>)}</ul>
+    </details>}
     {pending && <p className="history-empty" role="status" aria-live="polite">正在載入歷史資料…</p>}
     {error && <div className="history-error history-retry" role="alert"><span>歷史資料暫不可用，請稍後重試。</span><button type="button" onClick={() => setRetryCount((count) => count + 1)}>重試</button></div>}
     {!pending && !error && index && !query.invalidRange && !records.length && <p className="history-empty">休市／沒有發布</p>}

@@ -15,6 +15,7 @@ second product review asked for:
 from __future__ import annotations
 
 import hashlib
+import argparse
 import json
 import math
 import re
@@ -26,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from pipeline.release_contract import chip_reference_error
+from pipeline.release_contract import chip_reference_error, common_share_universe, growth_coverage_error
 
 RANKING_KEYS = ('trust', 'growth', 'lowPosition', 'lowBase', 'lowBaseGrowth', 'lowBaseQuality')
 STRATEGY_FUNNEL_KEYS = ('trust', 'growth', 'lowPosition')
@@ -95,6 +96,29 @@ def input_hash_error(
 ) -> str | None:
     if manifest.get("inputHash") != compute_input_hash(manifest, latest, details):
         return "manifest_input_hash"
+    return None
+
+
+def growth_funnel_error(
+    funnel: object,
+    *,
+    required: bool = False,
+) -> str | None:
+    """Check the independent growth contract without coupling it to PEG."""
+    if not isinstance(funnel, dict):
+        return "funnel_type"
+    error = growth_coverage_error(
+        funnel,
+        required=required,
+        expected_universe=common_share_universe(funnel) if funnel.get("growthCoverageVersion") else None,
+    )
+    if error:
+        return error
+    counts = funnel.get("strategyCandidates")
+    if not isinstance(counts, dict):
+        return "funnel_strategy_counts"
+    if counts.get("growth") != funnel.get("growthCandidates"):
+        return "funnel_growth_count_mismatch"
     return None
 
 
@@ -229,7 +253,7 @@ def market_indicator_error(value: object, market_date: str | None) -> str | None
     return None
 
 
-def main(root: Path | None = None) -> int:
+def main(root: Path | None = None, *, require_growth_coverage: bool = False) -> int:
     root = root or Path(__file__).resolve().parents[1]
     data = root / 'public' / 'data'
     latest_path = data / 'latest.json'
@@ -291,8 +315,9 @@ def main(root: Path | None = None) -> int:
         return fail('funnel_strategy_counts')
     if funnel['pegCandidates'] > funnel['valuationComplete']:
         return fail('funnel_conservation_peg')
-    if counts["growth"] > funnel['pegCandidates']:
-        return fail('funnel_conservation_growth')
+    growth_error = growth_funnel_error(funnel, required=require_growth_coverage)
+    if growth_error:
+        return fail(growth_error)
     if funnel['formalValuations'] + funnel['proxyValuations'] != funnel['valuationComplete']:
         return fail('funnel_conservation_evidence')
     if funnel['universe'] != coverage.get('universeCount') or funnel['priceComplete'] != coverage.get('priceCompleteCount'):
@@ -369,4 +394,11 @@ def main(root: Path | None = None) -> int:
 
 
 if __name__ == '__main__':
-    raise SystemExit(main())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--require-growth-coverage",
+        action="store_true",
+        help="require complete growth-coverage-v1 fields for a new producer publication",
+    )
+    args = parser.parse_args()
+    raise SystemExit(main(require_growth_coverage=args.require_growth_coverage))

@@ -30,6 +30,17 @@ function sha256(text) {
   }
   return hash.map(value=>(value>>>0).toString(16).padStart(8,'0')).join('');
 }
+function validateGrowthCoverage(funnel) {
+  const fields=['growthInputComplete','growthValuationComplete','growthThresholdCandidates','growthHealthCandidates','growthCandidates'];
+  const terminal=funnel?.growthTerminalOutcomes;
+  const keys=['universe','missing','knownInvalid','extreme','belowThreshold','healthBlocked','selected'];
+  if(funnel?.growthCoverageVersion!=='growth-coverage-v1'||funnel.version!=='funnel-v2-independent-trust-low-position'||!terminal||Object.keys(terminal).sort().join(',')!==[...keys].sort().join(',')||fields.some(key=>!Number.isInteger(funnel[key])||funnel[key]<0)||keys.some(key=>!Number.isInteger(terminal[key])||terminal[key]<0))throw Error('growth_coverage_schema');
+  if(!Number.isInteger(funnel.universe)||funnel.universe<0||!Number.isInteger(funnel.instrumentExcluded)||funnel.instrumentExcluded<0||funnel.instrumentExcluded>funnel.universe||terminal.universe!==funnel.universe-funnel.instrumentExcluded)throw Error('growth_coverage_universe_source');
+  if(keys.slice(1).reduce((sum,key)=>sum+terminal[key],0)!==terminal.universe||fields.some(key=>funnel[key]>terminal.universe)||funnel.growthValuationComplete>funnel.growthInputComplete)throw Error('growth_coverage_conservation');
+  if(terminal.selected!==funnel.growthCandidates||funnel.growthCandidates!==funnel.growthHealthCandidates||terminal.healthBlocked+terminal.selected!==funnel.growthThresholdCandidates||terminal.belowThreshold+funnel.growthThresholdCandidates!==funnel.growthValuationComplete)throw Error('growth_coverage_funnel');
+  const state=!terminal.universe||terminal.missing===terminal.universe?'not_evaluable':terminal.missing?'partial':'evaluated';
+  if(funnel.growthEvaluationState!==state||!Array.isArray(funnel.growthMissingReasons)||funnel.growthMissingReasons.some(item=>typeof item?.reason!=='string'||!item.reason||!Number.isInteger(item.count)||item.count<1||item.count>terminal.universe)||new Set(funnel.growthMissingReasons.map(item=>item.reason)).size!==funnel.growthMissingReasons.length)throw Error('growth_coverage_evaluation');
+}
 function validateExport(raw, expected) {
   if (typeof raw !== 'string' || Buffer.byteLength(raw)>3000000) throw Error('export_size');
   const suffix = /,"payloadHash":"([a-f0-9]{64})"}$/;
@@ -40,12 +51,14 @@ function validateExport(raw, expected) {
   for(const field of ['marketDate','requestId','actionsRunId']) if(value[field]!==expected[field]) throw Error('export_lineage:'+field);
   if(!/^[a-f0-9]{40}$/.test(value.sourceGitCommit) || !value.runId || !value.generatedAt || !value.formulaVersions || !value.coverage || !value.funnel) throw Error('export_lineage');
   if(!['current','degraded'].includes(value.freshness) || value.coverage.universeStale) throw Error('stale_export');
+  validateGrowthCoverage(value.funnel);
   if(!Array.isArray(value.selectedStocks) || value.selectedStocks.length>3000 || Object.keys(value.strategies||{}).sort().join(',')!==[...STRATEGIES].sort().join(',')) throw Error('export_schema');
   const codes=value.selectedStocks.map(stock=>stock.code);
   if(codes.some(code=>typeof code!=='string'||!/^\d{4,6}$/.test(code)) || new Set(codes).size!==codes.length) throw Error('selected_stock_duplicates');
   const union=new Set();
   for(const strategy of STRATEGIES) {
     const rows=value.strategies[strategy]; if(!Array.isArray(rows)) throw Error('strategy_rows');
+    if(strategy==='growth'&&rows.length!==value.funnel.growthCandidates)throw Error('growth_coverage_strategy_count');
     const members=rows.map(row=>`${row.code}:${row.rank}`);
     if(new Set(members).size!==members.length||new Set(rows.map(row=>row.code)).size!==rows.length||new Set(rows.map(row=>row.rank)).size!==rows.length||rows.some(row=>!Number.isInteger(row.rank)||row.rank<1)) throw Error('strategy_duplicates');
     rows.forEach(row=>union.add(row.code));
@@ -82,4 +95,4 @@ function claimState(existing, owner) {
   if(existing?.owner&&existing.owner!==owner&&!existing.released) throw Error('writer_busy');
   return {...(existing||{}),owner,released:false};
 }
-if(typeof module!=='undefined') module.exports={validateExport,stockProperties,stockSchema,richText,retrySeconds,claimState,sha256};
+if(typeof module!=='undefined') module.exports={validateExport,validateGrowthCoverage,stockProperties,stockSchema,richText,retrySeconds,claimState,sha256};

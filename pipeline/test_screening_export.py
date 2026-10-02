@@ -8,7 +8,17 @@ from pipeline.screening_export import build_export, export_bytes, validate_expor
 def release():
     return {'marketDate': '2026-10-02', 'generatedAt': '2026-10-02T10:00:00Z', 'runId': 'run-1',
             'formulaVersion': 'regression-v1', 'freshness': 'current', 'sourceRefs': ['official'],
-            'coverage': {'universeCount': 2}, 'funnel': {'universe': 2},
+            'coverage': {'universeCount': 2}, 'funnel': {
+                'version': 'funnel-v2-independent-trust-low-position',
+                'universe': 2, 'instrumentExcluded': 0, 'pegCandidates': 0,
+                'growthCandidates': 1, 'strategyCandidates': {'trust': 1, 'growth': 1, 'lowPosition': 0},
+                'growthCoverageVersion': 'growth-coverage-v1',
+                'growthEvaluationState': 'partial', 'growthInputComplete': 1,
+                'growthValuationComplete': 1, 'growthThresholdCandidates': 1,
+                'growthHealthCandidates': 1, 'growthMissingReasons': [],
+                'growthTerminalOutcomes': {'universe': 2, 'missing': 1, 'knownInvalid': 0,
+                    'extreme': 0, 'belowThreshold': 0, 'healthBlocked': 0, 'selected': 1},
+            },
             'stocks': [{'code': '2330', 'name': '台積電', 'lastPrice': 100.0, 'zScore': -1.2}],
             'rankings': {'trust': [{'code': '2330', 'rank': 1, 'reason': 'pass', 'status': 'pass'}],
                          'growth': [{'code': '2330', 'rank': 1, 'reason': 'growth', 'status': 'pass'}], 'lowPosition': []}}
@@ -38,6 +48,29 @@ def test_hash_can_be_verified_from_raw_without_float_reserialization():
 def test_export_rejects_invalid_or_stale_release(changes):
     with pytest.raises(ValueError):
         build_export({**release(), **changes}, request_id='request-1', source_git_commit='a'*40, actions_run_id='123')
+
+
+def test_nonlegacy_export_requires_complete_growth_coverage_but_legacy_remains_compatible():
+    old = release()
+    old['funnel'] = {'version': 'funnel-v2-independent-trust-low-position', 'universe': 2, 'growthCandidates': 1}
+    with pytest.raises(ValueError, match='growth_coverage_required'):
+        build_export(old, request_id='request-1', source_git_commit='a'*40, actions_run_id='123')
+
+    exported = build_export(old, request_id='legacy-request', source_git_commit='legacy', actions_run_id='legacy', legacy=True)
+    assert validate_export(exported) == []
+    assert 'growthCoverageVersion' not in exported['funnel']
+
+
+def test_growth_candidate_can_exceed_peg_pool_and_malformed_coverage_blocks_export():
+    source = release()
+    source['funnel']['pegCandidates'] = 0
+    value = build_export(source, request_id='x', source_git_commit='a'*40, actions_run_id='1')
+    assert value['funnel']['growthCandidates'] == 1
+    assert validate_export(value) == []
+
+    broken = {**source, 'funnel': {**source['funnel'], 'growthInputComplete': -1}}
+    with pytest.raises(ValueError, match='growth_coverage_count:growthInputComplete'):
+        build_export(broken, request_id='x', source_git_commit='a'*40, actions_run_id='1')
 
 
 def test_duplicate_rank_and_missing_stock_block_export():

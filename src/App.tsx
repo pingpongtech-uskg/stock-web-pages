@@ -4,16 +4,18 @@ import { HistoryPanel } from './components/HistoryPanel'
 import { MarketVolumeIndicator } from './components/MarketVolumeIndicator'
 import { StrategyCard } from './components/StrategyCard'
 import { DataStatus } from './components/DataStatus'
+import { PublicationNotice } from './components/PublicationNotice'
 import { loadLatestRelease, type LoadedRelease } from './data/api'
 import { releaseCoverageFunnel, type CoverageFunnel } from './domain/coverage'
 import { trackEvent, trackEventOnce } from './domain/events'
-import type { RankingRow, Release } from './domain/types'
+import type { Coverage, GrowthInputAudit, RankingRow, Release, StockSummary } from './domain/types'
 import { strategyPresentations, type StrategyKey, type StrategyPresentation } from './domain/strategyPresentation'
 import './styles.css'
 
 interface DataContextValue {
   release: Release | null
   dataSource: LoadedRelease['source'] | null
+  contentHash: string | null
   loading: boolean
   error: string | null
   reload: () => void
@@ -24,19 +26,21 @@ const DataContext = createContext<DataContextValue | null>(null)
 function DataProvider({ children }: { children: ReactNode }) {
   const [release, setRelease] = useState<Release | null>(null)
   const [dataSource, setDataSource] = useState<LoadedRelease['source'] | null>(null)
+  const [contentHash, setContentHash] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
+    setLoading(release === null)
     setError(null)
     loadLatestRelease()
       .then((next) => {
         if (cancelled) return
         setRelease(next.release)
         setDataSource(next.source)
+        setContentHash(next.contentHash)
         setLoading(false)
         trackEvent('release_load_success', { runId: next.release.runId, source: next.source })
       })
@@ -54,7 +58,7 @@ function DataProvider({ children }: { children: ReactNode }) {
   }, [reloadKey])
 
   return (
-    <DataContext.Provider value={{ release, dataSource, loading, error, reload: () => setReloadKey((value) => value + 1) }}>
+    <DataContext.Provider value={{ release, dataSource, contentHash, loading, error, reload: () => setReloadKey((value) => value + 1) }}>
       {children}
     </DataContext.Provider>
   )
@@ -124,13 +128,13 @@ function FatalScreen({ message }: { message: string }) {
 }
 
 function Dashboard() {
-  const { release, dataSource, loading, error } = useData()
-  if (loading) return <LoadingScreen />
-  if (error || !release) return <ErrorScreen message={error ?? '發布快照不存在'} />
-  return <DashboardContent release={release} dataSource={dataSource ?? 'network'} />
+  const { release, dataSource, contentHash, loading, error, reload } = useData()
+  if (loading && !release) return <LoadingScreen />
+  if (!release) return <ErrorScreen message={error ?? '發布快照不存在'} />
+  return <DashboardContent release={release} dataSource={dataSource ?? 'network'} contentHash={contentHash} onReload={reload} refreshError={error} />
 }
 
-function DashboardContent({ release, dataSource }: { release: Release; dataSource: LoadedRelease['source'] }) {
+function DashboardContent({ release, dataSource, contentHash, onReload, refreshError }: { release: Release; dataSource: LoadedRelease['source']; contentHash: string | null; onReload: () => void; refreshError: string | null }) {
   const blocks = dashboardStrategyRows(release)
   const [activeKey, setActiveKey] = useState<StrategyKey>('trust')
   const [historyView, setHistoryView] = useState(() => new URLSearchParams(window.location.search).get('view') === 'history')
@@ -143,10 +147,6 @@ function DashboardContent({ release, dataSource }: { release: Release; dataSourc
     trackEvent('history_view')
   }
   const returnToLatest = () => {
-    if (window.history.state?.historyView) {
-      window.history.back()
-      return
-    }
     const params = new URLSearchParams(window.location.search)
     params.delete('view')
     const query = params.toString()
@@ -192,11 +192,20 @@ function DashboardContent({ release, dataSource }: { release: Release; dataSourc
         </header>
 
         <DataStatus release={release} source={dataSource} />
+        {refreshError && <p className="publication-notice" role="alert">最新發布讀取失敗，仍保留目前已載入版本：{refreshError}</p>}
+        <PublicationNotice release={release} source={dataSource} contentHash={contentHash} onReload={onReload} />
 
-        {historyView && <HistoryPanel />}
+        {historyView && <HistoryPanel refreshKey={contentHash ?? `${release.marketDate}:${release.runId}:${release.generatedAt}`} />}
         <div hidden={historyView}>
         <MarketVolumeIndicator indicator={release.marketIndicators?.volumeMultiple00631L} />
-        <CoverageFunnelView funnel={releaseCoverageFunnel(release, activeKey)} strategy={activeKey} />
+        <CoverageFunnelView
+          funnel={releaseCoverageFunnel(release, activeKey)}
+          strategy={activeKey}
+          coverage={release.coverage}
+          growthStocks={release.stocks}
+          trustSignalCount={release.summary.trustSignalCount}
+          trustNewEntryCount={release.summary.trustNewEntryCount}
+        />
 
         <div className="strategy-tabs" role="tablist" aria-label="股票策略">
           {blocks.map((block, index) => {
@@ -258,51 +267,138 @@ function DashboardContent({ release, dataSource }: { release: Release; dataSourc
   )
 }
 
-export function CoverageFunnelView({ funnel, strategy }: { funnel: CoverageFunnel; strategy: StrategyKey }) {
+function percentage(numerator: number | undefined, denominator: number | undefined): string {
+  if (typeof numerator !== 'number' || typeof denominator !== 'number' || denominator <= 0) return '—'
+  return `${(numerator / denominator * 100).toFixed(1)}%`
+}
+
+const growthReasonLabels: Record<string, string> = {
+  price: '同日價格', pe: 'PE', ttmEps: 'TTM EPS', annualEpsGrowth: '多年度 EPS 成長', earningsGrowth: '多年度 EPS 成長',
+  dividend: '已確認股利', dividendYield: '已確認股利', extreme: '極端外推', threshold: '總報酬本益比門檻', health: '成長健康檢查',
+}
+
+export function CoverageFunnelView({ funnel, strategy, coverage, growthStocks = [], trustSignalCount, trustNewEntryCount }: {
+  funnel: CoverageFunnel
+  strategy: StrategyKey
+  coverage: Coverage
+  growthStocks?: StockSummary[]
+  trustSignalCount?: number
+  trustNewEntryCount?: number
+}) {
   const growth = strategy === 'growth'
-  const growthStages = [
-    ['共同母體', funnel.universe],
+  const hasGrowthCoverage = funnel.growthEvaluationState !== null
+  const growthStages = hasGrowthCoverage ? [
+    ['普通股母體', funnel.growthTerminalOutcomes?.universe ?? null],
     ['估值輸入完整', funnel.growthInputComplete],
     ['總報酬本益比可計算', funnel.growthValuationComplete],
     ['總報酬本益比 ≥ 1.20', funnel.growthThresholdCandidates],
     ['成長健康 ≥ 4/5', funnel.growthHealthCandidates],
     ['最終候選', funnel.strategyCandidates],
-  ] as const
+  ] as const : []
   const standardStages = [
-    ['A 母體', funnel.universe],
-    ['價格完整', funnel.priceComplete],
-    ['PEG 可計算', funnel.valuationComplete],
-    ['PEG < 0.75', funnel.pegCandidates],
-    ['本策略', funnel.strategyCandidates],
+    ['A 普通股母體', funnel.universe],
+    ...(strategy === 'trust'
+      ? [['官方十日買超 Top10 新進榜', trustSignalCount ?? null] as const]
+      : [['同日行情可用', funnel.priceComplete] as const]),
+    [strategy === 'trust' ? '投信新進榜候選' : '3.5 年價格觀察候選', funnel.strategyCandidates],
   ] as const
   const stages = growth ? growthStages : standardStages
-  const missingReasonLabels: Record<string, string> = {
-    price: '價格', pe: 'PE', ttmEps: 'TTM EPS', annualEpsGrowth: '多年度 EPS 成長', earningsGrowth: '多年度 EPS 成長',
-    dividend: '已確認股利', dividendYield: '已確認股利', extreme: '極端外推', threshold: '總報酬本益比門檻', health: '成長健康檢查',
-  }
   const missingReasons = funnel.growthMissingReasons
     ?.filter((item) => item.count > 0)
-    .map((item) => `${missingReasonLabels[item.reason] ?? item.reason} ${item.count} 檔`)
+    .map((item) => `${growthReasonLabels[item.reason] ?? item.reason} ${item.count} 檔`)
     .join(' · ')
-  const growthExplanation = funnel.growthInputComplete === null
-    ? '此發布未提供成長估值輸入覆蓋統計；— 表示沒有統計資料，不代表 0 檔合格。'
-    : funnel.growthValuationComplete === 0
-      ? `成長估值輸入完整 ${funnel.growthInputComplete} 檔，可計算 0 檔；目前沒有可評估門檻的估值。${missingReasons ? ` 原因：${missingReasons}。` : ''}`
-      : funnel.growthThresholdCandidates === 0
-        ? `已計算 ${funnel.growthValuationComplete} 檔，但總報酬本益比門檻合格 0 檔。${missingReasons ? ` 其他未入選原因：${missingReasons}。` : ''}`
-        : missingReasons ? `未入選原因：${missingReasons}。` : '沒有缺少輸入原因明細。'
+  const growthExplanation = !hasGrowthCoverage
+    ? '此舊版發布未提供成長覆蓋診斷；整組數字未知，等待新版重算。'
+    : funnel.growthEvaluationState === 'not_evaluable'
+      ? '成長估值尚不可評估：目前沒有可計算估值不代表條件未達。請查看財務建庫進度與逐檔缺漏。'
+      : funnel.growthValuationComplete === 0
+        ? `目前可計算估值 0 檔，無法判斷門檻是否達成。${missingReasons ? ` 輸入缺漏：${missingReasons}。` : ''}`
+        : funnel.growthThresholdCandidates === 0
+          ? `已計算 ${funnel.growthValuationComplete} 檔，總報酬本益比 ≥ 1.20 為 0 檔。`
+          : funnel.growthHealthCandidates === 0
+            ? `總報酬本益比門檻合格 ${funnel.growthThresholdCandidates} 檔，健康 ≥ 4/5 為 0 檔。`
+            : `健康 ≥ 4/5 合格 ${funnel.growthHealthCandidates} 檔，最終候選 ${funnel.strategyCandidates} 檔。`
+  const terminalLabels: Record<string, string> = { missing: '缺少輸入', knownInvalid: '已知不合格', extreme: '極端外推', belowThreshold: '低於估值門檻', healthBlocked: '健康未達', selected: '已入選' }
+  const terminalOutcomes = funnel.growthTerminalOutcomes
+    ? Object.entries(terminalLabels).map(([key, label]) => `${label} ${funnel.growthTerminalOutcomes?.[key as keyof typeof funnel.growthTerminalOutcomes]} 檔`).join(' · ')
+    : null
+  const trackedQuoteCount = coverage.trackedCompleteCount ?? coverage.priceCompleteCount
+  const trackedQuoteUniverse = coverage.trackedCount ?? coverage.universeCount
+  const growthInputPct = hasGrowthCoverage ? percentage(funnel.growthInputComplete ?? undefined, funnel.growthTerminalOutcomes?.universe) : '—'
   return (
     <section className="coverage-funnel" aria-label="候選資料漏斗">
+      <div className="publication-coverage" aria-label="行情與財務建庫進度">
+        <span>追蹤行情完整度 <strong>{percentage(trackedQuoteCount, trackedQuoteUniverse)}</strong> ({trackedQuoteCount}/{trackedQuoteUniverse})</span>
+        <span>資料庫財務品質檢查通過率 <strong>{percentage(coverage.financialCompleteCount, coverage.databaseCount)}</strong> ({coverage.financialCompleteCount}/{coverage.databaseCount})</span>
+        <span>股票資料檔覆蓋 <strong>{coverage.databaseCount}/{coverage.universeCount}</strong></span>
+        {growth && <span>成長估值輸入建置 <strong>{growthInputPct}</strong> ({hasGrowthCoverage ? `${funnel.growthInputComplete}/${funnel.growthTerminalOutcomes?.universe} · 缺資料 ${funnel.growthTerminalOutcomes?.missing}` : '未提供診斷'})</span>}
+      </div>
       <div className="funnel-steps">
         {stages.map(([label, count], index) => <Fragment key={label}>
           {index > 0 && <i aria-hidden="true">→</i>}
           <span><small>{label}</small><strong>{count ?? '—'}</strong></span>
         </Fragment>)}
       </div>
-      {growth ? <p>{growthExplanation}</p>
-        : <p>估值證據：正式 EPS {funnel.formalValuations} 檔 · 代理估算 {funnel.proxyValuations} 檔；代理 PEG 仍顯示，但不等同正式 EPS。</p>}
+      {growth ? <>
+        <p>{growthExplanation}{hasGrowthCoverage ? ' 缺漏原因可能重疊，不可相加。' : ''}</p>
+        {hasGrowthCoverage && missingReasons && <p>輸入或淘汰原因（可重疊）：{missingReasons}。</p>}
+        {hasGrowthCoverage && terminalOutcomes && <p>互斥結果（普通股母體）：{terminalOutcomes}</p>}
+        {hasGrowthCoverage && <GrowthStockDiagnosticsView stocks={growthStocks} />}
+      </>
+        : <>
+          <p>{strategy === 'trust'
+            ? `投信訊號：Top10 新進榜 ${trustSignalCount ?? '—'} 檔；新進榜確認 ${trustNewEntryCount ?? '—'} 檔。條件只依官方排名差集，不受 PE／PEG 缺值影響。`
+            : '低位條件：同一 A 母體、合格調整價與 3.5 年回歸可用、Z ≤ 0、slope > 0；健康與估值資料是旁證，不隱藏價格觀察。'}</p>
+          <p>估值旁證：祖魯 PEG 可計算 {funnel.valuationComplete} 檔 · PEG 低於 0.75 {funnel.pegCandidates} 檔 · 正式 EPS {funnel.formalValuations} 檔 · 代理估算 {funnel.proxyValuations} 檔；不作此策略必要門檻。</p>
+        </>}
     </section>
   )
+}
+
+const growthInputLabels: Record<keyof GrowthInputAudit, string> = {
+  price: '價格', pe: '本益比', ttmEps: 'TTM EPS', earningsGrowth: 'EPS 成長', dividendYield: '股利殖利率',
+}
+const growthOriginLabels: Record<string, string> = { reported: '來源報告', derived: '推導值', proxy: '代理值', unavailable: '缺少' }
+const growthEvidenceReasonLabels: Record<string, string> = {
+  insufficient_quarters: '季度不足', nonconsecutive_quarters: '季度不連續', incomparable_quarters: '股數或期間基礎不可比',
+  missing_or_unavailable_quarter_eps: '季度 EPS 缺漏', missing_quarters: '缺少季度資料', nonpositive_ttm_eps: 'TTM EPS 非正值',
+  nonpositive_eps: 'EPS 非正值',
+}
+
+function inputEvidenceLabel(audit: GrowthInputAudit | undefined, key: keyof GrowthInputAudit): string {
+  const evidence = audit?.[key]
+  if (!evidence) return `${growthInputLabels[key]}：未提供來源明細`
+  const detail = [evidence.sourcePeriod, evidence.source].filter(Boolean).join(' · ')
+  return `${growthInputLabels[key]}：${growthOriginLabels[evidence.origin] ?? evidence.origin}${detail ? ` · ${detail}` : ''}`
+}
+
+export function GrowthStockDiagnosticsView({ stocks }: { stocks: StockSummary[] }) {
+  if (!stocks.length) return <p>此發布沒有逐檔成長估值診斷。</p>
+  return <details className="growth-stock-diagnostics">
+    <summary>逐檔成長估值診斷 ({stocks.length} 檔)</summary>
+    <ul>{stocks.map((stock) => {
+      const growth = stock.growthValuation
+      const health = stock.healthCategories?.find((category) => category.key === 'growth')
+      const healthLabel = stock.growthHealthEligible === true
+        ? '健康條件達標'
+        : stock.growthHealthEligible === false
+          ? '健康條件未達'
+          : health ? `健康檢查 ${health.passCount}/${health.total}，狀態${health.status}` : '健康證據未知'
+      const statusLabel = growth?.status === 'available' ? '可計算' : growth?.status === 'extreme' ? '極端外推' : growth?.status === 'unavailable' ? '不可計算' : '未提供診斷'
+      const missing = growth?.missingReasons?.map((reason) => growthReasonLabels[reason] ?? reason).join('、')
+      return <li key={stock.code}>
+        <details>
+          <summary>{stock.name} ({stock.code}) · {statusLabel} · {healthLabel}</summary>
+          <p>{growth?.reason || '此舊版發布未提供個股估值原因。'}{missing ? ` 缺少：${missing}。` : ''}</p>
+          {growth?.inputAudit && <ul>{(['price', 'pe', 'ttmEps', 'earningsGrowth', 'dividendYield'] as const).map((key) => {
+            const evidence = growth.inputAudit?.[key]
+            return <li key={key}>{inputEvidenceLabel(growth.inputAudit, key)}{evidence?.method ? ` · ${evidence.method}` : ''}{evidence?.reason ? ` · ${growthEvidenceReasonLabels[evidence.reason] ?? evidence.reason}` : ''}</li>
+          })}</ul>}
+          {health?.checks?.length ? <ul>{health.checks.map((check) => <li key={check.label}>{check.label}：{check.status} · {check.explanation}</li>)}</ul> : null}
+        </details>
+      </li>
+    })}</ul>
+  </details>
 }
 
 function LoadingScreen() {

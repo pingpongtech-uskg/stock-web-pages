@@ -16,3 +16,4 @@ vite.config.d.ts
 .coverage
 coverage.xml
 htmlcov/
+coverage/

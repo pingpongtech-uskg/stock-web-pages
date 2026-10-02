@@ -21,6 +21,59 @@ def test_projection_is_compact_and_revision_is_not_self_referential():
     assert record["revision"] not in canonical_json_bytes({k:v for k,v in record.items() if k != "revision"}).decode()
 
 
+def test_legacy_history_omits_new_growth_coverage_and_keeps_legacy_label():
+    record = project_release_to_history(release())
+    assert record["legacy"] is True
+    assert "growthCoverage" not in record
+    assert record["funnel"]["growthValuationComplete"] == 1
+
+
+def test_new_history_projects_typed_growth_coverage_without_recomputing_legacy():
+    source = release()
+    source["funnel"] = {
+        "version": "funnel-v2-independent-trust-low-position",
+        "universe": 2,
+        "instrumentExcluded": 0,
+        "growthValuationComplete": 1,
+        "growthCandidates": 1,
+        "strategyCandidates": {"trust": 1, "growth": 1, "lowPosition": 0},
+        "growthCoverageVersion": "growth-coverage-v1",
+        "growthEvaluationState": "partial",
+        "growthInputComplete": 1,
+        "growthThresholdCandidates": 1,
+        "growthHealthCandidates": 1,
+        "growthMissingReasons": [],
+        "growthTerminalOutcomes": {
+            "universe": 2, "missing": 1, "knownInvalid": 0,
+            "extreme": 0, "belowThreshold": 0, "healthBlocked": 0, "selected": 1,
+        },
+    }
+
+    record = project_release_to_history(source)
+
+    assert record["legacy"] is False
+    assert record["growthCoverage"] == {
+        "version": "growth-coverage-v1",
+        "evaluationState": "partial",
+        "inputComplete": 1,
+        "valuationComplete": 1,
+        "thresholdCandidates": 1,
+        "healthCandidates": 1,
+        "candidates": 1,
+        "missingReasons": [],
+        "terminalOutcomes": source["funnel"]["growthTerminalOutcomes"],
+    }
+    assert record["funnel"]["growthValuationComplete"] == 1
+
+
+def test_history_refuses_partial_v1_coverage():
+    import pytest
+    source = release()
+    source["funnel"]["growthCoverageVersion"] = "growth-coverage-v1"
+    with pytest.raises(ValueError, match="growth_coverage"):
+        project_release_to_history(source)
+
+
 def test_merge_replaces_duplicate_and_sorts_dates():
     merged = merge_month([], project_release_to_history(release("2026-09-18", "old")))
     merged = merge_month(merged, project_release_to_history(release("2026-09-17", "older")))

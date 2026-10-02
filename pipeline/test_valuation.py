@@ -1,10 +1,62 @@
 import math
+import pytest
 
 from pipeline.valuation import (
     calculate_growth_total_return_valuation,
     calculate_zulu_valuation,
     derive_stable_eps_growth,
 )
+
+
+@pytest.mark.parametrize("case,expected_origin", [
+    ("derived", "derived"), ("reported", "reported"), ("stale_pe", "derived"),
+    ("adjusted_only", "unavailable"), ("wrong_price_date", "unavailable"),
+    ("gap", "unavailable"), ("stock_dividend", "unavailable"),
+    ("stock_surplus_only", "unavailable"),
+    ("stock_surplus_roc_year", "unavailable"),
+    ("incomparable", "unavailable"),
+])
+def test_shared_growth_inputs_preserve_same_day_and_eps_comparability(case, expected_origin):
+    from pipeline.valuation import derive_growth_inputs
+    income = [{"year": y, "quarter": q, "eps": 1.2 ** (y - 2022)}
+              for y in (2022, 2023, 2024, 2025) for q in (1, 2, 3, 4)]
+    detail = {"asOf": "2026-10-01", "lastPrice": 100,
+              "priceSeries": [{"date": "2026-10-01", "close": 100, "adjustedClose": 100}],
+              "healthInputs": {"incomeQuarterly": income}}
+    if case in {"reported", "stale_pe"}:
+        detail["healthInputs"]["valuationCurrent"] = {"date": "2026-10-01" if case == "reported" else "2026-09-30", "pe": 10}
+    elif case == "adjusted_only":
+        detail["priceSeries"][0].pop("close")
+    elif case == "wrong_price_date":
+        detail["priceSeries"][0]["date"] = "2026-09-30"
+    elif case == "gap":
+        income.remove(next(row for row in income if row["year"] == 2025 and row["quarter"] == 3))
+    elif case == "stock_dividend":
+        detail["healthInputs"]["dividends"] = [{"year": 2025, "stockPerShare": 1}]
+    elif case in {"stock_surplus_only", "stock_surplus_roc_year"}:
+        detail["financialInputs"] = {"dividend": [{"year": "114年" if case == "stock_surplus_roc_year" else "114", "StockStatutorySurplus": 1,
+            "AnnouncementDate": "2026-04-01", "StockExDividendTradingDate": "2026-07-01"}]}
+    elif case == "incomparable":
+        income[-1]["epsComparable"] = False
+    before = __import__("copy").deepcopy(detail)
+    result = derive_growth_inputs(detail)
+    assert result["pe_origin"] == expected_origin
+    assert result["cutoff"] == "2026-10-01"
+    assert detail == before
+    if expected_origin == "derived":
+        assert result["current_pe"] == 100 / result["ttm_eps"]
+    elif expected_origin == "reported":
+        assert result["current_pe"] == 10
+    else:
+        assert result["current_pe"] is None
+    if case == "adjusted_only":
+        assert result["current_price"] is None and result["price_origin"] == "proxy"
+    if case in {"gap", "stock_dividend", "stock_surplus_only", "stock_surplus_roc_year"}:
+        assert result["ttm_eps"] is None
+    if case == "gap":
+        assert result["ttm_eps_reason"] == "nonconsecutive_quarters"
+    elif case in {"stock_dividend", "stock_surplus_only", "stock_surplus_roc_year", "incomparable"}:
+        assert result["ttm_eps_reason"] == "incomparable_quarters"
 
 
 def test_zulu_valuation_uses_eps_growth_and_exposes_066_075_bands():

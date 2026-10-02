@@ -47,6 +47,8 @@ button { cursor: pointer; }
 .data-status strong, .data-status span { display: block; }
 .data-status strong { color: var(--text); font-size: 12px; }
 .data-status-meta { display: flex; margin-left: auto; gap: 16px; color: var(--faint); font-family: var(--mono); font-size: 10px; white-space: nowrap; }
+.publication-notice { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; border: 1px solid var(--blue); border-radius: 8px; background: var(--card); padding: 8px 12px; color: var(--text); font-size: 11px; }
+.publication-notice button { border: 1px solid var(--blue); border-radius: 5px; background: transparent; padding: 5px 8px; color: var(--blue); cursor: pointer; font: inherit; font-weight: 650; }
 .cache-note { color: var(--amber); font-style: normal; font-weight: 700; }
 .market-volume-indicator { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(180px, .65fr) minmax(250px, .9fr); align-items: center; gap: 18px; margin: 2px 0 12px; border: 1px solid var(--line); border-left: 4px solid var(--line-strong); border-radius: 10px; background: var(--card); padding: 14px 16px; box-shadow: var(--shadow); }
 .market-volume-indicator.signal-green { border-left-color: var(--green); background: linear-gradient(90deg, var(--green-soft), var(--card) 48%); }
@@ -70,6 +72,21 @@ button { cursor: pointer; }
 .funnel-steps strong { color: var(--text); font-family: var(--mono); font-size: 14px; }
 .funnel-steps i { color: var(--line-strong); font-style: normal; }
 .coverage-funnel p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.publication-coverage { display: flex; flex-wrap: wrap; gap: 7px 18px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.publication-coverage strong { color: var(--text); font-family: var(--mono); font-size: 11px; }
+.growth-stock-diagnostics { border-top: 1px solid var(--line); padding-top: 8px; color: var(--muted); font-size: 10px; }
+.growth-stock-diagnostics > summary { color: var(--text); cursor: pointer; font-weight: 650; }
+.growth-stock-diagnostics > ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 5px 18px; margin: 8px 0 0; padding-left: 19px; }
+.growth-stock-diagnostics li details { padding: 4px 0; }
+.growth-stock-diagnostics li details > summary { cursor: pointer; color: var(--text); }
+.growth-stock-diagnostics li p { margin: 5px 0; }
+.growth-stock-diagnostics li ul { display: grid; gap: 3px; margin: 5px 0; padding-left: 16px; }
+.history-growth-coverage { border: 1px solid var(--line); border-radius: 7px; background: var(--card-soft); padding: 9px 12px; color: var(--muted); font-size: 10px; }
+.history-growth-coverage > summary { color: var(--text); cursor: pointer; font-weight: 650; }
+.history-growth-coverage ul { display: grid; gap: 9px; margin: 9px 0 0; padding-left: 18px; }
+.history-growth-coverage li { display: grid; gap: 3px; }
+.history-growth-coverage strong { color: var(--text); font-family: var(--mono); }
+.history-growth-coverage span { line-height: 1.5; }
 .freshness-dot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; background: var(--faint); }
 .freshness-current { background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
 .freshness-stale, .freshness-degraded { background: var(--amber); box-shadow: 0 0 0 4px var(--amber-soft); }
@@ -185,12 +202,15 @@ button { cursor: pointer; }
   .dashboard-intro { font-size: 13px; }
   .dashboard-meta { grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-left: 0; margin-top: 19px; padding: 13px 0 0; }
   .data-status { align-items: flex-start; flex-wrap: wrap; }
+  .publication-notice { align-items: flex-start; }
   .data-status-meta { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 12px; margin-left: 21px; white-space: normal; }
   .market-volume-indicator { grid-template-columns: 1fr 1fr; gap: 12px; }
   .market-volume-detail { grid-column: 1 / -1; }
   .funnel-steps { align-items: flex-start; overflow-x: auto; justify-content: flex-start; padding-bottom: 2px; }
   .funnel-steps i { padding-top: 12px; }
   .coverage-funnel p { font-size: 10px; }
+  .publication-coverage { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .growth-stock-diagnostics > ul { grid-template-columns: minmax(0, 1fr); }
   .strategy-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .strategy-tab { min-height: 76px; gap: 4px; padding: 10px 8px; }
   .strategy-tab span { font-size: 13px; }

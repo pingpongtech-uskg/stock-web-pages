@@ -1,11 +1,10 @@
 """Versioned release-contract helpers shared by the publisher and QA.
 
-The funnel stage counts are published by the producer and must conserve:
-PEG candidates can never exceed valuation-complete, and every strategy tab
-can only draw from the PEG candidate pool.  Deriving these numbers from an
-already filtered ranking (the v2 bug: 100→7→5→5 instead of 100→7→6→5) is
-impossible here because the counts come straight from the full enriched
-universe.
+The funnel stage counts are published by the producer and must conserve.
+PEG, growth, trust, and low-position candidates have separate eligibility
+rules; the growth route uses its own versioned coverage contract. Deriving
+these numbers from an already filtered ranking is impossible here because
+the counts come straight from the full enriched universe.
 """
 
 from __future__ import annotations
@@ -95,8 +94,6 @@ def compute_funnel(
     counts = {str(key): int(value) for key, value in strategy_counts.items()}
     if peg_count > len(values) or proxy_count > len(values):
         raise ValueError("funnel stage counts do not conserve")
-    if growth_candidates is None and counts.get("growth", 0) > peg_count:
-        raise ValueError("growth route exceeds legacy peg pool")
     if growth_candidates is not None and counts.get("growth", 0) > growth_candidates:
         raise ValueError("growth route exceeds growth valuation pool")
     return {
@@ -113,3 +110,58 @@ def compute_funnel(
         "instrumentPolicy": INSTRUMENT_POLICY,
         "instrumentExcluded": int(instrument_excluded),
     }
+
+
+def growth_coverage_error(
+    funnel: Any,
+    *,
+    required: bool = False,
+    expected_universe: int | None = None,
+) -> str | None:
+    """Validate the independent growth-coverage-v1 contract in a funnel.
+
+    The generic funnel keeps its existing version because it also describes
+    trust and low-position. Legacy funnels may omit the entire new diagnostic
+    group; a v1 marker requires every field and all cross-count invariants.
+    """
+    if not isinstance(funnel, dict):
+        return "growth_coverage_funnel_type"
+    from pipeline.growth_coverage import GROWTH_COVERAGE_VERSION, validate_growth_coverage
+
+    marker = funnel.get("growthCoverageVersion")
+    v1_fields = {
+        "growthEvaluationState",
+        "growthInputComplete",
+        "growthThresholdCandidates",
+        "growthHealthCandidates",
+        "growthMissingReasons",
+        "growthTerminalOutcomes",
+    }
+    present_v1_fields = v1_fields.intersection(funnel)
+    if marker is None and not present_v1_fields:
+        return "growth_coverage_required" if required else None
+    if marker != GROWTH_COVERAGE_VERSION:
+        return "growth_coverage_version"
+    if expected_universe is None:
+        return "growth_coverage_universe_source"
+    result = validate_growth_coverage(funnel, expected_universe=expected_universe)
+    return result[0] if result else None
+
+
+def common_share_universe(funnel: Any) -> int | None:
+    """Return the generic universe less explicitly excluded instruments."""
+    if not isinstance(funnel, dict):
+        return None
+    universe = funnel.get("universe")
+    excluded = funnel.get("instrumentExcluded")
+    if (
+        not isinstance(universe, int)
+        or isinstance(universe, bool)
+        or not isinstance(excluded, int)
+        or isinstance(excluded, bool)
+        or universe < 0
+        or excluded < 0
+        or excluded > universe
+    ):
+        return None
+    return universe - excluded

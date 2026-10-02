@@ -25,13 +25,23 @@ def merge_states(current: dict, recovered: dict) -> dict:
     days = {**current.get('days', {})}
     for day, source in recovered.get('days', {}).items():
         existing = days.get(day, {})
-        newest = source if source.get('attempts', 0) >= existing.get('attempts', 0) else existing
+        source_rank = (source.get('attempts', 0), _checkpoint_rank(recovered))
+        existing_rank = (existing.get('attempts', 0), _checkpoint_rank(current))
+        newest = source if source_rank > existing_rank else existing
         merged = {**newest,
                   'attempts': max(existing.get('attempts', 0), source.get('attempts', 0)),
                   'ceiling': min(existing.get('ceiling', 300), source.get('ceiling', 300))}
         days[day] = merged
-    return {**current, **recovered, 'days': days,
+    latest, older = (recovered, current) if _checkpoint_rank(recovered) > _checkpoint_rank(current) else (current, recovered)
+    return {**older, **latest, 'days': days,
             'retryNotBefore': max(current.get('retryNotBefore', 0), recovered.get('retryNotBefore', 0))}
+
+
+def _checkpoint_rank(state: dict) -> tuple[str, int, float]:
+    day = state.get('checkpointDay') or max(state.get('days', {}), default='')
+    attempts = state.get('days', {}).get(day, {}).get('attempts', 0)
+    timestamp = datetime.fromisoformat(state['checkpointAt']).timestamp() if state.get('checkpointAt') else 0.0
+    return day, attempts, timestamp
 
 
 def _valid_state(state: object) -> dict:
@@ -67,6 +77,13 @@ def _valid_state(state: object) -> dict:
     retry = state.get('retryNotBefore', 0)
     if not isinstance(retry, (int, float)) or isinstance(retry, bool) or not math.isfinite(retry) or retry < 0:
         raise ValueError('invalid checkpoint retry date')
+    day = state.get('checkpointDay')
+    if day is not None and (not isinstance(day, str) or date.fromisoformat(day).isoformat() != day or day not in days):
+        raise ValueError('invalid active checkpoint day')
+    if state.get('checkpointAt') is not None:
+        parsed = datetime.fromisoformat(state['checkpointAt'])
+        if parsed.tzinfo is None:
+            raise ValueError('checkpoint timestamp requires timezone')
     return {**state, 'version': 2, 'days': days}
 
 

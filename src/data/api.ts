@@ -49,6 +49,12 @@ function requireFiniteNumber(value: unknown): number {
   return value
 }
 
+function requireCount(value: unknown): number {
+  const count = requireFiniteNumber(value)
+  expect(Number.isInteger(count) && count >= 0)
+  return count
+}
+
 function requireNullableNumber(value: unknown): number | null {
   if (value === null) return null
   if (typeof value !== 'number' || !Number.isFinite(value)) invalidRelease()
@@ -152,6 +158,97 @@ function validateStockSummary(value: unknown): void {
   if (stock.chipReference !== undefined) validateChipReference(stock.chipReference)
 }
 
+function validateGrowthInputAudit(value: unknown): void {
+  const audit = requireRecord(value)
+  for (const key of ['price', 'pe', 'ttmEps', 'earningsGrowth', 'dividendYield']) {
+    const evidence = requireRecord(audit[key])
+    expect(['reported', 'derived', 'proxy', 'unavailable'].includes(requireString(evidence.origin)))
+    requireNullableString(evidence.sourcePeriod)
+    requireNullableString(evidence.method)
+    requireNullableString(evidence.source)
+    if (evidence.reason !== undefined) requireNullableString(evidence.reason)
+  }
+}
+
+function validateGrowthStockDiagnostics(value: unknown): void {
+  const stock = requireRecord(value)
+  const growth = requireRecord(stock.growthValuation)
+  expect(['available', 'unavailable', 'extreme'].includes(requireString(growth.status)))
+  requireString(growth.reason)
+  expect(requireArray(growth.missingReasons).every((reason) => typeof reason === 'string'))
+  expect(typeof growth.inputsComplete === 'boolean')
+  validateGrowthInputAudit(growth.inputAudit)
+  expect(typeof stock.growthHealthEligible === 'boolean')
+  const categories = requireArray(stock.healthCategories).map(requireRecord)
+  const growthHealth = categories.find((category) => category.key === 'growth')
+  expect(Boolean(growthHealth))
+  requireString(growthHealth?.label)
+  requireCount(growthHealth?.passCount)
+  expect(requireCount(growthHealth?.total) === 5)
+  expect(['pass', 'fail', 'unknown', 'not_applicable'].includes(requireString(growthHealth?.status)))
+  const checks = requireArray(growthHealth?.checks)
+  expect(checks.length === 5 && checks.every((value) => {
+    const check = requireRecord(value)
+    requireString(check.label)
+    expect(['pass', 'fail', 'unknown', 'not_applicable'].includes(requireString(check.status)))
+    requireString(check.value)
+    requireString(check.period)
+    requireString(check.explanation)
+    expect(requireArray(check.sourceRefs).every((source) => typeof source === 'string'))
+    return true
+  }))
+}
+
+function validateGrowthCoverage(funnel: UnknownRecord, stocks: unknown[]): void {
+  const version = funnel.growthCoverageVersion
+  if (version === undefined) {
+    const v1Fields = ['growthEvaluationState', 'growthInputComplete', 'growthThresholdCandidates', 'growthHealthCandidates', 'growthMissingReasons', 'growthTerminalOutcomes']
+    expect(!v1Fields.some((key) => key in funnel))
+    return
+  }
+  expect(version === 'growth-coverage-v1')
+  expect(['not_evaluable', 'partial', 'evaluated'].includes(requireString(funnel.growthEvaluationState)))
+  const inputComplete = requireCount(funnel.growthInputComplete)
+  const valuationComplete = requireCount(funnel.growthValuationComplete)
+  const thresholdCandidates = requireCount(funnel.growthThresholdCandidates)
+  const healthCandidates = requireCount(funnel.growthHealthCandidates)
+  const growthCandidates = requireCount(funnel.growthCandidates)
+  expect(requireArray(funnel.growthMissingReasons).every((value) => {
+    const item = requireRecord(value)
+    requireString(item.reason)
+    requireCount(item.count)
+    return true
+  }))
+  const terminal = requireRecord(funnel.growthTerminalOutcomes)
+  const terminalKeys = ['universe', 'missing', 'knownInvalid', 'extreme', 'belowThreshold', 'healthBlocked', 'selected']
+  expect(Object.keys(terminal).sort().join('|') === [...terminalKeys].sort().join('|'))
+  const terminalCounts = terminalKeys
+    .map((key) => requireCount(terminal[key]))
+  const [universe, missing, knownInvalid, extreme, belowThreshold, healthBlocked, selected] = terminalCounts
+  expect(missing + knownInvalid + extreme + belowThreshold + healthBlocked + selected === universe)
+  const motherUniverse = requireCount(funnel.universe)
+  const instrumentExcluded = requireCount(funnel.instrumentExcluded)
+  expect(instrumentExcluded <= motherUniverse && universe === motherUniverse - instrumentExcluded)
+  expect(valuationComplete <= inputComplete && inputComplete <= universe)
+  expect(belowThreshold + thresholdCandidates === valuationComplete)
+  expect(healthBlocked + selected === thresholdCandidates)
+  expect(selected === healthCandidates && growthCandidates === selected)
+  const expectedState = universe === 0 || missing === universe ? 'not_evaluable' : missing > 0 ? 'partial' : 'evaluated'
+  expect(funnel.growthEvaluationState === expectedState)
+  const strategyCounts = requireRecord(funnel.strategyCandidates)
+  expect(requireCount(strategyCounts.growth) === growthCandidates)
+  const reasons = requireArray(funnel.growthMissingReasons)
+  const reasonKeys = new Set<string>()
+  reasons.forEach((value) => {
+    const item = requireRecord(value)
+    const reason = requireString(item.reason)
+    const count = requireCount(item.count)
+    expect(count > 0 && count <= universe && !reasonKeys.has(reason))
+    reasonKeys.add(reason)
+  })
+  stocks.forEach(validateGrowthStockDiagnostics)
+}
+
 export function validateRelease(payload: unknown): Release {
   const p = requireRecord(payload)
   expect(requireString(p.runId).length > 0)
@@ -217,7 +314,9 @@ export function validateRelease(payload: unknown): Release {
   for (const key of RANKING_KEYS) {
     for (const row of requireArray(rankings[key])) validateRankingRow(row)
   }
-  for (const stock of requireArray(p.stocks)) validateStockSummary(stock)
+  const stocks = requireArray(p.stocks)
+  for (const stock of stocks) validateStockSummary(stock)
+  validateGrowthCoverage(funnel, stocks)
   requireRecord(p.summary)
   requireRecord(p.research)
   return payload as unknown as Release
@@ -253,16 +352,30 @@ function loadCachedRelease(): Release | null {
 export interface LoadedRelease {
   release: Release
   source: 'network' | 'cache'
+  contentHash: string | null
+}
+
+async function sha256Text(value: string): Promise<string | null> {
+  try {
+    if (!globalThis.crypto?.subtle) return null
+    const digest = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+  } catch {
+    return null
+  }
 }
 
 export async function loadLatestRelease(): Promise<LoadedRelease> {
   try {
-    const release = validateRelease(await getJson<unknown>(`${DATA_ROOT}/latest.json`))
+    const response = await fetch(`${DATA_ROOT}/latest.json`, { headers: { Accept: 'application/json' }, cache: 'no-store' })
+    if (!response.ok) throw new Error(`資料讀取失敗（${response.status}）`)
+    const body = await response.text()
+    const release = validateRelease(JSON.parse(body) as unknown)
     cacheRelease(release)
-    return { release, source: 'network' }
+    return { release, source: 'network', contentHash: await sha256Text(body) }
   } catch (error) {
     const cached = loadCachedRelease()
-    if (cached) return { release: cached, source: 'cache' }
+    if (cached) return { release: cached, source: 'cache', contentHash: null }
     throw error
   }
 }

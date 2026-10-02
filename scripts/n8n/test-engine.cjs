@@ -1,3 +1,4 @@
+const {growthFixture}=require('./growth-fixture.cjs');
 const test=require('node:test'); const assert=require('node:assert/strict');
 let engine={}; try {engine=require('./engine.cjs');} catch(error){if(error.code!=='MODULE_NOT_FOUND') throw error;}
 const now=Date.parse('2026-10-02T10:00:00Z');
@@ -125,4 +126,17 @@ test('exact request duplicates on later Actions pages fail closed',()=>{
   assert.equal(first.state.stage,'findRun');assert.equal(first.state.runPage,2);
   const second=engine.advance(first.state,response({workflow_runs:[{id:101,display_title:'Daily screening | test-1 | 2026-10-02'}]}),now);
   assert.equal(second.state.errorCategory,'ambiguous_actions_runs');
+});
+test('artifact acceptance verifies immutable published bytes and main ancestry before Notion writes',()=>{
+  const fs=require('node:fs');const crypto=require('node:crypto');
+  const body={schemaVersion:'screening-export-v1',legacy:false,marketDate:input.marketDate,requestId:input.requestId,actionsRunId:'123',sourceGitCommit:'a'.repeat(40),runId:'r',generatedAt:'2026-10-02T10:00:00Z',revision:'b'.repeat(12),formulaVersions:{},coverage:{},funnel:growthFixture(),freshness:'current',strategies:{trust:[],growth:[],lowPosition:[]},selectedStocks:[]};
+  const preimage=JSON.stringify(body);const hash=crypto.createHash('sha256').update(preimage).digest('hex');const raw=preimage.slice(0,-1)+',"payloadHash":"'+hash+'"}';
+  const publication={requestId:body.requestId,marketDate:body.marketDate,runId:'r',payloadHash:hash,sourceGitCommit:body.sourceGitCommit,actionsRunId:'123',publishedGitCommit:'c'.repeat(40)};
+  let out=engine.advance({...engine.start(input,now).state,stage:'artifactZip',lockSha:'sha',actionsRunId:'123',runHeadSha:body.sourceGitCommit},response({rawExport:raw,publication}),now);
+  assert.equal(out.state.nextStage,'publicationExport');
+  out=engine.advance(out.state,response({content:{sha:'next'}}),now);assert.ok(out.op.url.includes('?ref='+publication.publishedGitCommit));
+  out=engine.advance(out.state,response({encoding:'base64',size:Buffer.byteLength(raw),content:Buffer.from(raw).toString('base64')}),now);
+  assert.equal(out.state.stage,'publicationMain');assert.ok(out.op.url.endsWith(publication.publishedGitCommit+'...main'));
+  const rejected=engine.advance(out.state,response({status:'diverged',base_commit:{sha:publication.publishedGitCommit}}),now);assert.equal(rejected.state.errorCategory,'publication_not_on_main');
+  const verified=engine.advance(out.state,response({status:'ahead',base_commit:{sha:publication.publishedGitCommit}}),now);assert.equal(verified.state.nextStage,'liveProbe');assert.equal(verified.state.publicationStatus,'verified');
 });

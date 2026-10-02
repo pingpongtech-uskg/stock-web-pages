@@ -15,15 +15,16 @@ from pathlib import Path
 from typing import Any
 
 from pipeline.finmind_client import BudgetExceeded, FinMindClient, FinMindError, SourceBlocked
-from pipeline.financial_periods import dividend_period, normalized_period
+from pipeline.financial_periods import dividend_period, normalized_date, normalized_period
 from pipeline.growth_health import evaluate_growth_health
 from pipeline.health_inputs import merge_health_inputs, normalize_finmind_health_inputs
-from pipeline.valuation import derive_stable_eps_growth, derive_ttm_eps
+from pipeline.valuation import GROWTH_EXTREME_RATE_MAX, derive_stable_eps_growth, derive_ttm_eps
 
 FINANCIAL = 'TaiwanStockFinancialStatements'
 REVENUE = 'TaiwanStockMonthRevenue'
 PER = 'TaiwanStockPER'
 DIVIDEND = 'TaiwanStockDividend'
+QUEUE_POLICY = 'valuation-chain-v1'
 
 
 def current_taipei_day() -> str:
@@ -72,7 +73,8 @@ class DailyBudget:
         return self.record['attempts']
 
     def save(self) -> None:
-        self.state = {**self.state, 'days': {**self.state['days'], self.day: self.record}}
+        self.state = {**self.state, 'days': {**self.state['days'], self.day: self.record},
+                      'checkpointDay': self.day, 'checkpointAt': datetime.now(timezone.utc).isoformat()}
         atomic_json(self.path, self.state)
 
     @property
@@ -156,45 +158,73 @@ def number(value: Any) -> float | None:
 def complete_dividend(rows: list[dict[str, Any]], year: int, as_of: str) -> bool:
     periods = set()
     for row in rows:
-        parsed = dividend_period(row.get('period'), row.get('year'))
-        if row.get('confirmed') is not True or number(row.get('cashPerShare')) is None or parsed is None:
+        parsed = dividend_period(row.get('period') or row.get('year'), row.get('year'))
+        cash = number(row.get('cashPerShare'))
+        available = normalized_date(row.get('approvedAt') or row.get('publishedAt') or row.get('availableAt') or row.get('exDate'))
+        if row.get('confirmed') is not True or cash is None or cash < 0 or parsed is None or not available or len(available) != 10:
             continue
-        if parsed[0] == year and str(row.get('availableAt') or '') <= as_of:
+        if parsed[0] == year and available <= as_of:
             periods.add(parsed[1])
     return 'annual' in periods or periods == {'Q1', 'Q2', 'Q3', 'Q4'} or periods == {'H1', 'H2'}
 
 
-def plan_gaps(details: list[dict[str, Any]], cache: dict[str, Any], as_of: str) -> list[dict[str, str]]:
+def plan_gaps(details: list[dict[str, Any]], cache: dict[str, Any], as_of: str, *, budget_date: str | None = None) -> list[dict[str, str]]:
+    from pipeline.valuation import derive_growth_inputs
+
     end = date.fromisoformat(as_of)
+    retry_day = budget_date or as_of
     jobs = []
     for detail in sorted(details, key=lambda item: item['code']):
         code, health = detail['code'], detail.get('healthInputs') or {}
         income = health.get('incomeQuarterly') or []
+        valuation = derive_growth_inputs(detail)
+        validated_income = valuation['rows']
+        same_day = valuation['cutoff'] == as_of
+        safe_pe = same_day and number(valuation['current_pe']) is not None and valuation['current_pe'] > 0
+        growth = valuation['growth'].get('growth')
+        closes_valuation = safe_pe and valuation['ttm_eps'] is not None and growth is not None and 0 < growth <= GROWTH_EXTREME_RATE_MAX
         growth_health = evaluate_growth_health(health.get('monthlyRevenueOfficial') or [], income)
         due_year, due_quarter = financial_period(end).split('-Q')
         latest_period = max((normalized_period(row) for row in income if normalized_period(row) is not None), default=(0, 0))
-        financial_missing = (latest_period < (int(due_year), int(due_quarter)) or derive_ttm_eps(income, as_of=as_of) is None or derive_stable_eps_growth(income, as_of=as_of).get('growth') is None
+        financial_missing = (latest_period < (int(due_year), int(due_quarter)) or derive_ttm_eps(validated_income, as_of=as_of) is None or derive_stable_eps_growth(validated_income, as_of=as_of).get('growth') is None
                              or any(check['status'] == 'unknown' for check in growth_health['checks'][1:]))
         requests = [
             (FINANCIAL, financial_missing, financial_period(end), f'{end.year - 4}-01-01'),
-            (PER, number((health.get('valuationCurrent') or {}).get('pe')) is None or str((health.get('valuationCurrent') or {}).get('date') or '') != as_of, as_of, (end - timedelta(days=10)).isoformat()),
+            (PER, not safe_pe, as_of, (end - timedelta(days=10)).isoformat()),
             (DIVIDEND, not complete_dividend(health.get('dividends') or [], end.year - 1, as_of), str(end.year), f'{end.year - 1}-01-01'),
             (REVENUE, growth_health['checks'][0]['status'] == 'unknown', as_of[:7], (end - timedelta(days=550)).isoformat()),
         ]
         for priority, (dataset, missing, period, start) in enumerate(requests):
             stored = cache.get(f'{code}:{dataset}') or {}
             checked = stored.get('checkedPeriod') == period
-            due_retry = stored.get('nextCheckAt') and stored['nextCheckAt'] <= as_of
-            if not missing or (checked and not due_retry):
+            next_check = stored.get('nextCheckAt')
+            if not missing or (checked and not next_check):
                 continue
-            history_complete = derive_stable_eps_growth(income, as_of=as_of).get('valid_years', 0) >= 4
+            history_complete = derive_stable_eps_growth(validated_income, as_of=as_of).get('valid_years', 0) >= 4
             if dataset == FINANCIAL and history_complete and stored.get('rows'):
                 dates = [row['date'] for row in stored['rows'] if isinstance(row, dict) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', str(row.get('date') or ''))]
                 if dates:
                     start = max(dates)
             jobs.append({'code': code, 'dataset': dataset, 'period': period, 'start_date': start,
-                         'end_date': as_of, 'priority': str(priority)})
+                         'end_date': as_of, 'priority': '0' if dataset == DIVIDEND and closes_valuation else str(priority + 1),
+                         **({'notBefore': next_check} if checked and next_check and next_check > retry_day else {})})
     return sorted(jobs, key=lambda job: (job['priority'], job['code']))
+
+
+def job_key(job: dict[str, str]) -> tuple[str, str, str]:
+    return job['code'], job['dataset'], job['period']
+
+
+def resume_queue(planned: list[dict[str, str]], pending: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Promote untried closing chains; retain FIFO for deferred and failed jobs."""
+    available = {job_key(job): job for job in planned}
+    retained = [{**available[job_key(job)], **({'attempted': 'true'} if job.get('attempted') else {})}
+                for job in pending if job_key(job) in available]
+    retained_keys = {job_key(job) for job in retained}
+    added = [job for job in planned if job_key(job) not in retained_keys]
+    urgent = [job for job in [*retained, *added] if job['priority'] == '0' and not job.get('attempted')]
+    urgent_keys = {job_key(job) for job in urgent}
+    return [*urgent, *(job for job in [*retained, *added] if job_key(job) not in urgent_keys)]
 
 
 def normalize_supplement(detail: dict[str, Any], cache: dict[str, Any], as_of: str) -> dict[str, Any]:
@@ -252,15 +282,18 @@ def supplement_snapshot(codes: list[str], output: Path, as_of: str | None = None
     details = [item for item in details if item.get('code') in paths]
     # Rehydrate durable cached history before deciding which inputs are missing.
     merged = [normalize_supplement(item, cache, as_of) for item in details]
-    jobs = plan_gaps(merged, cache, as_of)
+    pending = state.state.get('queue', []) if state.state.get('queuePolicy') == QUEUE_POLICY else []
+    jobs = resume_queue(plan_gaps(merged, cache, as_of, budget_date=budget_date), pending)
+    state.state = {**state.state, 'queuePolicy': QUEUE_POLICY}
     state.queue(jobs)
     skipped, completed = None, 0
     failed_jobs = []
+    deferred_jobs = []
     token = os.environ.get('FINMIND_TOKEN', '') if token is None else token
     started = time.monotonic()
     if not token.strip():
         skipped = 'missing_token'
-    elif jobs:
+    elif any(job.get('notBefore', '') <= budget_date for job in jobs):
         client = FinMindClient(token, hard_cap=max_requests, daily_budget=state)
         try:
             client.configure_account_budget()
@@ -269,6 +302,11 @@ def supplement_snapshot(codes: list[str], output: Path, as_of: str | None = None
                     skipped = 'runtime_limit'
                     break
                 job = jobs[0]
+                if job.get('notBefore', '') > budget_date:
+                    deferred_jobs = [*deferred_jobs, {**job, 'attempted': 'true'}]
+                    jobs = jobs[1:]
+                    state.queue([*jobs, *deferred_jobs, *failed_jobs])
+                    continue
                 try:
                     rows = client.get(job['dataset'], data_id=job['code'], start_date=job['start_date'], end_date=job['end_date'])
                 except (BudgetExceeded, SourceBlocked):
@@ -276,27 +314,30 @@ def supplement_snapshot(codes: list[str], output: Path, as_of: str | None = None
                 except FinMindError:
                     # Retain unsuccessful jobs for recovery, without a tight retry loop.
                     skipped = 'dataset_unavailable'
-                    failed_jobs = [*failed_jobs, job]
+                    failed_jobs = [*failed_jobs, {**job, 'attempted': 'true'}]
                     jobs = jobs[1:]
-                    state.queue([*failed_jobs, *jobs])
+                    state.queue([*jobs, *deferred_jobs, *failed_jobs])
                     continue
                 key = f"{job['code']}:{job['dataset']}"
-                stored = cache.get(key) or {}
+                stored = {name: value for name, value in (cache.get(key) or {}).items() if name != 'nextCheckAt'}
                 cache = {**cache, key: {**stored, 'rows': merge_raw_rows(stored.get('rows') or [], rows),
                          'checkedPeriod': job['period'], 'checkedAt': budget_date, 'fetchedAt': datetime.now(timezone.utc).isoformat()}}
-                if job['dataset'] == FINANCIAL:
-                    due = job['period']
-                    latest = max((str(row.get('date') or '') for row in rows), default='')
-                    observed = f'{latest[:4]}-Q{(int(latest[5:7]) - 1) // 3 + 1}' if re.fullmatch(r'\d{4}-\d{2}-\d{2}', latest) else ''
-                    if observed < due:
-                        cache = {**cache, key: {**cache[key], 'nextCheckAt': (date.fromisoformat(budget_date) + timedelta(days=7)).isoformat()}}
+                updated = normalize_supplement(next(item for item in details if item['code'] == job['code']), cache, as_of)
+                unresolved = any(item['dataset'] == job['dataset'] for item in plan_gaps([updated], {}, as_of, budget_date=budget_date))
+                if unresolved:
+                    cache = {**cache, key: {**cache[key], 'nextCheckAt': (date.fromisoformat(budget_date) + timedelta(days=7)).isoformat()}}
                 atomic_json(cache_dir / 'rows.json', cache)
-                jobs = jobs[1:]
-                state.queue([*failed_jobs, *jobs])
+                refreshed = [normalize_supplement(item, cache, as_of) for item in details]
+                parked_keys = {job_key(item) for item in [*failed_jobs, *deferred_jobs]}
+                planned = [item for item in plan_gaps(refreshed, cache, as_of, budget_date=budget_date) if job_key(item) not in parked_keys]
+                jobs = resume_queue(planned, jobs[1:])
+                state.queue([*jobs, *deferred_jobs, *failed_jobs])
                 completed += 1
         except (BudgetExceeded, SourceBlocked, FinMindError) as exc:
             skipped = type(exc).__name__
-    jobs = [*failed_jobs, *jobs]
+    elif jobs:
+        skipped = 'deferred'
+    jobs = [*jobs, *deferred_jobs, *failed_jobs]
     # Never replace the tracked universe with only the subset fetched today.
     changed = 0
     for original in details:

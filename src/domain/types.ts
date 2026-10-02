@@ -69,6 +69,37 @@ export interface GrowthValuationSummary {
   extreme_extrapolation: boolean
   growth_valid_years?: number
   growth_years?: number | null
+  inputsComplete?: boolean
+  missingReasons?: string[]
+  inputAudit?: GrowthInputAudit
+}
+
+export type GrowthInputOrigin = 'reported' | 'derived' | 'proxy' | 'unavailable'
+
+export interface GrowthInputEvidence {
+  origin: GrowthInputOrigin
+  sourcePeriod: string | null
+  method: string | null
+  source: string | null
+  reason?: string | null
+}
+
+export interface GrowthInputAudit {
+  price: GrowthInputEvidence
+  pe: GrowthInputEvidence
+  ttmEps: GrowthInputEvidence
+  earningsGrowth: GrowthInputEvidence
+  dividendYield: GrowthInputEvidence
+}
+
+export interface GrowthTerminalOutcomes {
+  universe: number
+  missing: number
+  knownInvalid: number
+  extreme: number
+  belowThreshold: number
+  healthBlocked: number
+  selected: number
 }
 
 export interface StockSummary {
@@ -121,6 +152,7 @@ export interface StockSummary {
   chipReference?: ChipReference
   valuation?: ValuationSummary
   growthValuation?: GrowthValuationSummary
+  growthHealthEligible?: boolean
   healthCategories?: HealthCategory[]
   healthScore?: { passCount: number; total: number; status: MetricStatus }
   healthInputSummary?: { valuationDate?: string | null; incomePeriods: number; balancePeriods: number; dividendRows: number; officialRevenueRows: number; source: string }
@@ -345,6 +377,9 @@ export interface ResearchSummary {
 
 export interface ReleaseFunnel {
   version: string
+  /** Separate from the shared trust/low-position funnel contract version. */
+  growthCoverageVersion?: 'growth-coverage-v1'
+  growthEvaluationState?: 'not_evaluable' | 'partial' | 'evaluated'
   universe: number
   priceComplete: number
   valuationComplete: number
@@ -353,6 +388,7 @@ export interface ReleaseFunnel {
   growthThresholdCandidates?: number
   growthHealthCandidates?: number
   growthMissingReasons?: Array<{ reason: string; count: number }>
+  growthTerminalOutcomes?: GrowthTerminalOutcomes
   pegCandidates: number
   growthCandidates?: number
   strategyCandidates: { trust: number; growth: number; lowPosition: number }
@@ -414,6 +450,18 @@ export interface ScreeningHistoryRecord {
   statusMessage: string
   formulaVersions: Record<'regression' | 'valuation' | 'growthValuation' | 'growthFallback' | 'ranking', string>
   funnel: { universe: number; priceComplete: number; valuationComplete: number; growthValuationComplete: number; pegCandidates: number; growthCandidates: number; strategyCandidates: { trust: number; growth: number; lowPosition: number }; formalValuations: number; proxyValuations: number }
+  legacy?: boolean
+  growthCoverage?: {
+    version: 'growth-coverage-v1'
+    evaluationState: 'not_evaluable' | 'partial' | 'evaluated'
+    inputComplete: number
+    valuationComplete: number
+    thresholdCandidates: number
+    healthCandidates: number
+    candidates: number
+    missingReasons: Array<{ reason: string; count: number }>
+    terminalOutcomes: GrowthTerminalOutcomes
+  }
   strategies: { trust: HistoryRankingRow[]; growth: HistoryRankingRow[]; lowPosition: HistoryRankingRow[] }
   sourceRefs: string[]
 }

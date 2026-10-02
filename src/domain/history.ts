@@ -36,12 +36,70 @@ export function filterHistoryRows(rows: HistoryRankingRow[], query: string): His
   if (!needle) return rows
   return rows.filter((row) => row.code.startsWith(needle) || row.name.toLocaleLowerCase().includes(needle))
 }
+export function historyGrowthCoverageSummary(record: Pick<ScreeningHistoryRecord, 'legacy' | 'growthCoverage'>): string {
+  const coverage = record.growthCoverage
+  if (!coverage) return '舊版歷史發布未提供成長覆蓋診斷；不依新規則回推。'
+  const terminal = coverage.terminalOutcomes
+  const state = coverage.evaluationState === 'not_evaluable' ? '尚不可評估' : coverage.evaluationState === 'partial' ? '部分評估' : '已完整評估'
+  const labels: Record<string, string> = { price: '價格', pe: 'PE', ttmEps: 'TTM EPS', earningsGrowth: 'EPS 成長', dividendYield: '股利殖利率' }
+  const reasons = coverage.missingReasons.map((item) => `${labels[item.reason] ?? item.reason} ${item.count}`).join('、')
+  return `成長覆蓋 ${state}：輸入完整 ${coverage.inputComplete}/${terminal.universe} 檔、可計算 ${coverage.valuationComplete} 檔、總報酬本益比 ≥ 1.20 為 ${coverage.thresholdCandidates} 檔、健康 ≥ 4/5 為 ${coverage.healthCandidates} 檔、最終 ${coverage.candidates} 檔；互斥缺少輸入 ${terminal.missing} 檔、已知不合格 ${terminal.knownInvalid} 檔、極端外推 ${terminal.extreme} 檔、低於門檻 ${terminal.belowThreshold} 檔、健康未達 ${terminal.healthBlocked} 檔、入選 ${terminal.selected} 檔。${reasons ? `重疊原因：${reasons}。` : ''}`
+}
 function record(value: unknown): ScreeningHistoryRecord {
   if (!value || typeof value !== 'object') throw new Error('歷史資料格式錯誤')
   const r = value as Record<string, unknown>
   if (typeof r.marketDate !== 'string' || !DATE.test(r.marketDate) || typeof r.runId !== 'string' || typeof r.revision !== 'string') throw new Error('歷史資料格式錯誤')
   if (!r.strategies || typeof r.strategies !== 'object') throw new Error('歷史資料格式錯誤')
+  if (r.legacy !== undefined && typeof r.legacy !== 'boolean') throw new Error('歷史資料格式錯誤')
+  if (r.growthCoverage !== undefined) {
+    if (r.legacy === true) throw new Error('歷史資料格式錯誤')
+    validateHistoryGrowthCoverage(r.growthCoverage)
+  }
+  else if (r.legacy === false) throw new Error('歷史資料格式錯誤')
   return value as ScreeningHistoryRecord
+}
+
+function validateHistoryGrowthCoverage(value: unknown): void {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('歷史成長覆蓋格式錯誤')
+  const coverage = value as Record<string, unknown>
+  const fields = ['version', 'evaluationState', 'inputComplete', 'valuationComplete', 'thresholdCandidates', 'healthCandidates', 'candidates', 'missingReasons', 'terminalOutcomes']
+  if (Object.keys(coverage).sort().join('|') !== [...fields].sort().join('|')
+    || coverage.version !== 'growth-coverage-v1'
+    || !['not_evaluable', 'partial', 'evaluated'].includes(String(coverage.evaluationState))) throw new Error('歷史成長覆蓋格式錯誤')
+  const count = (candidate: unknown): number => {
+    if (typeof candidate !== 'number' || !Number.isInteger(candidate) || candidate < 0) throw new Error('歷史成長覆蓋格式錯誤')
+    return candidate
+  }
+  const inputComplete = count(coverage.inputComplete)
+  const valuationComplete = count(coverage.valuationComplete)
+  const thresholdCandidates = count(coverage.thresholdCandidates)
+  const healthCandidates = count(coverage.healthCandidates)
+  const candidates = count(coverage.candidates)
+  if (!Array.isArray(coverage.missingReasons)) throw new Error('歷史成長覆蓋格式錯誤')
+  const reasons = new Set<string>()
+  for (const value of coverage.missingReasons) {
+    if (!value || typeof value !== 'object') throw new Error('歷史成長覆蓋格式錯誤')
+    const reason = (value as Record<string, unknown>).reason
+    const amount = count((value as Record<string, unknown>).count)
+    if (typeof reason !== 'string' || !reason || reasons.has(reason)) throw new Error('歷史成長覆蓋格式錯誤')
+    reasons.add(reason)
+    if (amount < 1) throw new Error('歷史成長覆蓋格式錯誤')
+  }
+  if (!coverage.terminalOutcomes || typeof coverage.terminalOutcomes !== 'object' || Array.isArray(coverage.terminalOutcomes)) throw new Error('歷史成長覆蓋格式錯誤')
+  const terminal = coverage.terminalOutcomes as Record<string, unknown>
+  const keys = ['universe', 'missing', 'knownInvalid', 'extreme', 'belowThreshold', 'healthBlocked', 'selected']
+  if (Object.keys(terminal).sort().join('|') !== [...keys].sort().join('|')) throw new Error('歷史成長覆蓋格式錯誤')
+  const counts = Object.fromEntries(keys.map((key) => [key, count(terminal[key])])) as Record<typeof keys[number], number>
+  if (Object.values(counts).slice(1).reduce((total, item) => total + item, 0) !== counts.universe
+    || counts.selected !== candidates || counts.selected !== healthCandidates
+    || counts.healthBlocked + counts.selected !== thresholdCandidates
+    || counts.belowThreshold + thresholdCandidates !== valuationComplete
+    || valuationComplete > inputComplete || inputComplete > counts.universe
+    || coverage.missingReasons.some((item) => count((item as Record<string, unknown>).count) > counts.universe)) throw new Error('歷史成長覆蓋不守恆')
+  const state = counts.universe === 0 || counts.missing === counts.universe
+    ? 'not_evaluable'
+    : counts.missing > 0 ? 'partial' : 'evaluated'
+  if (coverage.evaluationState !== state) throw new Error('歷史成長覆蓋狀態不一致')
 }
 export function validateHistoryIndex(value: unknown): ScreeningHistoryIndex {
   if (!value || typeof value !== 'object') throw new Error('歷史索引格式錯誤')

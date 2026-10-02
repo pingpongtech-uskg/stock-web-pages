@@ -57,8 +57,10 @@ from pipeline.enrichment import (  # noqa: E402
 )
 from pipeline.health_checks import evaluate_snapshot_health, health_totals  # noqa: E402
 from pipeline.indicators import trust_metrics  # noqa: E402
-from pipeline.financial_periods import gregorian_year, normalized_date, quarterly_income, number, dividend_period
+from pipeline.financial_periods import gregorian_year, normalized_date, number, dividend_period
 from pipeline.health_inputs import merge_health_inputs, normalize_finmind_health_inputs  # noqa: E402
+from pipeline.growth_health import growth_health_qualifies as growth_health_checks_qualify
+from pipeline.growth_coverage import build_growth_coverage
 from pipeline.yahoo_client import (  # noqa: E402
     YAHOO_CHART_SOURCE,
     YFINANCE_FUNDAMENTAL_SOURCE,
@@ -77,10 +79,9 @@ from pipeline.ownership_checks import evaluate_chip_reference  # noqa: E402
 from scripts.fetch_ownership import OWNERSHIP_SNAPSHOT_VERSION  # noqa: E402
 from pipeline.institutional_ranking import annotate_top_n_entries  # noqa: E402
 from pipeline.valuation import (  # noqa: E402
+    derive_growth_inputs,
     calculate_growth_total_return_valuation,
     calculate_zulu_valuation,
-    derive_stable_eps_growth,
-    derive_ttm_eps,
 )
 from pipeline.trading_calendar import next_deadline
 from pipeline.market_indicators import build_00631l_volume_indicator  # noqa: E402
@@ -396,19 +397,8 @@ def baseline_details(data_dir: Path, release: dict[str, Any]) -> list[dict[str, 
     return result
 
 
-GROWTH_HEALTH_REQUIRED_PASS = 4
-
-
 def growth_health_qualifies(category: object) -> bool:
-    """Return true only for a fully-known five-check result meeting 4/5."""
-    if not isinstance(category, dict):
-        return False
-    try:
-        passed = int(category.get("passCount") or 0)
-        total = int(category.get("total") or 0)
-    except (TypeError, ValueError):
-        return False
-    return category.get("status") == "pass" and total == 5 and passed >= GROWTH_HEALTH_REQUIRED_PASS
+    return growth_health_checks_qualify(category)
 
 
 def _current_price(detail: dict[str, Any]) -> float | None:
@@ -527,7 +517,7 @@ def _dividend_evidence(detail: dict[str, Any], current_price: float | None) -> d
         year = gregorian_year(row.get("year"))
         cash = number(row.get("cashPerShare"))
         available = normalized_date(row.get("approvedAt") or row.get("publishedAt") or row.get("availableAt") or row.get("exDate"))
-        if year is None or year >= int(cutoff[:4]) or cash is None or cash < 0 or not available or available > cutoff:
+        if year is None or year >= int(cutoff[:4]) or cash is None or cash < 0 or not available or len(available) != 10 or available > cutoff:
             continue
         parsed_period = dividend_period(row.get("period") or year, year)
         if parsed_period is None:
@@ -554,35 +544,13 @@ def _confirmed_dividend_yield(detail: dict[str, Any], current_price: float | Non
 def _growth_valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
     """Build the primary reference from validated financial inputs, with origins."""
     health_inputs = detail.get("healthInputs") or {}
-    rows = quarterly_income(health_inputs.get("incomeQuarterly", []))
-    cutoff = normalized_date(detail.get("asOf"))
-    # Raw FinMind quarters use the share basis as originally published. A
-    # known stock distribution makes cross-quarter EPS incomparable unless
-    # an explicit adjusted common basis is provided by the source.
-    dividends = health_inputs.get("dividends", [])
-    action_years = [gregorian_year(row.get("year")) for row in dividends if isinstance(row, dict) and (number(row.get("stockPerShare")) or 0) > 0]
-    raw_dividends = (detail.get("financialInputs") or {}).get("dividend", [])
-    action_years += [gregorian_year(row.get("year") or str(row.get("date") or "")[:4]) for row in raw_dividends if isinstance(row, dict) and (number(row.get("StockEarningsDistribution")) or 0) > 0]
-    periods = [row["year"] for row in rows]
-    if periods and any(year is not None and min(periods) <= year <= max(periods) for year in action_years):
-        rows = [{**row, "epsComparable": False} if not row.get("epsBasis") else row for row in rows]
-    growth = derive_stable_eps_growth(rows, as_of=cutoff)
-    eps = derive_ttm_eps(rows, as_of=cutoff)
-    current_price = _current_price(detail) if cutoff else None
-    price_origin = "reported" if current_price is not None and current_price > 0 else "unavailable"
-    quotes = [row for row in detail.get("priceSeries", []) if isinstance(row, dict)]
-    if quotes:
-        matching = [row for row in quotes if normalized_date(row.get("date")) == cutoff]
-        closes = [number(row.get("close")) for row in matching]
-        current_price = next((value for value in reversed(closes) if value is not None and value > 0), None)
-        price_origin = "reported" if current_price is not None else "proxy" if any(number(row.get("adjustedClose")) is not None for row in matching) else "unavailable"
+    inputs = derive_growth_inputs(detail)
+    rows, cutoff = inputs["rows"], inputs["cutoff"]
+    growth, eps = inputs["growth"], inputs["ttm_eps"]
+    current_price, price_origin = inputs["current_price"], inputs["price_origin"]
     valuation_current = health_inputs.get("valuationCurrent") or {}
-    reported_pe = number(valuation_current.get("pe"))
-    same_day_pe = normalized_date(valuation_current.get("date")) == cutoff
-    pe = reported_pe if same_day_pe and reported_pe is not None and reported_pe > 0 else None
-    pe_origin = "reported" if pe is not None else "unavailable"
-    if pe is None and eps is not None and current_price is not None and current_price > 0:
-        pe, pe_origin = current_price / eps, "derived"
+    reported_pe, same_day_pe = inputs["reported_pe"], inputs["same_day_pe"]
+    pe, pe_origin = inputs["current_pe"], inputs["pe_origin"]
     dividend = _dividend_evidence(detail, current_price)
     result = calculate_growth_total_return_valuation(
         current_price=current_price, current_pe=pe, ttm_eps=eps,
@@ -598,8 +566,8 @@ def _growth_valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
     result["inputAudit"] = {
         "price": {"origin": price_origin, "sourcePeriod": cutoff, "method": "same_day_close", "source": detail.get("priceSource") or "published_price_series"},
         "pe": {"origin": pe_origin, "sourcePeriod": cutoff if pe else None, "method": "reported_same_day_pe" if pe_origin == "reported" else "same_day_close / validated_ttm_eps", "source": valuation_current.get("source") or source if pe_origin == "reported" else eps_source},
-        "ttmEps": {"origin": "derived" if eps is not None else "unavailable", "sourcePeriod": period, "method": "sum_four_unique_consecutive_comparable_quarters", "source": eps_source},
-        "earningsGrowth": {"origin": "derived" if growth.get("growth") is not None else "unavailable", "sourcePeriod": f"{growth.get('start_year')}–{growth.get('end_year')}" if growth.get("start_year") else None, "method": growth.get("method"), "source": eps_source},
+        "ttmEps": {"origin": "derived" if eps is not None else "unavailable", "sourcePeriod": period, "method": "sum_four_unique_consecutive_comparable_quarters", "source": eps_source, "reason": inputs["ttm_eps_reason"]},
+        "earningsGrowth": {"origin": "derived" if growth.get("growth") is not None else "unavailable", "sourcePeriod": f"{growth.get('start_year')}–{growth.get('end_year')}" if growth.get("start_year") else None, "method": growth.get("method"), "source": eps_source, "reason": growth.get("method_label") if growth.get("growth") is None else None},
         "dividendYield": dividend["audit"],
     }
     missing = [key for key, audit in result["inputAudit"].items() if audit["origin"] in {"unavailable", "proxy"}]
@@ -1196,32 +1164,9 @@ def low_base_gap(results: dict[str, dict[str, Any]], *, label: str, tracked_coun
     }
 
 
-def growth_funnel(details: list[dict[str, Any]]) -> dict[str, Any]:
+def growth_funnel(details: list[dict[str, Any]], *, universe: int | None = None, selected_codes: set[str] | None = None) -> dict[str, Any]:
     """Count the full growth universe at distinct evidence and selection stages."""
-    complete = calculable = threshold = healthy = 0
-    reasons: dict[str, int] = {}
-    for detail in details:
-        if not is_common_stock_code(str(detail.get("code"))):
-            continue
-        valuation = detail.get("growthValuation") or {}
-        complete += bool(valuation.get("inputsComplete"))
-        available = valuation.get("status") == "available"
-        calculable += available
-        passes = available and (number(valuation.get("total_return_pe")) or 0) >= 1.2
-        threshold += passes
-        healthy += passes and detail.get("growthHealthEligible") is True
-        blockers = list(valuation.get("missingReasons") or [])
-        if valuation.get("status") == "extreme":
-            blockers.append("extreme")
-        elif available and not passes:
-            blockers.append("threshold")
-        elif passes and detail.get("growthHealthEligible") is not True:
-            blockers.append("health")
-        for reason in set(blockers):
-            reasons[reason] = reasons.get(reason, 0) + 1
-    return {"growthInputComplete": complete, "growthValuationComplete": calculable,
-            "growthThresholdCandidates": threshold, "growthHealthCandidates": healthy,
-            "growthMissingReasons": [{"reason": reason, "count": count} for reason, count in sorted(reasons.items())]}
+    return build_growth_coverage(details, universe=universe, selected_codes=selected_codes)
 
 
 def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None, recompute_existing: bool = False) -> dict[str, Any]:
@@ -1459,14 +1404,14 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         if isinstance(z, (int, float)) and math.isfinite(float(z)):
             low = float(z) <= -1 and isinstance(slope, (int, float)) and float(slope) > 0
             proxy_low = float(z) <= 0 and isinstance(slope, (int, float)) and float(slope) > 0
-            if proxy_low and growth_health_qualified:
+            if proxy_low and price_eligible is True:
                 low_count += 1
                 candidate_codes.add(code)
             if detail.get("signalState") == "進場觀察":
                 formal_entries += 1
             elif detail.get("signalState") in {"低位觀察", "值得研究"}:
                 proxy_candidates += 1
-            if proxy_low and growth_health_qualified:
+            if proxy_low and price_eligible is True:
                 low_rows.append(
                     {
                         "rank": 0,
@@ -1678,7 +1623,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     funnel = compute_funnel(
         universe=universe,
         price_complete=sum(1 for detail in enriched if detail.get("dataStatus") == "pass"),
-        instrument_excluded=sum(1 for detail in enriched if not is_common_stock_code(str(detail.get("code")))),
+        instrument_excluded=sum(not is_common_stock_code(str(row.get("code"))) for row in (universe_rows or enriched)),
         valuations=valuation_dicts,
         strategy_counts={"trust": len(trust_rank), "growth": len(growth_rank), "lowPosition": len(low_rank)},
         growth_candidates=len(growth_rank),
@@ -1689,7 +1634,8 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             and detail["growthValuation"].get("status") == "available"
         ),
     )
-    funnel.update(growth_funnel(enriched))
+    growth_universe = universe - funnel["instrumentExcluded"]
+    funnel.update(growth_funnel(enriched, universe=growth_universe, selected_codes={str(row["code"]) for row in growth_rank}))
     market_dates = [str(detail.get("asOf")) for detail in enriched if detail.get("asOf")]
     market_date = max(market_dates) if market_dates else baseline.get("marketDate")
     if offline or recompute_existing:

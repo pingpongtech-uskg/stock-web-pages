@@ -22,6 +22,10 @@ def require_headers(path,headers,index):
   if not m or int(m.group(1))<31536000: raise ValueError(f'cache_age_month:{path}:{cache}')
 def verify(base_url,expected_dir):
  data=Path(expected_dir); expected_latest=json.loads((data/'latest.json').read_text(encoding='utf-8')); expected_index=json.loads((data/'archive/v1/index.json').read_text(encoding='utf-8')); candidate=str(expected_latest.get('runId') or 'candidate')
+ fingerprint_path=data/'publication.json'
+ expected_fingerprint_raw=fingerprint_path.read_bytes() if fingerprint_path.exists() else None
+ expected_funnel=expected_latest.get('funnel') if isinstance(expected_latest.get('funnel'),dict) else {}
+ if expected_fingerprint_raw is None and expected_funnel.get('growthCoverageVersion')=='growth-coverage-v1': raise ValueError('publication_fingerprint_missing')
  actual_export = None
  if (data/'screening-export.json').exists():
   actual_export, eh, eb = get_json(base_url, '/data/screening-export.json', candidate)
@@ -34,6 +38,16 @@ def verify(base_url,expected_dir):
   if hashlib.sha256(hash_preimage(eb)).hexdigest() != actual_export.get('payloadHash'): raise ValueError('screening_export_hash')
   require_headers('/data/screening-export.json', eh, True)
  actual_latest,lh,lb=get_json(base_url,'/data/latest.json',candidate); actual_index,ih,ib=get_json(base_url,'/data/archive/v1/index.json',candidate); require_headers('/data/latest.json',lh,True); require_headers('/data/archive/v1/index.json',ih,True)
+ fingerprint_verified=False
+ if expected_fingerprint_raw is not None:
+  actual_fingerprint,fh,fb=get_json(base_url,'/data/publication.json',candidate); require_headers('/data/publication.json',fh,True)
+  if fb!=expected_fingerprint_raw: raise ValueError('publication_fingerprint_payload_mismatch')
+  import sys
+  if str(ROOT) not in sys.path: sys.path.insert(0,str(ROOT))
+  from scripts.build_publication_fingerprint import build_fingerprint
+  expected_fingerprint=build_fingerprint((data/'latest.json').read_bytes())
+  if actual_fingerprint!=expected_fingerprint or actual_fingerprint!=build_fingerprint(lb): raise ValueError('publication_fingerprint_latest_mismatch')
+  fingerprint_verified=True
  if actual_latest!=expected_latest: raise ValueError('latest_payload_mismatch')
  if actual_index!=expected_index: raise ValueError('history_index_payload_mismatch')
  months=expected_index.get('months') or []
@@ -63,7 +77,7 @@ def verify(base_url,expected_dir):
     if hashlib.sha256(rb).hexdigest() != ref['sha256']: raise ValueError('history_revision_hash_mismatch')
     if rb!=(data/'archive/v1/revisions'/Path(ref['path']).name).read_bytes(): raise ValueError('history_revision_payload_mismatch')
  if not latest_found: raise ValueError('latest_history_record_missing')
- return {'valid':True,'baseUrl':base_url,'runId':expected_latest.get('runId'),'latestBytes':len(lb),'indexBytes':len(ib),'monthPath':latest_meta['path'],'monthBytes':latest_month_bytes,'monthsVerified':len(months)}
+ return {'valid':True,'baseUrl':base_url,'runId':expected_latest.get('runId'),'latestBytes':len(lb),'indexBytes':len(ib),'monthPath':latest_meta['path'],'monthBytes':latest_month_bytes,'monthsVerified':len(months),'publicationFingerprintVerified':fingerprint_verified}
 def main(argv=None):
  p=argparse.ArgumentParser(); p.add_argument('--base-url',required=True); p.add_argument('--expected-dir',type=Path,default=ROOT/'public/data'); a=p.parse_args(argv)
  try: result=verify(a.base_url,a.expected_dir)

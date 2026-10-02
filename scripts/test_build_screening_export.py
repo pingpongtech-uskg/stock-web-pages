@@ -9,6 +9,14 @@ def write_release(data,run='r1'):
     data.mkdir(exist_ok=True)
     release={'marketDate':'2026-10-02','generatedAt':'2026-10-02T10:00:00Z','runId':run,'freshness':'current',
         'formulaVersion':'v1','stocks':[{'code':'2330','name':'台積電','lastPrice':100}],
+        'coverage':{'universeCount':1},
+        'funnel':{'version':'funnel-v2-independent-trust-low-position','universe':1,'instrumentExcluded':0,
+            'pegCandidates':0,'growthCandidates':0,'strategyCandidates':{'trust':1,'growth':0,'lowPosition':0},
+            'growthCoverageVersion':'growth-coverage-v1','growthEvaluationState':'not_evaluable',
+            'growthInputComplete':0,'growthValuationComplete':0,'growthThresholdCandidates':0,
+            'growthHealthCandidates':0,'growthMissingReasons':[],
+            'growthTerminalOutcomes':{'universe':1,'missing':1,'knownInvalid':0,'extreme':0,
+                'belowThreshold':0,'healthBlocked':0,'selected':0}},
         'rankings':{'trust':[{'code':'2330','rank':1,'status':'pass','reason':'selected'}],'growth':[],'lowPosition':[]}}
     (data/'latest.json').write_text(json.dumps(release))
     detail=data/'releases'/run/'stocks';detail.mkdir(parents=True)

@@ -233,7 +233,11 @@ def test_successful_supplement_merges_and_resume_uses_cached_periods(tmp_path, m
     result = supplement_snapshot(['2330', '2317'], output, '2026-10-02', cache_dir=tmp_path / 'cache', budget_date='2026-10-02', token='secret')
     assert result['updated'] == 2
     assert result['requests'] == 9
-    assert result['queued'] == 0
+    # One EPS quarter, one revenue month, and stale PE per stock remain recoverable.
+    assert result['queued'] == 6
+    pending = json.loads((tmp_path / 'cache' / 'state.json').read_text())['queue']
+    assert {job['dataset'] for job in pending} == {'TaiwanStockFinancialStatements', 'TaiwanStockMonthRevenue', 'TaiwanStockPER'}
+    assert all(job['notBefore'] == '2026-10-09' for job in pending)
     stock = json.loads((directory / '2330.json').read_text())
     assert stock['healthInputs']['valuationCurrent']['pe'] == 20
     assert stock['healthInputs']['dividends'][0]['cashPerShare'] == 2
@@ -254,7 +258,7 @@ def test_partial_budget_leaves_whole_universe_and_resumable_queue(tmp_path, monk
     assert result['updated'] == 2
     assert result['skipped'] == 'BudgetExceeded'
     assert len(list(directory.glob('*.json'))) == 2
-    assert result['queued'] == 6
+    assert result['queued'] == 8  # Six untried jobs plus two partial EPS histories deferred for recovery.
     recovered = supplement_snapshot(['2330', '2317'], output, '2026-10-02', cache_dir=tmp_path / 'cache', budget_date='2026-10-02', token='secret')
     assert recovered['requests'] == 4
     assert recovered['skipped'] == 'BudgetExceeded'
@@ -281,7 +285,10 @@ def test_empty_response_cached_once_and_failed_dataset_keeps_queue(tmp_path, mon
     monkeypatch.setattr('urllib.request.urlopen', respond)
     result = supplement_snapshot(['2330'], output, '2026-10-02', cache_dir=tmp_path / 'cache', budget_date='2026-10-02', token='secret')
     assert result['skipped'] == 'dataset_unavailable'
-    assert result['queued'] == 3
+    assert result['queued'] == 4  # Three failed datasets plus the empty financial response.
+    pending = json.loads((tmp_path / 'cache' / 'state.json').read_text())['queue']
+    financial = next(job for job in pending if job['dataset'] == 'TaiwanStockFinancialStatements')
+    assert financial['notBefore'] == '2026-10-09'
     assert result['requests'] == 5
     cache = json.loads((tmp_path / 'cache' / 'rows.json').read_text())
     assert cache['2330:TaiwanStockFinancialStatements']['checkedPeriod'] == '2026-Q2'
@@ -350,7 +357,10 @@ def test_one_bad_symbol_does_not_block_all_remaining_financial_gaps(tmp_path, mo
     monkeypatch.setattr('time.sleep', lambda value: None)
     result = supplement_snapshot(['2330', '2317'], output, '2026-10-02', cache_dir=tmp_path / 'cache', budget_date='2026-10-02', token='secret')
     assert result['completed'] == 4
-    assert result['queued'] == 4
+    assert result['queued'] == 8  # Four failed jobs plus four incomplete source responses.
+    pending = json.loads((tmp_path / 'cache' / 'state.json').read_text())['queue']
+    assert len([job for job in pending if job.get('notBefore') == '2026-10-09']) == 4
+    assert len([job for job in pending if job['code'] == '2317']) == 4
     assert json.loads((directory / '2330.json').read_text())['financialInputs']['incomeStatement']
 
 

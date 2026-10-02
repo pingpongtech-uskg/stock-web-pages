@@ -96,6 +96,11 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          if [ -n "${FINMIND_TOKEN:-}" ]; then
+            echo "finmind_token_present=true"
+          else
+            echo "finmind_token_present=false"
+          fi
           BUDGET_DATE="$(python scripts/prepare_finmind_budget.py --previous-date "$BUDGET_DATE" --cache-dir .cache/finmind)"
           echo "BUDGET_DATE=$BUDGET_DATE" >> "$GITHUB_ENV"
           python scripts/fetch_finmind.py --supplement --output public/data --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --as-of "$MARKET_DATE" --max-requests 300 --max-runtime-seconds 1500
@@ -108,8 +113,10 @@ jobs:
       - name: Recompute from existing enriched inputs without network
         timeout-minutes: 5
         run: python scripts/refresh_snapshot.py --recompute-existing --as-of "$MARKET_DATE" --output public/data
-      - run: python scripts/verify_snapshot.py
+      - run: python scripts/verify_snapshot.py --require-growth-coverage
       - run: python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json
+      - name: Build lightweight publication fingerprint
+        run: python scripts/build_publication_fingerprint.py --market-date "$MARKET_DATE"
       - name: Build canonical screening export
         run: python scripts/build_screening_export.py --data-dir public/data --request-id "$REQUEST_ID" --market-date "$MARKET_DATE" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID"
       - run: python scripts/build_history_archive.py --require-export --as-of "$MARKET_DATE"
@@ -123,6 +130,8 @@ jobs:
       - run: npm run build
       - name: Recheck tracked universe before publish
         run: python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json --latest public/data/latest.json
+      - name: Verify publication fingerprint still matches exact snapshot bytes
+        run: python scripts/build_publication_fingerprint.py --check --market-date "$MARKET_DATE"
       - name: Publish validated release to main
         shell: bash
         run: |

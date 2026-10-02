@@ -19,6 +19,18 @@ function calendarOpen(rows,day) {
   const events=dates.filter(row=>row.iso===day);
   return !events.some(row=>!['開始交易日','最後交易日','國曆新年開始交易日','農曆春節前最後交易日','農曆春節後開始交易日'].includes(row.Name));
 }
+function latestCompletedSession(rows,now) {
+  const local=new Date(now+8*3600000);
+  const today=local.toISOString().slice(0,10);
+  calendarOpen(rows,today); // Validate the official payload even when today is closed.
+  const beforeClose=local.getUTCHours()*60+local.getUTCMinutes()<13*60+30;
+  for(let offset=beforeClose?1:0;offset<32;offset++) {
+    const day=new Date(Date.parse(today+'T00:00:00Z')-offset*86400000).toISOString().slice(0,10);
+    if(day.slice(0,4)!==today.slice(0,4)) throw Error('calendar_year_boundary');
+    if(calendarOpen(rows,day)) return day;
+  }
+  throw Error('completed_session_unavailable');
+}
 function selectRun(runs,state) {
   const title=`Daily screening | ${state.requestId} | ${state.marketDate}`;
   const matches=runs.filter(run=>run.display_title===title);
@@ -26,7 +38,7 @@ function selectRun(runs,state) {
   return matches[0]||null;
 }
 function result(state,op,delaySeconds=0.5) {
-  return {state:{...state,op},op,route:op?.target||'done',delaySeconds};
+  return {state:{...state,op},op,route:op?.target||'done',delaySeconds,ledgerRequired:['calendar','done'].includes(state.stage)};
 }
 function request(state,stage,target,method,url,body,delaySeconds=0.5) {
   return result({...state,stage},{target,method,url,body:body||{}},delaySeconds);
@@ -80,6 +92,7 @@ function next(state,now) {
     case 'dispatch':return request({...state,dispatchIntent:true},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate}});
     case 'pollRun':return request(state,'pollRun','github','GET',`${REPO}/actions/runs/${state.actionsRunId}`,null,15);
     case 'artifactList':return request(state,'artifactList','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);
+    case 'publicationExport':return request(state,'publicationExport','github','GET',`${REPO}/contents/public/data/screening-export.json?ref=${state.publication.publishedGitCommit}`);
     case 'legacyRef':return state.archiveCommit?archiveContents(state,'legacyIndex','/data/archive/v1/index.json'):request(state,'legacyRef','github','GET',`${REPO}/git/ref/heads/main`);
     case 'legacyExport':return archiveContents(state,'legacyExport',state.archivePath);
     case 'rootSchema':return request(state,'rootSchema','notion','GET',`https://api.notion.com/v1/data_sources/${ROOT_SOURCE}`);
@@ -105,7 +118,7 @@ function advance(original,response,now=Date.now()) {
   if(state.stage==='checkpoint') {
     if([409,422].includes(status)) return fail({...state,lockSha:undefined},'writer_conflict');
     if(status<200||status>=300) return done({...state,errorCategory:'checkpoint_failed',errorMessage:'State write ambiguous; resume reads GitHub state before any write.'});
-    return next({...state,lockSha:body.content.sha,stage:state.nextStage,retry:0},now);
+    return {...next({...state,lockSha:body.content.sha,stage:state.nextStage,retry:0},now),ledgerRequired:true};
   }
   if(status>=500||response?.error) {
     const readStage={createDaily:'findDaily',createDatabase:'findDatabase',createStock:'queryRows',appendSummary:'summaryRead'}[state.stage];
@@ -124,6 +137,10 @@ function advance(original,response,now=Date.now()) {
 function advanceSuccess(state,body,status,response,now) {
   switch(state.stage) {
     case 'calendar': {
+      if(state.resolveLatest&&state.mode!=='diagnose') {
+        const marketDate=latestCompletedSession(body,now);
+        state={...state,requestedAtDate:state.marketDate,marketDate,requestId:state.automaticRequestId?'stockscreener:'+marketDate.replaceAll('-','')+':v1':state.requestId,targetAt:Date.parse(marketDate+'T10:45:00Z'),overdueAt:Date.parse(marketDate+'T11:30:00Z')};
+      }
       const isOpen=calendarOpen(body,state.marketDate);
       if(state.mode==='diagnose') return request({...state,isOpen},'diagnoseDatabase','notion','GET',`https://api.notion.com/v1/databases/${ROOT_DATABASE}`);
       if(state.runKind==='scheduled'&&now>=state.operationDeadline) return done({...state,isOpen,errorCategory:'operation_overdue',errorMessage:'19:30 Asia/Taipei deadline passed; explicit manual resume is required.'});
@@ -147,7 +164,7 @@ function advanceSuccess(state,body,status,response,now) {
       if(existing?.requestId&&!sameRequest&&state.mode!=='revision') throw Error('request_correction_requires_revision');
       if(existing?.released&&sameRequest&&existing.screeningStatus==='complete'&&existing.notionStatus==='complete'&&existing.deployStatus==='verified') return done({...existing,owner:state.owner,screeningStatus:'already_complete'});
       const resume=sameRequest?existing:{};
-      const manualOverride=state.runKind==='manual'&&['resume','legacy_archive'].includes(state.mode)&&!!resume.requestId;
+      const manualOverride=state.runKind==='manual'&&['screen','resume','legacy_archive'].includes(state.mode)&&!!resume.requestId;
       const operationDeadline=manualOverride?state.operationDeadline:(resume.operationDeadline||state.operationDeadline);
       const audit=manualOverride?{scheduledCutoff:resume.scheduledCutoff||resume.overdueAt,manualDeadlineOverride:true,manualResumedAt:now}:{};
       const saved={...state,...resume,...audit,owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl};
@@ -195,7 +212,16 @@ function advanceSuccess(state,body,status,response,now) {
       if(payload.sourceGitCommit!==state.runHeadSha) throw Error('source_commit_lineage');
       for(const field of ['requestId','marketDate','runId','payloadHash','sourceGitCommit','actionsRunId']) if(publication[field]!==payload[field]) throw Error('publication_lineage:'+field);
       if(!/^[a-f0-9]{40}$/.test(publication.publishedGitCommit)) throw Error('publication_commit');
-      return checkpoint({...state,payload,publication,payloadHash:payload.payloadHash,runId:payload.runId,revision:payload.revision},'liveProbe');
+      return checkpoint({...state,payload,publication,payloadHash:payload.payloadHash,runId:payload.runId,revision:payload.revision,expectedCount:payload.selectedStocks.length},'publicationExport');
+    }
+    case 'publicationExport': {
+      const payload=validateExport(contentBytes(body),{marketDate:state.marketDate,requestId:state.requestId,actionsRunId:state.actionsRunId});
+      if(payload.payloadHash!==state.payloadHash||payload.sourceGitCommit!==state.runHeadSha||payload.runId!==state.runId)throw Error('published_export_lineage');
+      return request(state,'publicationMain','github','GET',`${REPO}/compare/${state.publication.publishedGitCommit}...main`);
+    }
+    case 'publicationMain': {
+      if(!['ahead','identical'].includes(body.status)||body.base_commit?.sha!==state.publication.publishedGitCommit)throw Error('publication_not_on_main');
+      return checkpoint({...state,publicationStatus:'verified'},'liveProbe');
     }
     case 'legacyRef': {
       if(!/^[a-f0-9]{40}$/.test(body.object?.sha))throw Error('archive_source_commit');
@@ -218,7 +244,7 @@ function advanceSuccess(state,body,status,response,now) {
     }
     case 'legacyExport': {
       const payload=validateLegacyArchive(contentBytes(body),state.archiveExpected);
-      return checkpoint({...state,payload,payloadHash:payload.payloadHash,runId:payload.runId,revision:payload.revision,screeningStatus:'complete'},'liveProbe');
+      return checkpoint({...state,payload,payloadHash:payload.payloadHash,runId:payload.runId,revision:payload.revision,expectedCount:payload.selectedStocks.length,screeningStatus:'complete',publicationStatus:'legacy_commit_verified'},'liveProbe');
     }
     case 'rootSchema': {
       if(body.properties?.['名稱']?.type!=='title') throw Error('notion_root_title');
@@ -305,7 +331,7 @@ function handleRows(state,body) {
   const pendingStocks=selected.filter(stock=>!keys.includes(`${state.payload.payloadHash}:${stock.code}`));
   if(state.stage==='verifyRows'&&pendingStocks.length) throw Error('archive_incomplete');
   if(pendingStocks.length) return createStock({...state,pendingStocks,archiveRows:[],cursor:undefined});
-  return checkpoint({...state,archiveRows:[],cursor:undefined,notionStatus:'rows_verified'},'summaryRead');
+  return checkpoint({...state,archiveRows:[],cursor:undefined,archivedCount:rows.length,notionStatus:'rows_verified'},'summaryRead');
 }
 function createStock(state) {return request(state,'createStock','notion','POST','https://api.notion.com/v1/pages',{parent:{type:'data_source_id',data_source_id:state.dataSourceId},properties:stockProperties(state.pendingStocks[0],state.payload)});}
 function finishNotion(state) {return request(state,'finishNotion','notion','PATCH',`https://api.notion.com/v1/pages/${state.pageId}`,{properties:{...rootProperties(state,'complete'),'Summary':{rich_text:richText(summary(state))}}});}
@@ -316,4 +342,4 @@ function deploymentResult(state,deployStatus,deployError,now) {
   return finishNotion(updated);
 }
 function liveUrl(state,now){return `${state.siteUrl}${state.archiveMethod==='legacy_archive'?state.archivePath:'/data/screening-export.json'}?run=${encodeURIComponent(state.actionsRunId||state.revision||'')}&t=${now}`;}
-if(typeof module!=='undefined') module.exports={start,advance,calendarOpen,selectRun,durable};
+if(typeof module!=='undefined') module.exports={start,advance,calendarOpen,latestCompletedSession,selectRun,durable};

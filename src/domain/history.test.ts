@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeHistoryQuery, filterHistoryRows, defaultHistoryRange, validateHistoryIndex, validateHistoryMonth, loadHistoryMonth } from './history'
+import { normalizeHistoryQuery, filterHistoryRows, defaultHistoryRange, validateHistoryIndex, validateHistoryMonth, loadHistoryMonth, historyGrowthCoverageSummary } from './history'
 
 describe('history query', () => {
   it('normalizes dates, full-width digits, strategy, and clamps range', () => {
@@ -22,6 +22,31 @@ describe('history schemas', () => {
   it('fails closed for malformed index and month', () => {
     expect(() => validateHistoryIndex({ schemaVersion: 'wrong' })).toThrow()
     expect(() => validateHistoryMonth({ schemaVersion: 'screening-history-month-v1', month: '2026-09', records: [] })).not.toThrow()
+  })
+
+  it('keeps legacy history coverage unavailable and shows the typed new coverage projection', () => {
+    const terminalOutcomes = { universe: 2, missing: 1, knownInvalid: 0, extreme: 0, belowThreshold: 0, healthBlocked: 0, selected: 1 }
+    const record = {
+      marketDate: '2050-04-01', generatedAt: '2050-04-01T01:00:00Z', runId: 'history-v1', revision: 'r1',
+      freshness: 'current', statusMessage: '', formulaVersions: {}, funnel: {}, strategies: { trust: [], growth: [], lowPosition: [] },
+      legacy: false,
+      growthCoverage: {
+        version: 'growth-coverage-v1' as const, evaluationState: 'partial' as const, inputComplete: 1,
+        valuationComplete: 1, thresholdCandidates: 1, healthCandidates: 1, candidates: 1,
+        missingReasons: [{ reason: 'dividendYield', count: 1 }], terminalOutcomes,
+      },
+    }
+    expect(validateHistoryMonth({ schemaVersion: 'screening-history-month-v1', month: '2050-04', records: [record] })).toMatchObject({ records: [{ growthCoverage: record.growthCoverage }] })
+    expect(historyGrowthCoverageSummary(record)).toContain('可計算 1 檔')
+    expect(historyGrowthCoverageSummary(record)).toContain('缺少輸入 1')
+
+    const legacy = { ...record, legacy: true, growthCoverage: undefined }
+    expect(historyGrowthCoverageSummary(legacy)).toContain('舊版歷史發布未提供成長覆蓋診斷')
+
+    expect(() => validateHistoryMonth({
+      schemaVersion: 'screening-history-month-v1', month: '2050-04',
+      records: [{ ...legacy, legacy: false }],
+    })).toThrow('歷史資料格式錯誤')
   })
 
   it('keys month requests by content path and retries after a failed request', async () => {

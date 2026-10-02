@@ -1,3 +1,4 @@
+const {growthFixture}=require('./growth-fixture.cjs');
 const test=require('node:test');const assert=require('node:assert/strict');const crypto=require('node:crypto');
 const {start,advance}=require('./engine.cjs');const {stockProperties,stockSchema}=require('./runtime.cjs');
 // Unit integration fixtures stay local. They are never sent to the real service.
@@ -5,7 +6,7 @@ const now=Date.parse('2026-10-02T10:00:00Z');
 function fixture(zero=false) {
   const strategies=zero?{trust:[],growth:[],lowPosition:[]}:{trust:[{code:'0050',rank:1}],growth:[],lowPosition:[]};
   const selectedStocks=zero?[]:[{code:'0050',name:'Local fixture',sector:'test',metrics:{currentPrice:100,growthMethod:'eps_growth'},strategies:[{strategy:'trust',rank:1,status:'ok',reason:''}],provenance:{marketDate:'2026-10-02',financialCutoff:'2026-Q2'}}];
-  const body={schemaVersion:'screening-export-v1',marketDate:'2026-10-02',generatedAt:'2026-10-02T10:00:00Z',requestId:'local-test',actionsRunId:'123',runId:'local-run',sourceGitCommit:'a'.repeat(40),revision:'b'.repeat(12),formulaVersions:{ranking:'v1'},legacy:false,freshness:'current',coverage:{},funnel:{},strategies,selectedStocks};
+  const body={schemaVersion:'screening-export-v1',marketDate:'2026-10-02',generatedAt:'2026-10-02T10:00:00Z',requestId:'local-test',actionsRunId:'123',runId:'local-run',sourceGitCommit:'a'.repeat(40),revision:'b'.repeat(12),formulaVersions:{ranking:'v1'},legacy:false,freshness:'current',coverage:{},funnel:growthFixture(),strategies,selectedStocks};
   const preimage=JSON.stringify(body);const payloadHash=crypto.createHash('sha256').update(preimage).digest('hex');
   const raw=preimage.slice(0,-1)+',"payloadHash":"'+payloadHash+'"}';
   return {raw,payload:{...body,payloadHash},publication:{requestId:body.requestId,marketDate:body.marketDate,runId:body.runId,actionsRunId:body.actionsRunId,sourceGitCommit:body.sourceGitCommit,publishedGitCommit:'c'.repeat(40),payloadHash}};
@@ -30,6 +31,8 @@ function world(options={}) {
       case 'artifactList':return ok({artifacts:[{id:456,name:'screening-export',expired:false,workflow_run:{id:123,head_sha:'a'.repeat(40)}}]});
       case 'artifactRedirect':return ok('',302,{location:'https://production.blob.core.windows.net/artifacts/file.zip?signature=local-only'});
       case 'artifactZip':return ok({rawExport:f.raw,publication:f.publication});
+      case 'publicationExport':return ok({encoding:'base64',size:Buffer.byteLength(f.raw),content:Buffer.from(f.raw).toString('base64')});
+      case 'publicationMain':return ok({status:'ahead',base_commit:{sha:f.publication.publishedGitCommit}});
       case 'liveProbe':
       case 'liveVerify':liveAttempts++;return options.deployDelayed&&liveAttempts<3?ok('{}'):ok(f.raw);
       case 'rootSchema':return ok({properties:schema});

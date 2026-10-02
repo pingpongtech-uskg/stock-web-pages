@@ -5,6 +5,8 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
+from pipeline.release_contract import common_share_universe, growth_coverage_error
+
 SCHEMA_VERSION = "screening-history-month-v1"
 INDEX_VERSION = "screening-history-index-v1"
 STRATEGIES = ("trust", "growth", "lowPosition")
@@ -53,6 +55,29 @@ def project_release_to_history(release: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(rows, list): raise ValueError("strategy must be a list")
         strategies[strategy] = [_row(row, i) for i, row in enumerate(rows, 1) if isinstance(row, dict)]
     funnel_in = release.get("funnel") if isinstance(release.get("funnel"), dict) else {}
+    coverage_version = funnel_in.get("growthCoverageVersion")
+    common_universe = common_share_universe(funnel_in) if coverage_version else None
+    coverage_error = growth_coverage_error(
+        funnel_in,
+        expected_universe=common_universe,
+    )
+    if coverage_error:
+        raise ValueError("invalid growth coverage: " + coverage_error)
+    growth_coverage = None
+    if coverage_version:
+        if common_universe is None:
+            raise ValueError("invalid growth coverage: growth_coverage_universe_source")
+        growth_coverage = {
+            "version": coverage_version,
+            "evaluationState": funnel_in["growthEvaluationState"],
+            "inputComplete": funnel_in["growthInputComplete"],
+            "valuationComplete": funnel_in["growthValuationComplete"],
+            "thresholdCandidates": funnel_in["growthThresholdCandidates"],
+            "healthCandidates": funnel_in["growthHealthCandidates"],
+            "candidates": funnel_in["growthCandidates"],
+            "missingReasons": funnel_in["growthMissingReasons"],
+            "terminalOutcomes": funnel_in["growthTerminalOutcomes"],
+        }
     funnel = {k: _int(funnel_in.get(k)) for k in ("universe", "priceComplete", "valuationComplete", "growthValuationComplete", "pegCandidates", "growthCandidates", "formalValuations", "proxyValuations")}
     sc = funnel_in.get("strategyCandidates") if isinstance(funnel_in.get("strategyCandidates"), dict) else {}
     funnel["strategyCandidates"] = {k: _int(sc.get(k)) for k in STRATEGIES}
@@ -61,8 +86,10 @@ def project_release_to_history(release: dict[str, Any]) -> dict[str, Any]:
     record = {"marketDate": str(release["marketDate"])[:10], "generatedAt": str(release.get("generatedAt", "")),
         "runId": str(release.get("runId", "")), "revision": "", "freshness": freshness,
         "statusMessage": str(release.get("statusMessage", "")), "formulaVersions": formula_versions,
-        "funnel": funnel, "strategies": strategies,
+        "funnel": funnel, "strategies": strategies, "legacy": growth_coverage is None,
         "sourceRefs": [str(x) for x in release.get("sourceRefs", [])] if isinstance(release.get("sourceRefs", []), list) else []}
+    if growth_coverage is not None:
+        record["growthCoverage"] = growth_coverage
     record["revision"] = revision_for_record(record)
     return record
 

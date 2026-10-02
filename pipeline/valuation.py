@@ -10,7 +10,7 @@ from collections import defaultdict
 from typing import Any
 from datetime import date
 from calendar import monthrange
-from pipeline.financial_periods import normalized_period, quarterly_income, compatible_rows, normalized_date
+from pipeline.financial_periods import normalized_period, quarterly_income, compatible_rows, normalized_date, gregorian_year, number, dividend_period
 
 PEG_ACCEPTABLE_MAX = 0.75
 PEG_STRICT_MAX = 0.66
@@ -125,19 +125,26 @@ def _annual_eps(rows: list[dict[str, Any]], as_of: str | None = None) -> dict[in
 
 def derive_ttm_eps(rows: list[dict[str, Any]], *, as_of: str | None = None) -> float | None:
     """Return four unique consecutive quarters on a comparable EPS basis."""
+    return _ttm_eps_evidence(rows, as_of=as_of)[0]
+
+
+def _ttm_eps_evidence(rows: list[dict[str, Any]], *, as_of: str | None = None) -> tuple[float | None, str | None]:
+    """Keep the unavailable reason aligned with the exact calculation guard."""
     normalized = quarterly_income(rows)
     window = normalized[-4:]
-    if len(window) < 4 or not compatible_rows(window, eps=True):
-        return None
+    if len(window) < 4:
+        return None, "insufficient_quarters"
+    if not compatible_rows(window, eps=True):
+        return None, "incomparable_quarters"
     keys = [normalized_period(row) for row in window]
     indices = [year * 4 + quarter for year, quarter in keys]
     if any(current != previous + 1 for previous, current in zip(indices, indices[1:])):
-        return None
+        return None, "nonconsecutive_quarters"
     eligible = _validated_eps_rows(window, as_of)
     if len(eligible) != 4:
-        return None
+        return None, "missing_or_unavailable_quarter_eps"
     total = sum(float(row["eps"]) for row in eligible)
-    return total if math.isfinite(total) and total > 0 else None
+    return (total, None) if math.isfinite(total) and total > 0 else (None, "nonpositive_ttm_eps")
 
 
 def derive_stable_eps_growth(
@@ -183,6 +190,44 @@ def derive_stable_eps_growth(
         "valid_years": len(years),
         "annual_eps": annual,
     }
+
+
+def derive_growth_inputs(detail: dict[str, Any]) -> dict[str, Any]:
+    """Share primary EPS/PE evidence between the producer and retrieval planner."""
+    health = detail.get("healthInputs") or {}
+    rows = quarterly_income(health.get("incomeQuarterly", []))
+    cutoff = normalized_date(detail.get("asOf"))
+    action_years = [gregorian_year(row.get("year")) for row in health.get("dividends", [])
+                    if isinstance(row, dict) and (number(row.get("stockPerShare")) or 0) > 0]
+    raw_dividends = (detail.get("financialInputs") or {}).get("dividend", [])
+    action_years += [(dividend_period(row.get("year")) or (gregorian_year(str(row.get("date") or "")[:4]), ""))[0]
+                     for row in raw_dividends if isinstance(row, dict) and any(
+                         (number(row.get(key)) or 0) > 0
+                         for key in ("StockEarningsDistribution", "StockStatutorySurplus"))]
+    periods = [row["year"] for row in rows]
+    if periods and any(year is not None and min(periods) <= year <= max(periods) for year in action_years):
+        rows = [{**row, "epsComparable": False} if not row.get("epsBasis") else row for row in rows]
+    growth = derive_stable_eps_growth(rows, as_of=cutoff)
+    eps, eps_reason = _ttm_eps_evidence(rows, as_of=cutoff)
+    price = _finite(detail.get("lastPrice")) if cutoff else None
+    price_origin = "reported" if price is not None and price > 0 else "unavailable"
+    quotes = [row for row in detail.get("priceSeries", []) if isinstance(row, dict)]
+    if quotes:
+        matching = [row for row in quotes if normalized_date(row.get("date")) == cutoff]
+        closes = [number(row.get("close")) for row in matching]
+        price = next((value for value in reversed(closes) if value is not None and value > 0), None)
+        price_origin = "reported" if price is not None else "proxy" if any(number(row.get("adjustedClose")) is not None for row in matching) else "unavailable"
+    valuation = health.get("valuationCurrent") or {}
+    reported_pe = number(valuation.get("pe"))
+    same_day_pe = normalized_date(valuation.get("date")) == cutoff
+    pe = reported_pe if same_day_pe and reported_pe is not None and reported_pe > 0 else None
+    pe_origin = "reported" if pe is not None else "unavailable"
+    if pe is None and eps is not None and price is not None and price > 0:
+        pe, pe_origin = price / eps, "derived"
+    return {"rows": rows, "growth": growth, "ttm_eps": eps, "current_price": price,
+            "current_pe": pe, "price_origin": price_origin, "pe_origin": pe_origin,
+            "cutoff": cutoff, "reported_pe": reported_pe, "same_day_pe": same_day_pe,
+            "ttm_eps_reason": eps_reason}
 
 
 def calculate_growth_total_return_valuation(

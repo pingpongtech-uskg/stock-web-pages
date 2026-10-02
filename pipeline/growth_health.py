@@ -21,6 +21,18 @@ CHECK_LABELS = (
 )
 
 
+def growth_health_qualifies(category: object) -> bool:
+    """Require four distinct confirmed passes from the actual five checks."""
+    if not isinstance(category, dict):
+        return False
+    checks = category.get("checks")
+    if not isinstance(checks, list) or len(checks) != len(CHECK_LABELS) or any(not isinstance(check, dict) for check in checks):
+        return False
+    if any(not isinstance(check.get("label"), str) or check.get("status") not in ("pass", "fail", "unknown") for check in checks):
+        return False
+    return {check["label"] for check in checks} == set(CHECK_LABELS) and sum(check["status"] == "pass" for check in checks) >= 4
+
+
 def _number(value: Any) -> float | None:
     try:
         number = float(value)

@@ -121,7 +121,7 @@ def dividend_period(value: Any, year: Any = None) -> tuple[int, str] | None:
     if year is not None and text in {"ANNUAL", "Q1", "Q2", "Q3", "Q4", "H1", "H2"}:
         normalized_year = gregorian_year(year)
         return (normalized_year, "annual" if text == "ANNUAL" else text) if normalized_year else None
-    if year is not None and (text in {"年度", "全年", "上半年度", "下半年度"} or re.fullmatch(r"第[1-4]季", text)):
+    if year is not None and (text in {"年度", "全年", "上半年", "下半年", "上半年度", "下半年度"} or re.fullmatch(r"第[1-4]季", text)):
         text = str(year) + ("年全年" if text == "全年" else text)
     annual = re.fullmatch(r"(\d{2,4})(?:年(?:度|全年)?)?", text)
     quarter = re.fullmatch(r"(\d{2,4})(?:年?第?)?(?:Q([1-4])|([1-4])季)", text)

@@ -1,6 +1,6 @@
 import pytest
 
-from pipeline.release_contract import compute_funnel, is_common_stock_code
+from pipeline.release_contract import compute_funnel, growth_coverage_error, is_common_stock_code
 
 
 def valuation(*, proxy: bool = True, below: bool = True) -> dict[str, object]:
@@ -57,15 +57,82 @@ def test_compute_funnel_keeps_trust_and_low_position_independent_of_peg_pool():
     assert funnel["strategyCandidates"] == {"trust": 10, "growth": 0, "lowPosition": 4}
 
 
-def test_compute_funnel_rejects_a_growth_count_beyond_the_peg_pool():
-    with pytest.raises(ValueError):
-        compute_funnel(
-            universe=100,
-            price_complete=7,
-            instrument_excluded=0,
-            valuations=[valuation()],
-            strategy_counts={"growth": 2},
-        )
+def test_compute_funnel_allows_growth_independent_of_the_peg_pool():
+    funnel = compute_funnel(
+        universe=100,
+        price_complete=7,
+        instrument_excluded=0,
+        valuations=[valuation()],
+        strategy_counts={"growth": 2},
+    )
+
+    assert funnel["pegCandidates"] == 1
+    assert funnel["growthCandidates"] == 2
+
+
+def growth_coverage(*, outcomes=None):
+    return {
+        "growthCoverageVersion": "growth-coverage-v1",
+        "growthEvaluationState": "partial",
+        "growthInputComplete": 2,
+        "growthValuationComplete": 1,
+        "growthThresholdCandidates": 1,
+        "growthHealthCandidates": 1,
+        "growthCandidates": 1,
+        "growthMissingReasons": [],
+        "growthTerminalOutcomes": outcomes or {
+            "universe": 2,
+            "missing": 1,
+            "knownInvalid": 0,
+            "extreme": 0,
+            "belowThreshold": 0,
+            "healthBlocked": 0,
+            "selected": 1,
+        },
+    }
+
+
+def test_growth_coverage_is_independent_of_peg_candidates():
+    funnel = {
+        "version": "funnel-v2-independent-trust-low-position",
+        "universe": 2,
+        "pegCandidates": 0,
+        "growthCandidates": 1,
+        "growthCoverageVersion": "growth-coverage-v1",
+        **{k: v for k, v in growth_coverage().items() if k != "growthCoverageVersion"},
+    }
+
+    assert growth_coverage_error(funnel, required=True, expected_universe=2) is None
+
+
+def test_growth_coverage_rejects_missing_marker_negative_count_and_nonconservation():
+    valid = growth_coverage()
+    assert growth_coverage_error({key: value for key, value in valid.items() if key != "growthCoverageVersion"}) == "growth_coverage_version"
+    assert growth_coverage_error({**valid, "growthInputComplete": -1}, expected_universe=2) == "growth_coverage_count:growthInputComplete"
+    broken = {
+        **valid,
+        "growthTerminalOutcomes": {**valid["growthTerminalOutcomes"], "missing": 2},
+    }
+    assert growth_coverage_error(broken, expected_universe=2) == "growth_coverage_terminal_conservation"
+
+
+def test_legacy_funnel_is_accepted_without_reinterpreting_old_growth_zero():
+    legacy = {
+        "version": "funnel-v2-independent-trust-low-position",
+        "growthValuationComplete": 0,
+        "growthCandidates": 0,
+    }
+    assert growth_coverage_error(legacy) is None
+    assert growth_coverage_error(legacy, required=True) == "growth_coverage_required"
+
+
+def test_unversioned_new_missing_reasons_are_not_mistaken_for_legacy():
+    legacy_with_partial_v1 = {
+        "version": "funnel-v2-independent-trust-low-position",
+        "growthCandidates": 0,
+        "growthMissingReasons": [{"reason": "missing inputs", "count": 1}],
+    }
+    assert growth_coverage_error(legacy_with_partial_v1) == "growth_coverage_version"
 
 
 def test_common_stock_code_filter_separates_etf_and_etn_codes():

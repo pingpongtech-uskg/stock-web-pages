@@ -116,7 +116,7 @@ describe('StrategyCard', () => {
     expect(markup).toContain('0.52')
     expect(markup).toContain('PEG 0.66 價值帶')
     expect(markup).toContain('https://statementdog.com/analysis/2330/stock-health-check')
-    expect(markup).not.toContain('通過')
+    expect(markup).not.toContain('成長健康：通過')
     expect(markup).not.toContain('未知')
   })
 
@@ -208,7 +208,7 @@ describe('StrategyCard', () => {
     expect(markup).toContain('現在價格')
     expect(markup).toContain('目前 PEG')
     expect(markup).toContain('PEG 不可用')
-    expect(markup).not.toContain('通過')
+    expect(markup).not.toContain('成長健康：通過')
   })
 
   it('marks a trust top10 newcomer without changing PEG display', () => {

@@ -6,10 +6,46 @@ from scripts.refresh_snapshot import next_expected_update_for_market_date
 import pytest
 
 
-def test_growth_health_requires_four_known_passes():
-    assert growth_health_qualifies({"status": "pass", "passCount": 4, "total": 5}) is True
-    assert growth_health_qualifies({"status": "unknown", "passCount": 4, "total": 5}) is False
-    assert growth_health_qualifies({"status": "pass", "passCount": 3, "total": 5}) is False
+@pytest.mark.parametrize("monthly_ratio,missing_amount,passes,eligible", [
+    (1.01, False, 5, True), (.99, False, 4, True),
+    (None, False, 4, True), (None, True, 3, False),
+])
+def test_growth_health_counts_real_checks_without_aggregate_status_gate(monthly_ratio, missing_amount, passes, eligible):
+    from pipeline.growth_health import evaluate_growth_health
+    income = [{"year": year, "quarter": 2, "grossProfit": 100 * factor,
+               "operatingProfit": 80 * factor, "pretaxProfit": 70 * factor, "netIncome": 60 * factor}
+              for year, factor in ((2025, 1), (2026, 1.2))]
+    if missing_amount:
+        income[-1].pop("grossProfit")
+    monthly = [{"month": f"{year}-{month:02d}", "revenue": 100 * factor}
+               for year, factor in ((2025, 1), (2026, monthly_ratio or 1)) for month in (6, 7, 8)] if monthly_ratio else []
+    evidence = evaluate_growth_health(monthly, income)
+    assert evidence["passCount"] == passes
+    assert growth_health_qualifies(evidence) is eligible
+
+
+def test_growth_health_does_not_trust_aggregate_pass_count_without_real_checks():
+    assert growth_health_qualifies({"status": "pass", "passCount": 5, "total": 5}) is False
+
+
+@pytest.mark.parametrize("malformation", ["duplicate", "missing_label", "invalid_status", "unhashable_label", "unhashable_status"])
+def test_growth_health_rejects_malformed_five_check_evidence(malformation):
+    from pipeline.growth_health import evaluate_growth_health
+    income = [{"year": year, "quarter": 2, "grossProfit": 100 * factor,
+               "operatingProfit": 80 * factor, "pretaxProfit": 70 * factor, "netIncome": 60 * factor}
+              for year, factor in ((2025, 1), (2026, 1.2))]
+    evidence = evaluate_growth_health([], income)
+    if malformation == "duplicate":
+        evidence["checks"][-1] = dict(evidence["checks"][-2])
+    elif malformation == "missing_label":
+        evidence["checks"][-1].pop("label")
+    elif malformation == "unhashable_label":
+        evidence["checks"][-1]["label"] = []
+    elif malformation == "unhashable_status":
+        evidence["checks"][0]["status"] = []
+    else:
+        evidence["checks"][0]["status"] = "complete"
+    assert growth_health_qualifies(evidence) is False
 
 
 def test_next_expected_update_skips_weekend_after_friday_market_date():
@@ -229,6 +265,7 @@ def test_three_month_growth_does_not_use_nonconsecutive_months():
 
 def test_growth_funnel_counts_input_calculation_threshold_health_separately():
     from scripts.refresh_snapshot import growth_funnel
+    from pipeline.growth_health import CHECK_LABELS
     valuations = [
         {"status": "unavailable", "inputsComplete": False, "missingReasons": ["pe", "ttmEps"]},
         {"status": "extreme", "inputsComplete": True, "total_return_pe": 3},
@@ -237,6 +274,9 @@ def test_growth_funnel_counts_input_calculation_threshold_health_separately():
         {"status": "available", "inputsComplete": True, "total_return_pe": 1.4},
     ]
     details = [{"code": str(2000+i), "growthValuation": value, "growthHealthEligible": i == 4} for i,value in enumerate(valuations)]
+    details[-1]["healthCategories"] = [{"key": "growth", "checks": [
+        {"label": label, "status": "pass" if i < 4 else "unknown"}
+        for i, label in enumerate(CHECK_LABELS)]}]
     result = growth_funnel(details)
     assert result["growthInputComplete"] == 4
     assert result["growthValuationComplete"] == 3
@@ -244,7 +284,17 @@ def test_growth_funnel_counts_input_calculation_threshold_health_separately():
     assert result["growthHealthCandidates"] == 1
     reasons = {row["reason"]: row["count"] for row in result["growthMissingReasons"]}
     assert reasons["pe"] == 1 and reasons["ttmEps"] == 1
-    assert reasons["extreme"] == 1 and reasons["threshold"] == 1 and reasons["health"] == 1
+    assert result["growthTerminalOutcomes"] == {"universe": 5, "missing": 1, "knownInvalid": 0,
+        "extreme": 1, "belowThreshold": 1, "healthBlocked": 1, "selected": 1}
+
+
+@pytest.mark.parametrize("available", ["2026-01", "2026-01-invalid"])
+def test_dividend_confirmation_requires_a_complete_real_day(available):
+    from scripts.refresh_snapshot import _dividend_evidence
+    detail = {"asOf": "2026-10-01", "healthInputs": {"dividends": [
+        {"year": 2025, "period": "annual", "confirmed": True, "cashPerShare": 4,
+         "availableAt": available}]}}
+    assert _dividend_evidence(detail, 100)["value"] is None
 
 
 def test_known_stock_dividend_blocks_unadjusted_quarter_eps():
@@ -256,6 +306,23 @@ def test_known_stock_dividend_blocks_unadjusted_quarter_eps():
     result = _growth_valuation_from_detail(detail)
     assert result["ttm_eps"] is None
     assert result["earnings_growth"] is None
+
+
+@pytest.mark.parametrize("case,reason", [("gap", "nonconsecutive_quarters"), ("incomparable", "incomparable_quarters")])
+def test_growth_audit_explains_unavailable_quarter_eps(case, reason):
+    from scripts.refresh_snapshot import _growth_valuation_from_detail
+    income = [{"year": y, "quarter": q, "eps": 1.2 ** (y-2022)}
+              for y in (2022, 2023, 2024, 2025) for q in (1, 2, 3, 4)]
+    if case == "gap":
+        income.pop(-2)
+    else:
+        income[-1]["epsComparable"] = False
+    result = _growth_valuation_from_detail({"asOf": "2026-10-01", "lastPrice": 100,
+        "healthInputs": {"incomeQuarterly": income}})
+    assert result["ttm_eps"] is None
+    assert result["inputAudit"]["ttmEps"]["origin"] == "unavailable"
+    assert result["inputAudit"]["ttmEps"]["reason"] == reason
+    assert result["inputAudit"]["earningsGrowth"]["reason"] == "完整年度 EPS 資料不足"
 
 
 def test_cached_recompute_has_no_network_and_selects_growth_without_15_percent_revenue(tmp_path, monkeypatch):
@@ -553,3 +620,109 @@ def test_metadata_only_quarter_overlay_preserves_derived_values_and_provenance()
          "grossProfit": None, "source": "FinMind fixture", "amountUnit": "TWD"},
     ]})["incomeQuarterly"][0]
     assert row == original
+
+
+@pytest.mark.parametrize("label,expected", [("上半年", "H1"), ("下半年", "H2")])
+def test_dividend_period_accepts_separate_roc_year_and_observed_half_label(label, expected):
+    from pipeline.financial_periods import dividend_period
+    assert dividend_period(label, "114") == (2025, expected)
+
+
+@pytest.mark.parametrize("price_case,selected", [("adjusted", True), ("short", False), ("raw", False)])
+def test_low_position_keeps_eligible_price_observation_with_unknown_financials(tmp_path, monkeypatch, price_case, selected):
+    import json
+    from datetime import date, timedelta
+    import scripts.refresh_snapshot as refresh
+    data = tmp_path / "public" / "data"
+    data.mkdir(parents=True)
+    start, end = date(2023, 4, 3), date(2026, 10, 1)
+    days = [start + timedelta(days=i) for i in range((end - start).days + 1)
+            if (start + timedelta(days=i)).weekday() < 5]
+    prices = []
+    for i, day in enumerate(days):
+        close = 100 + i * .05 - (3 if i >= len(days) - 50 else 0) - (2 if i == len(days) - 1 else 0)
+        prices.append({"date": day.isoformat(), "close": close, "volume": 1000,
+                       **({"adjustedClose": close, "source": refresh.YFINANCE_PRICE_SOURCE} if price_case != "raw" else {})})
+    detail = {"code": "2330", "name": "Price fixture", "asOf": end.isoformat(),
+              "priceSeries": prices[-120:] if price_case == "short" else prices}
+    (data / "latest.json").write_text(json.dumps({"runId": "fixture", "marketDate": end.isoformat(),
+        "stocks": [detail], "freshness": "current"}))
+    def no_network(*args, **kwargs):
+        raise AssertionError("price observation recompute fetched network")
+    for key in ("build_health_inputs", "fetch_adjusted_history", "fetch_fundamental_proxies", "build_00631l_volume_indicator"):
+        monkeypatch.setattr(refresh, key, no_network)
+    result = refresh.build_release(data, [], as_of=end.isoformat(), offline=False, recompute_existing=True)
+    release = json.loads((data / "latest.json").read_text())
+    stock = json.loads((data / "releases" / result["run_id"] / "stocks" / "2330.json").read_text())
+    assert stock["growthValuation"]["ttm_eps"] is None
+    assert stock["growthHealthEligible"] is False
+    assert (stock["regression"]["signalEligible"] is True) is selected
+    assert stock["zScore"] <= 0 and stock["slope"] > 0
+    assert bool(release["rankings"]["lowPosition"]) is selected
+    assert release["funnel"]["strategyCandidates"]["lowPosition"] == int(selected)
+
+
+@pytest.mark.parametrize("health_case,expected_passes,selected", [
+    ("5P", 5, True), ("4P1F", 4, True), ("4P1U", 4, True), ("3P2U", 3, False),
+])
+def test_real_shaped_financial_inputs_positive_half_dividends_reach_release_and_export(tmp_path, monkeypatch, health_case, expected_passes, selected):
+    import json
+    from calendar import monthrange
+    import scripts.refresh_snapshot as refresh
+    from pipeline.health_inputs import normalize_finmind_health_inputs
+    from pipeline.twse_public import _dividend
+    from pipeline.screening_export import build_export, validate_export
+    raw_income = []
+    for year in range(2022, 2027):
+        for quarter in range(1, 5 if year < 2026 else 3):
+            day = f"{year}-{quarter * 3:02d}-{monthrange(year, quarter * 3)[1]}"
+            for field, base in (("EPS", 1), ("GrossProfit", 100), ("OperatingIncome", 80),
+                                ("PreTaxIncome", 70), ("IncomeAfterTaxes", 60)):
+                if health_case == "3P2U" and (year, quarter, field) == (2026, 2, "GrossProfit"):
+                    continue
+                raw_income.append({"date": day, "stock_id": "2330", "type": field,
+                                   "value": base * 1.2 ** (year - 2022)})
+    raw_revenue = [] if health_case in {"4P1U", "3P2U"} else [
+        {"revenue_year": year, "revenue_month": month, "revenue": 100 if year == 2025 else 99 if health_case == "4P1F" else 101}
+        for year in (2025, 2026) for month in (6, 7, 8)]
+    financial = {"incomeStatement": raw_income}
+    health = normalize_finmind_health_inputs(financial, raw_revenue)
+    health["dividends"] = [_dividend({
+        "股利年度": "114", "股利所屬年(季)度": period,
+        "股東配發-盈餘分配之現金股利(元/股)": cash,
+        "股東配發-法定盈餘公積、資本公積之現金(元/股)": surplus,
+        "股東會日期": approved, "出表日期": published,
+    }) for period, cash, surplus, approved, published in (
+        ("上半年", "1.5", ".5", "115/03/18", "115/03/20"),
+        ("下半年", "2", "0", "115/04/18", "115/04/20"),
+    )]
+    health["valuationCurrent"] = {"date": "2026-10-01", "pe": 13, "source": "TWSE fixture"}
+    detail = {"code": "2330", "name": "Financial fixture", "asOf": "2026-10-01", "lastPrice": 80,
+              "financialInputs": financial, "healthInputs": health,
+              "priceSeries": [{"date": "2026-10-01", "close": 80, "adjustedClose": 80, "volume": 100}]}
+    data = tmp_path / "public" / "data"
+    data.mkdir(parents=True)
+    (data / "latest.json").write_text(json.dumps({"runId": "fixture", "marketDate": "2026-10-01",
+        "freshness": "current", "stocks": [detail]}))
+    def no_network(*args, **kwargs):
+        raise AssertionError("financial fixture recompute fetched network")
+    for key in ("build_health_inputs", "fetch_adjusted_history", "fetch_fundamental_proxies", "build_00631l_volume_indicator"):
+        monkeypatch.setattr(refresh, key, no_network)
+    result = refresh.build_release(data, [], as_of="2026-10-01", offline=False, recompute_existing=True)
+    release = json.loads((data / "latest.json").read_text())
+    stock = json.loads((data / "releases" / result["run_id"] / "stocks" / "2330.json").read_text())
+    assert stock["growthHealthPassCount"] == expected_passes
+    assert stock["growthHealthEligible"] is selected
+    assert stock["growthValuation"]["status"] == "available"
+    assert stock["growthValuation"]["dividend_yield"] == .05
+    assert stock["growthValuation"]["inputAudit"]["dividendYield"]["sourcePeriod"] == "2025"
+    assert stock["growthValuation"]["total_return_pe"] == pytest.approx(21 / 13)
+    assert bool(release["rankings"]["growth"]) is selected
+    assert release["funnel"]["growthCoverageVersion"] == "growth-coverage-v1"
+    assert release["funnel"]["growthTerminalOutcomes"]["selected"] == int(selected)
+    export = build_export(release, request_id="fixture", source_git_commit="a" * 40, actions_run_id="1", details={"2330": stock})
+    assert validate_export(export) == []
+    assert {item["code"] for item in export["selectedStocks"]} == ({"2330"} if selected else set())
+    if selected:
+        assert export["selectedStocks"][0]["metrics"]["dividendYield"] == .05
+        assert export["selectedStocks"][0]["provenance"]["inputOrigins"]["ttmEps"]["origin"] == "derived"
