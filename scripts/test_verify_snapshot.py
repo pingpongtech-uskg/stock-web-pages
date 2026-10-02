@@ -189,6 +189,7 @@ def test_daily_workflow_runs_v3_refresh_and_gate() -> None:
     universe_gate = workflow.index(
         "python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json"
     )
+    as_of_assignment = workflow.find("AS_OF=")
     refresh = workflow.index("python scripts/refresh_snapshot.py")
     verify = workflow.index("python scripts/verify_snapshot.py")
     freshness = workflow.index("python scripts/verify_daily_freshness.py")
@@ -202,8 +203,13 @@ def test_daily_workflow_runs_v3_refresh_and_gate() -> None:
     )
     publish = workflow.index("git add config/tracked_symbols.json public/data")
 
+    assert as_of_assignment >= 0, "refresh must pin its query end to the official complete market date"
+    as_of_block = workflow[as_of_assignment:refresh]
+    assert '"config/tracked_symbols.json"' in as_of_block
+    assert '["universe"]["marketDates"][0]' in as_of_block
+    assert 'python scripts/refresh_snapshot.py --as-of "$AS_OF"' in workflow[refresh:verify]
+    assert universe_fetch < universe_gate < as_of_assignment < refresh < verify < freshness
     assert fetch_finmind < refresh < verify < freshness
-    assert universe_fetch < universe_gate < refresh
     assert "--offline" not in workflow
     assert pytest_gate < vitest_gate < typecheck_gate < build < final_universe_gate < publish
     assert workflow.count("python scripts/verify_tracked_universe.py") == 2

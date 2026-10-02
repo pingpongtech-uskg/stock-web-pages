@@ -58,9 +58,11 @@ jobs:
         run: |
           set -euo pipefail
           # Both modes are live. FinMind enriches the public-source refresh
-          # when configured; without it, Yahoo/TWSE/TPEx still fetch current
-          # prices, regression inputs, valuation inputs, and official flows.
-          python scripts/refresh_snapshot.py --output public/data --ownership-snapshot .cache/ownership_snapshot.json
+          # when configured; otherwise Yahoo/TWSE/TPEx remain the public sources.
+          # Pin every source to the latest fully completed Taiwan session.
+          AS_OF="$(python -c 'import json; print(json.load(open("config/tracked_symbols.json", encoding="utf-8"))["universe"]["marketDates"][0])')"
+          echo "Using official complete market date: $AS_OF"
+          python scripts/refresh_snapshot.py --as-of "$AS_OF" --output public/data --ownership-snapshot .cache/ownership_snapshot.json
       - run: python scripts/verify_snapshot.py
       - run: python scripts/verify_daily_freshness.py --data-dir public/data --config config/tracked_symbols.json
       - run: python scripts/build_history_archive.py
