@@ -58,6 +58,7 @@ def forbid_live_http(monkeypatch):
             return cls(2026, 10, 2, 18, 0, tzinfo=cli.TAIPEI).astimezone(tz)
 
     monkeypatch.setattr(cli, 'datetime', FixtureDateTime)
+    monkeypatch.setattr('pipeline.finmind_incremental.current_taipei_day', lambda: '2026-10-02', raising=False)
     def forbidden(*args, **kwargs):
         pytest.fail('CLI test attempted live HTTP')
     monkeypatch.setattr('urllib.request.urlopen', forbidden)

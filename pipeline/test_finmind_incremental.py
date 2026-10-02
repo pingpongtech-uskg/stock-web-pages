@@ -1,11 +1,90 @@
 import json
 from pathlib import Path
 import urllib.error
+import uuid
+from datetime import datetime
 
 import pytest
 
 from pipeline.finmind_client import BudgetExceeded, FinMindClient, FinMindError, SourceBlocked
-from pipeline.finmind_incremental import DailyBudget, merge_raw_rows, plan_gaps, supplement_snapshot
+from pipeline.finmind_incremental import DailyBudget, current_taipei_day, merge_raw_rows, plan_gaps, supplement_snapshot
+
+
+@pytest.fixture(autouse=True)
+def fixed_budget_clock(monkeypatch):
+    monkeypatch.setattr('pipeline.finmind_incremental.current_taipei_day', lambda: '2026-10-02', raising=False)
+
+
+@pytest.mark.parametrize('utc_time, expected', [('2020-01-01T15:59:59+00:00', '2020-01-01'),
+                                              ('2020-01-01T16:00:00+00:00', '2020-01-02')])
+def test_default_budget_clock_uses_taipei_midnight(monkeypatch, utc_time, expected):
+    from pipeline import finmind_incremental
+    instant = datetime.fromisoformat(utc_time)
+
+    class FixtureDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return instant.astimezone(tz)
+
+    monkeypatch.setattr(finmind_incremental, 'datetime', FixtureDateTime)
+    # The imported binding retains the actual clock despite the request fixture.
+    assert current_taipei_day() == expected
+
+
+def test_midnight_stops_old_day_ledger_without_creating_new_day_allowance(tmp_path, monkeypatch):
+    day = ['2026-10-02']
+    monkeypatch.setattr('pipeline.finmind_incremental.current_taipei_day', lambda: day[0], raising=False)
+    state = DailyBudget(tmp_path / 'state.json', day[0])
+    jobs = [{'code': '2330', 'dataset': 'TaiwanStockFinancialStatements'}]
+    state.queue(jobs)
+    state.consume()
+    day[0] = '2026-10-03'
+    with pytest.raises(BudgetExceeded, match='date changed'):
+        state.consume()
+    checkpoint = json.loads(state.path.read_text())
+    assert checkpoint['days']['2026-10-02']['attempts'] == 1
+    assert checkpoint['days']['2026-10-02']['stoppedReason'] == 'budget_date_changed'
+    assert '2026-10-03' not in checkpoint['days']
+    assert checkpoint['queue'] == jobs
+
+
+@pytest.mark.parametrize('phase', ['quota_retry', 'data_retry', 'rate_wait', 'after_quota'])
+def test_crossing_midnight_stops_http_and_preserves_supplement_queue(tmp_path, monkeypatch, phase):
+    day = ['2026-10-02']
+    monkeypatch.setattr('pipeline.finmind_incremental.current_taipei_day', lambda: day[0], raising=False)
+    output, _ = fixture_release(tmp_path)
+    calls = []
+    waits = []
+
+    def respond(request, **kwargs):
+        calls.append(request.full_url)
+        if request.full_url.endswith('/v2/user_info'):
+            if phase == 'quota_retry':
+                raise urllib.error.URLError('fixture outage')
+            if phase == 'after_quota':
+                day[0] = '2026-10-03'
+            return Response({'api_request_limit': 1000, 'user_count': 0})
+        raise urllib.error.URLError('fixture outage')
+
+    def rate_wait(self):
+        waits.append(True)
+        if phase == 'rate_wait' and len(waits) == 2:
+            day[0] = '2026-10-03'
+
+    monkeypatch.setattr('urllib.request.urlopen', respond)
+    monkeypatch.setattr(FinMindClient, '_wait_for_rate', rate_wait)
+    monkeypatch.setattr('time.sleep', lambda seconds: day.__setitem__(0, '2026-10-03'))
+    result = supplement_snapshot(['2330'], output, '2026-10-02', cache_dir=tmp_path / 'cache',
+                                 budget_date='2026-10-02', token=str(uuid.uuid4()))
+    expected = 2 if phase == 'data_retry' else 1
+    assert len(calls) == expected
+    assert result['requests'] == expected
+    assert result['skipped'] == 'BudgetExceeded'
+    assert result['queued'] > 0 and result['completed'] == 0
+    checkpoint = json.loads((tmp_path / 'cache' / 'state.json').read_text())
+    assert checkpoint['queue']
+    assert set(checkpoint['days']) == {'2026-10-02'}
+    assert checkpoint['days']['2026-10-02']['stoppedReason'] == 'budget_date_changed'
 
 
 def detail(code='2330'):

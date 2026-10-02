@@ -26,6 +26,10 @@ PER = 'TaiwanStockPER'
 DIVIDEND = 'TaiwanStockDividend'
 
 
+def current_taipei_day() -> str:
+    return datetime.now(timezone(timedelta(hours=8))).date().isoformat()
+
+
 def atomic_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + '.tmp')
@@ -76,6 +80,11 @@ class DailyBudget:
         return min(self.record['ceiling'], self.record.get('accountCeiling', self.record['ceiling']))
 
     def consume(self, *, require_known: bool = False) -> None:
+        if current_taipei_day() != self.day:
+            self.record = {**self.record, 'stoppedReason': 'budget_date_changed',
+                           'stoppedAt': datetime.now(timezone.utc).isoformat()}
+            self.save()
+            raise BudgetExceeded('FinMind budget date changed; retain checkpoint and resume with a new run')
         if self.used >= self.record['ceiling']:
             raise BudgetExceeded('FinMind project daily request allowance exhausted')
         deferred = time.time() < self.state.get('retryNotBefore', 0)

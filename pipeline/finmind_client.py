@@ -208,6 +208,8 @@ class FinMindClient:
         for attempt in range(1, self.max_attempts + 1):
             if self.blocked:
                 raise SourceBlocked(self.blocked_reason or "FinMind source is blocked")
+            # Check and checkpoint the budget after waits, immediately before HTTP.
+            self._wait_for_rate()
             if count_attempt:
                 if self.daily_budget:
                     self.daily_budget.consume(require_known=url == DATA_URL)
@@ -217,7 +219,6 @@ class FinMindClient:
                     self._initial_attempts += 1
                 else:
                     self.budget.consume()
-            self._wait_for_rate()
             query = urllib.parse.urlencode(params)
             request = urllib.request.Request(
                 f"{url}?{query}" if query else url,
