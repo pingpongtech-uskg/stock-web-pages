@@ -90,9 +90,15 @@ jobs:
         run: python scripts/refresh_snapshot.py --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json
       - name: Supplement remaining financial gaps within durable free budget
         timeout-minutes: 26
+        shell: bash
         env:
           FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
-        run: python scripts/fetch_finmind.py --supplement --output public/data --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --as-of "$MARKET_DATE" --max-requests 300 --max-runtime-seconds 1500
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BUDGET_DATE="$(python scripts/prepare_finmind_budget.py --previous-date "$BUDGET_DATE" --cache-dir .cache/finmind)"
+          echo "BUDGET_DATE=$BUDGET_DATE" >> "$GITHUB_ENV"
+          python scripts/fetch_finmind.py --supplement --output public/data --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --as-of "$MARKET_DATE" --max-requests 300 --max-runtime-seconds 1500
       - name: Persist completed supplementary checkpoint immediately
         if: always()
         uses: actions/cache/save@v4
