@@ -191,7 +191,7 @@ function DashboardContent({ release, dataSource }: { release: Release; dataSourc
           </div>
         </header>
 
-        <DataStatus release={release} source={dataSource} now={Date.now()} />
+        <DataStatus release={release} source={dataSource} />
 
         {historyView && <HistoryPanel />}
         <div hidden={historyView}>

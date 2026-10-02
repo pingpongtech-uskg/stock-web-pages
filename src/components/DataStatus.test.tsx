@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import { act } from 'react'
+import { createRoot } from 'react-dom/client'
 import type { Release } from '../domain/types'
 import { DataStatus, getEffectiveFreshness } from './DataStatus'
 
@@ -46,5 +48,55 @@ describe('DataStatus freshness', () => {
     expect(markup).toContain('新鮮度：正常')
     expect(markup).toContain('資料品質：正常')
     expect(markup).toContain('更新 UTC+8')
+  })
+
+  it('updates overdue freshness at deadline without a prop change while keeping degraded quality separate', async () => {
+    const start = Date.parse('2026-10-01T12:00:00Z')
+    const deadline = start + 60_000
+    const degraded = { ...release, freshness: 'degraded', nextExpectedUpdateAt: new Date(deadline).toISOString() } as unknown as Release
+    const host = document.createElement('div')
+    document.body.append(host)
+    const root = createRoot(host)
+    const previousActEnvironment = (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT
+    vi.useFakeTimers()
+    vi.setSystemTime(start)
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    try {
+      await act(async () => { root.render(<DataStatus release={degraded} />) })
+      expect(host.textContent).toContain('新鮮度：正常')
+      expect(host.textContent).toContain('資料品質：降級發布')
+      await act(async () => { vi.advanceTimersByTime(60_001) })
+      expect(host.textContent).toContain('新鮮度：逾期')
+      expect(host.textContent).toContain('資料品質：降級發布')
+    } finally {
+      await act(async () => root.unmount())
+      host.remove()
+      ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = previousActEnvironment
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps an explicitly injected now value deterministic', async () => {
+    const start = Date.parse('2026-10-01T12:00:00Z')
+    const host = document.createElement('div')
+    document.body.append(host)
+    const root = createRoot(host)
+    const previousActEnvironment = (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT
+    vi.useFakeTimers()
+    vi.setSystemTime(start)
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    try {
+      await act(async () => { root.render(<DataStatus release={{ ...release, nextExpectedUpdateAt: new Date(start + 1).toISOString() } as Release} now={start} />) })
+      expect(host.textContent).toContain('新鮮度：正常')
+      await act(async () => { vi.advanceTimersByTime(60_000) })
+      expect(host.textContent).toContain('新鮮度：正常')
+    } finally {
+      await act(async () => root.unmount())
+      host.remove()
+      ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = previousActEnvironment
+      vi.useRealTimers()
+    }
   })
 })

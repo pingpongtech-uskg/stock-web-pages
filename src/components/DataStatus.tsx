@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { Coverage, Freshness, Release } from '../domain/types'
 import { trackEventOnce } from '../domain/events'
 import { statusLabels } from './StatusPill'
@@ -39,10 +39,29 @@ function formatCount(value: number | undefined): string {
   return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString('zh-TW') : '—'
 }
 
-export function DataStatus({ release, compact = false, now = Date.now(), source = 'network' }: { release: Release; compact?: boolean; now?: number; source?: 'network' | 'cache' }) {
+export function DataStatus({ release, compact = false, now, source = 'network' }: { release: Release; compact?: boolean; now?: number; source?: 'network' | 'cache' }) {
+  const [clockNow, setClockNow] = useState(() => Date.now())
+  const renderNow = now ?? clockNow
+  useEffect(() => {
+    if (now !== undefined) return
+    const updateClock = () => {
+      const current = Date.now()
+      setClockNow(current)
+      const expected = release.nextExpectedUpdateAt ? Date.parse(release.nextExpectedUpdateAt) : NaN
+      const nextMinute = 60_000 - (current % 60_000)
+      const untilDeadline = Number.isFinite(expected) && expected >= current ? expected - current + 1 : Infinity
+      timeout = window.setTimeout(updateClock, Math.max(1, Math.min(nextMinute, untilDeadline)))
+    }
+    const current = Date.now()
+    const expected = release.nextExpectedUpdateAt ? Date.parse(release.nextExpectedUpdateAt) : NaN
+    const nextMinute = 60_000 - (current % 60_000)
+    const untilDeadline = Number.isFinite(expected) && expected >= current ? expected - current + 1 : Infinity
+    let timeout = window.setTimeout(updateClock, Math.max(1, Math.min(nextMinute, untilDeadline)))
+    return () => window.clearTimeout(timeout)
+  }, [now, release.nextExpectedUpdateAt])
   const coverage: Coverage = release.coverage
-  const effectiveFreshness = getEffectiveFreshness(release, now)
-  const overdue = overdueLabel(release, now)
+  const effectiveFreshness = getEffectiveFreshness(release, renderNow)
+  const overdue = overdueLabel(release, renderNow)
   const quality = release.freshness === 'degraded' ? '降級發布' : release.freshness === 'unavailable' ? '不可用' : '正常'
   const trustSignalSummary = !compact && typeof release.summary.trustSignalCount === 'number'
     ? ` · 投信 Top10 ${formatCount(release.summary.trustSignalCount)} 檔／新進榜 ${formatCount(release.summary.trustNewEntryCount)} 檔／PEG 可顯示 ${formatCount(release.summary.trustValuationVisibleCount ?? release.summary.candidateRouteCounts.trust)} 檔`
