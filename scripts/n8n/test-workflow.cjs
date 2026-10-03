@@ -22,3 +22,15 @@ test('expired writer records terminal outcome and cannot enter a credential requ
  const branch=graph.nodes.find(node=>node.name==='Persist expired-owner outcome before showing result');assert.ok(branch);
  assert.equal(graph.connections[branch.name].main[0][0].node,'Prepare sanitized durable progress');
 });
+test('live publication verification preserves exact JSON bytes rather than parsed text numbers',async()=>{
+ for(const name of ['Probe live publication before archive','Verify live exact payload'])assert.equal(graph.nodes.find(node=>node.name===name).parameters.options.response.response.responseFormat,'file');
+ const node=graph.nodes.find(node=>node.name==='Restore exact live bytes and current stage');assert.ok(node);
+ const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;const evaluate=new AsyncFunction('$input','$',node.parameters.jsCode);
+ const raw='{"value":130.0,"absent":null}';const item={json:{statusCode:200,headers:{'content-type':'application/json'}},binary:{data:{}}};
+ const output=await evaluate.call({helpers:{getBinaryDataBuffer:async()=>Buffer.from(raw)}},{first:()=>item},()=>({item:{json:{state:{stage:'liveVerify'}}}}));
+ assert.equal(output[0].json.response.body,raw);assert.equal(output[0].json.state.stage,'liveVerify');
+ const failed=await evaluate.call({}, {first:()=>({json:{error:'network'}})},()=>({item:{json:{state:{stage:'liveVerify'}}}}));assert.equal(failed[0].json.response.error,'network');
+ assert.equal(failed[0].json.response.liveReadError,'live_binary_missing');
+ const large=await evaluate.call({helpers:{getBinaryDataBuffer:async()=>Buffer.alloc(3000001)}},{first:()=>item},()=>({item:{json:{state:{stage:'liveVerify'}}}}));assert.equal(large[0].json.response.liveReadError,'live_file_too_large');assert.equal(large[0].json.response.statusCode,200);
+ const unreadable=await evaluate.call({helpers:{getBinaryDataBuffer:async()=>{throw Error('storage');}}},{first:()=>item},()=>({item:{json:{state:{stage:'liveVerify'}}}}));assert.equal(unreadable[0].json.response.liveReadError,'live_binary_read_failed');
+});

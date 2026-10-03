@@ -203,7 +203,13 @@ describe('dashboard freshness clock', () => {
       await vi.waitFor(() => expect(host.textContent).toContain('新鮮度：正常'))
       expect(host.textContent).toContain('新鮮度：正常')
       expect(host.textContent).toContain('資料品質：降級發布')
-      await act(async () => { vi.advanceTimersByTime(60_001) })
+      const toDeadline = start + 60_000 - Date.now()
+      expect(toDeadline).toBeGreaterThan(0)
+      await act(async () => { await vi.advanceTimersByTimeAsync(toDeadline) })
+      expect(host.textContent).toContain('新鮮度：正常')
+      // Browser timers can be clamped by a few milliseconds when a timer is
+      // scheduled from another timer; allow a small bounded scheduling margin.
+      await act(async () => { await vi.advanceTimersByTimeAsync(100) })
       expect(host.textContent).toContain('新鮮度：逾期')
       expect(host.textContent).toContain('資料品質：降級發布')
     } finally {

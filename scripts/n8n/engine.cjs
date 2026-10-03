@@ -124,7 +124,7 @@ function advance(original,response,now=Date.now()) {
     const readStage={createDaily:'findDaily',createDatabase:'findDatabase',createStock:'queryRows',appendSummary:'summaryRead'}[state.stage];
     if(readStage) return next({...state,stage:readStage,retry:(state.retry||0)+1},now);
     if(state.stage==='dispatch') return findRuns({...state,dispatchIntent:true,runPage:1},15);
-    if(['liveProbe','liveVerify'].includes(state.stage)) return deploymentResult(state,'failed','live_http_'+status,now);
+    if(['liveProbe','liveVerify'].includes(state.stage)) return deploymentResult(state,'failed',['live_binary_missing','live_file_too_large','live_binary_read_failed'].includes(response.liveReadError)?response.liveReadError:'live_http_'+status,now);
     if((state.retry||0)<3&&state.op?.method==='GET') return result({...state,retry:(state.retry||0)+1},state.op,2**((state.retry||0)+1));
     return fail(state,'external_http_'+status);
   }

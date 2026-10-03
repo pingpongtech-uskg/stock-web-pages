@@ -19,3 +19,13 @@ test('audit handles malformed metadata, unavailable API and multiple requested d
  out=audit.auditStart([date],'owner');out=audit.auditAdvance(out.state,{statusCode:200,body:{results:[root,root],has_more:false}});assert.equal(out.state.results[0].status,'failed');
  out=audit.auditStart([date],'owner');out=audit.auditAdvance(out.state,{statusCode:200,body:{results:[{...root,properties:{}}],has_more:false}});assert.equal(out.state.results[0].error,'root_archive_metadata');
 });
+test('independent audit checks inline database uniqueness and exact numeric null zero tags and ranks',()=>{
+ const expected={[date]:[{code:'0050',strategies:[{strategy:'trust',rank:1}],metrics:{currentPrice:0,ttmEps:null}}]};
+ let out=audit.auditStart([date],'owner',expected);out=audit.auditAdvance(out.state,{statusCode:200,body:{results:[root],has_more:false}});
+ assert.equal(out.state.stage,'blocks');assert.equal(out.op.method,'GET');
+ out=audit.auditAdvance(out.state,{statusCode:200,body:{results:[{id:'22222222-2222-2222-2222-222222222222',type:'child_database',child_database:{title:'20260908'}}],has_more:false}});
+ const actual={...stock,properties:{...stock.properties,'策略':{multi_select:[{name:'trust'}]},'投信排名':{number:1},'成長排名':{number:null},'低位階排名':{number:null},currentPrice:{number:0},ttmEps:{number:null}}};
+ const good=audit.auditAdvance(out.state,{statusCode:200,body:{results:[actual],has_more:false}}).state.results[0];assert.equal(good.status,'verified');assert.equal(good.childDatabaseCount,1);assert.equal(good.stockValuesVerified,true);assert.equal(good.nullNumbers,1);assert.equal(good.zeroNumbers,1);
+ const wrong=audit.auditAdvance(out.state,{statusCode:200,body:{results:[{...actual,properties:{...actual.properties,ttmEps:{number:0}}}],has_more:false}}).state.results[0];assert.equal(wrong.status,'failed');assert.equal(wrong.stockValuesVerified,false);
+ const duplicate=audit.auditAdvance({...out.state,stage:'blocks',childDatabases:[]},{statusCode:200,body:{results:[{id:'db',type:'child_database',child_database:{title:'20260908'}},{id:'db2',type:'child_database',child_database:{title:'20260908'}}],has_more:false}});assert.equal(duplicate.state.results[0].error,'child_database_count');
+});
