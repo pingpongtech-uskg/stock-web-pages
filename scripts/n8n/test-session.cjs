@@ -129,3 +129,24 @@ test('dispatch intent timestamp survives its CAS commit and state rehydration be
  const firstEmpty=engine.advance(search.state,{statusCode:200,body:{workflow_runs:[]}},resumeAt+1000);
  assert.equal(firstEmpty.state.stage,'findRun');assert.notEqual(firstEmpty.state.errorCategory,'dispatch_run_not_found');
 });
+test('checkpoint transition exceptions persist a sanitized terminal result with the successful CAS sha',()=>{
+ const now=Date.parse('2026-10-02T10:30:00Z');
+ for(const nextStage of ['cache_unrecognized','restore_unrecognized']) {
+  const transition=engine.advance({...engine.start({...base,runKind:'scheduled'},now).state,stage:'checkpoint',nextStage,lockSha:'old-sha',deadline:now+60000},
+    {statusCode:200,body:{content:{sha:'fresh-sha-1'}}},now);
+  assert.equal(transition.state.stage,'checkpoint');assert.equal(transition.state.nextStage,'done');
+  assert.equal(transition.op.method,'PUT');assert.equal(transition.op.body.sha,'fresh-sha-1');
+  const saved=JSON.parse(Buffer.from(transition.op.body.content,'base64').toString('utf8'));
+  assert.equal(saved.lockSha,'fresh-sha-1');assert.equal(saved.released,true);assert.equal(saved.errorCategory,'checkpoint_advance_failed');
+  assert.equal(saved.errorMessage,'The state checkpoint was saved, but the next request could not be prepared. Resume from saved state.');
+  assert.equal(saved.errorMessage.includes('unknown_stage'),false);
+  const done=engine.advance(transition.state,{statusCode:200,body:{content:{sha:'terminal-sha-2'}}},now);
+  assert.equal(done.route,'done');assert.equal(done.state.errorCategory,'checkpoint_advance_failed');assert.equal(done.ledgerRequired,true);
+ }
+});
+test('successful checkpoint with missing CAS sha stops without issuing a follow-up request',()=>{
+ const now=Date.parse('2026-10-02T10:30:00Z');
+ const out=engine.advance({...engine.start({...base,runKind:'scheduled'},now).state,stage:'checkpoint',nextStage:'cache_unrecognized',lockSha:'old-sha',deadline:now+60000},
+  {statusCode:200,body:{content:{}}},now);
+ assert.equal(out.route,'done');assert.equal(out.state.errorCategory,'checkpoint_write_ambiguous');assert.equal(out.op,null);
+});

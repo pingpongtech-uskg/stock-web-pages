@@ -177,7 +177,13 @@ function advance(original,response,now=Date.now()) {
   if(state.stage==='checkpoint') {
     if([409,422].includes(status)) return fail({...state,lockSha:undefined},'writer_conflict');
     if(status<200||status>=300) return done({...state,errorCategory:'checkpoint_failed',errorMessage:'State write ambiguous; resume reads GitHub state before any write.'});
-    return {...next({...state,lockSha:body.content.sha,stage:state.nextStage,retry:0},now),ledgerRequired:true};
+    if(typeof body?.content?.sha!=='string'||!body.content.sha||body.content.sha.length>64||!/^[a-zA-Z0-9_-]+$/.test(body.content.sha)) return done({...state,errorCategory:'checkpoint_write_ambiguous',errorMessage:'State write response was incomplete; recovery must read GitHub state before writing again.'});
+    const committed={...state,lockSha:body.content.sha,stage:state.nextStage,retry:0};
+    try {return {...next(committed,now),ledgerRequired:true};}
+    catch {
+      const terminal={...committed,released:true,screeningStatus:committed.screeningStatus==='pending'?'failed':committed.screeningStatus||'failed',recordFailure:false,errorCategory:'checkpoint_advance_failed',errorMessage:'The state checkpoint was saved, but the next request could not be prepared. Resume from saved state.'};
+      return checkpoint(terminal,'done',now);
+    }
   }
   if(status>=500||response?.error) {
     if(['restoreBlobCreate','restoreTreeCreate','restoreCommitCreate','restoreRefCreate'].includes(state.stage))return restoreOperation.ambiguousRestore(state,cacheApi(now));
