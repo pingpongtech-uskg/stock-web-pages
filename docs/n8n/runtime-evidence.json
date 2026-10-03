@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-03T00:53:27Z",
+  "recordedAt": "2026-10-03T01:59:47.875836+00:00",
   "workflowId": "huDBNJDss4KuPmn4",
   "active": false,
   "draftVerification": {
@@ -661,6 +661,182 @@
     },
     "scope": "Sanitized observations of completed public probes; not a complete eleven-session release.",
     "releaseGate": "incomplete_eleven_complete_sessions_no_new_dispatch",
-    "relatedSwaggerDatasetsWithNoHistoricalParameters": 3
+    "relatedSwaggerDatasetsWithNoHistoricalParameters": 3,
+    "preservedCurrentSessionBackup": {
+      "sourceUrl": "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading",
+      "documentationUrl": "https://www.tpex.org.tw/openapi/swagger.json",
+      "retrievedAt": "2026-10-03T01:12:54.281658+00:00",
+      "requestMethod": "GET",
+      "httpStatus": 200,
+      "contentType": "application/json",
+      "rawDate": "1151002",
+      "marketDate": "2026-10-02",
+      "unit": "shares",
+      "rowCount": 910,
+      "netCounts": {
+        "positive": 28,
+        "negative": 28,
+        "zero": 854
+      },
+      "sha256": "2d058996bf67a375e152f381dda1a8610c32cf3ecd1ed31240c89ac7fd020402",
+      "bytes": 861949,
+      "validation": {
+        "allDatesExact": true,
+        "codeUniqueness": true,
+        "integerShareAmounts": true,
+        "buyMinusSellEqualsNet": true
+      },
+      "status": "preserved_not_imported_not_published",
+      "historicalSessionsAvailable": 1,
+      "requiredHistoricalSessions": 11
+    },
+    "documentedFixedPostEnvironmentProbe": {
+      "executionId": "843",
+      "ledgerRow": 92,
+      "endpoint": "https://www.tpex.org.tw/www/zh-tw/insti/sitcStat",
+      "method": "POST",
+      "params": {
+        "type": "Daily",
+        "date": "2026/10/02",
+        "searchType": "buy",
+        "response": "json"
+      },
+      "authentication": "none",
+      "redirects": false,
+      "timeoutMs": 20000,
+      "statusCode": 0,
+      "category": "timeout",
+      "dates": [],
+      "tableCount": 0,
+      "rowCounts": [],
+      "negativeNetPresent": false,
+      "rawPayloadRetained": false,
+      "temporaryDiagnosticArchived": true
+    }
+  },
+  "followupSourcePublication": {
+    "commit": "e91dfe2f374eb8911b9519339f5a35bebdae9e4c",
+    "tree": "f7be1cae264b51f0db76028a214da4455d31ea56",
+    "parent": "a50389a9c6bea6db326c9914f4e866d1f2893560",
+    "featureCi": {
+      "runId": "37085405629",
+      "headSha": "e91dfe2f374eb8911b9519339f5a35bebdae9e4c",
+      "conclusion": "success"
+    },
+    "mainCi": {
+      "runId": "37085556137",
+      "headSha": "e91dfe2f374eb8911b9519339f5a35bebdae9e4c",
+      "conclusion": "success"
+    },
+    "nonForcedMainPromotionExecutionId": "840",
+    "independentReadbackExecutionId": "841",
+    "scope": "source_only_no_new_market_data_or_schedule_activation"
+  },
+  "institutionalProbePreparation": {
+    "status": "locally_verified_not_dispatched",
+    "sourceMode": "institutional_probe",
+    "marketDate": "2026-10-02",
+    "cases": [
+      {
+        "code": "1785",
+        "case": "positive",
+        "buy": 8000,
+        "sell": 0
+      },
+      {
+        "code": "3105",
+        "case": "negative",
+        "buy": 0,
+        "sell": 27000
+      },
+      {
+        "code": "1240",
+        "case": "zero",
+        "buy": 0,
+        "sell": 0
+      }
+    ],
+    "expectedSessionCount": 11,
+    "dataRequestLimit": 3,
+    "httpAttemptsPerRequestLimit": 1,
+    "sharedTaipeiDailyCap": 300,
+    "observedRemainingAccountFraction": 0.8,
+    "actualFinMindCalls": 0,
+    "tokenPresence": null,
+    "actualAccountQuota": null,
+    "pythonTests": 515,
+    "n8nTests": 82,
+    "frontendTypecheckAndBuild": "passed",
+    "npmAuditVulnerabilities": 0,
+    "installedPythonDependencyVulnerabilities": 0,
+    "sourceCoveragePercent": 94.86,
+    "cliCoveragePercent": 88.42,
+    "independentReview": "no_remaining_high_or_medium_findings",
+    "newDataPublished": false,
+    "globalCompletenessProven": false,
+    "scheduleActivated": false,
+    "helperDeploymentSettingsReadbackRequired": true,
+    "crossExecutionRedispatchAllowed": false,
+    "partialValidatedCacheReplayUsesHttp": false,
+    "originalUserCheckoutModified": false,
+    "helperId": "u955NdZSl26dxfJJ",
+    "helperSettingsIndependentlyVerified": true,
+    "helperActive": false,
+    "helperDefaultMode": "inspect",
+    "manifestUtf8ByteLimit": 1000000,
+    "actualParameterTransportVerified": false
+  },
+  "temporaryInstitutionalProbeHelper": {
+    "workflowId": "u955NdZSl26dxfJJ",
+    "versionId": "ef9c8934-2d4a-45a3-be92-f333337dc192",
+    "projectId": "08BqQaiWx6fZrnt9",
+    "projectType": "personal",
+    "folder": null,
+    "nodeCount": 22,
+    "active": false,
+    "hasPublishedVersion": false,
+    "defaultMode": "inspect",
+    "status": "installed_retention_verified_not_executed",
+    "executed": false,
+    "parameterDriftCount": 0,
+    "sdkValidation": true,
+    "nodeConfigValidationCount": 22,
+    "fullN8nTestsPassed": 82,
+    "helperTestsPassed": 19,
+    "helperCoverage": {
+      "linesPercent": 100,
+      "branchesPercent": 87.55
+    },
+    "settings": {
+      "timezone": "Asia/Taipei",
+      "executionOrder": "v1",
+      "executionTimeout": 1500,
+      "saveExecutionProgress": false,
+      "saveManualExecutions": false,
+      "saveDataErrorExecution": "none",
+      "saveDataSuccessExecution": "none"
+    },
+    "settingsAppliedThenIndependentFullReadback": true,
+    "githubCredentialNodesVerified": 6,
+    "githubCredentialId": "VGYqVCElPfvn333j",
+    "artifactStorage": {
+      "authentication": "none",
+      "credentialsPresent": false,
+      "followRedirects": false,
+      "responseFormat": "file"
+    },
+    "warning": "TOP_LEVEL_ITEMS_OVER_CEILING: 22 visible operator boxes; no execution blocker",
+    "dispatchRecovery": "One serial approved execution only; ambiguous response searches exact request within same execution. New dispatch executions are not an automatic recovery mechanism.",
+    "publicationManifestCapacity": {
+      "maxUtf8Bytes": 1000000,
+      "maxBlobs": 100,
+      "maxTreeEntries": 100,
+      "isolatedCodeParameterValidatedBytes": 600000,
+      "codeSchemaDeclaredSizeLimit": null,
+      "sdkToolMaxCharacters": 300000,
+      "deploymentPath": "existing helper initialization Code parameter only; full manifest-expanded SDK exceeds tool cap",
+      "runtimeTransportLimitEmpiricallyProved": false,
+      "remoteCapacityPatchPending": true
+    }
   }
 }

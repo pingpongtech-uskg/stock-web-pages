@@ -1,0 +1,1002 @@
+{
+  "name": "Stockscreener temporary reviewed source operation",
+  "active": false,
+  "nodes": [
+    {
+      "name": "Manual reviewed source operation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Initialize immutable approved operation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Authenticated Actions artifacts are source evidence only; never a screened release.\nconst PROBE_ERRORS=['token_missing','budget_exhausted','source_blocked','quota_unavailable','transport_unavailable','invalid_source_rows','operation_limit','official_source_unavailable','official_source_invalid','checkpoint_unavailable'];\nconst PROBE_OFFICIAL='https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading';\nfunction probeAssert(condition){if(!condition)throw Error('probe_artifact_schema');}\nfunction probeInt(value,min=0,max=Number.MAX_SAFE_INTEGER){return Number.isSafeInteger(value)&&value>=min&&value<=max;}\nfunction probeDate(value){return typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;}\nfunction probeKeys(value,required,optional=[]){probeAssert(value&&typeof value==='object'&&!Array.isArray(value));probeAssert(required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>[...required,...optional].includes(key)));}\nfunction probeError(value){probeAssert(value===null||PROBE_ERRORS.includes(value));}\nfunction sourceValidateCase(item,dates){\n probeKeys(item,['code','case','buy','sell','net','status','coverage','missingDates','errorCategory']);\n probeAssert(/^[1-9]\\d{3}$/.test(item.code)&&['positive','negative','zero'].includes(item.case)&&probeInt(item.buy)&&probeInt(item.sell)&&Number.isSafeInteger(item.net)&&item.buy-item.sell===item.net);\n probeAssert(Math.sign(item.net)==={positive:1,negative:-1,zero:0}[item.case]);probeError(item.errorCategory);\n probeAssert(Array.isArray(item.missingDates)&&new Set(item.missingDates).size===item.missingDates.length&&item.missingDates.every((day,index)=>dates.includes(day)&&(!index||day>item.missingDates[index-1])));\n probeAssert(['complete','partial','unavailable'].includes(item.status)&&item.coverage===(11-item.missingDates.length)/11);\n probeAssert(item.status==='complete'?item.missingDates.length===0&&item.errorCategory===null:item.status==='partial'?item.missingDates.length>0&&item.errorCategory===null:item.missingDates.length===11&&item.errorCategory!==null);\n return {...item,missingDates:[...item.missingDates]};\n}\nfunction sourceValidateSummary(summary,state){\n probeKeys(summary,['probeVersion','marketDate','expectedDates','publicationEligible','globalCompleteness','tokenPresent','actualAttempts','dataRequests','cacheHits','accountLimit','observedRemaining','cases','outcome'],['errorCategory','dailyAttempts','projectCeiling','accountWindowCeiling','officialSourceUrl','officialRowCount','officialSha256']);\n const dates=summary.expectedDates;probeAssert(summary.probeVersion==='institutional-probe-v1'&&summary.marketDate===state.plan.marketDate&&summary.publicationEligible===false&&summary.globalCompleteness===false&&typeof summary.tokenPresent==='boolean');\n probeAssert(Array.isArray(dates)&&dates.length===11&&dates.every((day,index)=>probeDate(day)&&(!index||day>dates[index-1]))&&dates.at(-1)===state.plan.marketDate);\n probeAssert(probeInt(summary.actualAttempts,0,4)&&probeInt(summary.dataRequests,0,3)&&summary.actualAttempts>=summary.dataRequests&&summary.actualAttempts-summary.dataRequests<=1&&probeInt(summary.cacheHits,0,3)&&summary.cacheHits+summary.dataRequests<=3&&(!summary.dataRequests||summary.tokenPresent));\n probeAssert((summary.accountLimit===null||probeInt(summary.accountLimit,1))&&(summary.observedRemaining===null||probeInt(summary.observedRemaining))&&((summary.accountLimit===null)===(summary.observedRemaining===null))&&(summary.accountLimit===null||summary.observedRemaining<=summary.accountLimit));\n for(const key of ['dailyAttempts','projectCeiling','accountWindowCeiling'])if(Object.hasOwn(summary,key))probeAssert(summary[key]===null||probeInt(summary[key],0,key==='dailyAttempts'?300:Number.MAX_SAFE_INTEGER));\n if(Object.hasOwn(summary,'projectCeiling'))probeAssert(probeInt(summary.projectCeiling,1,300));if(summary.dailyAttempts!==undefined&&summary.dailyAttempts!==null)probeAssert(summary.dailyAttempts>=summary.actualAttempts);\n if(Object.hasOwn(summary,'errorCategory'))probeError(summary.errorCategory);\n probeAssert(Array.isArray(summary.cases)&&[0,3].includes(summary.cases.length));const cases=summary.cases.map(item=>sourceValidateCase(item,dates));\n if(cases.length){probeAssert(new Set(cases.map(item=>item.code)).size===3&&cases.every((item,index)=>item.case===['positive','negative','zero'][index]));probeAssert(['dailyAttempts','projectCeiling','accountWindowCeiling'].every(key=>Object.hasOwn(summary,key)));probeAssert(summary.officialSourceUrl===PROBE_OFFICIAL&&probeInt(summary.officialRowCount,3)&&/^[a-f0-9]{64}$/.test(summary.officialSha256||''));}\n else probeAssert(summary.outcome==='unavailable'&&summary.actualAttempts===0&&summary.cacheHits===0&&PROBE_ERRORS.includes(summary.errorCategory)&&!['officialSourceUrl','officialRowCount','officialSha256'].some(key=>Object.hasOwn(summary,key)));\n const outcome=cases.length===3&&cases.every(item=>item.status==='complete')?'complete':cases.some(item=>item.coverage>0)?'partial':'unavailable';probeAssert(summary.outcome===outcome);\n return {...summary,expectedDates:[...dates],cases};\n}\nfunction sourceValidateArtifact(body,state){\n probeKeys(body,['summary.json','provenance.json','byteHashes']);const p=body['provenance.json'];probeKeys(p,['requestId','marketDate','sourceMode','sourceGitCommit','actionsRunId','actionsRunAttempt','repository']);\n probeAssert(p.requestId===state.plan.requestId&&p.marketDate===state.plan.marketDate&&p.sourceMode==='institutional_probe'&&p.sourceGitCommit===state.plan.probeHeadSha&&p.actionsRunId===String(state.runId)&&p.actionsRunAttempt===String(state.runAttempt)&&p.repository==='pingpongtech-uskg/stock-web-pages');\n probeKeys(body.byteHashes,['summary','provenance']);probeAssert(Object.values(body.byteHashes).every(value=>/^[a-f0-9]{64}$/.test(value)));\n return {summary:sourceValidateSummary(body['summary.json'],state),byteHashes:{...body.byteHashes}};\n}\nasync function sourceReadArtifact(files,readBuffer){\n const entries=Object.entries(files||{});probeAssert(entries.length===2&&entries.every(([,file])=>['summary.json','provenance.json'].includes(file.fileName))&&new Set(entries.map(([,file])=>file.fileName)).size===2);\n const body={};const hashes={};for(const [key,file] of entries){const bytes=await readBuffer(key);probeAssert(bytes.length>0&&bytes.length<=1000000);body[file.fileName]=JSON.parse(bytes.toString('utf8'));hashes[file.fileName.slice(0,-5)]=require('crypto').createHash('sha256').update(bytes).digest('hex');}\n return {...body,byteHashes:hashes};\n}\n\n// Temporary operator helper. Pure transitions; no network, credentials, Notion or daily CAS.\nconst SOURCE_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nconst SOURCE_BRANCH='fix/n8n-daily-screening';\nconst SOURCE_SHA=/^[a-f0-9]{40}$/;\nfunction sourceResult(state,op,delaySeconds=0.5){return {state:{...state,op},op,route:op?.route||'done',delaySeconds,ledgerRequired:state.stage==='done'};}\nfunction sourceRequest(state,stage,method,path,body,delaySeconds=0.5){return sourceResult({...state,stage},{route:'github',method,url:SOURCE_REPO+path,body:body||{}},delaySeconds);}\nfunction sourceDone(state,outcome,errorCategory){return sourceResult({...state,stage:'done',outcome,...(errorCategory?{errorCategory}:{})},null);}\nfunction sourceOutcome(state){return {operation:state.plan.mode,stage:state.stage,outcome:state.outcome||'in_progress',requestId:state.plan.requestId||'',marketDate:state.plan.marketDate||'',sourceGitCommit:state.plan.probeHeadSha||state.plan.targetSha||'',actionsRunId:state.runId||'',dispatchIntent:!!state.dispatchIntent,errorCategory:state.errorCategory||'',...(state.probeSummary?{probeSummary:state.probeSummary,artifactByteHashes:state.artifactByteHashes,runConclusion:state.runConclusion}:{})};}\nfunction sourceStart(plan,now=Date.now()){\n if(!['inspect','prepare_feature','promote_main','dispatch_probe','read_probe'].includes(plan.mode))throw Error('source_input');\n if(['prepare_feature','promote_main'].includes(plan.mode)&&![plan.baseSha,plan.targetSha,plan.targetTreeSha].every(value=>SOURCE_SHA.test(value||'')))throw Error('source_input');\n if(plan.mode==='prepare_feature'){\n  if(!SOURCE_SHA.test(plan.featureBaseSha||'')||!SOURCE_SHA.test(plan.baseTreeSha||'')||!Array.isArray(plan.blobs)||!Array.isArray(plan.treeEntries)||plan.blobs.length>100||plan.treeEntries.length>100||Buffer.byteLength(JSON.stringify(plan),'utf8')>1000000)throw Error('source_manifest');\n  if(plan.blobs.some(item=>!SOURCE_SHA.test(item.sha)||!item.content||!/^[A-Za-z0-9+/]*={0,2}$/.test(item.content))||plan.treeEntries.some(item=>typeof item.path!=='string'||item.path.startsWith('/')||item.path.split('/').some(part=>!part||part==='..'||part==='.')||item.type!=='blob'||item.mode!=='100644'||(item.sha!==null&&!SOURCE_SHA.test(item.sha))))throw Error('source_manifest');\n  if(plan.commit?.tree!==plan.targetTreeSha||plan.commit?.parents?.length!==1||plan.commit.parents[0]!==plan.baseSha||typeof plan.commit.message!=='string'||!plan.commit.author||!plan.commit.committer)throw Error('source_manifest');\n }\n if(plan.mode==='promote_main'&&!/^\\d{1,24}$/.test(plan.ciRunId||''))throw Error('source_input');\n if(['dispatch_probe','read_probe'].includes(plan.mode)&&(!SOURCE_SHA.test(plan.probeHeadSha||'')||!/^\\d{4}-\\d{2}-\\d{2}$/.test(plan.marketDate||'')||new Date(plan.marketDate+'T00:00:00Z').toISOString().slice(0,10)!==plan.marketDate||!/^institutional-probe:[A-Za-z0-9_.:-]{1,140}$/.test(plan.requestId||'')))throw Error('source_input');\n if(plan.mode==='read_probe'&&!/^\\d{1,24}$/.test(plan.runId||''))throw Error('source_input');\n return sourceRequest({plan,startedAt:now,deadline:now+20*60000,blobIndex:0},'main','GET','/git/ref/heads/main');\n}\nfunction sourceFindRuns(state,delaySeconds=0.5){return sourceRequest(state,'findRun','GET',`/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=100&page=${state.runPage||1}`,null,delaySeconds);}\nfunction sourceTrustedRun(run,state){return String(run.id)===String(state.runId||run.id)&&run.workflow_id===state.workflowId&&run.head_sha===state.plan.probeHeadSha&&run.head_branch==='main'&&run.event==='workflow_dispatch'&&run.head_repository?.full_name==='pingpongtech-uskg/stock-web-pages'&&run.display_title===`Daily screening | ${state.plan.requestId} | ${state.plan.marketDate}`;}\nfunction sourceAdvance(state,response,now=Date.now()){\n if(now>=state.deadline)return sourceDone(state,'failed','source_deadline');\n const status=Number(response.statusCode||0);\n if(state.stage==='dispatch'&&(status>=500||response.error))return sourceFindRuns({...state,dispatchIntent:true},15);\n if(status<200||status>=300){if(state.stage==='artifactRedirect'&&status===302)return sourceRedirect(state,response.headers);return sourceDone(state,'failed','github_http_'+status);}\n let body=response.body??response.data??{};if(typeof body==='string'){try{body=JSON.parse(body);}catch{return sourceDone(state,'failed','github_response_schema');}}\n try{return sourceAdvanceSuccess(state,body,response,now);}catch(error){return sourceDone(state,'failed',error.message.split(':')[0]);}\n}\nfunction sourceAdvanceSuccess(state,body,response,now){\n const plan=state.plan;\n switch(state.stage){\n  case 'main':\n   if(plan.mode==='inspect')return sourceDone({...state,observedMainSha:body.object?.sha},'inspected');\n   if(body.object?.sha!==(['dispatch_probe','read_probe'].includes(plan.mode)?plan.probeHeadSha:plan.baseSha))throw Error('main_changed');\n   return sourceRequest(state,['dispatch_probe','read_probe'].includes(plan.mode)?'probeWorkflow':'feature','GET',['dispatch_probe','read_probe'].includes(plan.mode)?'/actions/workflows/daily.yml':'/git/ref/heads/'+SOURCE_BRANCH);\n  case 'feature':\n   if(plan.mode==='prepare_feature'&&body.object?.sha===plan.targetSha)return sourceDone(state,'feature_verified');\n   if(body.object?.sha!==(plan.mode==='prepare_feature'?plan.featureBaseSha:plan.targetSha))throw Error('feature_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'baseCommit':'ciWorkflow','GET',plan.mode==='prepare_feature'?'/git/commits/'+plan.baseSha:'/actions/workflows/ci.yml');\n  case 'baseCommit':\n   if(body.sha!==plan.baseSha||body.tree?.sha!==plan.baseTreeSha)throw Error('base_tree_mismatch');\n   return sourceNextBlob(state);\n  case 'blob':\n   if(body.sha!==plan.blobs[state.blobIndex].sha)throw Error('blob_sha_mismatch');\n   return sourceNextBlob({...state,blobIndex:state.blobIndex+1});\n  case 'tree':\n   if(body.sha!==plan.targetTreeSha)throw Error('tree_sha_mismatch');\n   return sourceRequest(state,'commit','POST','/git/commits',plan.commit);\n  case 'commit':\n   if(body.sha!==plan.targetSha)throw Error('commit_sha_mismatch');\n   return sourceRequest(state,'featureRecheck','GET','/git/ref/heads/'+SOURCE_BRANCH);\n  case 'featureRecheck':\n   if(body.object?.sha!==plan.featureBaseSha)throw Error('feature_changed');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'ciWorkflow':return sourceRequest({...state,workflowId:body.id},'ciRun','GET','/actions/runs/'+plan.ciRunId);\n  case 'ciRun':\n   if(body.id!==Number(plan.ciRunId)||body.workflow_id!==state.workflowId||body.head_sha!==plan.targetSha||body.head_branch!==SOURCE_BRANCH||body.event!=='push'||body.status!=='completed'||body.conclusion!=='success'||body.repository?.full_name!=='pingpongtech-uskg/stock-web-pages')throw Error('ci_gate');\n   return sourceRequest(state,'targetCommit','GET','/git/commits/'+plan.targetSha);\n  case 'targetCommit':\n   if(body.sha!==plan.targetSha||body.tree?.sha!==plan.targetTreeSha||body.parents?.length!==1||body.parents[0].sha!==plan.baseSha)throw Error('target_commit_gate');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'mainRecheck':\n   if(body.object?.sha!==plan.baseSha)throw Error('main_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'featureWrite':'mainWrite','PATCH','/git/refs/heads/'+(plan.mode==='prepare_feature'?SOURCE_BRANCH:'main'),{sha:plan.targetSha,force:false});\n  case 'featureWrite':case 'mainWrite':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_write_mismatch');\n   return sourceRequest(state,state.stage==='featureWrite'?'featureVerify':'mainVerify','GET','/git/ref/heads/'+(state.stage==='featureWrite'?SOURCE_BRANCH:'main'));\n  case 'featureVerify':case 'mainVerify':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_readback_mismatch');\n   return sourceDone(state,state.stage==='featureVerify'?'feature_verified':'main_verified');\n  case 'probeWorkflow':\n   if(!Number.isInteger(body.id)||body.state&&body.state!=='active')throw Error('workflow_gate');\n   return plan.mode==='read_probe'?sourceRequest({...state,workflowId:body.id,runId:plan.runId},'pollRun','GET','/actions/runs/'+plan.runId):sourceFindRuns({...state,workflowId:body.id});\n  case 'findRun':{\n   if(!Array.isArray(body.workflow_runs))throw Error('actions_schema');\n   const matches=[...(state.runMatches||[]),...body.workflow_runs.filter(run=>run.display_title===`Daily screening | ${plan.requestId} | ${plan.marketDate}`)];\n   if(matches.length>1)throw Error('ambiguous_probe_runs');\n   if(body.workflow_runs.length===100){if((state.runPage||1)>=10)throw Error('actions_scan_limit');return sourceFindRuns({...state,runPage:(state.runPage||1)+1,runMatches:matches});}\n   if(matches[0]){if(!sourceTrustedRun(matches[0],state))throw Error('probe_run_lineage');return sourceRequest({...state,runId:String(matches[0].id),runMatches:[]},'pollRun','GET','/actions/runs/'+matches[0].id,null,15);}\n   if(state.dispatchIntent){if(now-state.startedAt>=5*60000)throw Error('probe_dispatch_unconfirmed');return sourceFindRuns({...state,runPage:1},15);}\n   return {...sourceResult({...state,stage:'dispatch',dispatchIntent:true},{route:'native',method:'POST',url:SOURCE_REPO+'/actions/workflows/daily.yml/dispatches',body:{ref:'main',inputs:{request_id:plan.requestId,market_date:plan.marketDate,source_mode:'institutional_probe'}}}),ledgerRequired:true};\n  }\n  case 'dispatch':return sourceFindRuns({...state,dispatchIntent:true},15);\n  case 'pollRun':\n   if(!sourceTrustedRun(body,state))throw Error('probe_run_lineage');\n   if(body.status!=='completed')return sourceRequest(state,'pollRun','GET','/actions/runs/'+state.runId,null,15);\n   return sourceRequest({...state,runAttempt:body.run_attempt||1,runConclusion:body.conclusion},'artifactList','GET','/actions/runs/'+state.runId+'/artifacts?per_page=100');\n  case 'artifactList':{\n   if(body.total_count>100||!Array.isArray(body.artifacts))throw Error('artifact_schema');\n   const matches=body.artifacts.filter(item=>item.name==='institutional-probe'&&!item.expired);\n   if(matches.length!==1)throw Error('probe_artifact_missing_or_ambiguous');const artifact=matches[0];\n   if(!Number.isInteger(artifact.id)||artifact.size_in_bytes>3000000||artifact.workflow_run?.id!==Number(state.runId)||artifact.workflow_run?.head_sha!==plan.probeHeadSha)throw Error('probe_artifact_lineage');\n   return sourceRequest({...state,artifactId:artifact.id},'artifactRedirect','GET','/actions/artifacts/'+artifact.id+'/zip');\n  }\n  case 'artifactBytes':{const evidence=sourceValidateArtifact(body,state);return sourceDone({...state,probeSummary:evidence.summary,artifactByteHashes:evidence.byteHashes},'probe_evidence_verified');}\n  default:throw Error('source_stage');\n }\n}\nfunction sourceNextBlob(state){const plan=state.plan;return state.blobIndex<plan.blobs.length?sourceRequest(state,'blob','POST','/git/blobs',{encoding:'base64',content:plan.blobs[state.blobIndex].content}):sourceRequest(state,'tree','POST','/git/trees',{base_tree:plan.baseTreeSha,tree:plan.treeEntries});}\nfunction sourceRedirect(state,headers){const url=headers?.location||headers?.Location;if(typeof url!=='string'||!/^https:\\/\\/[a-zA-Z0-9.-]+\\.(blob\\.core\\.windows\\.net|actions\\.githubusercontent\\.com|githubusercontent\\.com)\\//.test(url))return sourceDone(state,'failed','artifact_storage_origin');return sourceResult({...state,stage:'artifactBytes'},{route:'zip',method:'GET',url});}\n\nreturn [{json:sourceStart({\"mode\":\"inspect\"})}];"
+      },
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "name": "Record intent or continue",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 2,
+        "output": "={{ $json.ledgerRequired ? 0 : 1 }}"
+      },
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "name": "Project source operation without secrets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Authenticated Actions artifacts are source evidence only; never a screened release.\nconst PROBE_ERRORS=['token_missing','budget_exhausted','source_blocked','quota_unavailable','transport_unavailable','invalid_source_rows','operation_limit','official_source_unavailable','official_source_invalid','checkpoint_unavailable'];\nconst PROBE_OFFICIAL='https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading';\nfunction probeAssert(condition){if(!condition)throw Error('probe_artifact_schema');}\nfunction probeInt(value,min=0,max=Number.MAX_SAFE_INTEGER){return Number.isSafeInteger(value)&&value>=min&&value<=max;}\nfunction probeDate(value){return typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;}\nfunction probeKeys(value,required,optional=[]){probeAssert(value&&typeof value==='object'&&!Array.isArray(value));probeAssert(required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>[...required,...optional].includes(key)));}\nfunction probeError(value){probeAssert(value===null||PROBE_ERRORS.includes(value));}\nfunction sourceValidateCase(item,dates){\n probeKeys(item,['code','case','buy','sell','net','status','coverage','missingDates','errorCategory']);\n probeAssert(/^[1-9]\\d{3}$/.test(item.code)&&['positive','negative','zero'].includes(item.case)&&probeInt(item.buy)&&probeInt(item.sell)&&Number.isSafeInteger(item.net)&&item.buy-item.sell===item.net);\n probeAssert(Math.sign(item.net)==={positive:1,negative:-1,zero:0}[item.case]);probeError(item.errorCategory);\n probeAssert(Array.isArray(item.missingDates)&&new Set(item.missingDates).size===item.missingDates.length&&item.missingDates.every((day,index)=>dates.includes(day)&&(!index||day>item.missingDates[index-1])));\n probeAssert(['complete','partial','unavailable'].includes(item.status)&&item.coverage===(11-item.missingDates.length)/11);\n probeAssert(item.status==='complete'?item.missingDates.length===0&&item.errorCategory===null:item.status==='partial'?item.missingDates.length>0&&item.errorCategory===null:item.missingDates.length===11&&item.errorCategory!==null);\n return {...item,missingDates:[...item.missingDates]};\n}\nfunction sourceValidateSummary(summary,state){\n probeKeys(summary,['probeVersion','marketDate','expectedDates','publicationEligible','globalCompleteness','tokenPresent','actualAttempts','dataRequests','cacheHits','accountLimit','observedRemaining','cases','outcome'],['errorCategory','dailyAttempts','projectCeiling','accountWindowCeiling','officialSourceUrl','officialRowCount','officialSha256']);\n const dates=summary.expectedDates;probeAssert(summary.probeVersion==='institutional-probe-v1'&&summary.marketDate===state.plan.marketDate&&summary.publicationEligible===false&&summary.globalCompleteness===false&&typeof summary.tokenPresent==='boolean');\n probeAssert(Array.isArray(dates)&&dates.length===11&&dates.every((day,index)=>probeDate(day)&&(!index||day>dates[index-1]))&&dates.at(-1)===state.plan.marketDate);\n probeAssert(probeInt(summary.actualAttempts,0,4)&&probeInt(summary.dataRequests,0,3)&&summary.actualAttempts>=summary.dataRequests&&summary.actualAttempts-summary.dataRequests<=1&&probeInt(summary.cacheHits,0,3)&&summary.cacheHits+summary.dataRequests<=3&&(!summary.dataRequests||summary.tokenPresent));\n probeAssert((summary.accountLimit===null||probeInt(summary.accountLimit,1))&&(summary.observedRemaining===null||probeInt(summary.observedRemaining))&&((summary.accountLimit===null)===(summary.observedRemaining===null))&&(summary.accountLimit===null||summary.observedRemaining<=summary.accountLimit));\n for(const key of ['dailyAttempts','projectCeiling','accountWindowCeiling'])if(Object.hasOwn(summary,key))probeAssert(summary[key]===null||probeInt(summary[key],0,key==='dailyAttempts'?300:Number.MAX_SAFE_INTEGER));\n if(Object.hasOwn(summary,'projectCeiling'))probeAssert(probeInt(summary.projectCeiling,1,300));if(summary.dailyAttempts!==undefined&&summary.dailyAttempts!==null)probeAssert(summary.dailyAttempts>=summary.actualAttempts);\n if(Object.hasOwn(summary,'errorCategory'))probeError(summary.errorCategory);\n probeAssert(Array.isArray(summary.cases)&&[0,3].includes(summary.cases.length));const cases=summary.cases.map(item=>sourceValidateCase(item,dates));\n if(cases.length){probeAssert(new Set(cases.map(item=>item.code)).size===3&&cases.every((item,index)=>item.case===['positive','negative','zero'][index]));probeAssert(['dailyAttempts','projectCeiling','accountWindowCeiling'].every(key=>Object.hasOwn(summary,key)));probeAssert(summary.officialSourceUrl===PROBE_OFFICIAL&&probeInt(summary.officialRowCount,3)&&/^[a-f0-9]{64}$/.test(summary.officialSha256||''));}\n else probeAssert(summary.outcome==='unavailable'&&summary.actualAttempts===0&&summary.cacheHits===0&&PROBE_ERRORS.includes(summary.errorCategory)&&!['officialSourceUrl','officialRowCount','officialSha256'].some(key=>Object.hasOwn(summary,key)));\n const outcome=cases.length===3&&cases.every(item=>item.status==='complete')?'complete':cases.some(item=>item.coverage>0)?'partial':'unavailable';probeAssert(summary.outcome===outcome);\n return {...summary,expectedDates:[...dates],cases};\n}\nfunction sourceValidateArtifact(body,state){\n probeKeys(body,['summary.json','provenance.json','byteHashes']);const p=body['provenance.json'];probeKeys(p,['requestId','marketDate','sourceMode','sourceGitCommit','actionsRunId','actionsRunAttempt','repository']);\n probeAssert(p.requestId===state.plan.requestId&&p.marketDate===state.plan.marketDate&&p.sourceMode==='institutional_probe'&&p.sourceGitCommit===state.plan.probeHeadSha&&p.actionsRunId===String(state.runId)&&p.actionsRunAttempt===String(state.runAttempt)&&p.repository==='pingpongtech-uskg/stock-web-pages');\n probeKeys(body.byteHashes,['summary','provenance']);probeAssert(Object.values(body.byteHashes).every(value=>/^[a-f0-9]{64}$/.test(value)));\n return {summary:sourceValidateSummary(body['summary.json'],state),byteHashes:{...body.byteHashes}};\n}\nasync function sourceReadArtifact(files,readBuffer){\n const entries=Object.entries(files||{});probeAssert(entries.length===2&&entries.every(([,file])=>['summary.json','provenance.json'].includes(file.fileName))&&new Set(entries.map(([,file])=>file.fileName)).size===2);\n const body={};const hashes={};for(const [key,file] of entries){const bytes=await readBuffer(key);probeAssert(bytes.length>0&&bytes.length<=1000000);body[file.fileName]=JSON.parse(bytes.toString('utf8'));hashes[file.fileName.slice(0,-5)]=require('crypto').createHash('sha256').update(bytes).digest('hex');}\n return {...body,byteHashes:hashes};\n}\n\n// Temporary operator helper. Pure transitions; no network, credentials, Notion or daily CAS.\nconst SOURCE_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nconst SOURCE_BRANCH='fix/n8n-daily-screening';\nconst SOURCE_SHA=/^[a-f0-9]{40}$/;\nfunction sourceResult(state,op,delaySeconds=0.5){return {state:{...state,op},op,route:op?.route||'done',delaySeconds,ledgerRequired:state.stage==='done'};}\nfunction sourceRequest(state,stage,method,path,body,delaySeconds=0.5){return sourceResult({...state,stage},{route:'github',method,url:SOURCE_REPO+path,body:body||{}},delaySeconds);}\nfunction sourceDone(state,outcome,errorCategory){return sourceResult({...state,stage:'done',outcome,...(errorCategory?{errorCategory}:{})},null);}\nfunction sourceOutcome(state){return {operation:state.plan.mode,stage:state.stage,outcome:state.outcome||'in_progress',requestId:state.plan.requestId||'',marketDate:state.plan.marketDate||'',sourceGitCommit:state.plan.probeHeadSha||state.plan.targetSha||'',actionsRunId:state.runId||'',dispatchIntent:!!state.dispatchIntent,errorCategory:state.errorCategory||'',...(state.probeSummary?{probeSummary:state.probeSummary,artifactByteHashes:state.artifactByteHashes,runConclusion:state.runConclusion}:{})};}\nfunction sourceStart(plan,now=Date.now()){\n if(!['inspect','prepare_feature','promote_main','dispatch_probe','read_probe'].includes(plan.mode))throw Error('source_input');\n if(['prepare_feature','promote_main'].includes(plan.mode)&&![plan.baseSha,plan.targetSha,plan.targetTreeSha].every(value=>SOURCE_SHA.test(value||'')))throw Error('source_input');\n if(plan.mode==='prepare_feature'){\n  if(!SOURCE_SHA.test(plan.featureBaseSha||'')||!SOURCE_SHA.test(plan.baseTreeSha||'')||!Array.isArray(plan.blobs)||!Array.isArray(plan.treeEntries)||plan.blobs.length>100||plan.treeEntries.length>100||Buffer.byteLength(JSON.stringify(plan),'utf8')>1000000)throw Error('source_manifest');\n  if(plan.blobs.some(item=>!SOURCE_SHA.test(item.sha)||!item.content||!/^[A-Za-z0-9+/]*={0,2}$/.test(item.content))||plan.treeEntries.some(item=>typeof item.path!=='string'||item.path.startsWith('/')||item.path.split('/').some(part=>!part||part==='..'||part==='.')||item.type!=='blob'||item.mode!=='100644'||(item.sha!==null&&!SOURCE_SHA.test(item.sha))))throw Error('source_manifest');\n  if(plan.commit?.tree!==plan.targetTreeSha||plan.commit?.parents?.length!==1||plan.commit.parents[0]!==plan.baseSha||typeof plan.commit.message!=='string'||!plan.commit.author||!plan.commit.committer)throw Error('source_manifest');\n }\n if(plan.mode==='promote_main'&&!/^\\d{1,24}$/.test(plan.ciRunId||''))throw Error('source_input');\n if(['dispatch_probe','read_probe'].includes(plan.mode)&&(!SOURCE_SHA.test(plan.probeHeadSha||'')||!/^\\d{4}-\\d{2}-\\d{2}$/.test(plan.marketDate||'')||new Date(plan.marketDate+'T00:00:00Z').toISOString().slice(0,10)!==plan.marketDate||!/^institutional-probe:[A-Za-z0-9_.:-]{1,140}$/.test(plan.requestId||'')))throw Error('source_input');\n if(plan.mode==='read_probe'&&!/^\\d{1,24}$/.test(plan.runId||''))throw Error('source_input');\n return sourceRequest({plan,startedAt:now,deadline:now+20*60000,blobIndex:0},'main','GET','/git/ref/heads/main');\n}\nfunction sourceFindRuns(state,delaySeconds=0.5){return sourceRequest(state,'findRun','GET',`/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=100&page=${state.runPage||1}`,null,delaySeconds);}\nfunction sourceTrustedRun(run,state){return String(run.id)===String(state.runId||run.id)&&run.workflow_id===state.workflowId&&run.head_sha===state.plan.probeHeadSha&&run.head_branch==='main'&&run.event==='workflow_dispatch'&&run.head_repository?.full_name==='pingpongtech-uskg/stock-web-pages'&&run.display_title===`Daily screening | ${state.plan.requestId} | ${state.plan.marketDate}`;}\nfunction sourceAdvance(state,response,now=Date.now()){\n if(now>=state.deadline)return sourceDone(state,'failed','source_deadline');\n const status=Number(response.statusCode||0);\n if(state.stage==='dispatch'&&(status>=500||response.error))return sourceFindRuns({...state,dispatchIntent:true},15);\n if(status<200||status>=300){if(state.stage==='artifactRedirect'&&status===302)return sourceRedirect(state,response.headers);return sourceDone(state,'failed','github_http_'+status);}\n let body=response.body??response.data??{};if(typeof body==='string'){try{body=JSON.parse(body);}catch{return sourceDone(state,'failed','github_response_schema');}}\n try{return sourceAdvanceSuccess(state,body,response,now);}catch(error){return sourceDone(state,'failed',error.message.split(':')[0]);}\n}\nfunction sourceAdvanceSuccess(state,body,response,now){\n const plan=state.plan;\n switch(state.stage){\n  case 'main':\n   if(plan.mode==='inspect')return sourceDone({...state,observedMainSha:body.object?.sha},'inspected');\n   if(body.object?.sha!==(['dispatch_probe','read_probe'].includes(plan.mode)?plan.probeHeadSha:plan.baseSha))throw Error('main_changed');\n   return sourceRequest(state,['dispatch_probe','read_probe'].includes(plan.mode)?'probeWorkflow':'feature','GET',['dispatch_probe','read_probe'].includes(plan.mode)?'/actions/workflows/daily.yml':'/git/ref/heads/'+SOURCE_BRANCH);\n  case 'feature':\n   if(plan.mode==='prepare_feature'&&body.object?.sha===plan.targetSha)return sourceDone(state,'feature_verified');\n   if(body.object?.sha!==(plan.mode==='prepare_feature'?plan.featureBaseSha:plan.targetSha))throw Error('feature_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'baseCommit':'ciWorkflow','GET',plan.mode==='prepare_feature'?'/git/commits/'+plan.baseSha:'/actions/workflows/ci.yml');\n  case 'baseCommit':\n   if(body.sha!==plan.baseSha||body.tree?.sha!==plan.baseTreeSha)throw Error('base_tree_mismatch');\n   return sourceNextBlob(state);\n  case 'blob':\n   if(body.sha!==plan.blobs[state.blobIndex].sha)throw Error('blob_sha_mismatch');\n   return sourceNextBlob({...state,blobIndex:state.blobIndex+1});\n  case 'tree':\n   if(body.sha!==plan.targetTreeSha)throw Error('tree_sha_mismatch');\n   return sourceRequest(state,'commit','POST','/git/commits',plan.commit);\n  case 'commit':\n   if(body.sha!==plan.targetSha)throw Error('commit_sha_mismatch');\n   return sourceRequest(state,'featureRecheck','GET','/git/ref/heads/'+SOURCE_BRANCH);\n  case 'featureRecheck':\n   if(body.object?.sha!==plan.featureBaseSha)throw Error('feature_changed');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'ciWorkflow':return sourceRequest({...state,workflowId:body.id},'ciRun','GET','/actions/runs/'+plan.ciRunId);\n  case 'ciRun':\n   if(body.id!==Number(plan.ciRunId)||body.workflow_id!==state.workflowId||body.head_sha!==plan.targetSha||body.head_branch!==SOURCE_BRANCH||body.event!=='push'||body.status!=='completed'||body.conclusion!=='success'||body.repository?.full_name!=='pingpongtech-uskg/stock-web-pages')throw Error('ci_gate');\n   return sourceRequest(state,'targetCommit','GET','/git/commits/'+plan.targetSha);\n  case 'targetCommit':\n   if(body.sha!==plan.targetSha||body.tree?.sha!==plan.targetTreeSha||body.parents?.length!==1||body.parents[0].sha!==plan.baseSha)throw Error('target_commit_gate');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'mainRecheck':\n   if(body.object?.sha!==plan.baseSha)throw Error('main_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'featureWrite':'mainWrite','PATCH','/git/refs/heads/'+(plan.mode==='prepare_feature'?SOURCE_BRANCH:'main'),{sha:plan.targetSha,force:false});\n  case 'featureWrite':case 'mainWrite':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_write_mismatch');\n   return sourceRequest(state,state.stage==='featureWrite'?'featureVerify':'mainVerify','GET','/git/ref/heads/'+(state.stage==='featureWrite'?SOURCE_BRANCH:'main'));\n  case 'featureVerify':case 'mainVerify':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_readback_mismatch');\n   return sourceDone(state,state.stage==='featureVerify'?'feature_verified':'main_verified');\n  case 'probeWorkflow':\n   if(!Number.isInteger(body.id)||body.state&&body.state!=='active')throw Error('workflow_gate');\n   return plan.mode==='read_probe'?sourceRequest({...state,workflowId:body.id,runId:plan.runId},'pollRun','GET','/actions/runs/'+plan.runId):sourceFindRuns({...state,workflowId:body.id});\n  case 'findRun':{\n   if(!Array.isArray(body.workflow_runs))throw Error('actions_schema');\n   const matches=[...(state.runMatches||[]),...body.workflow_runs.filter(run=>run.display_title===`Daily screening | ${plan.requestId} | ${plan.marketDate}`)];\n   if(matches.length>1)throw Error('ambiguous_probe_runs');\n   if(body.workflow_runs.length===100){if((state.runPage||1)>=10)throw Error('actions_scan_limit');return sourceFindRuns({...state,runPage:(state.runPage||1)+1,runMatches:matches});}\n   if(matches[0]){if(!sourceTrustedRun(matches[0],state))throw Error('probe_run_lineage');return sourceRequest({...state,runId:String(matches[0].id),runMatches:[]},'pollRun','GET','/actions/runs/'+matches[0].id,null,15);}\n   if(state.dispatchIntent){if(now-state.startedAt>=5*60000)throw Error('probe_dispatch_unconfirmed');return sourceFindRuns({...state,runPage:1},15);}\n   return {...sourceResult({...state,stage:'dispatch',dispatchIntent:true},{route:'native',method:'POST',url:SOURCE_REPO+'/actions/workflows/daily.yml/dispatches',body:{ref:'main',inputs:{request_id:plan.requestId,market_date:plan.marketDate,source_mode:'institutional_probe'}}}),ledgerRequired:true};\n  }\n  case 'dispatch':return sourceFindRuns({...state,dispatchIntent:true},15);\n  case 'pollRun':\n   if(!sourceTrustedRun(body,state))throw Error('probe_run_lineage');\n   if(body.status!=='completed')return sourceRequest(state,'pollRun','GET','/actions/runs/'+state.runId,null,15);\n   return sourceRequest({...state,runAttempt:body.run_attempt||1,runConclusion:body.conclusion},'artifactList','GET','/actions/runs/'+state.runId+'/artifacts?per_page=100');\n  case 'artifactList':{\n   if(body.total_count>100||!Array.isArray(body.artifacts))throw Error('artifact_schema');\n   const matches=body.artifacts.filter(item=>item.name==='institutional-probe'&&!item.expired);\n   if(matches.length!==1)throw Error('probe_artifact_missing_or_ambiguous');const artifact=matches[0];\n   if(!Number.isInteger(artifact.id)||artifact.size_in_bytes>3000000||artifact.workflow_run?.id!==Number(state.runId)||artifact.workflow_run?.head_sha!==plan.probeHeadSha)throw Error('probe_artifact_lineage');\n   return sourceRequest({...state,artifactId:artifact.id},'artifactRedirect','GET','/actions/artifacts/'+artifact.id+'/zip');\n  }\n  case 'artifactBytes':{const evidence=sourceValidateArtifact(body,state);return sourceDone({...state,probeSummary:evidence.summary,artifactByteHashes:evidence.byteHashes},'probe_evidence_verified');}\n  default:throw Error('source_stage');\n }\n}\nfunction sourceNextBlob(state){const plan=state.plan;return state.blobIndex<plan.blobs.length?sourceRequest(state,'blob','POST','/git/blobs',{encoding:'base64',content:plan.blobs[state.blobIndex].content}):sourceRequest(state,'tree','POST','/git/trees',{base_tree:plan.baseTreeSha,tree:plan.treeEntries});}\nfunction sourceRedirect(state,headers){const url=headers?.location||headers?.Location;if(typeof url!=='string'||!/^https:\\/\\/[a-zA-Z0-9.-]+\\.(blob\\.core\\.windows\\.net|actions\\.githubusercontent\\.com|githubusercontent\\.com)\\//.test(url))return sourceDone(state,'failed','artifact_storage_origin');return sourceResult({...state,stage:'artifactBytes'},{route:'zip',method:'GET',url});}\n\nconst item=$input.first().json;return [{json:{...item,observation:sourceOutcome(item.state)}}];"
+      },
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "name": "Store sanitized source observation",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "JWOzPb7PlUVqGC1g"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "record_key": "={{ 'source-operation:'+ $execution.id + ':' + $json.state.stage }}",
+            "market_date": "={{ $json.observation.marketDate }}",
+            "request_id": "={{ $json.observation.requestId }}",
+            "actions_run_id": "={{ $json.observation.actionsRunId }}",
+            "run_id": "",
+            "payload_hash": "",
+            "screening_status": "not_screened",
+            "notion_status": "not_requested",
+            "deploy_status": "not_requested",
+            "error_category": "={{ $json.observation.errorCategory }}",
+            "error_message": "",
+            "notion_page_id": "",
+            "notion_database_id": "",
+            "notion_data_source_id": "",
+            "state_json": "={{ JSON.stringify($json.observation) }}"
+          },
+          "schema": [
+            {
+              "id": "record_key",
+              "displayName": "record_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "market_date",
+              "displayName": "market_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actions_run_id",
+              "displayName": "actions_run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payload_hash",
+              "displayName": "payload_hash",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "screening_status",
+              "displayName": "screening_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_status",
+              "displayName": "notion_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deploy_status",
+              "displayName": "deploy_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_category",
+              "displayName": "error_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_page_id",
+              "displayName": "notion_page_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_database_id",
+              "displayName": "notion_database_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notion_data_source_id",
+              "displayName": "notion_data_source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "state_json",
+              "displayName": "state_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "position": [
+        880,
+        0
+      ]
+    },
+    {
+      "name": "Continue original operation after observation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const item=$('Project source operation without secrets').item.json;return [{json:{...item,ledgerRequired:false}}];"
+      },
+      "position": [
+        1100,
+        0
+      ]
+    },
+    {
+      "name": "Bounded source polling wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": "={{ $json.delaySeconds }}",
+        "unit": "seconds"
+      },
+      "position": [
+        1320,
+        0
+      ]
+    },
+    {
+      "name": "Gate deadline and fixed request origins",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Authenticated Actions artifacts are source evidence only; never a screened release.\nconst PROBE_ERRORS=['token_missing','budget_exhausted','source_blocked','quota_unavailable','transport_unavailable','invalid_source_rows','operation_limit','official_source_unavailable','official_source_invalid','checkpoint_unavailable'];\nconst PROBE_OFFICIAL='https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading';\nfunction probeAssert(condition){if(!condition)throw Error('probe_artifact_schema');}\nfunction probeInt(value,min=0,max=Number.MAX_SAFE_INTEGER){return Number.isSafeInteger(value)&&value>=min&&value<=max;}\nfunction probeDate(value){return typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;}\nfunction probeKeys(value,required,optional=[]){probeAssert(value&&typeof value==='object'&&!Array.isArray(value));probeAssert(required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>[...required,...optional].includes(key)));}\nfunction probeError(value){probeAssert(value===null||PROBE_ERRORS.includes(value));}\nfunction sourceValidateCase(item,dates){\n probeKeys(item,['code','case','buy','sell','net','status','coverage','missingDates','errorCategory']);\n probeAssert(/^[1-9]\\d{3}$/.test(item.code)&&['positive','negative','zero'].includes(item.case)&&probeInt(item.buy)&&probeInt(item.sell)&&Number.isSafeInteger(item.net)&&item.buy-item.sell===item.net);\n probeAssert(Math.sign(item.net)==={positive:1,negative:-1,zero:0}[item.case]);probeError(item.errorCategory);\n probeAssert(Array.isArray(item.missingDates)&&new Set(item.missingDates).size===item.missingDates.length&&item.missingDates.every((day,index)=>dates.includes(day)&&(!index||day>item.missingDates[index-1])));\n probeAssert(['complete','partial','unavailable'].includes(item.status)&&item.coverage===(11-item.missingDates.length)/11);\n probeAssert(item.status==='complete'?item.missingDates.length===0&&item.errorCategory===null:item.status==='partial'?item.missingDates.length>0&&item.errorCategory===null:item.missingDates.length===11&&item.errorCategory!==null);\n return {...item,missingDates:[...item.missingDates]};\n}\nfunction sourceValidateSummary(summary,state){\n probeKeys(summary,['probeVersion','marketDate','expectedDates','publicationEligible','globalCompleteness','tokenPresent','actualAttempts','dataRequests','cacheHits','accountLimit','observedRemaining','cases','outcome'],['errorCategory','dailyAttempts','projectCeiling','accountWindowCeiling','officialSourceUrl','officialRowCount','officialSha256']);\n const dates=summary.expectedDates;probeAssert(summary.probeVersion==='institutional-probe-v1'&&summary.marketDate===state.plan.marketDate&&summary.publicationEligible===false&&summary.globalCompleteness===false&&typeof summary.tokenPresent==='boolean');\n probeAssert(Array.isArray(dates)&&dates.length===11&&dates.every((day,index)=>probeDate(day)&&(!index||day>dates[index-1]))&&dates.at(-1)===state.plan.marketDate);\n probeAssert(probeInt(summary.actualAttempts,0,4)&&probeInt(summary.dataRequests,0,3)&&summary.actualAttempts>=summary.dataRequests&&summary.actualAttempts-summary.dataRequests<=1&&probeInt(summary.cacheHits,0,3)&&summary.cacheHits+summary.dataRequests<=3&&(!summary.dataRequests||summary.tokenPresent));\n probeAssert((summary.accountLimit===null||probeInt(summary.accountLimit,1))&&(summary.observedRemaining===null||probeInt(summary.observedRemaining))&&((summary.accountLimit===null)===(summary.observedRemaining===null))&&(summary.accountLimit===null||summary.observedRemaining<=summary.accountLimit));\n for(const key of ['dailyAttempts','projectCeiling','accountWindowCeiling'])if(Object.hasOwn(summary,key))probeAssert(summary[key]===null||probeInt(summary[key],0,key==='dailyAttempts'?300:Number.MAX_SAFE_INTEGER));\n if(Object.hasOwn(summary,'projectCeiling'))probeAssert(probeInt(summary.projectCeiling,1,300));if(summary.dailyAttempts!==undefined&&summary.dailyAttempts!==null)probeAssert(summary.dailyAttempts>=summary.actualAttempts);\n if(Object.hasOwn(summary,'errorCategory'))probeError(summary.errorCategory);\n probeAssert(Array.isArray(summary.cases)&&[0,3].includes(summary.cases.length));const cases=summary.cases.map(item=>sourceValidateCase(item,dates));\n if(cases.length){probeAssert(new Set(cases.map(item=>item.code)).size===3&&cases.every((item,index)=>item.case===['positive','negative','zero'][index]));probeAssert(['dailyAttempts','projectCeiling','accountWindowCeiling'].every(key=>Object.hasOwn(summary,key)));probeAssert(summary.officialSourceUrl===PROBE_OFFICIAL&&probeInt(summary.officialRowCount,3)&&/^[a-f0-9]{64}$/.test(summary.officialSha256||''));}\n else probeAssert(summary.outcome==='unavailable'&&summary.actualAttempts===0&&summary.cacheHits===0&&PROBE_ERRORS.includes(summary.errorCategory)&&!['officialSourceUrl','officialRowCount','officialSha256'].some(key=>Object.hasOwn(summary,key)));\n const outcome=cases.length===3&&cases.every(item=>item.status==='complete')?'complete':cases.some(item=>item.coverage>0)?'partial':'unavailable';probeAssert(summary.outcome===outcome);\n return {...summary,expectedDates:[...dates],cases};\n}\nfunction sourceValidateArtifact(body,state){\n probeKeys(body,['summary.json','provenance.json','byteHashes']);const p=body['provenance.json'];probeKeys(p,['requestId','marketDate','sourceMode','sourceGitCommit','actionsRunId','actionsRunAttempt','repository']);\n probeAssert(p.requestId===state.plan.requestId&&p.marketDate===state.plan.marketDate&&p.sourceMode==='institutional_probe'&&p.sourceGitCommit===state.plan.probeHeadSha&&p.actionsRunId===String(state.runId)&&p.actionsRunAttempt===String(state.runAttempt)&&p.repository==='pingpongtech-uskg/stock-web-pages');\n probeKeys(body.byteHashes,['summary','provenance']);probeAssert(Object.values(body.byteHashes).every(value=>/^[a-f0-9]{64}$/.test(value)));\n return {summary:sourceValidateSummary(body['summary.json'],state),byteHashes:{...body.byteHashes}};\n}\nasync function sourceReadArtifact(files,readBuffer){\n const entries=Object.entries(files||{});probeAssert(entries.length===2&&entries.every(([,file])=>['summary.json','provenance.json'].includes(file.fileName))&&new Set(entries.map(([,file])=>file.fileName)).size===2);\n const body={};const hashes={};for(const [key,file] of entries){const bytes=await readBuffer(key);probeAssert(bytes.length>0&&bytes.length<=1000000);body[file.fileName]=JSON.parse(bytes.toString('utf8'));hashes[file.fileName.slice(0,-5)]=require('crypto').createHash('sha256').update(bytes).digest('hex');}\n return {...body,byteHashes:hashes};\n}\n\n// Temporary operator helper. Pure transitions; no network, credentials, Notion or daily CAS.\nconst SOURCE_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nconst SOURCE_BRANCH='fix/n8n-daily-screening';\nconst SOURCE_SHA=/^[a-f0-9]{40}$/;\nfunction sourceResult(state,op,delaySeconds=0.5){return {state:{...state,op},op,route:op?.route||'done',delaySeconds,ledgerRequired:state.stage==='done'};}\nfunction sourceRequest(state,stage,method,path,body,delaySeconds=0.5){return sourceResult({...state,stage},{route:'github',method,url:SOURCE_REPO+path,body:body||{}},delaySeconds);}\nfunction sourceDone(state,outcome,errorCategory){return sourceResult({...state,stage:'done',outcome,...(errorCategory?{errorCategory}:{})},null);}\nfunction sourceOutcome(state){return {operation:state.plan.mode,stage:state.stage,outcome:state.outcome||'in_progress',requestId:state.plan.requestId||'',marketDate:state.plan.marketDate||'',sourceGitCommit:state.plan.probeHeadSha||state.plan.targetSha||'',actionsRunId:state.runId||'',dispatchIntent:!!state.dispatchIntent,errorCategory:state.errorCategory||'',...(state.probeSummary?{probeSummary:state.probeSummary,artifactByteHashes:state.artifactByteHashes,runConclusion:state.runConclusion}:{})};}\nfunction sourceStart(plan,now=Date.now()){\n if(!['inspect','prepare_feature','promote_main','dispatch_probe','read_probe'].includes(plan.mode))throw Error('source_input');\n if(['prepare_feature','promote_main'].includes(plan.mode)&&![plan.baseSha,plan.targetSha,plan.targetTreeSha].every(value=>SOURCE_SHA.test(value||'')))throw Error('source_input');\n if(plan.mode==='prepare_feature'){\n  if(!SOURCE_SHA.test(plan.featureBaseSha||'')||!SOURCE_SHA.test(plan.baseTreeSha||'')||!Array.isArray(plan.blobs)||!Array.isArray(plan.treeEntries)||plan.blobs.length>100||plan.treeEntries.length>100||Buffer.byteLength(JSON.stringify(plan),'utf8')>1000000)throw Error('source_manifest');\n  if(plan.blobs.some(item=>!SOURCE_SHA.test(item.sha)||!item.content||!/^[A-Za-z0-9+/]*={0,2}$/.test(item.content))||plan.treeEntries.some(item=>typeof item.path!=='string'||item.path.startsWith('/')||item.path.split('/').some(part=>!part||part==='..'||part==='.')||item.type!=='blob'||item.mode!=='100644'||(item.sha!==null&&!SOURCE_SHA.test(item.sha))))throw Error('source_manifest');\n  if(plan.commit?.tree!==plan.targetTreeSha||plan.commit?.parents?.length!==1||plan.commit.parents[0]!==plan.baseSha||typeof plan.commit.message!=='string'||!plan.commit.author||!plan.commit.committer)throw Error('source_manifest');\n }\n if(plan.mode==='promote_main'&&!/^\\d{1,24}$/.test(plan.ciRunId||''))throw Error('source_input');\n if(['dispatch_probe','read_probe'].includes(plan.mode)&&(!SOURCE_SHA.test(plan.probeHeadSha||'')||!/^\\d{4}-\\d{2}-\\d{2}$/.test(plan.marketDate||'')||new Date(plan.marketDate+'T00:00:00Z').toISOString().slice(0,10)!==plan.marketDate||!/^institutional-probe:[A-Za-z0-9_.:-]{1,140}$/.test(plan.requestId||'')))throw Error('source_input');\n if(plan.mode==='read_probe'&&!/^\\d{1,24}$/.test(plan.runId||''))throw Error('source_input');\n return sourceRequest({plan,startedAt:now,deadline:now+20*60000,blobIndex:0},'main','GET','/git/ref/heads/main');\n}\nfunction sourceFindRuns(state,delaySeconds=0.5){return sourceRequest(state,'findRun','GET',`/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=100&page=${state.runPage||1}`,null,delaySeconds);}\nfunction sourceTrustedRun(run,state){return String(run.id)===String(state.runId||run.id)&&run.workflow_id===state.workflowId&&run.head_sha===state.plan.probeHeadSha&&run.head_branch==='main'&&run.event==='workflow_dispatch'&&run.head_repository?.full_name==='pingpongtech-uskg/stock-web-pages'&&run.display_title===`Daily screening | ${state.plan.requestId} | ${state.plan.marketDate}`;}\nfunction sourceAdvance(state,response,now=Date.now()){\n if(now>=state.deadline)return sourceDone(state,'failed','source_deadline');\n const status=Number(response.statusCode||0);\n if(state.stage==='dispatch'&&(status>=500||response.error))return sourceFindRuns({...state,dispatchIntent:true},15);\n if(status<200||status>=300){if(state.stage==='artifactRedirect'&&status===302)return sourceRedirect(state,response.headers);return sourceDone(state,'failed','github_http_'+status);}\n let body=response.body??response.data??{};if(typeof body==='string'){try{body=JSON.parse(body);}catch{return sourceDone(state,'failed','github_response_schema');}}\n try{return sourceAdvanceSuccess(state,body,response,now);}catch(error){return sourceDone(state,'failed',error.message.split(':')[0]);}\n}\nfunction sourceAdvanceSuccess(state,body,response,now){\n const plan=state.plan;\n switch(state.stage){\n  case 'main':\n   if(plan.mode==='inspect')return sourceDone({...state,observedMainSha:body.object?.sha},'inspected');\n   if(body.object?.sha!==(['dispatch_probe','read_probe'].includes(plan.mode)?plan.probeHeadSha:plan.baseSha))throw Error('main_changed');\n   return sourceRequest(state,['dispatch_probe','read_probe'].includes(plan.mode)?'probeWorkflow':'feature','GET',['dispatch_probe','read_probe'].includes(plan.mode)?'/actions/workflows/daily.yml':'/git/ref/heads/'+SOURCE_BRANCH);\n  case 'feature':\n   if(plan.mode==='prepare_feature'&&body.object?.sha===plan.targetSha)return sourceDone(state,'feature_verified');\n   if(body.object?.sha!==(plan.mode==='prepare_feature'?plan.featureBaseSha:plan.targetSha))throw Error('feature_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'baseCommit':'ciWorkflow','GET',plan.mode==='prepare_feature'?'/git/commits/'+plan.baseSha:'/actions/workflows/ci.yml');\n  case 'baseCommit':\n   if(body.sha!==plan.baseSha||body.tree?.sha!==plan.baseTreeSha)throw Error('base_tree_mismatch');\n   return sourceNextBlob(state);\n  case 'blob':\n   if(body.sha!==plan.blobs[state.blobIndex].sha)throw Error('blob_sha_mismatch');\n   return sourceNextBlob({...state,blobIndex:state.blobIndex+1});\n  case 'tree':\n   if(body.sha!==plan.targetTreeSha)throw Error('tree_sha_mismatch');\n   return sourceRequest(state,'commit','POST','/git/commits',plan.commit);\n  case 'commit':\n   if(body.sha!==plan.targetSha)throw Error('commit_sha_mismatch');\n   return sourceRequest(state,'featureRecheck','GET','/git/ref/heads/'+SOURCE_BRANCH);\n  case 'featureRecheck':\n   if(body.object?.sha!==plan.featureBaseSha)throw Error('feature_changed');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'ciWorkflow':return sourceRequest({...state,workflowId:body.id},'ciRun','GET','/actions/runs/'+plan.ciRunId);\n  case 'ciRun':\n   if(body.id!==Number(plan.ciRunId)||body.workflow_id!==state.workflowId||body.head_sha!==plan.targetSha||body.head_branch!==SOURCE_BRANCH||body.event!=='push'||body.status!=='completed'||body.conclusion!=='success'||body.repository?.full_name!=='pingpongtech-uskg/stock-web-pages')throw Error('ci_gate');\n   return sourceRequest(state,'targetCommit','GET','/git/commits/'+plan.targetSha);\n  case 'targetCommit':\n   if(body.sha!==plan.targetSha||body.tree?.sha!==plan.targetTreeSha||body.parents?.length!==1||body.parents[0].sha!==plan.baseSha)throw Error('target_commit_gate');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'mainRecheck':\n   if(body.object?.sha!==plan.baseSha)throw Error('main_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'featureWrite':'mainWrite','PATCH','/git/refs/heads/'+(plan.mode==='prepare_feature'?SOURCE_BRANCH:'main'),{sha:plan.targetSha,force:false});\n  case 'featureWrite':case 'mainWrite':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_write_mismatch');\n   return sourceRequest(state,state.stage==='featureWrite'?'featureVerify':'mainVerify','GET','/git/ref/heads/'+(state.stage==='featureWrite'?SOURCE_BRANCH:'main'));\n  case 'featureVerify':case 'mainVerify':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_readback_mismatch');\n   return sourceDone(state,state.stage==='featureVerify'?'feature_verified':'main_verified');\n  case 'probeWorkflow':\n   if(!Number.isInteger(body.id)||body.state&&body.state!=='active')throw Error('workflow_gate');\n   return plan.mode==='read_probe'?sourceRequest({...state,workflowId:body.id,runId:plan.runId},'pollRun','GET','/actions/runs/'+plan.runId):sourceFindRuns({...state,workflowId:body.id});\n  case 'findRun':{\n   if(!Array.isArray(body.workflow_runs))throw Error('actions_schema');\n   const matches=[...(state.runMatches||[]),...body.workflow_runs.filter(run=>run.display_title===`Daily screening | ${plan.requestId} | ${plan.marketDate}`)];\n   if(matches.length>1)throw Error('ambiguous_probe_runs');\n   if(body.workflow_runs.length===100){if((state.runPage||1)>=10)throw Error('actions_scan_limit');return sourceFindRuns({...state,runPage:(state.runPage||1)+1,runMatches:matches});}\n   if(matches[0]){if(!sourceTrustedRun(matches[0],state))throw Error('probe_run_lineage');return sourceRequest({...state,runId:String(matches[0].id),runMatches:[]},'pollRun','GET','/actions/runs/'+matches[0].id,null,15);}\n   if(state.dispatchIntent){if(now-state.startedAt>=5*60000)throw Error('probe_dispatch_unconfirmed');return sourceFindRuns({...state,runPage:1},15);}\n   return {...sourceResult({...state,stage:'dispatch',dispatchIntent:true},{route:'native',method:'POST',url:SOURCE_REPO+'/actions/workflows/daily.yml/dispatches',body:{ref:'main',inputs:{request_id:plan.requestId,market_date:plan.marketDate,source_mode:'institutional_probe'}}}),ledgerRequired:true};\n  }\n  case 'dispatch':return sourceFindRuns({...state,dispatchIntent:true},15);\n  case 'pollRun':\n   if(!sourceTrustedRun(body,state))throw Error('probe_run_lineage');\n   if(body.status!=='completed')return sourceRequest(state,'pollRun','GET','/actions/runs/'+state.runId,null,15);\n   return sourceRequest({...state,runAttempt:body.run_attempt||1,runConclusion:body.conclusion},'artifactList','GET','/actions/runs/'+state.runId+'/artifacts?per_page=100');\n  case 'artifactList':{\n   if(body.total_count>100||!Array.isArray(body.artifacts))throw Error('artifact_schema');\n   const matches=body.artifacts.filter(item=>item.name==='institutional-probe'&&!item.expired);\n   if(matches.length!==1)throw Error('probe_artifact_missing_or_ambiguous');const artifact=matches[0];\n   if(!Number.isInteger(artifact.id)||artifact.size_in_bytes>3000000||artifact.workflow_run?.id!==Number(state.runId)||artifact.workflow_run?.head_sha!==plan.probeHeadSha)throw Error('probe_artifact_lineage');\n   return sourceRequest({...state,artifactId:artifact.id},'artifactRedirect','GET','/actions/artifacts/'+artifact.id+'/zip');\n  }\n  case 'artifactBytes':{const evidence=sourceValidateArtifact(body,state);return sourceDone({...state,probeSummary:evidence.summary,artifactByteHashes:evidence.byteHashes},'probe_evidence_verified');}\n  default:throw Error('source_stage');\n }\n}\nfunction sourceNextBlob(state){const plan=state.plan;return state.blobIndex<plan.blobs.length?sourceRequest(state,'blob','POST','/git/blobs',{encoding:'base64',content:plan.blobs[state.blobIndex].content}):sourceRequest(state,'tree','POST','/git/trees',{base_tree:plan.baseTreeSha,tree:plan.treeEntries});}\nfunction sourceRedirect(state,headers){const url=headers?.location||headers?.Location;if(typeof url!=='string'||!/^https:\\/\\/[a-zA-Z0-9.-]+\\.(blob\\.core\\.windows\\.net|actions\\.githubusercontent\\.com|githubusercontent\\.com)\\//.test(url))return sourceDone(state,'failed','artifact_storage_origin');return sourceResult({...state,stage:'artifactBytes'},{route:'zip',method:'GET',url});}\n\nconst item=$input.first();const {state,op}=item.json;if(state.stage!=='done'&&Date.now()>=state.deadline)return [{json:sourceDone(state,'failed','source_deadline')}];if(op&&!(op.url.startsWith(SOURCE_REPO+'/')||(op.route==='zip'&&/^https:\\/\\/[a-zA-Z0-9.-]+\\.(blob\\.core\\.windows\\.net|actions\\.githubusercontent\\.com|githubusercontent\\.com)\\//.test(op.url))))throw Error('source_origin');return [item];"
+      },
+      "position": [
+        1540,
+        0
+      ]
+    },
+    {
+      "name": "Choose explicit source business operation",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 8,
+        "output": "={{ !$json.op ? 7 : $json.route === \"native\" ? 5 : $json.route === \"zip\" ? 6 : $json.op.method === \"GET\" ? 0 : $json.state.stage === \"blob\" ? 1 : $json.state.stage === \"tree\" ? 2 : $json.state.stage === \"commit\" ? 3 : 4 }}"
+      },
+      "position": [
+        1760,
+        0
+      ]
+    },
+    {
+      "name": "Read guarded refs CI run and artifact metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": false,
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        1980,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Create approved Git blob",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.op.body }}",
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        2200,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Create approved Git tree",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.op.body }}",
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        2420,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Create approved exact Git commit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.op.body }}",
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        2640,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Nonforced guarded feature or main reference",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.op.body }}",
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        2860,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Dispatch one institutional probe",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "workflow",
+        "operation": "dispatch",
+        "authentication": "accessToken",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "pingpongtech-uskg"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "stock-web-pages"
+        },
+        "workflowId": {
+          "__rl": true,
+          "mode": "filename",
+          "value": "daily.yml"
+        },
+        "ref": {
+          "__rl": true,
+          "mode": "name",
+          "value": "main"
+        },
+        "inputs": "={{ JSON.stringify($json.op.body.inputs) }}"
+      },
+      "position": [
+        3080,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Download probe artifact without credentials",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "url": "={{ $json.op.url }}",
+        "authentication": "none",
+        "options": {
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "position": [
+        3300,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Restore original operation after GitHub response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{state:$('Choose explicit source business operation').item.json.state,response:$input.first().json}}];"
+      },
+      "position": [
+        3520,
+        0
+      ]
+    },
+    {
+      "name": "Recover native probe result without redispatch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Sanitized observations survive execution retention; recovery authority remains GitHub CAS.\nfunction safeOutcomeText(value) {return String(value||'').replace(/https?:\\/\\/\\S+/g,'[URL redacted]').slice(0,1000);}\nfunction operationOutcome(state) {\n  const screeningStatus=state.screeningStatus||'pending',notionStatus=state.notionStatus||'pending',deployStatus=state.deployStatus||'pending';\n  const outcome=screeningStatus==='diagnostic_verified'?'diagnostics_only':screeningStatus==='skipped_non_trading'?'skipped_non_trading':screeningStatus==='already_complete'?'already_complete':screeningStatus==='complete'&&notionStatus==='complete'?(deployStatus==='verified'?'complete':'deployment_pending'):state.errorCategory?'failed':'in_progress';\n  const actionsRunId=/^\\d{1,24}$/.test(state.actionsRunId||'')?state.actionsRunId:'';\n  const pageId=/^[a-f0-9-]{36}$/.test(state.notionPageId||'')?state.notionPageId:'';\n  return {outcome,marketDate:state.marketDate,requestedAtDate:state.requestedAtDate||state.marketDate,requestId:state.requestId,stage:state.stage,owner:state.owner,screeningStatus,notionStatus,deployStatus,publicationStatus:state.publicationStatus||'pending',actionsRunId,runId:state.runId||'',revision:state.revision||'',payloadHash:state.payloadHash||'',expectedCount:state.expectedCount??null,archivedCount:state.archivedCount??null,actionsUrl:actionsRunId?'https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/'+actionsRunId:null,notionUrl:pageId?'https://www.notion.so/'+pageId.replaceAll('-',''):null,publishedGitCommit:/^[a-f0-9]{40}$/.test(state.publication?.publishedGitCommit||'')?state.publication.publishedGitCommit:null,errorCategory:state.errorCategory||'',errorMessage:safeOutcomeText(state.errorMessage),diagnosticsOnly:screeningStatus==='diagnostic_verified',deadline:state.deadline||null,scheduledCutoff:state.scheduledCutoff||state.overdueAt||null,manualDeadlineOverride:state.manualDeadlineOverride||false};\n}\nfunction nativeDispatchResponse(value) {\n  const error=value?.error;\n  const code=Number(value?.statusCode||error?.statusCode||error?.httpCode||error?.cause?.statusCode||0);\n  // Github v1.1 throws this exact local validation error before githubApiRequest.\n  if(error&&code===0&&(error.message||error)==='Inputs: Invalid JSON')return {statusCode:400,body:{message:'Inputs: Invalid JSON'},headers:{},preflightFailed:true};\n  const statusCode=code>=100&&code<600?code:error?503:204;\n  return {statusCode,body:error?{message:safeOutcomeText(error.message||error)}:{},headers:value?.headers||error?.headers||error?.response?.headers||{},...(error&&statusCode>=500?{error:true}:{})};\n}\n\nreturn [{json:{state:$('Choose explicit source business operation').item.json.state,response:nativeDispatchResponse($input.first().json)}}];"
+      },
+      "position": [
+        3740,
+        0
+      ]
+    },
+    {
+      "name": "Validate reviewed object run and source lineage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Authenticated Actions artifacts are source evidence only; never a screened release.\nconst PROBE_ERRORS=['token_missing','budget_exhausted','source_blocked','quota_unavailable','transport_unavailable','invalid_source_rows','operation_limit','official_source_unavailable','official_source_invalid','checkpoint_unavailable'];\nconst PROBE_OFFICIAL='https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading';\nfunction probeAssert(condition){if(!condition)throw Error('probe_artifact_schema');}\nfunction probeInt(value,min=0,max=Number.MAX_SAFE_INTEGER){return Number.isSafeInteger(value)&&value>=min&&value<=max;}\nfunction probeDate(value){return typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;}\nfunction probeKeys(value,required,optional=[]){probeAssert(value&&typeof value==='object'&&!Array.isArray(value));probeAssert(required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>[...required,...optional].includes(key)));}\nfunction probeError(value){probeAssert(value===null||PROBE_ERRORS.includes(value));}\nfunction sourceValidateCase(item,dates){\n probeKeys(item,['code','case','buy','sell','net','status','coverage','missingDates','errorCategory']);\n probeAssert(/^[1-9]\\d{3}$/.test(item.code)&&['positive','negative','zero'].includes(item.case)&&probeInt(item.buy)&&probeInt(item.sell)&&Number.isSafeInteger(item.net)&&item.buy-item.sell===item.net);\n probeAssert(Math.sign(item.net)==={positive:1,negative:-1,zero:0}[item.case]);probeError(item.errorCategory);\n probeAssert(Array.isArray(item.missingDates)&&new Set(item.missingDates).size===item.missingDates.length&&item.missingDates.every((day,index)=>dates.includes(day)&&(!index||day>item.missingDates[index-1])));\n probeAssert(['complete','partial','unavailable'].includes(item.status)&&item.coverage===(11-item.missingDates.length)/11);\n probeAssert(item.status==='complete'?item.missingDates.length===0&&item.errorCategory===null:item.status==='partial'?item.missingDates.length>0&&item.errorCategory===null:item.missingDates.length===11&&item.errorCategory!==null);\n return {...item,missingDates:[...item.missingDates]};\n}\nfunction sourceValidateSummary(summary,state){\n probeKeys(summary,['probeVersion','marketDate','expectedDates','publicationEligible','globalCompleteness','tokenPresent','actualAttempts','dataRequests','cacheHits','accountLimit','observedRemaining','cases','outcome'],['errorCategory','dailyAttempts','projectCeiling','accountWindowCeiling','officialSourceUrl','officialRowCount','officialSha256']);\n const dates=summary.expectedDates;probeAssert(summary.probeVersion==='institutional-probe-v1'&&summary.marketDate===state.plan.marketDate&&summary.publicationEligible===false&&summary.globalCompleteness===false&&typeof summary.tokenPresent==='boolean');\n probeAssert(Array.isArray(dates)&&dates.length===11&&dates.every((day,index)=>probeDate(day)&&(!index||day>dates[index-1]))&&dates.at(-1)===state.plan.marketDate);\n probeAssert(probeInt(summary.actualAttempts,0,4)&&probeInt(summary.dataRequests,0,3)&&summary.actualAttempts>=summary.dataRequests&&summary.actualAttempts-summary.dataRequests<=1&&probeInt(summary.cacheHits,0,3)&&summary.cacheHits+summary.dataRequests<=3&&(!summary.dataRequests||summary.tokenPresent));\n probeAssert((summary.accountLimit===null||probeInt(summary.accountLimit,1))&&(summary.observedRemaining===null||probeInt(summary.observedRemaining))&&((summary.accountLimit===null)===(summary.observedRemaining===null))&&(summary.accountLimit===null||summary.observedRemaining<=summary.accountLimit));\n for(const key of ['dailyAttempts','projectCeiling','accountWindowCeiling'])if(Object.hasOwn(summary,key))probeAssert(summary[key]===null||probeInt(summary[key],0,key==='dailyAttempts'?300:Number.MAX_SAFE_INTEGER));\n if(Object.hasOwn(summary,'projectCeiling'))probeAssert(probeInt(summary.projectCeiling,1,300));if(summary.dailyAttempts!==undefined&&summary.dailyAttempts!==null)probeAssert(summary.dailyAttempts>=summary.actualAttempts);\n if(Object.hasOwn(summary,'errorCategory'))probeError(summary.errorCategory);\n probeAssert(Array.isArray(summary.cases)&&[0,3].includes(summary.cases.length));const cases=summary.cases.map(item=>sourceValidateCase(item,dates));\n if(cases.length){probeAssert(new Set(cases.map(item=>item.code)).size===3&&cases.every((item,index)=>item.case===['positive','negative','zero'][index]));probeAssert(['dailyAttempts','projectCeiling','accountWindowCeiling'].every(key=>Object.hasOwn(summary,key)));probeAssert(summary.officialSourceUrl===PROBE_OFFICIAL&&probeInt(summary.officialRowCount,3)&&/^[a-f0-9]{64}$/.test(summary.officialSha256||''));}\n else probeAssert(summary.outcome==='unavailable'&&summary.actualAttempts===0&&summary.cacheHits===0&&PROBE_ERRORS.includes(summary.errorCategory)&&!['officialSourceUrl','officialRowCount','officialSha256'].some(key=>Object.hasOwn(summary,key)));\n const outcome=cases.length===3&&cases.every(item=>item.status==='complete')?'complete':cases.some(item=>item.coverage>0)?'partial':'unavailable';probeAssert(summary.outcome===outcome);\n return {...summary,expectedDates:[...dates],cases};\n}\nfunction sourceValidateArtifact(body,state){\n probeKeys(body,['summary.json','provenance.json','byteHashes']);const p=body['provenance.json'];probeKeys(p,['requestId','marketDate','sourceMode','sourceGitCommit','actionsRunId','actionsRunAttempt','repository']);\n probeAssert(p.requestId===state.plan.requestId&&p.marketDate===state.plan.marketDate&&p.sourceMode==='institutional_probe'&&p.sourceGitCommit===state.plan.probeHeadSha&&p.actionsRunId===String(state.runId)&&p.actionsRunAttempt===String(state.runAttempt)&&p.repository==='pingpongtech-uskg/stock-web-pages');\n probeKeys(body.byteHashes,['summary','provenance']);probeAssert(Object.values(body.byteHashes).every(value=>/^[a-f0-9]{64}$/.test(value)));\n return {summary:sourceValidateSummary(body['summary.json'],state),byteHashes:{...body.byteHashes}};\n}\nasync function sourceReadArtifact(files,readBuffer){\n const entries=Object.entries(files||{});probeAssert(entries.length===2&&entries.every(([,file])=>['summary.json','provenance.json'].includes(file.fileName))&&new Set(entries.map(([,file])=>file.fileName)).size===2);\n const body={};const hashes={};for(const [key,file] of entries){const bytes=await readBuffer(key);probeAssert(bytes.length>0&&bytes.length<=1000000);body[file.fileName]=JSON.parse(bytes.toString('utf8'));hashes[file.fileName.slice(0,-5)]=require('crypto').createHash('sha256').update(bytes).digest('hex');}\n return {...body,byteHashes:hashes};\n}\n\n// Temporary operator helper. Pure transitions; no network, credentials, Notion or daily CAS.\nconst SOURCE_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nconst SOURCE_BRANCH='fix/n8n-daily-screening';\nconst SOURCE_SHA=/^[a-f0-9]{40}$/;\nfunction sourceResult(state,op,delaySeconds=0.5){return {state:{...state,op},op,route:op?.route||'done',delaySeconds,ledgerRequired:state.stage==='done'};}\nfunction sourceRequest(state,stage,method,path,body,delaySeconds=0.5){return sourceResult({...state,stage},{route:'github',method,url:SOURCE_REPO+path,body:body||{}},delaySeconds);}\nfunction sourceDone(state,outcome,errorCategory){return sourceResult({...state,stage:'done',outcome,...(errorCategory?{errorCategory}:{})},null);}\nfunction sourceOutcome(state){return {operation:state.plan.mode,stage:state.stage,outcome:state.outcome||'in_progress',requestId:state.plan.requestId||'',marketDate:state.plan.marketDate||'',sourceGitCommit:state.plan.probeHeadSha||state.plan.targetSha||'',actionsRunId:state.runId||'',dispatchIntent:!!state.dispatchIntent,errorCategory:state.errorCategory||'',...(state.probeSummary?{probeSummary:state.probeSummary,artifactByteHashes:state.artifactByteHashes,runConclusion:state.runConclusion}:{})};}\nfunction sourceStart(plan,now=Date.now()){\n if(!['inspect','prepare_feature','promote_main','dispatch_probe','read_probe'].includes(plan.mode))throw Error('source_input');\n if(['prepare_feature','promote_main'].includes(plan.mode)&&![plan.baseSha,plan.targetSha,plan.targetTreeSha].every(value=>SOURCE_SHA.test(value||'')))throw Error('source_input');\n if(plan.mode==='prepare_feature'){\n  if(!SOURCE_SHA.test(plan.featureBaseSha||'')||!SOURCE_SHA.test(plan.baseTreeSha||'')||!Array.isArray(plan.blobs)||!Array.isArray(plan.treeEntries)||plan.blobs.length>100||plan.treeEntries.length>100||Buffer.byteLength(JSON.stringify(plan),'utf8')>1000000)throw Error('source_manifest');\n  if(plan.blobs.some(item=>!SOURCE_SHA.test(item.sha)||!item.content||!/^[A-Za-z0-9+/]*={0,2}$/.test(item.content))||plan.treeEntries.some(item=>typeof item.path!=='string'||item.path.startsWith('/')||item.path.split('/').some(part=>!part||part==='..'||part==='.')||item.type!=='blob'||item.mode!=='100644'||(item.sha!==null&&!SOURCE_SHA.test(item.sha))))throw Error('source_manifest');\n  if(plan.commit?.tree!==plan.targetTreeSha||plan.commit?.parents?.length!==1||plan.commit.parents[0]!==plan.baseSha||typeof plan.commit.message!=='string'||!plan.commit.author||!plan.commit.committer)throw Error('source_manifest');\n }\n if(plan.mode==='promote_main'&&!/^\\d{1,24}$/.test(plan.ciRunId||''))throw Error('source_input');\n if(['dispatch_probe','read_probe'].includes(plan.mode)&&(!SOURCE_SHA.test(plan.probeHeadSha||'')||!/^\\d{4}-\\d{2}-\\d{2}$/.test(plan.marketDate||'')||new Date(plan.marketDate+'T00:00:00Z').toISOString().slice(0,10)!==plan.marketDate||!/^institutional-probe:[A-Za-z0-9_.:-]{1,140}$/.test(plan.requestId||'')))throw Error('source_input');\n if(plan.mode==='read_probe'&&!/^\\d{1,24}$/.test(plan.runId||''))throw Error('source_input');\n return sourceRequest({plan,startedAt:now,deadline:now+20*60000,blobIndex:0},'main','GET','/git/ref/heads/main');\n}\nfunction sourceFindRuns(state,delaySeconds=0.5){return sourceRequest(state,'findRun','GET',`/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=100&page=${state.runPage||1}`,null,delaySeconds);}\nfunction sourceTrustedRun(run,state){return String(run.id)===String(state.runId||run.id)&&run.workflow_id===state.workflowId&&run.head_sha===state.plan.probeHeadSha&&run.head_branch==='main'&&run.event==='workflow_dispatch'&&run.head_repository?.full_name==='pingpongtech-uskg/stock-web-pages'&&run.display_title===`Daily screening | ${state.plan.requestId} | ${state.plan.marketDate}`;}\nfunction sourceAdvance(state,response,now=Date.now()){\n if(now>=state.deadline)return sourceDone(state,'failed','source_deadline');\n const status=Number(response.statusCode||0);\n if(state.stage==='dispatch'&&(status>=500||response.error))return sourceFindRuns({...state,dispatchIntent:true},15);\n if(status<200||status>=300){if(state.stage==='artifactRedirect'&&status===302)return sourceRedirect(state,response.headers);return sourceDone(state,'failed','github_http_'+status);}\n let body=response.body??response.data??{};if(typeof body==='string'){try{body=JSON.parse(body);}catch{return sourceDone(state,'failed','github_response_schema');}}\n try{return sourceAdvanceSuccess(state,body,response,now);}catch(error){return sourceDone(state,'failed',error.message.split(':')[0]);}\n}\nfunction sourceAdvanceSuccess(state,body,response,now){\n const plan=state.plan;\n switch(state.stage){\n  case 'main':\n   if(plan.mode==='inspect')return sourceDone({...state,observedMainSha:body.object?.sha},'inspected');\n   if(body.object?.sha!==(['dispatch_probe','read_probe'].includes(plan.mode)?plan.probeHeadSha:plan.baseSha))throw Error('main_changed');\n   return sourceRequest(state,['dispatch_probe','read_probe'].includes(plan.mode)?'probeWorkflow':'feature','GET',['dispatch_probe','read_probe'].includes(plan.mode)?'/actions/workflows/daily.yml':'/git/ref/heads/'+SOURCE_BRANCH);\n  case 'feature':\n   if(plan.mode==='prepare_feature'&&body.object?.sha===plan.targetSha)return sourceDone(state,'feature_verified');\n   if(body.object?.sha!==(plan.mode==='prepare_feature'?plan.featureBaseSha:plan.targetSha))throw Error('feature_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'baseCommit':'ciWorkflow','GET',plan.mode==='prepare_feature'?'/git/commits/'+plan.baseSha:'/actions/workflows/ci.yml');\n  case 'baseCommit':\n   if(body.sha!==plan.baseSha||body.tree?.sha!==plan.baseTreeSha)throw Error('base_tree_mismatch');\n   return sourceNextBlob(state);\n  case 'blob':\n   if(body.sha!==plan.blobs[state.blobIndex].sha)throw Error('blob_sha_mismatch');\n   return sourceNextBlob({...state,blobIndex:state.blobIndex+1});\n  case 'tree':\n   if(body.sha!==plan.targetTreeSha)throw Error('tree_sha_mismatch');\n   return sourceRequest(state,'commit','POST','/git/commits',plan.commit);\n  case 'commit':\n   if(body.sha!==plan.targetSha)throw Error('commit_sha_mismatch');\n   return sourceRequest(state,'featureRecheck','GET','/git/ref/heads/'+SOURCE_BRANCH);\n  case 'featureRecheck':\n   if(body.object?.sha!==plan.featureBaseSha)throw Error('feature_changed');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'ciWorkflow':return sourceRequest({...state,workflowId:body.id},'ciRun','GET','/actions/runs/'+plan.ciRunId);\n  case 'ciRun':\n   if(body.id!==Number(plan.ciRunId)||body.workflow_id!==state.workflowId||body.head_sha!==plan.targetSha||body.head_branch!==SOURCE_BRANCH||body.event!=='push'||body.status!=='completed'||body.conclusion!=='success'||body.repository?.full_name!=='pingpongtech-uskg/stock-web-pages')throw Error('ci_gate');\n   return sourceRequest(state,'targetCommit','GET','/git/commits/'+plan.targetSha);\n  case 'targetCommit':\n   if(body.sha!==plan.targetSha||body.tree?.sha!==plan.targetTreeSha||body.parents?.length!==1||body.parents[0].sha!==plan.baseSha)throw Error('target_commit_gate');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'mainRecheck':\n   if(body.object?.sha!==plan.baseSha)throw Error('main_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'featureWrite':'mainWrite','PATCH','/git/refs/heads/'+(plan.mode==='prepare_feature'?SOURCE_BRANCH:'main'),{sha:plan.targetSha,force:false});\n  case 'featureWrite':case 'mainWrite':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_write_mismatch');\n   return sourceRequest(state,state.stage==='featureWrite'?'featureVerify':'mainVerify','GET','/git/ref/heads/'+(state.stage==='featureWrite'?SOURCE_BRANCH:'main'));\n  case 'featureVerify':case 'mainVerify':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_readback_mismatch');\n   return sourceDone(state,state.stage==='featureVerify'?'feature_verified':'main_verified');\n  case 'probeWorkflow':\n   if(!Number.isInteger(body.id)||body.state&&body.state!=='active')throw Error('workflow_gate');\n   return plan.mode==='read_probe'?sourceRequest({...state,workflowId:body.id,runId:plan.runId},'pollRun','GET','/actions/runs/'+plan.runId):sourceFindRuns({...state,workflowId:body.id});\n  case 'findRun':{\n   if(!Array.isArray(body.workflow_runs))throw Error('actions_schema');\n   const matches=[...(state.runMatches||[]),...body.workflow_runs.filter(run=>run.display_title===`Daily screening | ${plan.requestId} | ${plan.marketDate}`)];\n   if(matches.length>1)throw Error('ambiguous_probe_runs');\n   if(body.workflow_runs.length===100){if((state.runPage||1)>=10)throw Error('actions_scan_limit');return sourceFindRuns({...state,runPage:(state.runPage||1)+1,runMatches:matches});}\n   if(matches[0]){if(!sourceTrustedRun(matches[0],state))throw Error('probe_run_lineage');return sourceRequest({...state,runId:String(matches[0].id),runMatches:[]},'pollRun','GET','/actions/runs/'+matches[0].id,null,15);}\n   if(state.dispatchIntent){if(now-state.startedAt>=5*60000)throw Error('probe_dispatch_unconfirmed');return sourceFindRuns({...state,runPage:1},15);}\n   return {...sourceResult({...state,stage:'dispatch',dispatchIntent:true},{route:'native',method:'POST',url:SOURCE_REPO+'/actions/workflows/daily.yml/dispatches',body:{ref:'main',inputs:{request_id:plan.requestId,market_date:plan.marketDate,source_mode:'institutional_probe'}}}),ledgerRequired:true};\n  }\n  case 'dispatch':return sourceFindRuns({...state,dispatchIntent:true},15);\n  case 'pollRun':\n   if(!sourceTrustedRun(body,state))throw Error('probe_run_lineage');\n   if(body.status!=='completed')return sourceRequest(state,'pollRun','GET','/actions/runs/'+state.runId,null,15);\n   return sourceRequest({...state,runAttempt:body.run_attempt||1,runConclusion:body.conclusion},'artifactList','GET','/actions/runs/'+state.runId+'/artifacts?per_page=100');\n  case 'artifactList':{\n   if(body.total_count>100||!Array.isArray(body.artifacts))throw Error('artifact_schema');\n   const matches=body.artifacts.filter(item=>item.name==='institutional-probe'&&!item.expired);\n   if(matches.length!==1)throw Error('probe_artifact_missing_or_ambiguous');const artifact=matches[0];\n   if(!Number.isInteger(artifact.id)||artifact.size_in_bytes>3000000||artifact.workflow_run?.id!==Number(state.runId)||artifact.workflow_run?.head_sha!==plan.probeHeadSha)throw Error('probe_artifact_lineage');\n   return sourceRequest({...state,artifactId:artifact.id},'artifactRedirect','GET','/actions/artifacts/'+artifact.id+'/zip');\n  }\n  case 'artifactBytes':{const evidence=sourceValidateArtifact(body,state);return sourceDone({...state,probeSummary:evidence.summary,artifactByteHashes:evidence.byteHashes},'probe_evidence_verified');}\n  default:throw Error('source_stage');\n }\n}\nfunction sourceNextBlob(state){const plan=state.plan;return state.blobIndex<plan.blobs.length?sourceRequest(state,'blob','POST','/git/blobs',{encoding:'base64',content:plan.blobs[state.blobIndex].content}):sourceRequest(state,'tree','POST','/git/trees',{base_tree:plan.baseTreeSha,tree:plan.treeEntries});}\nfunction sourceRedirect(state,headers){const url=headers?.location||headers?.Location;if(typeof url!=='string'||!/^https:\\/\\/[a-zA-Z0-9.-]+\\.(blob\\.core\\.windows\\.net|actions\\.githubusercontent\\.com|githubusercontent\\.com)\\//.test(url))return sourceDone(state,'failed','artifact_storage_origin');return sourceResult({...state,stage:'artifactBytes'},{route:'zip',method:'GET',url});}\n\nconst item=$input.first().json;return [{json:item.state.stage===\"done\"?sourceResult(item.state,null):sourceAdvance(item.state,item.response)}];"
+      },
+      "position": [
+        3960,
+        0
+      ]
+    },
+    {
+      "name": "Extract institutional probe artifact",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "parameters": {
+        "operation": "decompress",
+        "outputPrefix": "probe_"
+      },
+      "position": [
+        4180,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Read bounded summary and provenance only",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Authenticated Actions artifacts are source evidence only; never a screened release.\nconst PROBE_ERRORS=['token_missing','budget_exhausted','source_blocked','quota_unavailable','transport_unavailable','invalid_source_rows','operation_limit','official_source_unavailable','official_source_invalid','checkpoint_unavailable'];\nconst PROBE_OFFICIAL='https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading';\nfunction probeAssert(condition){if(!condition)throw Error('probe_artifact_schema');}\nfunction probeInt(value,min=0,max=Number.MAX_SAFE_INTEGER){return Number.isSafeInteger(value)&&value>=min&&value<=max;}\nfunction probeDate(value){return typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;}\nfunction probeKeys(value,required,optional=[]){probeAssert(value&&typeof value==='object'&&!Array.isArray(value));probeAssert(required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>[...required,...optional].includes(key)));}\nfunction probeError(value){probeAssert(value===null||PROBE_ERRORS.includes(value));}\nfunction sourceValidateCase(item,dates){\n probeKeys(item,['code','case','buy','sell','net','status','coverage','missingDates','errorCategory']);\n probeAssert(/^[1-9]\\d{3}$/.test(item.code)&&['positive','negative','zero'].includes(item.case)&&probeInt(item.buy)&&probeInt(item.sell)&&Number.isSafeInteger(item.net)&&item.buy-item.sell===item.net);\n probeAssert(Math.sign(item.net)==={positive:1,negative:-1,zero:0}[item.case]);probeError(item.errorCategory);\n probeAssert(Array.isArray(item.missingDates)&&new Set(item.missingDates).size===item.missingDates.length&&item.missingDates.every((day,index)=>dates.includes(day)&&(!index||day>item.missingDates[index-1])));\n probeAssert(['complete','partial','unavailable'].includes(item.status)&&item.coverage===(11-item.missingDates.length)/11);\n probeAssert(item.status==='complete'?item.missingDates.length===0&&item.errorCategory===null:item.status==='partial'?item.missingDates.length>0&&item.errorCategory===null:item.missingDates.length===11&&item.errorCategory!==null);\n return {...item,missingDates:[...item.missingDates]};\n}\nfunction sourceValidateSummary(summary,state){\n probeKeys(summary,['probeVersion','marketDate','expectedDates','publicationEligible','globalCompleteness','tokenPresent','actualAttempts','dataRequests','cacheHits','accountLimit','observedRemaining','cases','outcome'],['errorCategory','dailyAttempts','projectCeiling','accountWindowCeiling','officialSourceUrl','officialRowCount','officialSha256']);\n const dates=summary.expectedDates;probeAssert(summary.probeVersion==='institutional-probe-v1'&&summary.marketDate===state.plan.marketDate&&summary.publicationEligible===false&&summary.globalCompleteness===false&&typeof summary.tokenPresent==='boolean');\n probeAssert(Array.isArray(dates)&&dates.length===11&&dates.every((day,index)=>probeDate(day)&&(!index||day>dates[index-1]))&&dates.at(-1)===state.plan.marketDate);\n probeAssert(probeInt(summary.actualAttempts,0,4)&&probeInt(summary.dataRequests,0,3)&&summary.actualAttempts>=summary.dataRequests&&summary.actualAttempts-summary.dataRequests<=1&&probeInt(summary.cacheHits,0,3)&&summary.cacheHits+summary.dataRequests<=3&&(!summary.dataRequests||summary.tokenPresent));\n probeAssert((summary.accountLimit===null||probeInt(summary.accountLimit,1))&&(summary.observedRemaining===null||probeInt(summary.observedRemaining))&&((summary.accountLimit===null)===(summary.observedRemaining===null))&&(summary.accountLimit===null||summary.observedRemaining<=summary.accountLimit));\n for(const key of ['dailyAttempts','projectCeiling','accountWindowCeiling'])if(Object.hasOwn(summary,key))probeAssert(summary[key]===null||probeInt(summary[key],0,key==='dailyAttempts'?300:Number.MAX_SAFE_INTEGER));\n if(Object.hasOwn(summary,'projectCeiling'))probeAssert(probeInt(summary.projectCeiling,1,300));if(summary.dailyAttempts!==undefined&&summary.dailyAttempts!==null)probeAssert(summary.dailyAttempts>=summary.actualAttempts);\n if(Object.hasOwn(summary,'errorCategory'))probeError(summary.errorCategory);\n probeAssert(Array.isArray(summary.cases)&&[0,3].includes(summary.cases.length));const cases=summary.cases.map(item=>sourceValidateCase(item,dates));\n if(cases.length){probeAssert(new Set(cases.map(item=>item.code)).size===3&&cases.every((item,index)=>item.case===['positive','negative','zero'][index]));probeAssert(['dailyAttempts','projectCeiling','accountWindowCeiling'].every(key=>Object.hasOwn(summary,key)));probeAssert(summary.officialSourceUrl===PROBE_OFFICIAL&&probeInt(summary.officialRowCount,3)&&/^[a-f0-9]{64}$/.test(summary.officialSha256||''));}\n else probeAssert(summary.outcome==='unavailable'&&summary.actualAttempts===0&&summary.cacheHits===0&&PROBE_ERRORS.includes(summary.errorCategory)&&!['officialSourceUrl','officialRowCount','officialSha256'].some(key=>Object.hasOwn(summary,key)));\n const outcome=cases.length===3&&cases.every(item=>item.status==='complete')?'complete':cases.some(item=>item.coverage>0)?'partial':'unavailable';probeAssert(summary.outcome===outcome);\n return {...summary,expectedDates:[...dates],cases};\n}\nfunction sourceValidateArtifact(body,state){\n probeKeys(body,['summary.json','provenance.json','byteHashes']);const p=body['provenance.json'];probeKeys(p,['requestId','marketDate','sourceMode','sourceGitCommit','actionsRunId','actionsRunAttempt','repository']);\n probeAssert(p.requestId===state.plan.requestId&&p.marketDate===state.plan.marketDate&&p.sourceMode==='institutional_probe'&&p.sourceGitCommit===state.plan.probeHeadSha&&p.actionsRunId===String(state.runId)&&p.actionsRunAttempt===String(state.runAttempt)&&p.repository==='pingpongtech-uskg/stock-web-pages');\n probeKeys(body.byteHashes,['summary','provenance']);probeAssert(Object.values(body.byteHashes).every(value=>/^[a-f0-9]{64}$/.test(value)));\n return {summary:sourceValidateSummary(body['summary.json'],state),byteHashes:{...body.byteHashes}};\n}\nasync function sourceReadArtifact(files,readBuffer){\n const entries=Object.entries(files||{});probeAssert(entries.length===2&&entries.every(([,file])=>['summary.json','provenance.json'].includes(file.fileName))&&new Set(entries.map(([,file])=>file.fileName)).size===2);\n const body={};const hashes={};for(const [key,file] of entries){const bytes=await readBuffer(key);probeAssert(bytes.length>0&&bytes.length<=1000000);body[file.fileName]=JSON.parse(bytes.toString('utf8'));hashes[file.fileName.slice(0,-5)]=require('crypto').createHash('sha256').update(bytes).digest('hex');}\n return {...body,byteHashes:hashes};\n}\n\n// Temporary operator helper. Pure transitions; no network, credentials, Notion or daily CAS.\nconst SOURCE_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nconst SOURCE_BRANCH='fix/n8n-daily-screening';\nconst SOURCE_SHA=/^[a-f0-9]{40}$/;\nfunction sourceResult(state,op,delaySeconds=0.5){return {state:{...state,op},op,route:op?.route||'done',delaySeconds,ledgerRequired:state.stage==='done'};}\nfunction sourceRequest(state,stage,method,path,body,delaySeconds=0.5){return sourceResult({...state,stage},{route:'github',method,url:SOURCE_REPO+path,body:body||{}},delaySeconds);}\nfunction sourceDone(state,outcome,errorCategory){return sourceResult({...state,stage:'done',outcome,...(errorCategory?{errorCategory}:{})},null);}\nfunction sourceOutcome(state){return {operation:state.plan.mode,stage:state.stage,outcome:state.outcome||'in_progress',requestId:state.plan.requestId||'',marketDate:state.plan.marketDate||'',sourceGitCommit:state.plan.probeHeadSha||state.plan.targetSha||'',actionsRunId:state.runId||'',dispatchIntent:!!state.dispatchIntent,errorCategory:state.errorCategory||'',...(state.probeSummary?{probeSummary:state.probeSummary,artifactByteHashes:state.artifactByteHashes,runConclusion:state.runConclusion}:{})};}\nfunction sourceStart(plan,now=Date.now()){\n if(!['inspect','prepare_feature','promote_main','dispatch_probe','read_probe'].includes(plan.mode))throw Error('source_input');\n if(['prepare_feature','promote_main'].includes(plan.mode)&&![plan.baseSha,plan.targetSha,plan.targetTreeSha].every(value=>SOURCE_SHA.test(value||'')))throw Error('source_input');\n if(plan.mode==='prepare_feature'){\n  if(!SOURCE_SHA.test(plan.featureBaseSha||'')||!SOURCE_SHA.test(plan.baseTreeSha||'')||!Array.isArray(plan.blobs)||!Array.isArray(plan.treeEntries)||plan.blobs.length>100||plan.treeEntries.length>100||Buffer.byteLength(JSON.stringify(plan),'utf8')>1000000)throw Error('source_manifest');\n  if(plan.blobs.some(item=>!SOURCE_SHA.test(item.sha)||!item.content||!/^[A-Za-z0-9+/]*={0,2}$/.test(item.content))||plan.treeEntries.some(item=>typeof item.path!=='string'||item.path.startsWith('/')||item.path.split('/').some(part=>!part||part==='..'||part==='.')||item.type!=='blob'||item.mode!=='100644'||(item.sha!==null&&!SOURCE_SHA.test(item.sha))))throw Error('source_manifest');\n  if(plan.commit?.tree!==plan.targetTreeSha||plan.commit?.parents?.length!==1||plan.commit.parents[0]!==plan.baseSha||typeof plan.commit.message!=='string'||!plan.commit.author||!plan.commit.committer)throw Error('source_manifest');\n }\n if(plan.mode==='promote_main'&&!/^\\d{1,24}$/.test(plan.ciRunId||''))throw Error('source_input');\n if(['dispatch_probe','read_probe'].includes(plan.mode)&&(!SOURCE_SHA.test(plan.probeHeadSha||'')||!/^\\d{4}-\\d{2}-\\d{2}$/.test(plan.marketDate||'')||new Date(plan.marketDate+'T00:00:00Z').toISOString().slice(0,10)!==plan.marketDate||!/^institutional-probe:[A-Za-z0-9_.:-]{1,140}$/.test(plan.requestId||'')))throw Error('source_input');\n if(plan.mode==='read_probe'&&!/^\\d{1,24}$/.test(plan.runId||''))throw Error('source_input');\n return sourceRequest({plan,startedAt:now,deadline:now+20*60000,blobIndex:0},'main','GET','/git/ref/heads/main');\n}\nfunction sourceFindRuns(state,delaySeconds=0.5){return sourceRequest(state,'findRun','GET',`/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=100&page=${state.runPage||1}`,null,delaySeconds);}\nfunction sourceTrustedRun(run,state){return String(run.id)===String(state.runId||run.id)&&run.workflow_id===state.workflowId&&run.head_sha===state.plan.probeHeadSha&&run.head_branch==='main'&&run.event==='workflow_dispatch'&&run.head_repository?.full_name==='pingpongtech-uskg/stock-web-pages'&&run.display_title===`Daily screening | ${state.plan.requestId} | ${state.plan.marketDate}`;}\nfunction sourceAdvance(state,response,now=Date.now()){\n if(now>=state.deadline)return sourceDone(state,'failed','source_deadline');\n const status=Number(response.statusCode||0);\n if(state.stage==='dispatch'&&(status>=500||response.error))return sourceFindRuns({...state,dispatchIntent:true},15);\n if(status<200||status>=300){if(state.stage==='artifactRedirect'&&status===302)return sourceRedirect(state,response.headers);return sourceDone(state,'failed','github_http_'+status);}\n let body=response.body??response.data??{};if(typeof body==='string'){try{body=JSON.parse(body);}catch{return sourceDone(state,'failed','github_response_schema');}}\n try{return sourceAdvanceSuccess(state,body,response,now);}catch(error){return sourceDone(state,'failed',error.message.split(':')[0]);}\n}\nfunction sourceAdvanceSuccess(state,body,response,now){\n const plan=state.plan;\n switch(state.stage){\n  case 'main':\n   if(plan.mode==='inspect')return sourceDone({...state,observedMainSha:body.object?.sha},'inspected');\n   if(body.object?.sha!==(['dispatch_probe','read_probe'].includes(plan.mode)?plan.probeHeadSha:plan.baseSha))throw Error('main_changed');\n   return sourceRequest(state,['dispatch_probe','read_probe'].includes(plan.mode)?'probeWorkflow':'feature','GET',['dispatch_probe','read_probe'].includes(plan.mode)?'/actions/workflows/daily.yml':'/git/ref/heads/'+SOURCE_BRANCH);\n  case 'feature':\n   if(plan.mode==='prepare_feature'&&body.object?.sha===plan.targetSha)return sourceDone(state,'feature_verified');\n   if(body.object?.sha!==(plan.mode==='prepare_feature'?plan.featureBaseSha:plan.targetSha))throw Error('feature_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'baseCommit':'ciWorkflow','GET',plan.mode==='prepare_feature'?'/git/commits/'+plan.baseSha:'/actions/workflows/ci.yml');\n  case 'baseCommit':\n   if(body.sha!==plan.baseSha||body.tree?.sha!==plan.baseTreeSha)throw Error('base_tree_mismatch');\n   return sourceNextBlob(state);\n  case 'blob':\n   if(body.sha!==plan.blobs[state.blobIndex].sha)throw Error('blob_sha_mismatch');\n   return sourceNextBlob({...state,blobIndex:state.blobIndex+1});\n  case 'tree':\n   if(body.sha!==plan.targetTreeSha)throw Error('tree_sha_mismatch');\n   return sourceRequest(state,'commit','POST','/git/commits',plan.commit);\n  case 'commit':\n   if(body.sha!==plan.targetSha)throw Error('commit_sha_mismatch');\n   return sourceRequest(state,'featureRecheck','GET','/git/ref/heads/'+SOURCE_BRANCH);\n  case 'featureRecheck':\n   if(body.object?.sha!==plan.featureBaseSha)throw Error('feature_changed');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'ciWorkflow':return sourceRequest({...state,workflowId:body.id},'ciRun','GET','/actions/runs/'+plan.ciRunId);\n  case 'ciRun':\n   if(body.id!==Number(plan.ciRunId)||body.workflow_id!==state.workflowId||body.head_sha!==plan.targetSha||body.head_branch!==SOURCE_BRANCH||body.event!=='push'||body.status!=='completed'||body.conclusion!=='success'||body.repository?.full_name!=='pingpongtech-uskg/stock-web-pages')throw Error('ci_gate');\n   return sourceRequest(state,'targetCommit','GET','/git/commits/'+plan.targetSha);\n  case 'targetCommit':\n   if(body.sha!==plan.targetSha||body.tree?.sha!==plan.targetTreeSha||body.parents?.length!==1||body.parents[0].sha!==plan.baseSha)throw Error('target_commit_gate');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'mainRecheck':\n   if(body.object?.sha!==plan.baseSha)throw Error('main_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'featureWrite':'mainWrite','PATCH','/git/refs/heads/'+(plan.mode==='prepare_feature'?SOURCE_BRANCH:'main'),{sha:plan.targetSha,force:false});\n  case 'featureWrite':case 'mainWrite':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_write_mismatch');\n   return sourceRequest(state,state.stage==='featureWrite'?'featureVerify':'mainVerify','GET','/git/ref/heads/'+(state.stage==='featureWrite'?SOURCE_BRANCH:'main'));\n  case 'featureVerify':case 'mainVerify':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_readback_mismatch');\n   return sourceDone(state,state.stage==='featureVerify'?'feature_verified':'main_verified');\n  case 'probeWorkflow':\n   if(!Number.isInteger(body.id)||body.state&&body.state!=='active')throw Error('workflow_gate');\n   return plan.mode==='read_probe'?sourceRequest({...state,workflowId:body.id,runId:plan.runId},'pollRun','GET','/actions/runs/'+plan.runId):sourceFindRuns({...state,workflowId:body.id});\n  case 'findRun':{\n   if(!Array.isArray(body.workflow_runs))throw Error('actions_schema');\n   const matches=[...(state.runMatches||[]),...body.workflow_runs.filter(run=>run.display_title===`Daily screening | ${plan.requestId} | ${plan.marketDate}`)];\n   if(matches.length>1)throw Error('ambiguous_probe_runs');\n   if(body.workflow_runs.length===100){if((state.runPage||1)>=10)throw Error('actions_scan_limit');return sourceFindRuns({...state,runPage:(state.runPage||1)+1,runMatches:matches});}\n   if(matches[0]){if(!sourceTrustedRun(matches[0],state))throw Error('probe_run_lineage');return sourceRequest({...state,runId:String(matches[0].id),runMatches:[]},'pollRun','GET','/actions/runs/'+matches[0].id,null,15);}\n   if(state.dispatchIntent){if(now-state.startedAt>=5*60000)throw Error('probe_dispatch_unconfirmed');return sourceFindRuns({...state,runPage:1},15);}\n   return {...sourceResult({...state,stage:'dispatch',dispatchIntent:true},{route:'native',method:'POST',url:SOURCE_REPO+'/actions/workflows/daily.yml/dispatches',body:{ref:'main',inputs:{request_id:plan.requestId,market_date:plan.marketDate,source_mode:'institutional_probe'}}}),ledgerRequired:true};\n  }\n  case 'dispatch':return sourceFindRuns({...state,dispatchIntent:true},15);\n  case 'pollRun':\n   if(!sourceTrustedRun(body,state))throw Error('probe_run_lineage');\n   if(body.status!=='completed')return sourceRequest(state,'pollRun','GET','/actions/runs/'+state.runId,null,15);\n   return sourceRequest({...state,runAttempt:body.run_attempt||1,runConclusion:body.conclusion},'artifactList','GET','/actions/runs/'+state.runId+'/artifacts?per_page=100');\n  case 'artifactList':{\n   if(body.total_count>100||!Array.isArray(body.artifacts))throw Error('artifact_schema');\n   const matches=body.artifacts.filter(item=>item.name==='institutional-probe'&&!item.expired);\n   if(matches.length!==1)throw Error('probe_artifact_missing_or_ambiguous');const artifact=matches[0];\n   if(!Number.isInteger(artifact.id)||artifact.size_in_bytes>3000000||artifact.workflow_run?.id!==Number(state.runId)||artifact.workflow_run?.head_sha!==plan.probeHeadSha)throw Error('probe_artifact_lineage');\n   return sourceRequest({...state,artifactId:artifact.id},'artifactRedirect','GET','/actions/artifacts/'+artifact.id+'/zip');\n  }\n  case 'artifactBytes':{const evidence=sourceValidateArtifact(body,state);return sourceDone({...state,probeSummary:evidence.summary,artifactByteHashes:evidence.byteHashes},'probe_evidence_verified');}\n  default:throw Error('source_stage');\n }\n}\nfunction sourceNextBlob(state){const plan=state.plan;return state.blobIndex<plan.blobs.length?sourceRequest(state,'blob','POST','/git/blobs',{encoding:'base64',content:plan.blobs[state.blobIndex].content}):sourceRequest(state,'tree','POST','/git/trees',{base_tree:plan.baseTreeSha,tree:plan.treeEntries});}\nfunction sourceRedirect(state,headers){const url=headers?.location||headers?.Location;if(typeof url!=='string'||!/^https:\\/\\/[a-zA-Z0-9.-]+\\.(blob\\.core\\.windows\\.net|actions\\.githubusercontent\\.com|githubusercontent\\.com)\\//.test(url))return sourceDone(state,'failed','artifact_storage_origin');return sourceResult({...state,stage:'artifactBytes'},{route:'zip',method:'GET',url});}\n\nconst item=$input.first();const state=$('Choose explicit source business operation').item.json.state;try{const body=await sourceReadArtifact(item.binary,key=>this.helpers.getBinaryDataBuffer(0,key));return [{json:{state,response:{statusCode:200,body}}}];}catch{return [{json:sourceDone(state,'failed','probe_artifact_read')}];}"
+      },
+      "position": [
+        4400,
+        0
+      ]
+    },
+    {
+      "name": "Show source operation without daily success claim",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Authenticated Actions artifacts are source evidence only; never a screened release.\nconst PROBE_ERRORS=['token_missing','budget_exhausted','source_blocked','quota_unavailable','transport_unavailable','invalid_source_rows','operation_limit','official_source_unavailable','official_source_invalid','checkpoint_unavailable'];\nconst PROBE_OFFICIAL='https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading';\nfunction probeAssert(condition){if(!condition)throw Error('probe_artifact_schema');}\nfunction probeInt(value,min=0,max=Number.MAX_SAFE_INTEGER){return Number.isSafeInteger(value)&&value>=min&&value<=max;}\nfunction probeDate(value){return typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;}\nfunction probeKeys(value,required,optional=[]){probeAssert(value&&typeof value==='object'&&!Array.isArray(value));probeAssert(required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>[...required,...optional].includes(key)));}\nfunction probeError(value){probeAssert(value===null||PROBE_ERRORS.includes(value));}\nfunction sourceValidateCase(item,dates){\n probeKeys(item,['code','case','buy','sell','net','status','coverage','missingDates','errorCategory']);\n probeAssert(/^[1-9]\\d{3}$/.test(item.code)&&['positive','negative','zero'].includes(item.case)&&probeInt(item.buy)&&probeInt(item.sell)&&Number.isSafeInteger(item.net)&&item.buy-item.sell===item.net);\n probeAssert(Math.sign(item.net)==={positive:1,negative:-1,zero:0}[item.case]);probeError(item.errorCategory);\n probeAssert(Array.isArray(item.missingDates)&&new Set(item.missingDates).size===item.missingDates.length&&item.missingDates.every((day,index)=>dates.includes(day)&&(!index||day>item.missingDates[index-1])));\n probeAssert(['complete','partial','unavailable'].includes(item.status)&&item.coverage===(11-item.missingDates.length)/11);\n probeAssert(item.status==='complete'?item.missingDates.length===0&&item.errorCategory===null:item.status==='partial'?item.missingDates.length>0&&item.errorCategory===null:item.missingDates.length===11&&item.errorCategory!==null);\n return {...item,missingDates:[...item.missingDates]};\n}\nfunction sourceValidateSummary(summary,state){\n probeKeys(summary,['probeVersion','marketDate','expectedDates','publicationEligible','globalCompleteness','tokenPresent','actualAttempts','dataRequests','cacheHits','accountLimit','observedRemaining','cases','outcome'],['errorCategory','dailyAttempts','projectCeiling','accountWindowCeiling','officialSourceUrl','officialRowCount','officialSha256']);\n const dates=summary.expectedDates;probeAssert(summary.probeVersion==='institutional-probe-v1'&&summary.marketDate===state.plan.marketDate&&summary.publicationEligible===false&&summary.globalCompleteness===false&&typeof summary.tokenPresent==='boolean');\n probeAssert(Array.isArray(dates)&&dates.length===11&&dates.every((day,index)=>probeDate(day)&&(!index||day>dates[index-1]))&&dates.at(-1)===state.plan.marketDate);\n probeAssert(probeInt(summary.actualAttempts,0,4)&&probeInt(summary.dataRequests,0,3)&&summary.actualAttempts>=summary.dataRequests&&summary.actualAttempts-summary.dataRequests<=1&&probeInt(summary.cacheHits,0,3)&&summary.cacheHits+summary.dataRequests<=3&&(!summary.dataRequests||summary.tokenPresent));\n probeAssert((summary.accountLimit===null||probeInt(summary.accountLimit,1))&&(summary.observedRemaining===null||probeInt(summary.observedRemaining))&&((summary.accountLimit===null)===(summary.observedRemaining===null))&&(summary.accountLimit===null||summary.observedRemaining<=summary.accountLimit));\n for(const key of ['dailyAttempts','projectCeiling','accountWindowCeiling'])if(Object.hasOwn(summary,key))probeAssert(summary[key]===null||probeInt(summary[key],0,key==='dailyAttempts'?300:Number.MAX_SAFE_INTEGER));\n if(Object.hasOwn(summary,'projectCeiling'))probeAssert(probeInt(summary.projectCeiling,1,300));if(summary.dailyAttempts!==undefined&&summary.dailyAttempts!==null)probeAssert(summary.dailyAttempts>=summary.actualAttempts);\n if(Object.hasOwn(summary,'errorCategory'))probeError(summary.errorCategory);\n probeAssert(Array.isArray(summary.cases)&&[0,3].includes(summary.cases.length));const cases=summary.cases.map(item=>sourceValidateCase(item,dates));\n if(cases.length){probeAssert(new Set(cases.map(item=>item.code)).size===3&&cases.every((item,index)=>item.case===['positive','negative','zero'][index]));probeAssert(['dailyAttempts','projectCeiling','accountWindowCeiling'].every(key=>Object.hasOwn(summary,key)));probeAssert(summary.officialSourceUrl===PROBE_OFFICIAL&&probeInt(summary.officialRowCount,3)&&/^[a-f0-9]{64}$/.test(summary.officialSha256||''));}\n else probeAssert(summary.outcome==='unavailable'&&summary.actualAttempts===0&&summary.cacheHits===0&&PROBE_ERRORS.includes(summary.errorCategory)&&!['officialSourceUrl','officialRowCount','officialSha256'].some(key=>Object.hasOwn(summary,key)));\n const outcome=cases.length===3&&cases.every(item=>item.status==='complete')?'complete':cases.some(item=>item.coverage>0)?'partial':'unavailable';probeAssert(summary.outcome===outcome);\n return {...summary,expectedDates:[...dates],cases};\n}\nfunction sourceValidateArtifact(body,state){\n probeKeys(body,['summary.json','provenance.json','byteHashes']);const p=body['provenance.json'];probeKeys(p,['requestId','marketDate','sourceMode','sourceGitCommit','actionsRunId','actionsRunAttempt','repository']);\n probeAssert(p.requestId===state.plan.requestId&&p.marketDate===state.plan.marketDate&&p.sourceMode==='institutional_probe'&&p.sourceGitCommit===state.plan.probeHeadSha&&p.actionsRunId===String(state.runId)&&p.actionsRunAttempt===String(state.runAttempt)&&p.repository==='pingpongtech-uskg/stock-web-pages');\n probeKeys(body.byteHashes,['summary','provenance']);probeAssert(Object.values(body.byteHashes).every(value=>/^[a-f0-9]{64}$/.test(value)));\n return {summary:sourceValidateSummary(body['summary.json'],state),byteHashes:{...body.byteHashes}};\n}\nasync function sourceReadArtifact(files,readBuffer){\n const entries=Object.entries(files||{});probeAssert(entries.length===2&&entries.every(([,file])=>['summary.json','provenance.json'].includes(file.fileName))&&new Set(entries.map(([,file])=>file.fileName)).size===2);\n const body={};const hashes={};for(const [key,file] of entries){const bytes=await readBuffer(key);probeAssert(bytes.length>0&&bytes.length<=1000000);body[file.fileName]=JSON.parse(bytes.toString('utf8'));hashes[file.fileName.slice(0,-5)]=require('crypto').createHash('sha256').update(bytes).digest('hex');}\n return {...body,byteHashes:hashes};\n}\n\n// Temporary operator helper. Pure transitions; no network, credentials, Notion or daily CAS.\nconst SOURCE_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nconst SOURCE_BRANCH='fix/n8n-daily-screening';\nconst SOURCE_SHA=/^[a-f0-9]{40}$/;\nfunction sourceResult(state,op,delaySeconds=0.5){return {state:{...state,op},op,route:op?.route||'done',delaySeconds,ledgerRequired:state.stage==='done'};}\nfunction sourceRequest(state,stage,method,path,body,delaySeconds=0.5){return sourceResult({...state,stage},{route:'github',method,url:SOURCE_REPO+path,body:body||{}},delaySeconds);}\nfunction sourceDone(state,outcome,errorCategory){return sourceResult({...state,stage:'done',outcome,...(errorCategory?{errorCategory}:{})},null);}\nfunction sourceOutcome(state){return {operation:state.plan.mode,stage:state.stage,outcome:state.outcome||'in_progress',requestId:state.plan.requestId||'',marketDate:state.plan.marketDate||'',sourceGitCommit:state.plan.probeHeadSha||state.plan.targetSha||'',actionsRunId:state.runId||'',dispatchIntent:!!state.dispatchIntent,errorCategory:state.errorCategory||'',...(state.probeSummary?{probeSummary:state.probeSummary,artifactByteHashes:state.artifactByteHashes,runConclusion:state.runConclusion}:{})};}\nfunction sourceStart(plan,now=Date.now()){\n if(!['inspect','prepare_feature','promote_main','dispatch_probe','read_probe'].includes(plan.mode))throw Error('source_input');\n if(['prepare_feature','promote_main'].includes(plan.mode)&&![plan.baseSha,plan.targetSha,plan.targetTreeSha].every(value=>SOURCE_SHA.test(value||'')))throw Error('source_input');\n if(plan.mode==='prepare_feature'){\n  if(!SOURCE_SHA.test(plan.featureBaseSha||'')||!SOURCE_SHA.test(plan.baseTreeSha||'')||!Array.isArray(plan.blobs)||!Array.isArray(plan.treeEntries)||plan.blobs.length>100||plan.treeEntries.length>100||Buffer.byteLength(JSON.stringify(plan),'utf8')>1000000)throw Error('source_manifest');\n  if(plan.blobs.some(item=>!SOURCE_SHA.test(item.sha)||!item.content||!/^[A-Za-z0-9+/]*={0,2}$/.test(item.content))||plan.treeEntries.some(item=>typeof item.path!=='string'||item.path.startsWith('/')||item.path.split('/').some(part=>!part||part==='..'||part==='.')||item.type!=='blob'||item.mode!=='100644'||(item.sha!==null&&!SOURCE_SHA.test(item.sha))))throw Error('source_manifest');\n  if(plan.commit?.tree!==plan.targetTreeSha||plan.commit?.parents?.length!==1||plan.commit.parents[0]!==plan.baseSha||typeof plan.commit.message!=='string'||!plan.commit.author||!plan.commit.committer)throw Error('source_manifest');\n }\n if(plan.mode==='promote_main'&&!/^\\d{1,24}$/.test(plan.ciRunId||''))throw Error('source_input');\n if(['dispatch_probe','read_probe'].includes(plan.mode)&&(!SOURCE_SHA.test(plan.probeHeadSha||'')||!/^\\d{4}-\\d{2}-\\d{2}$/.test(plan.marketDate||'')||new Date(plan.marketDate+'T00:00:00Z').toISOString().slice(0,10)!==plan.marketDate||!/^institutional-probe:[A-Za-z0-9_.:-]{1,140}$/.test(plan.requestId||'')))throw Error('source_input');\n if(plan.mode==='read_probe'&&!/^\\d{1,24}$/.test(plan.runId||''))throw Error('source_input');\n return sourceRequest({plan,startedAt:now,deadline:now+20*60000,blobIndex:0},'main','GET','/git/ref/heads/main');\n}\nfunction sourceFindRuns(state,delaySeconds=0.5){return sourceRequest(state,'findRun','GET',`/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=100&page=${state.runPage||1}`,null,delaySeconds);}\nfunction sourceTrustedRun(run,state){return String(run.id)===String(state.runId||run.id)&&run.workflow_id===state.workflowId&&run.head_sha===state.plan.probeHeadSha&&run.head_branch==='main'&&run.event==='workflow_dispatch'&&run.head_repository?.full_name==='pingpongtech-uskg/stock-web-pages'&&run.display_title===`Daily screening | ${state.plan.requestId} | ${state.plan.marketDate}`;}\nfunction sourceAdvance(state,response,now=Date.now()){\n if(now>=state.deadline)return sourceDone(state,'failed','source_deadline');\n const status=Number(response.statusCode||0);\n if(state.stage==='dispatch'&&(status>=500||response.error))return sourceFindRuns({...state,dispatchIntent:true},15);\n if(status<200||status>=300){if(state.stage==='artifactRedirect'&&status===302)return sourceRedirect(state,response.headers);return sourceDone(state,'failed','github_http_'+status);}\n let body=response.body??response.data??{};if(typeof body==='string'){try{body=JSON.parse(body);}catch{return sourceDone(state,'failed','github_response_schema');}}\n try{return sourceAdvanceSuccess(state,body,response,now);}catch(error){return sourceDone(state,'failed',error.message.split(':')[0]);}\n}\nfunction sourceAdvanceSuccess(state,body,response,now){\n const plan=state.plan;\n switch(state.stage){\n  case 'main':\n   if(plan.mode==='inspect')return sourceDone({...state,observedMainSha:body.object?.sha},'inspected');\n   if(body.object?.sha!==(['dispatch_probe','read_probe'].includes(plan.mode)?plan.probeHeadSha:plan.baseSha))throw Error('main_changed');\n   return sourceRequest(state,['dispatch_probe','read_probe'].includes(plan.mode)?'probeWorkflow':'feature','GET',['dispatch_probe','read_probe'].includes(plan.mode)?'/actions/workflows/daily.yml':'/git/ref/heads/'+SOURCE_BRANCH);\n  case 'feature':\n   if(plan.mode==='prepare_feature'&&body.object?.sha===plan.targetSha)return sourceDone(state,'feature_verified');\n   if(body.object?.sha!==(plan.mode==='prepare_feature'?plan.featureBaseSha:plan.targetSha))throw Error('feature_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'baseCommit':'ciWorkflow','GET',plan.mode==='prepare_feature'?'/git/commits/'+plan.baseSha:'/actions/workflows/ci.yml');\n  case 'baseCommit':\n   if(body.sha!==plan.baseSha||body.tree?.sha!==plan.baseTreeSha)throw Error('base_tree_mismatch');\n   return sourceNextBlob(state);\n  case 'blob':\n   if(body.sha!==plan.blobs[state.blobIndex].sha)throw Error('blob_sha_mismatch');\n   return sourceNextBlob({...state,blobIndex:state.blobIndex+1});\n  case 'tree':\n   if(body.sha!==plan.targetTreeSha)throw Error('tree_sha_mismatch');\n   return sourceRequest(state,'commit','POST','/git/commits',plan.commit);\n  case 'commit':\n   if(body.sha!==plan.targetSha)throw Error('commit_sha_mismatch');\n   return sourceRequest(state,'featureRecheck','GET','/git/ref/heads/'+SOURCE_BRANCH);\n  case 'featureRecheck':\n   if(body.object?.sha!==plan.featureBaseSha)throw Error('feature_changed');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'ciWorkflow':return sourceRequest({...state,workflowId:body.id},'ciRun','GET','/actions/runs/'+plan.ciRunId);\n  case 'ciRun':\n   if(body.id!==Number(plan.ciRunId)||body.workflow_id!==state.workflowId||body.head_sha!==plan.targetSha||body.head_branch!==SOURCE_BRANCH||body.event!=='push'||body.status!=='completed'||body.conclusion!=='success'||body.repository?.full_name!=='pingpongtech-uskg/stock-web-pages')throw Error('ci_gate');\n   return sourceRequest(state,'targetCommit','GET','/git/commits/'+plan.targetSha);\n  case 'targetCommit':\n   if(body.sha!==plan.targetSha||body.tree?.sha!==plan.targetTreeSha||body.parents?.length!==1||body.parents[0].sha!==plan.baseSha)throw Error('target_commit_gate');\n   return sourceRequest(state,'mainRecheck','GET','/git/ref/heads/main');\n  case 'mainRecheck':\n   if(body.object?.sha!==plan.baseSha)throw Error('main_changed');\n   return sourceRequest(state,plan.mode==='prepare_feature'?'featureWrite':'mainWrite','PATCH','/git/refs/heads/'+(plan.mode==='prepare_feature'?SOURCE_BRANCH:'main'),{sha:plan.targetSha,force:false});\n  case 'featureWrite':case 'mainWrite':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_write_mismatch');\n   return sourceRequest(state,state.stage==='featureWrite'?'featureVerify':'mainVerify','GET','/git/ref/heads/'+(state.stage==='featureWrite'?SOURCE_BRANCH:'main'));\n  case 'featureVerify':case 'mainVerify':\n   if(body.object?.sha!==plan.targetSha)throw Error('ref_readback_mismatch');\n   return sourceDone(state,state.stage==='featureVerify'?'feature_verified':'main_verified');\n  case 'probeWorkflow':\n   if(!Number.isInteger(body.id)||body.state&&body.state!=='active')throw Error('workflow_gate');\n   return plan.mode==='read_probe'?sourceRequest({...state,workflowId:body.id,runId:plan.runId},'pollRun','GET','/actions/runs/'+plan.runId):sourceFindRuns({...state,workflowId:body.id});\n  case 'findRun':{\n   if(!Array.isArray(body.workflow_runs))throw Error('actions_schema');\n   const matches=[...(state.runMatches||[]),...body.workflow_runs.filter(run=>run.display_title===`Daily screening | ${plan.requestId} | ${plan.marketDate}`)];\n   if(matches.length>1)throw Error('ambiguous_probe_runs');\n   if(body.workflow_runs.length===100){if((state.runPage||1)>=10)throw Error('actions_scan_limit');return sourceFindRuns({...state,runPage:(state.runPage||1)+1,runMatches:matches});}\n   if(matches[0]){if(!sourceTrustedRun(matches[0],state))throw Error('probe_run_lineage');return sourceRequest({...state,runId:String(matches[0].id),runMatches:[]},'pollRun','GET','/actions/runs/'+matches[0].id,null,15);}\n   if(state.dispatchIntent){if(now-state.startedAt>=5*60000)throw Error('probe_dispatch_unconfirmed');return sourceFindRuns({...state,runPage:1},15);}\n   return {...sourceResult({...state,stage:'dispatch',dispatchIntent:true},{route:'native',method:'POST',url:SOURCE_REPO+'/actions/workflows/daily.yml/dispatches',body:{ref:'main',inputs:{request_id:plan.requestId,market_date:plan.marketDate,source_mode:'institutional_probe'}}}),ledgerRequired:true};\n  }\n  case 'dispatch':return sourceFindRuns({...state,dispatchIntent:true},15);\n  case 'pollRun':\n   if(!sourceTrustedRun(body,state))throw Error('probe_run_lineage');\n   if(body.status!=='completed')return sourceRequest(state,'pollRun','GET','/actions/runs/'+state.runId,null,15);\n   return sourceRequest({...state,runAttempt:body.run_attempt||1,runConclusion:body.conclusion},'artifactList','GET','/actions/runs/'+state.runId+'/artifacts?per_page=100');\n  case 'artifactList':{\n   if(body.total_count>100||!Array.isArray(body.artifacts))throw Error('artifact_schema');\n   const matches=body.artifacts.filter(item=>item.name==='institutional-probe'&&!item.expired);\n   if(matches.length!==1)throw Error('probe_artifact_missing_or_ambiguous');const artifact=matches[0];\n   if(!Number.isInteger(artifact.id)||artifact.size_in_bytes>3000000||artifact.workflow_run?.id!==Number(state.runId)||artifact.workflow_run?.head_sha!==plan.probeHeadSha)throw Error('probe_artifact_lineage');\n   return sourceRequest({...state,artifactId:artifact.id},'artifactRedirect','GET','/actions/artifacts/'+artifact.id+'/zip');\n  }\n  case 'artifactBytes':{const evidence=sourceValidateArtifact(body,state);return sourceDone({...state,probeSummary:evidence.summary,artifactByteHashes:evidence.byteHashes},'probe_evidence_verified');}\n  default:throw Error('source_stage');\n }\n}\nfunction sourceNextBlob(state){const plan=state.plan;return state.blobIndex<plan.blobs.length?sourceRequest(state,'blob','POST','/git/blobs',{encoding:'base64',content:plan.blobs[state.blobIndex].content}):sourceRequest(state,'tree','POST','/git/trees',{base_tree:plan.baseTreeSha,tree:plan.treeEntries});}\nfunction sourceRedirect(state,headers){const url=headers?.location||headers?.Location;if(typeof url!=='string'||!/^https:\\/\\/[a-zA-Z0-9.-]+\\.(blob\\.core\\.windows\\.net|actions\\.githubusercontent\\.com|githubusercontent\\.com)\\//.test(url))return sourceDone(state,'failed','artifact_storage_origin');return sourceResult({...state,stage:'artifactBytes'},{route:'zip',method:'GET',url});}\n\nreturn [{json:sourceOutcome($input.first().json.state)}];"
+      },
+      "position": [
+        4620,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual reviewed source operation": {
+      "main": [
+        [
+          {
+            "node": "Initialize immutable approved operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize immutable approved operation": {
+      "main": [
+        [
+          {
+            "node": "Record intent or continue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record intent or continue": {
+      "main": [
+        [
+          {
+            "node": "Project source operation without secrets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bounded source polling wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Project source operation without secrets": {
+      "main": [
+        [
+          {
+            "node": "Store sanitized source observation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store sanitized source observation": {
+      "main": [
+        [
+          {
+            "node": "Continue original operation after observation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Continue original operation after observation": {
+      "main": [
+        [
+          {
+            "node": "Bounded source polling wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bounded source polling wait": {
+      "main": [
+        [
+          {
+            "node": "Gate deadline and fixed request origins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate deadline and fixed request origins": {
+      "main": [
+        [
+          {
+            "node": "Choose explicit source business operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose explicit source business operation": {
+      "main": [
+        [
+          {
+            "node": "Read guarded refs CI run and artifact metadata",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create approved Git blob",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create approved Git tree",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create approved exact Git commit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nonforced guarded feature or main reference",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dispatch one institutional probe",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download probe artifact without credentials",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Show source operation without daily success claim",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read guarded refs CI run and artifact metadata": {
+      "main": [
+        [
+          {
+            "node": "Restore original operation after GitHub response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create approved Git blob": {
+      "main": [
+        [
+          {
+            "node": "Restore original operation after GitHub response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create approved Git tree": {
+      "main": [
+        [
+          {
+            "node": "Restore original operation after GitHub response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create approved exact Git commit": {
+      "main": [
+        [
+          {
+            "node": "Restore original operation after GitHub response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nonforced guarded feature or main reference": {
+      "main": [
+        [
+          {
+            "node": "Restore original operation after GitHub response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore original operation after GitHub response": {
+      "main": [
+        [
+          {
+            "node": "Validate reviewed object run and source lineage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch one institutional probe": {
+      "main": [
+        [
+          {
+            "node": "Recover native probe result without redispatch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recover native probe result without redispatch": {
+      "main": [
+        [
+          {
+            "node": "Validate reviewed object run and source lineage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download probe artifact without credentials": {
+      "main": [
+        [
+          {
+            "node": "Extract institutional probe artifact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract institutional probe artifact": {
+      "main": [
+        [
+          {
+            "node": "Read bounded summary and provenance only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read bounded summary and provenance only": {
+      "main": [
+        [
+          {
+            "node": "Validate reviewed object run and source lineage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate reviewed object run and source lineage": {
+      "main": [
+        [
+          {
+            "node": "Record intent or continue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Asia/Taipei",
+    "executionOrder": "v1",
+    "executionTimeout": 1500,
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  }
+}

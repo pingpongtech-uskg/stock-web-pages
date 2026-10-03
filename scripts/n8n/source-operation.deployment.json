@@ -1,0 +1,26 @@
+{
+  "executionAllowedBeforeReadback": false,
+  "operations": [
+    {
+      "type": "setWorkflowSettings",
+      "settings": {
+        "timezone": "Asia/Taipei",
+        "executionOrder": "v1",
+        "executionTimeout": 1500,
+        "saveExecutionProgress": false,
+        "saveManualExecutions": false,
+        "saveDataErrorExecution": "none",
+        "saveDataSuccessExecution": "none"
+      }
+    }
+  ],
+  "requiredSettingsReadback": {
+    "timezone": "Asia/Taipei",
+    "executionOrder": "v1",
+    "executionTimeout": 1500,
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  }
+}

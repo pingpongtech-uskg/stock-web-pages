@@ -55,7 +55,7 @@
 
 官方 `tables.js` 顯示 ordinary AJAX request 會加 `response=json`，目前 Python client 漏傳；這是可用回歸修正的 request contract 缺陷。但補上該參數的普通 POST 仍 connection reset，因此此 client bug 修正不能宣稱外部來源已恢復。官方 OpenAPI／歷史 CSV fallback 的調查仍須保留可核對的相同日期、完整市場資料與來源，不以舊母體、部分股票或新假零檔代替。
 
-本次後續修正已完成指定日期傳遞、TPEx `response=json`、native dispatch 字串輸入與限定 preflight 恢復、正常入口採用同日已保存的更正 request，以及新日 immutable export 的獨立 audit。整合本機結果為 Python 449、UI 74、n8n 63 項通過；npm audit 零漏洞、installed Python dependency audit 無已知漏洞、diff／秘密字串檢查通過。此修正仍須取得新的 exact-head CI 及非強制 main 發布證據；不將本機測試當作來源已恢复。
+本次後續修正已完成指定日期傳遞、TPEx `response=json`、native dispatch 字串輸入與限定 preflight 恢復、正常入口採用同日已保存的更正 request，以及新日 immutable export 的獨立 audit。整合本機結果為 Python 449、UI 74、n8n 63 項通過；npm audit 零漏洞、installed Python dependency audit 無已知漏洞、diff／秘密字串檢查通過。此修正來源已發布為 `e91dfe2f374eb8911b9519339f5a35bebdae9e4c`、tree `f7be1cae264b51f0db76028a214da4455d31ea56`：[feature CI 37085405629](https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37085405629) 與 [main CI 37085556137](https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37085556137) 均在 exact head success。Execution 840 先讀回 main／feature／精確 feature CI，再以非強制更新將 main 從 `a50389a` 推進至 `e91dfe2`；841 獨立讀回 SHA／tree／parent 相符。此證明來源修正发布，不將本機或 CI 測試當作官方報表已恢復。
 
 2026-10-03 01:06:04 UTC 的公開官方 [TPEx OpenAPI](https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading) GET 實際 HTTP 200，910 列全部日期 `1151002`（2026-10-02），投信 buy／sell／net 單位為 shares，保留負 net。官方 [Swagger](https://www.tpex.org.tw/openapi/swagger.json) 三個相關資料集沒有宣告 historical parameters；同日 documented `insti/dailyTrade` 普通 POST 亦 connection reset，CSV 尚未取得。這證明當日完整市場 API 可讀，仍未提供篩選要求的 11 個完整交易日；不得拿舊 100 檔子集或猜測 historical query 補足。資料 dispatch 與排程啟用繼續等待完整來源 gate。
 
@@ -220,3 +220,26 @@ Same payload 重試：相同 date/request/run/hash 不新 dispatch、不多建 r
     .venv/bin/python scripts/verify_history_production.py --base-url https://stockscreener.andyshih.uk/ --expected-dir public/data
 
 實際 node schema／SDK 驗證、security review、npm audit／pip audit、git diff review 都在發布前完成。最終狀態不得只寫「測試都通過」；必須附產品與營運閉環的真實證據。
+
+
+目前日期完整 OpenAPI 原始 bytes 已另存 ignored local cache，861949 bytes／SHA-256 `2d058996bf67a375e152f381dda1a8610c32cf3ecd1ed31240c89ac7fd020402`；910 唯一代號、全部日期正確、整數 shares 及 buy−sell=net 逐列通過。正 net 28、負 net 28、真實零 net 854。此備份仍只涵蓋 1／11 個所需交易日，未匯入公開資料、未發布假零檔，沒有新增 FinMind calls。
+
+最後一次限定診斷 execution 843／ledger 92 從 n8n 環境發出官方 documented POST，完整 form 為 `type=Daily&date=2026/10/02&searchType=buy&response=json`，不帶 credentials、redirect off、20 秒上限；實際結果 timeout、沒有 HTTP response 或 report 日期／表格。Raw payload 不保留，temporary helper 已 archive。不再重送相同診斷或資料 job；此只說明受測 endpoint／環境，仍不宣稱 TPEx 全站故障。
+
+### 免費歷史備援的下一步：先驗證三檔，不先假設全市場可補齊
+
+本輪單次 ordinary TPEx POST 重查仍 connection reset；audit checkout、原始使用者 checkout、可用 Git refs 及既知外部 cache 路徑均未找到前十日完整資料。沒有更改原始使用者 checkout。
+
+[FinMind 官方籌碼文件](https://finmind.github.io/tutor/TaiwanMarket/Chip/) 支援免費單股歷史區間；省略 `data_id` 的全市場日資料限 Backer／Sponsor。[官方 SDK](https://github.com/FinMind/FinMind/blob/master/FinMind/data/finmind_api.py) 的 `stock_id_list` 會建立逐股 HTTP，不能把它當成一個配額的批次呼叫。910 個當日代碼包含 788 普通股及 122 其他商品；查全部代碼至少 910 次區間查詢，並非 910×11。每日 300 上限下至少四日，還須扣用量查詢、重試及財務補件；實際剩餘帳戶額度 80% 可能進一步降低速度。
+
+正式 A 母體只包含合格普通股，擴大備援時應先確認窗口內的普通股名冊，避免花配額查 122 種不參與母體的其他商品。若最終所需恰為當日 788 普通股，300 上限下理想至少三日；若實際帳戶剩餘量只有 300，80% 限制與用量查詢使其至少四日。歷史成員異動、缺日期、其他補件及失敗請求可能延長，不能先承諾完成日期。
+
+沿用已核准的免費備援範圍，先在同一 GitHub Actions `daily.yml` 增加隔離的 `institutional_probe` 手動模式。此模式只驗證三種普通股案例：10/2 官方投信正買超、負買超、明確零值各一檔。每檔查 9/16–10/2 的十一個已確認交易日；每個 HTTP 最多一次，最多三次資料查詢，另有計入共同預算的用量查詢。實際 token 只在 Actions secret 環境使用，報告僅記存在布林值及用量數字。
+
+資料存 `.cache/finmind/state.json`／`rows.json`，與金融補件共用同一曆日 300 上限及 80% 帳戶餘額限制，不改金融 queue。每次取得後先保存 checkpoint，再更新進度；同範圍 cache 重試不重查已保存資料。新模式沿用 `daily-snapshot` concurrency、trusted checkpoint 恢復及 `always()` 保存；只輸出 sanitized probe summary，不發布股票資料、不建立 canonical export、不推網站、不進 Notion 股票歸檔。
+
+三檔驗證須核對 exact symbol／十一個日期／整數 shares／buy−sell，以及 10/2 官方 buy／sell。空回應、缺日期、缺 Investment_Trust 列都維持未知，不能補零。即使三檔通過，也只證明三檔資料可用；尚不能宣稱完整歷史母體或十日全市場排名。擴大建庫前需另外解決歷史上市／下市／轉板成員與所有必需日期的覆蓋。
+
+順序：本機 TDD、審查與 exact-head CI → 已核准的非強制 main 發布 → 一次受控 probe → 獨立讀回实际 token presence／quota／attempts／日期／零值與 checkpoint。這次 probe 的結果不會把 10/2 網站更新或排程驗收改為成功。
+
+三檔程式最終 targeted tests 54 項通過，production module line coverage 94.86%、CLI 88.42%；全量 Python 514 項曾於最後一個 aggregate 修正前通過，修正後相關測試已通過，exact-head CI 將再驗证全量。審查修正 checkpoint 平面格式、原始與正規化雜湊、有效部分資料的零 HTTP 重試、部分覆蓋 outcome、200 response 要求及 CLI 輸出路徑隔離。此為程式證據，實際 FinMind token presence、用量與三檔結果仍未取得。

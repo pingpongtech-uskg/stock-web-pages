@@ -12,6 +12,14 @@ on:
         description: Independently requested Taiwan session (YYYY-MM-DD)
         required: true
         type: string
+      source_mode:
+        description: Publish a validated snapshot or only probe institutional history
+        required: false
+        type: choice
+        default: publish
+        options:
+          - publish
+          - institutional_probe
 permissions:
   contents: write
   actions: read
@@ -20,12 +28,13 @@ concurrency:
   cancel-in-progress: false
 jobs:
   snapshot:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (inputs.source_mode == 'publish' || inputs.source_mode == '')
     runs-on: ubuntu-latest
     timeout-minutes: 80
     env:
       REQUEST_ID: ${{ inputs.request_id }}
       MARKET_DATE: ${{ inputs.market_date }}
+      SOURCE_MODE: ${{ inputs.source_mode }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,6 +46,7 @@ jobs:
           python - <<'PY'
           import os, re
           from datetime import date
+          assert (os.environ.get('SOURCE_MODE') or 'publish') in {'publish', 'institutional_probe'}, 'invalid source_mode'
           assert re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}', os.environ['REQUEST_ID']), 'invalid request_id'
           assert date.fromisoformat(os.environ['MARKET_DATE']).isoformat() == os.environ['MARKET_DATE'], 'invalid market_date'
           PY
@@ -175,4 +185,99 @@ jobs:
         with:
           name: finmind-checkpoint-${{ github.run_attempt }}
           path: .cache/finmind
+          if-no-files-found: warn
+  institutional_probe:
+    if: github.ref == 'refs/heads/main' && inputs.source_mode == 'institutional_probe'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      REQUEST_ID: ${{ inputs.request_id }}
+      MARKET_DATE: ${{ inputs.market_date }}
+      SOURCE_MODE: ${{ inputs.source_mode }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Validate probe inputs and initialize checkpoint directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os, re
+          from datetime import date
+          assert (os.environ.get('SOURCE_MODE') or 'publish') in {'publish', 'institutional_probe'}, 'invalid source_mode'
+          assert os.environ['SOURCE_MODE'] == 'institutional_probe', 'invalid probe mode'
+          assert re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}', os.environ['REQUEST_ID']), 'invalid request_id'
+          assert date.fromisoformat(os.environ['MARKET_DATE']).isoformat() == os.environ['MARKET_DATE'], 'invalid market_date'
+          PY
+          mkdir -p .cache/finmind .artifacts/institutional-probe
+          echo "BUDGET_DATE=$(TZ=Asia/Taipei date +%F)" >> "$GITHUB_ENV"
+          echo "SOURCE_GIT_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - uses: actions/cache/restore@v4
+        with:
+          path: .cache/finmind
+          key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            finmind-v1-${{ env.BUDGET_DATE }}-
+            finmind-v1-
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Recover same-day budget before institutional probe
+        timeout-minutes: 3
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/restore_finmind_checkpoint.py --cache-dir .cache/finmind --budget-date "$BUDGET_DATE"
+      - name: Fetch authoritative exchange calendar for probe
+        timeout-minutes: 2
+        run: python scripts/build_trading_calendar.py --market-date "$MARKET_DATE" --output .cache/institutional-probe/trading-calendar.json
+      - name: Save probe provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          value = {'requestId': os.environ['REQUEST_ID'], 'marketDate': os.environ['MARKET_DATE'],
+                   'sourceMode': os.environ['SOURCE_MODE'], 'sourceGitCommit': os.environ['SOURCE_GIT_COMMIT'],
+                   'actionsRunId': os.environ['GITHUB_RUN_ID'], 'actionsRunAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
+                   'repository': os.environ['GITHUB_REPOSITORY']}
+          Path('.artifacts/institutional-probe/provenance.json').write_text(json.dumps(value, sort_keys=True))
+          PY
+      - name: Probe institutional source within shared free budget
+        timeout-minutes: 4
+        shell: bash
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ -n "${FINMIND_TOKEN:-}" ]; then
+            echo "finmind_token_present=true"
+          else
+            echo "finmind_token_present=false"
+          fi
+          BUDGET_DATE="$(python scripts/prepare_finmind_budget.py --previous-date "$BUDGET_DATE" --cache-dir .cache/finmind)"
+          echo "BUDGET_DATE=$BUDGET_DATE" >> "$GITHUB_ENV"
+          python scripts/probe_institutional_history.py --market-date "$MARKET_DATE" --calendar .cache/institutional-probe/trading-calendar.json --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --summary .artifacts/institutional-probe/summary.json --max-data-requests 3
+      - name: Persist probe checkpoint
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/finmind
+          key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}-checkpoint
+      - name: Preserve checkpoint evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finmind-checkpoint-${{ github.run_attempt }}
+          path: .cache/finmind
+          if-no-files-found: warn
+      - name: Preserve sanitized probe evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: institutional-probe
+          path: .artifacts/institutional-probe
           if-no-files-found: warn
