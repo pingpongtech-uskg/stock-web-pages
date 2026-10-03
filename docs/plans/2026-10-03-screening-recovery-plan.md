@@ -22,7 +22,7 @@ n8n 是唯一日常排程入口，週一至週五 18:00 Asia/Taipei；先查官�
 | 其他健診把缺資料當失敗 | 非成長分類存在 blanket unknown-to-fail；AR／存貨、歷史股利等缺欄位亦判失敗 | 未知保留未知；已知完整輸入且未達條件才失敗；不影響三策略的既定門檻 |
 | 自動發布未完成閉環 | 新日 Actions 因 TPEx 歷史來源失敗；10/2 未發布／未有股票歸檔，主排程 inactive | 完成一次真實網站發布、Notion 值讀回與同 payload 重試，才啟用主排程 |
 
-完整原始執行證據及既有歸檔審核保存在 docs/n8n/runtime-evidence.json。最新已發布程式來源 3c5fcb6b24281e9c892727079e46762f9b759459，feature CI 37094159114／main CI 37094354929 success；這不是 10/2 行情發布。
+完整原始執行證據及既有歸檔審核保存在 docs/n8n/runtime-evidence.json。最新已發布程式來源 ce8d2d4e9abdde4cf37e329011d1653bff669885，feature CI 37142362746／main CI 37142472458 success；n8n 878／879、ledger 113／114 驗證非強制 feature／main 更新；這不是 10/2 行情發布。
 
 ## 一、五項成長健診與估值規則
 
@@ -80,13 +80,15 @@ n8n 是唯一日常排程入口，週一至週五 18:00 Asia/Taipei；先查官�
 
 10/2 起每天先保存完整官方日來源；往後只加入新日並滑動窗口，避免每次重新回補舊日期。
 
-新的只讀來源證據：使用者目前開啟的相同 sitcStat 路由，以 GET、完整 type／date／searchType／id／response 查詢可取得 10/2 CSV；原始 SHA-256 231878b83ee9b668debc6ce7d457660fb6c50f5f17d635ac730d71729367bf8b，cp950 編碼，28 排名列。這份 buy 報告只有買超側，張數取整，3131 的 36 股顯示為 0 張；不能當完整精確全市場日資料。正在驗證同路由 JSON 的完整側別、日期及精度；此前 POST 失敗不代表此 GET 也失敗。
+新的只讀來源證據：使用者目前開啟的相同 sitcStat 路由，以 GET、完整 type／date／searchType／id／response 查詢可取得 10/2 CSV；原始 SHA-256 231878b83ee9b668debc6ce7d457660fb6c50f5f17d635ac730d71729367bf8b，cp950 編碼，28 排名列。這份 buy 報告只有買超側，張數取整，3131 的 36 股顯示為 0 張；不能當完整精確全市場日資料。已核對同路由 JSON 也只有 buy／sell 各 28 列且取整，不能作完整來源；此前 POST 失敗不代表此 GET 也失敗。
+
+已從官方頁面與其公開 frontend script 找到完整三大法人明細：GET insti/dailyTrade，type=Daily、sect=AL、date=YYYY/MM/DD、response=csv；原始 cp950，以股數列示含零股。10/1 完整報表 6,279 列／793 普通股，10/2 6,190 列／788 普通股；後者與已保存 OpenAPI 的全部 788 普通股、2,364 個投信買進／賣出／淨額數值完全一致。實作改用此完整來源，逐日股票集合不同，不能以缺列補零。
 
 ## 五、網站與 Notion 發布閉環
 
 n8n 可見節點涵蓋：選交易日、GitHub 原生 dispatch、claim/checkpoint、Actions 狀態、main publication 驗證、canonical export、網站真實 bytes fingerprint、Notion schema／當日頁／子資料庫／逐列讀回。實際 main 資料提交在 Actions 的 Publish validated release to main；n8n 必須再讀回確認，不能只看 dispatch 成功。
 
-網站顯示資料日、更新時間、run、品質狀態。刷新日期及 00631L 日期必須與官方已完成 session 一致。旧版 aggregate growth funnel 未提供時保留未知，仍顯示該發布實際保存的逐檔五項健診與估值缺漏，不捏造 input audit。區分「未取得資料」、「已知不符」及「有效零候選」。
+網站顯示資料日、更新時間、run、品質狀態。刷新日期及 00631L 日期必須與官方已完成 session 一致。實際已核對 10/2 量 99,743,650 股、前五日均量 118,730,520 股、0.8400843355 倍；原始 September／October 回應與七日必要窗口已留存，尚未發布新資料。旧版 aggregate growth funnel 未提供時保留未知，仍顯示該發布實際保存的逐檔五項健診與估值缺漏，不捏造 input audit。區分「未取得資料」、「已知不符」及「有效零候選」。
 
 Notion 使用 Notion account 2，根資料庫 StockScreener；每個交易日一個 YYYYMMDD 頁面／inline 股票子資料庫。
 
@@ -118,3 +120,19 @@ Notion 使用 Notion account 2，根資料庫 StockScreener；每個交易日一
 8. 交付實際 code commit、CI、10/2 data run、網站 fingerprint、Notion 日頁／筆數、workflow active version 與排程 readback。沒有這些證據，整體仍未完成。
 
 最終本機驗證：657 項 Python、86 項 n8n、84 項 UI 通過，typecheck／build／diff check 通過。受影響三份前端 production 檔案 line coverage 分別 87.78%／100%／100%，合計 91.95%；branch 75.88%，不宣稱 branch 達 80%。配額模組 combined line coverage 93%，health_checks 99%、growth_health 94%、官方投信模組 80%。npm audit 漏洞 0、secret review 0、未解決 HIGH／MEDIUM 0。實際 Python producer 在無網路 fixture 下產生新每小時摘要，通過實際 n8n validator；已過期額度的三筆快取重用也以 0 attempts／3 cache hits 通過。上述不是新金融資料發布。
+
+
+## 最新完整來源與快取實作驗證
+
+已用 34 次官方公開請求（17 個日曆日期、兩市場）取得上述十一個完整交易日，FinMind 使用 0 次；原始 bytes、來源參數、hash 與驗證 sidecar 先保存，再篩 Top100。獨立離線重算使用原始來源重新驗證、0 HTTP，證明 10/2 與 10/1 前十成員相同，但排名與十日淨買超不同，因此本日新進榜 0 是有效計算結果。10/2 排名前四：2303 67,309,456 股、2884 35,453,077 股、1303 30,334,589 股、6505 29,716,498 股；尚未發布網站。
+
+新增確定性 Python assembler／producer 先核对 Git／run／publication／config／export lineage，逐份重解析十一日原始 TWSE／TPEx，核对全市場逐日代碼集合與 buy／sell／net，然後產生九角色 gzip 快取分片與完整證明。calendar／00631L 同步保留原始月回應、官方休市證據及必要七日窗口；Actions restore source cache 在選母體前，成功 artifact 與失敗 partial checkpoint 分開。金融缺漏保留 null，不能靠快取完整掩蓋指標缺漏。
+
+第二批本機驗證：843 Python、106 n8n 通過；官方來源模組 line coverage 81.80%、producer／export／assembler scoped line coverage 96%；不宣稱 branch coverage 達 80%。独立 peer 沒有 HIGH／MEDIUM。這批尚未發布，主 workflow 尚未接上完整快取。
+
+Notion 能力驗證尚未完成：881／ledger115 證明遠端 Code 不支援 zlib，於 Notion 請求前停止；882 無結果 ledger，不能宣稱成功或安全重試；883／ledger116 只讀證明無已掛載診斷附件。884／ledger117 用同一個原始 multipart wrapper，證明 prepareBinaryData／getBinaryDataBuffer 可用，172-byte 公開測試 gzip 的 hash 完全相符，沒有 Notion 請求。下次真實 tiny upload 必須保持 workflow 版本直到執行完成，逐階段保存去敏結果，成功後再恢復 inspect。完整原始語意由有界 Python 驗證，Notion 讀回驗證可信 producer 證明與壓縮 bytes，不降級成無界解壓。
+
+
+發布前補充審查已關閉兩处 assembler 固定 temp symlink 覆寫：以同目錄隨機 mkstemp、target／ancestor guard、atomic replace 與失敗 cleanup 驗證。股利 producer、補件 planner、cache assembler 統一檢查 approvedAt／publishedAt／availableAt／exDate／exDividendDate 的所有已知日期；任一日期不完整、無效或超過資料日都不採用，確認的真零仍保留。新增 RED 後 GREEN 測試與獨立 peer 已通過；npm／pip audit 實際漏洞皆 0。
+
+真實 Notion 885／ledger118 已完成唯一小型公開測試檔的 create upload、multipart send、附件建立與新頁讀回，全部 HTTP 200。既有獨立下載 gate 對實際回傳的 S3 virtual-host hostname 拒絕，所以壓縮 bytes hash 讀回仍待下一次只讀驗證；不重複上傳、不宣稱完整快取成功。主排程仍未啟用。

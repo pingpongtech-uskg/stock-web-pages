@@ -1428,14 +1428,18 @@
   },
   "operationalNotionCachePlan": {
     "schema": "market-cache-v1",
-    "status": "design_approved_implementation_pending",
+    "status": "producer_and_compressed_verifier_tested_primary_integration_pending",
     "selectedHistorySeparate": true,
     "roles": [
-      "institutional_raw",
-      "institutional_normalized",
-      "calendar",
-      "stock_inputs",
-      "00631L"
+      "institutional_raw:TWSE",
+      "institutional_raw:TPEx",
+      "institutional_normalized:TWSE",
+      "institutional_normalized:TPEx",
+      "calendar_raw",
+      "calendar_normalized",
+      "volume_raw",
+      "volume_normalized",
+      "published_stock_inputs"
     ],
     "notionFreeFileLimitBytes": 5242880,
     "shardCompressedLimitBytes": 4194304,
@@ -1444,5 +1448,273 @@
     "previousBaselineRequired": true,
     "aiRuntime": false,
     "actualNewCacheWrites": 0
+  },
+  "hourlyRepairSourcePublication": {
+    "sourceGitCommit": "ce8d2d4e9abdde4cf37e329011d1653bff669885",
+    "tree": "c0dd7936d6530607c3433ad7374c15ae1be06f70",
+    "featurePublicationExecution": "878",
+    "featureLedgerRow": 113,
+    "featureCiRun": "37142362746",
+    "featureCiConclusion": "success",
+    "mainPublicationExecution": "879",
+    "mainLedgerRow": 114,
+    "mainCiRun": "37142472458",
+    "mainCiConclusion": "success",
+    "nonForced": true,
+    "sourceOnly": true,
+    "newMarketDataPublished": false,
+    "primaryActivated": false,
+    "helperDefaultRestored": true,
+    "pagesAssets": [
+      {
+        "path": "/assets/index-CT0mN7j6.js",
+        "bytes": 251641,
+        "sha256": "58df53869751da06115288b8de61e1cb6e359df8bb16f1f85d6e6df2c365c3e0",
+        "matchesTestedLocalBuild": true
+      },
+      {
+        "path": "/assets/index-De-S0dI5.css",
+        "bytes": 19407,
+        "sha256": "9f194b89fb1a7a749dc7881e158d91c1d6560a657ecbc946fb88829bd780f182",
+        "matchesTestedLocalBuild": true
+      }
+    ]
+  },
+  "preciseHistoricalTpexDiscovery": {
+    "endpoint": "https://www.tpex.org.tw/www/zh-tw/insti/dailyTrade",
+    "method": "GET",
+    "documentedParameters": {
+      "type": "Daily",
+      "sect": "AL",
+      "date": "YYYY/MM/DD",
+      "response": "csv"
+    },
+    "encoding": "cp950",
+    "unit": "shares",
+    "days": {
+      "2026-10-01": {
+        "rawBytes": 936476,
+        "rawSha256": "d6dc0975176a6e32d4b9e441bfb39dba3887e1f3d9fc5464b94d48a602d2628f",
+        "securityRows": 6279,
+        "commonRows": 793
+      },
+      "2026-10-02": {
+        "rawBytes": 924334,
+        "rawSha256": "a2eaf28d907b5a9e9858d1f981d0d1d4264665fa6f444c967f6603cf93c3aab8",
+        "securityRows": 6190,
+        "commonRows": 788
+      }
+    },
+    "exactOpenApiCommonValueChecks": 2364,
+    "mismatches": 0,
+    "adapterStatus": "implemented_peer_reviewed",
+    "full11DayCollected": true,
+    "published": false
+  },
+  "october2InstitutionalRecalculation": {
+    "currentWindow": [
+      "2026-10-02",
+      "2026-10-01",
+      "2026-09-30",
+      "2026-09-29",
+      "2026-09-24",
+      "2026-09-23",
+      "2026-09-22",
+      "2026-09-21",
+      "2026-09-18",
+      "2026-09-17"
+    ],
+    "previousWindow": [
+      "2026-10-01",
+      "2026-09-30",
+      "2026-09-29",
+      "2026-09-24",
+      "2026-09-23",
+      "2026-09-22",
+      "2026-09-21",
+      "2026-09-18",
+      "2026-09-17",
+      "2026-09-16"
+    ],
+    "currentTop10": [
+      {
+        "code": "2303",
+        "netShares": 67309456
+      },
+      {
+        "code": "2884",
+        "netShares": 35453077
+      },
+      {
+        "code": "1303",
+        "netShares": 30334589
+      },
+      {
+        "code": "6505",
+        "netShares": 29716498
+      },
+      {
+        "code": "2618",
+        "netShares": 29026071
+      },
+      {
+        "code": "2610",
+        "netShares": 28505765
+      },
+      {
+        "code": "2887",
+        "netShares": 25260859
+      },
+      {
+        "code": "2801",
+        "netShares": 24571184
+      },
+      {
+        "code": "2892",
+        "netShares": 23668374
+      },
+      {
+        "code": "2890",
+        "netShares": 17700109
+      }
+    ],
+    "previousTop10": [
+      {
+        "code": "2303",
+        "netShares": 69355872
+      },
+      {
+        "code": "2884",
+        "netShares": 37449118
+      },
+      {
+        "code": "2887",
+        "netShares": 37185757
+      },
+      {
+        "code": "1303",
+        "netShares": 33123290
+      },
+      {
+        "code": "2890",
+        "netShares": 31863930
+      },
+      {
+        "code": "6505",
+        "netShares": 31389498
+      },
+      {
+        "code": "2618",
+        "netShares": 30826236
+      },
+      {
+        "code": "2610",
+        "netShares": 28517765
+      },
+      {
+        "code": "2801",
+        "netShares": 25731184
+      },
+      {
+        "code": "2892",
+        "netShares": 24118507
+      }
+    ],
+    "newEntries": [],
+    "networkCalls": 0,
+    "sourceCollection": {
+      "officialHttpAttempts": 34,
+      "calendarDateProbes": 17,
+      "validatedTradingSessions": 11,
+      "finmindAttempts": 0
+    },
+    "fullMarketRawCaptured": true,
+    "top10MembershipSame": true,
+    "top10RanksAndNetSharesChanged": true,
+    "sourceCacheLocation": "ignored_local_cache",
+    "productionWebsiteUpdated": false,
+    "notionCacheComplete": false
+  },
+  "october2VolumeRecalculation": {
+    "marketDate": "2026-10-02",
+    "volumeShares": 99743650,
+    "previousFiveAverageShares": 118730520,
+    "multiple": 0.8400843355,
+    "status": "yellow",
+    "sourceHttpAttempts": 3,
+    "finmindAttempts": 0,
+    "calendarRawSha256": "7644c1a8af784c09f54670fd7413f536b13eb76c54d658058e8873d1aee32117",
+    "septemberRawSha256": "0876fb9be8dd892ee236c372acb1d3a140788b9a0d95d1ca8285a3cf7b0d70da",
+    "octoberRawSha256": "420dd1ce7ceb91e540f8e5c2c1fb2f770de3eb6e3aefa8b6b4819c463674068a",
+    "published": false
+  },
+  "marketCacheNotionCapability": {
+    "workflowId": "XauqdPFGOw8qOp1R",
+    "primaryChanged": false,
+    "marketCacheComplete": false,
+    "attempts": [
+      {
+        "execution": "881",
+        "ledgerRow": 115,
+        "outcome": "zlib_unavailable_before_notion",
+        "notionRequests": 0
+      },
+      {
+        "execution": "882",
+        "outcome": "unknown_no_ledger",
+        "attachedDiagnosticFilesVerified": 0
+      },
+      {
+        "execution": "883",
+        "ledgerRow": 116,
+        "outcome": "read_only_page_check",
+        "httpStatus": 200,
+        "attachedDiagnosticFilesVerified": 0
+      },
+      {
+        "execution": "884",
+        "ledgerRow": 117,
+        "outcome": "credential_free_original_binary_wrapper_verified",
+        "notionRequests": 0,
+        "binarySha256": "e18d59d0c39bb091d0a9bf348d261729b0a4a6b455e2bc7b3e90f4ede1b1822e",
+        "prepareBinaryDataAvailable": true,
+        "getBinaryDataBufferAvailable": true
+      },
+      {
+        "execution": "885",
+        "ledgerRow": 118,
+        "outcome": "upload_sent_attached_verified_download_origin_pending",
+        "uploadHttpStatus": 200,
+        "sendHttpStatus": 200,
+        "appendHttpStatus": 200,
+        "freshAttachmentReadHttpStatus": 200,
+        "attachedDiagnosticFilesVerified": 1,
+        "compressedBytesReadbackVerified": false,
+        "rawSemanticsIndependent": false,
+        "marketCacheComplete": false,
+        "diagnosticBlockId": "3ee6fb57-ff38-8123-bb73-d8d9650647ce"
+      }
+    ],
+    "lastVerifiedVersion": "02ec1a7b-2027-48dd-8b8d-b61627ee9c56",
+    "inactive": true,
+    "defaultRestored": "inspect",
+    "executionDataRetention": "none",
+    "rawSemanticVerification": "bounded_python_producer",
+    "backupReadbackVerification": "compressed_bytes_sha256_and_trusted_producer_proof"
+  },
+  "marketCacheSourceBatchValidation": {
+    "pythonTestsPassed": 843,
+    "n8nTestsPassed": 106,
+    "officialSourceLineCoveragePercent": 81.8,
+    "producerExportAssemblerLineCoveragePercent": 96,
+    "unresolvedHighMediumFindings": 0,
+    "currentBatchPublished": false,
+    "primaryCacheIntegration": "pending",
+    "realOctober2DataPublished": false,
+    "assemblerSymlinkReproductionClosed": true,
+    "dividendAllFiveKnownDatesCutoffClosed": true,
+    "npmAuditVulnerabilityCount": 0,
+    "pipAuditVulnerabilityCount": 0,
+    "finalIndependentPeerHighMedium": 0
   }
 }

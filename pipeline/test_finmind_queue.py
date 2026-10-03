@@ -267,3 +267,19 @@ def test_incomplete_sources_keep_bounded_calendar_retry_queue(tmp_path, monkeypa
     ledger = json.loads((tmp_path / 'cache' / 'state.json').read_text())
     assert ledger['rollingHour']['totalAttempts'] == 5 + deferred_count + 1
     assert recovered['actual_attempts'] == deferred_count + 1
+
+
+@pytest.mark.parametrize('field', ['publishedAt', 'availableAt', 'exDate', 'exDividendDate'])
+@pytest.mark.parametrize('later_date', ['2026-10-03', '2026-10-invalid', '2026-10'])
+def test_dividend_planner_prior_approval_cannot_mask_later_known_date(field, later_date):
+    evidence = {'year': 2025, 'period': 'annual', 'cashPerShare': 2, 'confirmed': True,
+                'approvedAt': '2026-06-01', field: later_date}
+    assert retrieval.complete_dividend([evidence], 2025, '2026-10-02') is False
+
+
+@pytest.mark.parametrize('cash', [0, 2])
+def test_dividend_planner_all_known_dates_eligible_preserves_confirmed_cash(cash):
+    evidence = {'year': 2025, 'period': 'annual', 'cashPerShare': cash, 'confirmed': True,
+                'approvedAt': '2026-06-01', 'publishedAt': '2026-06-02',
+                'availableAt': '2026-06-03', 'exDividendDate': '2026-07-01'}
+    assert retrieval.complete_dividend([evidence], 2025, '2026-10-02') is True

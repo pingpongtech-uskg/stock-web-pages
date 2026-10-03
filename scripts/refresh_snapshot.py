@@ -83,7 +83,7 @@ from pipeline.valuation import (  # noqa: E402
     calculate_growth_total_return_valuation,
     calculate_zulu_valuation,
 )
-from pipeline.trading_calendar import next_deadline
+from pipeline.trading_calendar import next_deadline, is_open
 from pipeline.market_indicators import build_00631l_volume_indicator  # noqa: E402
 
 
@@ -516,9 +516,10 @@ def _dividend_evidence(detail: dict[str, Any], current_price: float | None) -> d
             continue
         year = gregorian_year(row.get("year"))
         cash = number(row.get("cashPerShare"))
-        available = normalized_date(row.get("approvedAt") or row.get("publishedAt") or row.get("availableAt") or row.get("exDate"))
-        if year is None or year >= int(cutoff[:4]) or cash is None or cash < 0 or not available or len(available) != 10 or available > cutoff:
+        dates = [normalized_date(row[field]) for field in ("approvedAt", "publishedAt", "availableAt", "exDate", "exDividendDate") if row.get(field) not in (None, "")]
+        if year is None or year >= int(cutoff[:4]) or cash is None or cash < 0 or not dates or any(day is None or len(day) != 10 or day > cutoff for day in dates):
             continue
+        available = max(dates)
         parsed_period = dividend_period(row.get("period") or year, year)
         if parsed_period is None:
             continue
@@ -1169,7 +1170,26 @@ def growth_funnel(details: list[dict[str, Any]], *, universe: int | None = None,
     return build_growth_coverage(details, universe=universe, selected_codes=selected_codes)
 
 
-def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None, recompute_existing: bool = False) -> dict[str, Any]:
+def release_volume_indicator(data_dir: Path, baseline: dict[str, Any], market_date: str, *,
+                             offline: bool, recompute_existing: bool,
+                             source_cache_dir: Path | None = None) -> dict[str, Any]:
+    if offline or recompute_existing:
+        return (baseline.get("marketIndicators") or {}).get("volumeMultiple00631L") or {
+            "status": "unavailable", "reason": "cached_recompute_missing_indicator"}
+    if source_cache_dir is None:
+        return build_00631l_volume_indicator(market_date)
+    with (data_dir / "trading-calendar.json").open("rb") as source:
+        raw = source.read(1_000_001)
+    if len(raw) > 1_000_000:
+        raise ValueError("market cache calendar exceeds bound")
+    calendar = json.loads(raw)
+    if not is_open(calendar, market_date):
+        raise ValueError("market cache calendar date is closed")
+    return build_00631l_volume_indicator(market_date, source_cache_dir=source_cache_dir,
+                                        calendar=calendar)
+
+
+def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None, recompute_existing: bool = False, source_cache_dir: Path | None = None) -> dict[str, Any]:
     latest_path = data_dir / "latest.json"
     if not latest_path.exists():
         raise FileNotFoundError(f"missing baseline release: {latest_path}")
@@ -1278,7 +1298,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         })
 
     official_market_dates, official_daily_by_code = official_institutional_index(universe_config)
-    official_refs = ["TWSE:TWT44U", "TPEx:insti/sitcStat"]
+    official_refs = ["TWSE:TWT44U", "TPEx:insti/dailyTrade"]
     for detail in enriched:
         # Clear old ten-session values when the current official source is
         # stale/unavailable. Never publish yesterday's metrics as current.
@@ -1638,10 +1658,9 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     funnel.update(growth_funnel(enriched, universe=growth_universe, selected_codes={str(row["code"]) for row in growth_rank}))
     market_dates = [str(detail.get("asOf")) for detail in enriched if detail.get("asOf")]
     market_date = max(market_dates) if market_dates else baseline.get("marketDate")
-    if offline or recompute_existing:
-        volume_indicator = (baseline.get("marketIndicators") or {}).get("volumeMultiple00631L") or {"status": "unavailable", "reason": "cached_recompute_missing_indicator"}
-    else:
-        volume_indicator = build_00631l_volume_indicator(market_date)
+    volume_indicator = release_volume_indicator(
+        data_dir, baseline, market_date, offline=offline, recompute_existing=recompute_existing,
+        source_cache_dir=source_cache_dir)
     market_indicators = {
         **(baseline.get("marketIndicators") if isinstance(baseline.get("marketIndicators"), dict) else {}),
         "volumeMultiple00631L": volume_indicator,
@@ -1813,13 +1832,14 @@ def main() -> int:
     parser.add_argument("--offline", action="store_true", help="skip network sources and recalculate from the checked-in snapshot")
     parser.add_argument("--recompute-existing", action="store_true", help="recalculate fresh cached inputs without another network refresh")
     parser.add_argument("--ownership-snapshot", default=None, help="validated ownership cache path; ownership is reference-only")
+    parser.add_argument("--source-cache-dir", type=Path, default=None, help="retain verified official raw volume receipts")
     args = parser.parse_args()
     codes = list(dict.fromkeys(code.strip() for code in args.codes.split(",") if code.strip()))
     try:
         result = build_release(
             Path(args.output), codes, as_of=args.as_of, offline=args.offline,
             ownership_snapshot=Path(args.ownership_snapshot) if args.ownership_snapshot else None,
-            recompute_existing=args.recompute_existing,
+            recompute_existing=args.recompute_existing, source_cache_dir=args.source_cache_dir,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"snapshot_refresh_failed={type(exc).__name__}: {exc}", file=sys.stderr)

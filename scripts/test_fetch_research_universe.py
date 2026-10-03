@@ -71,7 +71,8 @@ def test_official_api_collects_only_sessions_at_or_before_historical_target(monk
     import pipeline.official_institutional as official
     requested = []
     target = date(2026, 10, 2)
-    def complete_day(day):
+    def complete_day(day, **kwargs):
+        assert kwargs.get('source_cache_dir') is None
         requested.append(day)
         return [{"code": "2330", "netShares": 1}] if day.weekday() < 5 else []
     monkeypatch.setattr(official, "fetch_complete_day", complete_day)
@@ -118,3 +119,19 @@ def test_legacy_cli_remains_compatible_and_preserves_existing_metadata(tmp_path,
     assert payload["symbols"][:2] == ["1000", "1001"]
     assert payload["metadata"]["1000"] == {"market": "TWSE", "name": "公司0"}
     assert payload["stale"] is False
+
+
+def test_full_source_capture_occurs_before_top100_subset_update(tmp_path, monkeypatch):
+    import scripts.fetch_research_universe as fetch
+    from scripts.test_build_market_cache_index import setup_inputs
+    snapshots, kwargs = setup_inputs(tmp_path)
+    calls = []
+    monkeypatch.setattr(fetch, 'fetch_recent_complete_days', lambda **kw: calls.append(kw) or snapshots)
+    def subset(received, path):
+        assert (kwargs['source_cache_dir'] / 'institutional-TWSE-receipt-index.json').exists()
+        assert len(received) == 11
+        return {'symbols': ['1101']}
+    monkeypatch.setattr(fetch, 'update_official_tracked_config', subset)
+    monkeypatch.setattr('sys.argv', ['fetch.py', '--source', 'official', '--as-of', '2026-10-02', '--print-codes', '--source-cache-dir', str(kwargs['source_cache_dir'])])
+    assert fetch.main() == 0
+    assert calls[0]['source_cache_dir'] == kwargs['source_cache_dir']

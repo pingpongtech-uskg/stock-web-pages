@@ -726,3 +726,26 @@ def test_real_shaped_financial_inputs_positive_half_dividends_reach_release_and_
     if selected:
         assert export["selectedStocks"][0]["metrics"]["dividendYield"] == .05
         assert export["selectedStocks"][0]["provenance"]["inputOrigins"]["ttmEps"]["origin"] == "derived"
+
+
+@pytest.mark.parametrize('field', ['publishedAt', 'availableAt', 'exDate', 'exDividendDate'])
+@pytest.mark.parametrize('later_date', ['2026-10-03', '2026-10-invalid', '2026-10'])
+def test_dividend_prior_approval_cannot_mask_future_or_invalid_known_dates(field, later_date):
+    from scripts.refresh_snapshot import _dividend_evidence
+    dividend = {'year': 2025, 'period': 'annual', 'cashPerShare': 2, 'confirmed': True,
+                'approvedAt': '2026-06-01', field: later_date}
+    detail = {'asOf': '2026-10-02', 'healthInputs': {'dividends': [dividend]}}
+    result = _dividend_evidence(detail, 100)
+    assert result['value'] is None
+    assert result['audit']['origin'] == 'unavailable'
+
+
+@pytest.mark.parametrize('cash', [0, 2])
+def test_dividend_all_known_dates_before_cutoff_retains_confirmed_cash(cash):
+    from scripts.refresh_snapshot import _dividend_evidence
+    dividend = {'year': 2025, 'period': 'annual', 'cashPerShare': cash, 'confirmed': True,
+                'approvedAt': '2026-06-01', 'publishedAt': '2026-06-02',
+                'availableAt': '2026-06-03', 'exDividendDate': '2026-07-01'}
+    result = _dividend_evidence({'asOf': '2026-10-02', 'healthInputs': {'dividends': [dividend]}}, 100)
+    assert result['value'] == cash / 100
+    assert result['audit']['origin'] == 'derived'

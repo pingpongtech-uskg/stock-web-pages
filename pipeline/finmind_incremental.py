@@ -340,10 +340,10 @@ def complete_dividend(rows: list[dict[str, Any]], year: int, as_of: str) -> bool
     for row in rows:
         parsed = dividend_period(row.get('period') or row.get('year'), row.get('year'))
         cash = number(row.get('cashPerShare'))
-        available = normalized_date(row.get('approvedAt') or row.get('publishedAt') or row.get('availableAt') or row.get('exDate'))
-        if row.get('confirmed') is not True or cash is None or cash < 0 or parsed is None or not available or len(available) != 10:
+        dates = [normalized_date(row[field]) for field in ('approvedAt', 'publishedAt', 'availableAt', 'exDate', 'exDividendDate') if row.get(field) not in (None, '')]
+        if row.get('confirmed') is not True or cash is None or cash < 0 or parsed is None or not dates or any(day is None or len(day) != 10 or day > as_of for day in dates):
             continue
-        if parsed[0] == year and available <= as_of:
+        if parsed[0] == year:
             periods.add(parsed[1])
     return 'annual' in periods or periods == {'Q1', 'Q2', 'Q3', 'Q4'} or periods == {'H1', 'H2'}
 

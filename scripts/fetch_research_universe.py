@@ -301,10 +301,17 @@ def main() -> int:
     parser.add_argument("--lookback-days", type=int, default=35)
     parser.add_argument("--as-of", type=_iso_date, help="latest requested official market date (YYYY-MM-DD)")
     parser.add_argument("--allow-stale", action="store_true", help="keep the last complete universe when the official source is unavailable")
+    parser.add_argument("--source-cache-dir", type=Path, help="preserve full official receipts before Top100 selection")
     args = parser.parse_args()
     try:
         if args.source == "official":
-            snapshots = fetch_recent_complete_days(as_of=args.as_of, sessions=args.sessions, lookback_days=args.lookback_days)
+            options = {"as_of": args.as_of, "sessions": args.sessions, "lookback_days": args.lookback_days}
+            if args.source_cache_dir is not None:
+                options["source_cache_dir"] = args.source_cache_dir
+            snapshots = fetch_recent_complete_days(**options)
+            if args.source_cache_dir is not None:
+                from scripts.build_market_cache_index import write_institutional_cache
+                write_institutional_cache(snapshots, args.source_cache_dir)
             payload = update_official_tracked_config(snapshots, Path(args.config))
         else:
             rows = parse_rankings(fetch_document(args.url))

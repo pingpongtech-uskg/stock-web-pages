@@ -1,4 +1,6 @@
 import json
+import csv
+import io
 import urllib.parse
 from datetime import date
 
@@ -15,13 +17,11 @@ from pipeline.official_institutional import (
 def test_tpex_request_matches_official_json_post_contract(monkeypatch):
     from pipeline.official_institutional import fetch_tpex_day, TPEX_ENDPOINT
     requests = []
-    payload = {"date": "20261002", "stat": "ok", "tables": [{
-        "fields": ["排行", "代號", "名稱", "買進", "賣出", "買賣超(張數)"],
-        "data": [["1", "2330", "台積電", "10", "2", "8"]]}]}
+    payload = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
     class Response:
         def __enter__(self): return self
         def __exit__(self, *args): return False
-        def read(self): return json.dumps(payload).encode()
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
     def respond(request, **kwargs):
         requests.append(request)
         return Response()
@@ -29,17 +29,409 @@ def test_tpex_request_matches_official_json_post_contract(monkeypatch):
     rows = fetch_tpex_day(date(2026, 10, 2))
     assert len(requests) == 1
     request = requests[0]
-    assert request.full_url == TPEX_ENDPOINT
-    assert request.get_method() == "POST"
-    assert urllib.parse.parse_qs(request.data.decode()) == {
-        "type": ["Daily"], "date": ["2026/10/02"], "searchType": ["buy"], "response": ["json"]}
-    assert rows[0]["netShares"] == 8000
+    assert request.full_url.startswith(TPEX_ENDPOINT + "?")
+    assert request.get_method() == "GET"
+    assert urllib.parse.parse_qs(urllib.parse.urlparse(request.full_url).query) == {
+        "type": ["Daily"], "sect": ["AL"], "date": ["2026/10/02"], "response": ["csv"]}
+    assert rows[0]["netShares"] == 97941
 
 
-def test_tpex_json_contract_still_rejects_a_different_report_date(monkeypatch):
+def test_tpex_fetch_persists_raw_receipt_before_writing_validated_metadata(monkeypatch, tmp_path):
+    from pipeline.official_institutional import fetch_tpex_day
+    payload = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    rows = fetch_tpex_day(date(2026, 10, 2), source_cache_dir=tmp_path)
+    assert rows[0]["sellShares"] == 59
+    raw_files = list(tmp_path.glob("inst-tpex-2026-10-02-*.raw.json"))
+    assert len(raw_files) == 1
+    assert raw_files[0].read_bytes() == payload
+    validated = json.loads((tmp_path / "institutional-TPEx-2026-10-02-validated.json").read_text())
+    assert validated["rawSha256"]
+    assert validated["reportedDate"] == "2026-10-02"
+    assert validated["validated"] is True
+    assert validated["codes"] == ["3081"]
+    assert validated["unit"] == "shares"
+    assert validated["encoding"] == "MS950"
+
+
+def test_twse_fetch_persists_exact_raw_json_and_validated_code_roster(monkeypatch, tmp_path):
+    from pipeline.official_institutional import fetch_twse_day
+    payload = json.dumps({
+        "date": "20261002", "fields": ["證券代號", "證券名稱", "買進股數", "賣出股數", "買賣超股數"],
+        "data": [["2330", "台積電", "10", "3", "7"], ["0050", "ETF", "5", "2", "3"]],
+    }, ensure_ascii=False).encode("utf-8")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    rows = fetch_twse_day(date(2026, 10, 2), source_cache_dir=tmp_path)
+    assert len(rows) == 2
+    raw_files = list(tmp_path.glob("inst-twse-2026-10-02-*.raw.json"))
+    assert len(raw_files) == 1 and raw_files[0].read_bytes() == payload
+    validated = json.loads((tmp_path / "institutional-TWSE-2026-10-02-validated.json").read_text())
+    assert validated["codes"] == ["2330"]
+    assert validated["reportedDate"] == "2026-10-02"
+    assert validated["validated"] is True
+    assert validated["encoding"] == "utf-8"
+
+
+def test_twse_exact_official_no_data_response_is_cached_as_no_data_not_zero(monkeypatch, tmp_path):
+    from pipeline.official_institutional import fetch_twse_day
+    payload = json.dumps({"stat": "很抱歉，沒有符合條件的資料!"}, ensure_ascii=False).encode("utf-8")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    day = date(2026, 10, 3)
+    assert fetch_twse_day(day, source_cache_dir=tmp_path) == []
+    validated = json.loads((tmp_path / "institutional-TWSE-2026-10-03-validated.json").read_text())
+    assert validated["status"] == "no_data"
+    assert validated["codes"] == []
+    assert validated["reportedDate"] == "2026-10-03"
+
+    def unexpected_http(*args, **kwargs):
+        raise AssertionError("validated no-data history should be replayed from cache")
+
+    monkeypatch.setattr("urllib.request.urlopen", unexpected_http)
+    assert fetch_twse_day(day, source_cache_dir=tmp_path, refresh=False) == []
+
+
+def test_twse_orphaned_exact_raw_capture_is_reparsed_and_validated_without_http(monkeypatch, tmp_path):
+    from pipeline.official_institutional import fetch_twse_day
+    payload = json.dumps({"stat": "很抱歉，沒有符合條件的資料!"}, ensure_ascii=False).encode("utf-8")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    day = date(2026, 10, 3)
+    assert fetch_twse_day(day, source_cache_dir=tmp_path) == []
+    (tmp_path / "institutional-TWSE-2026-10-03-validated.json").unlink()
+
+    def unexpected_http(*args, **kwargs):
+        raise AssertionError("a source-authenticated orphaned receipt should be reparsed locally")
+
+    monkeypatch.setattr("urllib.request.urlopen", unexpected_http)
+    assert fetch_twse_day(day, source_cache_dir=tmp_path, refresh=False) == []
+    validated = json.loads((tmp_path / "institutional-TWSE-2026-10-03-validated.json").read_text())
+    assert validated["status"] == "no_data"
+    assert validated["codes"] == []
+
+
+def test_twse_byte_parser_validates_report_date_and_accepts_exact_no_data_sentinel():
+    from pipeline.official_institutional import parse_twse_json_response
+    day = date(2026, 10, 3)
+    sentinel = json.dumps({"stat": "很抱歉，沒有符合條件的資料!"}, ensure_ascii=False).encode("utf-8")
+    assert parse_twse_json_response(sentinel, expected_date=day) == []
+    dated = json.dumps({
+        "date": "20261002",
+        "fields": ["證券代號", "證券名稱", "買進股數", "賣出股數", "買賣超股數"],
+        "data": [["2330", "台積電", "10", "3", "7"]],
+    }, ensure_ascii=False).encode("utf-8")
+    assert parse_twse_json_response(dated, expected_date=date(2026, 10, 2))[0]["netShares"] == 7
+    with pytest.raises(OfficialInstitutionalError, match="date"):
+        parse_twse_json_response(dated, expected_date=day)
+
+
+def test_twse_byte_parser_accepts_exact_historical_no_data_variant():
+    from pipeline.official_institutional import parse_twse_json_response
+    raw = json.dumps({
+        "stat": "很抱歉，沒有符合條件的資料!", "hints": "單位：股", "total": 0,
+    }, ensure_ascii=False).encode("utf-8")
+    assert parse_twse_json_response(raw, expected_date=date(2026, 9, 28)) == []
+
+
+def test_recent_snapshot_fetch_forwards_source_cache_directory(monkeypatch, tmp_path):
     import pipeline.official_institutional as official
-    monkeypatch.setattr(official, "_get_json", lambda *args, **kwargs: {"date": "20261001"})
-    assert official.fetch_tpex_day(date(2026, 10, 2)) == []
+    calls = []
+    monkeypatch.setattr(official, "fetch_complete_day", lambda day, **kwargs: calls.append(kwargs) or [{"code": "2330"}])
+    result = official.fetch_recent_complete_days(
+        as_of=date(2026, 10, 2), sessions=1, lookback_days=1, source_cache_dir=tmp_path)
+    assert result == [{"date": "2026-10-02", "rows": [{"code": "2330"}]}]
+    assert calls == [{"source_cache_dir": tmp_path, "refresh": True}]
+
+
+def test_tpex_replays_verified_prior_day_without_http_and_refreshes_target(monkeypatch, tmp_path):
+    from pipeline.official_institutional import fetch_tpex_day
+    payload = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+    calls = []
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
+
+    def respond(*args, **kwargs):
+        calls.append((args, kwargs))
+        return Response()
+
+    monkeypatch.setattr("urllib.request.urlopen", respond)
+    day = date(2026, 10, 2)
+    initial = fetch_tpex_day(day, source_cache_dir=tmp_path)
+    assert len(calls) == 1
+
+    def unexpected_http(*args, **kwargs):
+        raise AssertionError("verified history cache should not call HTTP")
+
+    monkeypatch.setattr("urllib.request.urlopen", unexpected_http)
+    assert fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=False) == initial
+
+    monkeypatch.setattr("urllib.request.urlopen", respond)
+    assert fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=True) == initial
+    assert len(calls) == 2
+
+
+def test_tpex_invalid_prior_cache_fails_closed_without_http(monkeypatch, tmp_path):
+    from pipeline.official_institutional import fetch_tpex_day
+    payload = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    day = date(2026, 10, 2)
+    fetch_tpex_day(day, source_cache_dir=tmp_path)
+    raw_file = next(tmp_path.glob("inst-tpex-2026-10-02-*.raw.json"))
+    raw_file.write_bytes(raw_file.read_bytes() + b"tampered")
+
+    def unexpected_http(*args, **kwargs):
+        raise AssertionError("corrupt cache must fail closed rather than refetch")
+
+    monkeypatch.setattr("urllib.request.urlopen", unexpected_http)
+    with pytest.raises(OfficialInstitutionalError, match="hash"):
+        fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=False)
+
+
+def test_tpex_wrong_day_cache_metadata_fails_closed_without_http(monkeypatch, tmp_path):
+    from pipeline.official_institutional import fetch_tpex_day
+    payload = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    day = date(2026, 10, 2)
+    fetch_tpex_day(day, source_cache_dir=tmp_path)
+    metadata_path = tmp_path / "institutional-TPEx-2026-10-02-validated.json"
+    metadata = json.loads(metadata_path.read_text())
+    metadata["reportedDate"] = "2026-10-01"
+    metadata_path.write_text(json.dumps(metadata))
+
+    def unexpected_http(*args, **kwargs):
+        raise AssertionError("wrong-date cache must fail closed rather than refetch")
+
+    monkeypatch.setattr("urllib.request.urlopen", unexpected_http)
+    with pytest.raises(OfficialInstitutionalError, match="market date"):
+        fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=False)
+
+
+@pytest.mark.parametrize(("field", "value", "message"), [
+    ("unit", "lots", "market date"),
+    ("rawSha256", "0" * 64, "raw reference"),
+    ("codes", [], "projection"),
+])
+def test_tpex_cache_projection_and_source_contract_are_rechecked(monkeypatch, tmp_path, field, value, message):
+    from pipeline.official_institutional import fetch_tpex_day
+    payload = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    day = date(2026, 10, 2)
+    fetch_tpex_day(day, source_cache_dir=tmp_path)
+    metadata_path = tmp_path / "institutional-TPEx-2026-10-02-validated.json"
+    metadata = json.loads(metadata_path.read_text())
+    metadata[field] = value
+    metadata_path.write_text(json.dumps(metadata))
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: pytest.fail("invalid cache triggered HTTP"))
+    with pytest.raises(OfficialInstitutionalError, match=message):
+        fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=False)
+
+
+def test_tpex_orphaned_receipt_with_wrong_request_date_fails_before_http(monkeypatch, tmp_path):
+    from pipeline.official_institutional import fetch_tpex_day
+    payload = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    day = date(2026, 10, 2)
+    fetch_tpex_day(day, source_cache_dir=tmp_path)
+    (tmp_path / "institutional-TPEx-2026-10-02-validated.json").unlink()
+    receipt_path = next(tmp_path.glob("inst-tpex-2026-10-02-*.receipt.json"))
+    receipt = json.loads(receipt_path.read_text())
+    receipt["requestDate"] = "2026-10-01"
+    receipt_path.write_text(json.dumps(receipt))
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: pytest.fail("invalid orphan triggered HTTP"))
+    with pytest.raises(OfficialInstitutionalError, match="hash or lineage"):
+        fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=False)
+
+
+def test_tpex_partial_orphan_capture_without_receipt_fails_before_http(monkeypatch, tmp_path):
+    from pipeline.official_institutional import fetch_tpex_day
+    payload = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return payload[:size] if size >= 0 else payload
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    day = date(2026, 10, 2)
+    fetch_tpex_day(day, source_cache_dir=tmp_path)
+    (tmp_path / "institutional-TPEx-2026-10-02-validated.json").unlink()
+    next(tmp_path.glob("inst-tpex-2026-10-02-*.receipt.json")).unlink()
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: pytest.fail("partial receipt triggered HTTP"))
+    with pytest.raises(OfficialInstitutionalError, match="bytes are missing"):
+        fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=False)
+
+
+def test_tpex_parser_rejects_wrong_unit_header_and_extra_no_data_fields():
+    from pipeline.official_institutional import parse_tpex_csv, parse_tpex_daily_response
+    payload = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+    malformed_header = payload.replace("投信-買進股數".encode("cp950"), "投信-買進張數".encode("cp950"))
+    with pytest.raises(OfficialInstitutionalError, match="missing official field"):
+        parse_tpex_csv(malformed_header, expected_date=date(2026, 10, 2))
+    sentinel = {
+        "stat": "無資料可供下載", "date": "20261003", "tables": [{
+            "date": "115/10/03", "fields": ["欄位"] * 24, "data": [], "totalCount": 0,
+        }],
+    }
+    with pytest.raises(OfficialInstitutionalError, match="unexpected JSON"):
+        parse_tpex_daily_response(json.dumps({**sentinel, "unexpected": True}).encode(), expected_date=date(2026, 10, 3))
+    with pytest.raises(OfficialInstitutionalError, match="date mismatch"):
+        parse_tpex_daily_response(json.dumps({**sentinel, "date": "20261002"}).encode(), expected_date=date(2026, 10, 3))
+
+
+def test_tpex_http_source_size_limit_fails_before_capturing_receipt(monkeypatch, tmp_path):
+    from pipeline.official_institutional import MAX_TPEX_REPORT_BYTES, fetch_tpex_day
+
+    class OversizeResponse:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return b"x" * size
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: OversizeResponse())
+    with pytest.raises(OfficialInstitutionalError, match="response exceeds"):
+        fetch_tpex_day(date(2026, 10, 2), source_cache_dir=tmp_path)
+    assert not list(tmp_path.glob("*.raw.json"))
+
+
+def test_tpex_http_error_is_wrapped_with_source_context(monkeypatch):
+    from urllib.error import URLError
+    from pipeline.official_institutional import fetch_tpex_day
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: (_ for _ in ()).throw(URLError("offline")))
+    with pytest.raises(OfficialInstitutionalError, match="official report request failed:.*offline"):
+        fetch_tpex_day(date(2026, 10, 2))
+
+
+def test_tpex_csv_contract_rejects_a_different_report_date(monkeypatch):
+    import pipeline.official_institutional as official
+    monkeypatch.setattr(official, "_get_bytes", lambda *args, **kwargs: (
+        _tpex_csv("3081", "聯亞", "98,000", "59", "97,941", report_date="115年10月01日"), None))
+    with pytest.raises(OfficialInstitutionalError, match="date"):
+        official.fetch_tpex_day(date(2026, 10, 2))
+
+
+def _tpex_csv(code, name, buy, sell, net, *, report_date="115年10月02日"):
+    header = [
+        "代號", "名稱", "外資及陸資(不含外資自營商)-買進股數", "外資及陸資(不含外資自營商)-賣出股數",
+        "外資及陸資(不含外資自營商)-買賣超股數", "外資自營商-買進股數", "外資自營商-賣出股數",
+        "外資自營商-買賣超股數", "外資及陸資-買進股數", "外資及陸資-賣出股數", "外資及陸資-買賣超股數",
+        "投信-買進股數", "投信-賣出股數", "投信-買賣超股數", "自營商(自行買賣)-買進股數",
+        "自營商(自行買賣)-賣出股數", "自營商(自行買賣)-買賣超股數", "自營商(避險)-買進股數",
+        "自營商(避險)-賣出股數", "自營商(避險)-買賣超股數", "自營商-買進股數", "自營商-賣出股數",
+        "自營商-買賣超股數", "三大法人買賣超股數合計",
+    ]
+    values = [code, name, "0", "0", "0", "0", "0", "0", "0", "0", "0", buy, sell, net,
+              "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"]
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\r\n")
+    writer.writerow([report_date + " 三大法人日交易資訊"])
+    writer.writerow(header)
+    writer.writerow(values)
+    writer.writerow(["共1筆"])
+    return output.getvalue().encode("cp950")
+
+
+def test_tpex_csv_preserves_exact_shares_and_explicit_zero_rows():
+    from pipeline.official_institutional import parse_tpex_csv
+    raw = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+    result = parse_tpex_csv(raw, expected_date=date(2026, 10, 2))
+    assert result == [{
+        "code": "3081", "name": "聯亞", "market": "TPEx",
+        "buyShares": 98000, "sellShares": 59, "netShares": 97941,
+    }]
+
+    zero = _tpex_csv("3131", "弘塑", "0", "0", "0")
+    assert parse_tpex_csv(zero, expected_date=date(2026, 10, 2))[0]["netShares"] == 0
+    assert parse_tpex_csv(
+        _tpex_csv("3131", "弘塑", "36", "0", "36"), expected_date=date(2026, 10, 2)
+    )[0]["buyShares"] == 36
+    assert parse_tpex_csv(
+        _tpex_csv("3163", "波若威", "0", "158,675", "-158,675"), expected_date=date(2026, 10, 2)
+    )[0]["netShares"] == -158675
+
+
+def test_tpex_official_no_data_sentinel_is_empty_only_for_the_requested_date():
+    from pipeline.official_institutional import parse_tpex_daily_response
+    fields = list(csv.reader(io.StringIO(_tpex_csv("3081", "聯亞", "0", "0", "0").decode("cp950"))))[1]
+    payload = json.dumps({
+        "date": "20261003", "stat": "無資料可供下載", "tables": [{
+            "date": "115/10/03", "data": [], "totalCount": 0, "fields": fields,
+        }],
+    }, ensure_ascii=False).encode("utf-8")
+    assert parse_tpex_daily_response(payload, expected_date=date(2026, 10, 3)) == []
+    with pytest.raises(OfficialInstitutionalError, match="date"):
+        parse_tpex_daily_response(payload, expected_date=date(2026, 10, 2))
+
+
+def test_tpex_csv_rejects_duplicate_codes_and_malformed_common_rows():
+    from pipeline.official_institutional import parse_tpex_csv
+    raw = _tpex_csv("3081", "聯亞", "10", "2", "8")
+    lines = raw.decode("cp950").splitlines()
+    duplicate = "\r\n".join([*lines[:3], lines[2], "共2筆", ""])
+    with pytest.raises(OfficialInstitutionalError, match="duplicate"):
+        parse_tpex_csv(duplicate.encode("cp950"), expected_date=date(2026, 10, 2))
+    malformed = _tpex_csv("3081", "聯亞", "10", "2", "9")
+    with pytest.raises(OfficialInstitutionalError, match="inconsistent"):
+        parse_tpex_csv(malformed, expected_date=date(2026, 10, 2))
+
+
+def test_tpex_csv_requires_a_matching_terminal_row_count():
+    from pipeline.official_institutional import parse_tpex_csv
+    raw = _tpex_csv("3081", "聯亞", "10", "2", "8").decode("cp950")
+    with pytest.raises(OfficialInstitutionalError, match="row-count"):
+        parse_tpex_csv(raw.replace("共1筆", "共2筆").encode("cp950"), expected_date=date(2026, 10, 2))
+    with pytest.raises(OfficialInstitutionalError, match="row-count footer"):
+        parse_tpex_csv(raw.replace("共1筆\r\n", "").encode("cp950"), expected_date=date(2026, 10, 2))
 
 
 def test_parse_twse_report_keeps_share_units():

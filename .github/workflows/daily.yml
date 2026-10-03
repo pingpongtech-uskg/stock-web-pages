@@ -50,7 +50,7 @@ jobs:
           assert re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}', os.environ['REQUEST_ID']), 'invalid request_id'
           assert date.fromisoformat(os.environ['MARKET_DATE']).isoformat() == os.environ['MARKET_DATE'], 'invalid market_date'
           PY
-          mkdir -p .cache/finmind
+          mkdir -p .cache/finmind .cache/market-source
           echo "BUDGET_DATE=$(TZ=Asia/Taipei date +%F)" >> "$GITHUB_ENV"
           echo "SOURCE_GIT_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - uses: actions/cache/restore@v4
@@ -75,15 +75,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python scripts/restore_finmind_checkpoint.py --cache-dir .cache/finmind --budget-date "$BUDGET_DATE"
+      - name: Restore complete daily source receipts
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/market-source
+          key: market-source-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            market-source-v1-
       - name: Fetch authoritative exchange calendar
-        run: python scripts/build_trading_calendar.py --market-date "$MARKET_DATE"
+        run: python scripts/build_trading_calendar.py --market-date "$MARKET_DATE" --source-cache-dir .cache/market-source
       - name: Fetch official institutional universe
         timeout-minutes: 10
         shell: bash
         run: |
           set -euo pipefail
           for attempt in 1 2 3; do
-            if python scripts/fetch_research_universe.py --source official --as-of "$MARKET_DATE" --config config/tracked_symbols.json --output public/data/institutional_universe.json; then
+            if python scripts/fetch_research_universe.py --source official --as-of "$MARKET_DATE" --config config/tracked_symbols.json --output public/data/institutional_universe.json --source-cache-dir .cache/market-source; then
               exit 0
             fi
             if [ "$attempt" -lt 3 ]; then sleep $((attempt * 15)); fi
@@ -97,7 +104,7 @@ jobs:
         run: python scripts/fetch_ownership.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output .cache/ownership_snapshot.json
       - name: Refresh official public-source snapshot first
         timeout-minutes: 25
-        run: python scripts/refresh_snapshot.py --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json
+        run: python scripts/refresh_snapshot.py --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json --source-cache-dir .cache/market-source
       - name: Supplement remaining financial gaps within durable free budget
         timeout-minutes: 26
         shell: bash
@@ -129,6 +136,20 @@ jobs:
         run: python scripts/build_publication_fingerprint.py --market-date "$MARKET_DATE"
       - name: Build canonical screening export
         run: python scripts/build_screening_export.py --data-dir public/data --request-id "$REQUEST_ID" --market-date "$MARKET_DATE" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID"
+      - name: Build and validate complete market cache before publication
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/build_market_cache_index.py --data-dir public/data --config config/tracked_symbols.json --source-cache-dir .cache/market-source --output .artifacts/market-cache-index --market-date "$MARKET_DATE" --request-id "$REQUEST_ID" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID" --publication-sha256 "$(python -c "import json; print(json.load(open('public/data/publication.json'))['contentHash'])")" --config-sha256 "$(python -c "import hashlib; print(hashlib.sha256(open('config/tracked_symbols.json','rb').read()).hexdigest())")" --export-payload-hash "$(python -c "import json; print(json.load(open('public/data/screening-export.json'))['payloadHash'])")"
+          python scripts/export_market_cache.py --input .artifacts/market-cache-index/input.json --expected .artifacts/market-cache-index/expected.json --output .artifacts/market-cache
+          cp .artifacts/market-cache-index/expected.json .artifacts/market-cache/expected.json
+      - name: Preserve validated complete market cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-cache
+          path: .artifacts/market-cache
+          if-no-files-found: error
       - run: python scripts/build_history_archive.py --require-export --as-of "$MARKET_DATE"
       - run: python scripts/verify_history_archive.py
       - run: python scripts/prune_releases.py --data-dir public/data --keep 3 --max-bytes 250000000
@@ -173,6 +194,19 @@ jobs:
         with:
           name: validated-static-release
           path: dist
+      - name: Persist daily source receipts after success or failure
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/market-source
+          key: market-source-v1-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Preserve raw source receipts after failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-source-checkpoint-${{ github.run_attempt }}
+          path: .cache/market-source
+          if-no-files-found: warn
       - name: Persist FinMind budget, queue and rows even after failure
         if: always()
         uses: actions/cache/save@v4
