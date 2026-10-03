@@ -99,10 +99,22 @@ function ambiguousRestore(state,api){
   const stage={restoreBlobCreate:'restoreBlobGet',restoreTreeCreate:'restoreTreeGet',restoreCommitCreate:'restoreCommitGet',restoreRefCreate:'restoreRefGet'}[state.stage];
   restoreCheck(stage,'ambiguous_stage');return nextRestore({...state,stage,restoreAmbiguousObject:true},api);
 }
+function restoreVerifiedRead(state){const {restoreReconcileKey,restoreReconcileAttempt,...verified}=state;return verified;}
+function reconcileRestoreRead(state,now,api){
+  const ref=state.stage==='restoreRefGet',sha=state.stage==='restoreBlobGet'?state.restoreObjectSha:state.stage==='restoreTreeGet'?state.restoreTreeSha:state.restoreCommitSha;
+  const key=state.stage+':'+sha+(ref?':'+state.restoreManifestHash:''),attempt=state.restoreReconcileKey===key?state.restoreReconcileAttempt:0;
+  const pending=()=>api.fail({...state,restoreStatus:'pending_reconciliation'},'restore_object_ambiguous');
+  const matching=ref?state.restoreRefIntent===true:state.restoreObjectIntent===sha;
+  if(!matching||!restoreSha(sha)||ref&&!/^[a-f0-9]{64}$/.test(state.restoreManifestHash||'')||!Number.isInteger(attempt)||attempt<0||attempt>=3||!Number.isFinite(state.deadline))return pending();
+  const delay=2**attempt;
+  if(!Number.isFinite(now)||now+delay*1000>=state.deadline)return pending();
+  const path=ref?'/git/ref/heads/n8n-cache-restore/'+state.restoreManifestHash:'/git/'+({restoreBlobGet:'blobs',restoreTreeGet:'trees',restoreCommitGet:'commits'})[state.stage]+'/'+sha;
+  return api.request({...state,restoreReconcileKey:key,restoreReconcileAttempt:attempt+1},state.stage,'github','GET',RESTORE_REPO+path,undefined,delay);
+}
 function advanceRestore(state,response,now,api){
   const body=response.body,status=response.statusCode;
   if(status===404&&['restoreBlobGet','restoreTreeGet','restoreCommitGet','restoreRefGet'].includes(state.stage)){
-    if(state.restoreAmbiguousObject||state.restoreObjectIntent===state.restoreObjectSha&&state.stage==='restoreBlobGet'||state.restoreObjectIntent===state.restoreTreeSha&&state.stage==='restoreTreeGet'||state.restoreObjectIntent===state.restoreCommitSha&&state.stage==='restoreCommitGet'||state.restoreRefIntent&&state.stage==='restoreRefGet')return api.fail({...state,restoreStatus:'pending_reconciliation'},'restore_object_ambiguous');
+    if(state.restoreAmbiguousObject||state.restoreObjectIntent===state.restoreObjectSha&&state.stage==='restoreBlobGet'||state.restoreObjectIntent===state.restoreTreeSha&&state.stage==='restoreTreeGet'||state.restoreObjectIntent===state.restoreCommitSha&&state.stage==='restoreCommitGet'||state.restoreRefIntent&&state.stage==='restoreRefGet')return reconcileRestoreRead(state,now,api);
     const stage=state.stage.replace('Get','Create'),sha=state.stage==='restoreTreeGet'?state.restoreTreeSha:state.stage==='restoreCommitGet'?state.restoreCommitSha:state.restoreObjectSha;
     return api.checkpoint({...state,restoreObjectIntent:sha,...(state.stage==='restoreRefGet'?{restoreRefIntent:true}:{})},stage);
   }
@@ -154,24 +166,24 @@ function advanceRestore(state,response,now,api){
     case 'restoreBlobGet':{
       const bytes=Buffer.from(state.restoreTransient.files[state.restoreGitFiles[state.restoreBlobCursor]],'base64');
       restoreCheck(body?.sha===state.restoreObjectSha&&body.encoding==='base64'&&body.size===bytes.length&&gitObject('blob',Buffer.from(body.content||'','base64'))===state.restoreObjectSha,'blob_readback');
-      return api.checkpoint({...state,restoreBlobCursor:state.restoreBlobCursor+1,restoreObjectIntent:state.restoreObjectIntent===state.restoreObjectSha?undefined:state.restoreObjectIntent,restoreAmbiguousObject:false},'restoreBlobGet');
+      return api.checkpoint({...restoreVerifiedRead(state),restoreBlobCursor:state.restoreBlobCursor+1,restoreObjectIntent:state.restoreObjectIntent===state.restoreObjectSha?undefined:state.restoreObjectIntent,restoreAmbiguousObject:false},'restoreBlobGet');
     }
     case 'restoreTreeCreate':restoreCheck(body?.sha===state.restoreTreeSha,'tree_sha');return nextRestore({...state,stage:'restoreTreeGet',restoreAmbiguousObject:false},api);
     case 'restoreTreeGet':{
       const entries=body?.tree?.map(({path,mode,type,sha})=>({path,mode,type,sha}));
       restoreCheck(body?.sha===state.restoreTreeSha&&body.truncated===false&&JSON.stringify(entries)===JSON.stringify(state.restoreTreeEntries),'tree_readback');
-      return api.checkpoint({...state,restoreObjectIntent:undefined,restoreAmbiguousObject:false},'restoreCommitGet');
+      return api.checkpoint({...restoreVerifiedRead(state),restoreObjectIntent:undefined,restoreAmbiguousObject:false},'restoreCommitGet');
     }
     case 'restoreCommitCreate':restoreCheck(body?.sha===state.restoreCommitSha,'commit_sha');return nextRestore({...state,stage:'restoreCommitGet',restoreAmbiguousObject:false},api);
     case 'restoreCommitGet':{
       const expected=state.restoreCommitBody;
-      restoreCheck(body?.sha===state.restoreCommitSha&&body.tree?.sha===state.restoreTreeSha&&Array.isArray(body.parents)&&body.parents.length===0&&body.message===expected.message&&['author','committer'].every(k=>['name','email'].every(v=>body[k]?.[v]===expected[k][v])&&Date.parse(body[k]?.date)===Date.parse(expected[k].date)),'commit_readback');
-      return api.checkpoint({...state,restoreObjectIntent:undefined,restoreAmbiguousObject:false},'restoreRefGet');
+      restoreCheck(body?.sha===state.restoreCommitSha&&body.tree?.sha===state.restoreTreeSha&&Array.isArray(body.parents)&&body.parents.length===0&&(body.message===expected.message||expected.message.endsWith('\n')&&body.message===expected.message.slice(0,-1))&&['author','committer'].every(k=>['name','email'].every(v=>body[k]?.[v]===expected[k][v])&&Date.parse(body[k]?.date)===Date.parse(expected[k].date)),'commit_readback');
+      return api.checkpoint({...restoreVerifiedRead(state),restoreObjectIntent:undefined,restoreAmbiguousObject:false},'restoreRefGet');
     }
     case 'restoreRefCreate':return nextRestore({...state,stage:'restoreRefGet',restoreAmbiguousObject:false},api);
     case 'restoreRefGet':
       restoreCheck(body?.ref==='refs/heads/n8n-cache-restore/'+state.restoreManifestHash&&body.object?.type==='commit'&&body.object.sha===state.restoreCommitSha,'immutable_ref');
-      return api.checkpoint({...state,restoreStatus:'verified',dispatchIntent:true,restoreObjectIntent:undefined,restoreRefIntent:undefined,restoreAmbiguousObject:false},'dispatch');
+      return api.checkpoint({...restoreVerifiedRead(state),restoreStatus:'verified',dispatchIntent:true,restoreObjectIntent:undefined,restoreRefIntent:undefined,restoreAmbiguousObject:false},'dispatch');
     default:throw Error('restore_unknown_stage');
   }
 }
