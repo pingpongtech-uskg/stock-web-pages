@@ -282,3 +282,8 @@ test('observed Notion virtual-host storage is exact and signed expiry/path/query
   assert.equal(cache.validateCacheDownload(file,policy,now),true);
   for(const url of [base.replace('prod-files-secure.','other.')+query,base.replace('.amazonaws.com','.amazonaws.com.evil')+query,base.replace('https://','https://user@')+query,base.replace('.com/','.com:443/')+query,base.replace('/abc/','/../')+query,base.replace('/abc/','/%2e%2e/')+query,base+query+'&X-Amz-Expires=3600',base+query.replace('Expires=3600','Expires=86400'),base+query.replace('T040000Z','T020000Z'),base+query.replace('X-Amz-Date','Missing-Date'),base+query+'#secret'])assert.throws(()=>cache.validateCacheDownload({...file,url},policy,now),/cache_storage|cache_url_expired/);
 });
+
+test('signed AWS credential query separators are accepted while encoded path separators are rejected',()=>{
+ const policy={authentication:'none',followRedirects:false,responseFormat:'file'};const now='2026-10-03T04:00:00Z';const base='https://prod-files-secure.s3.us-west-2.amazonaws.com/abc/cache.json.gz';const query='?X-Amz-Date=20261003T040000Z&X-Amz-Expires=3600&X-Amz-Credential=public%2F20261003%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=dummy';const file={url:base+query,expiry_time:'2026-10-03T05:00:00Z'};
+ assert.equal(cache.validateCacheDownload(file,policy,now),true);assert.throws(()=>cache.validateCacheDownload({...file,url:base.replace('/abc/','/%2F/')+query},policy,now),/cache_storage/);
+});

@@ -1,13 +1,15 @@
 // Pure state transitions; all requests execute through n8n credential nodes.
 const {validateExport,stockProperties,stockSchema,richText,retrySeconds,sha256}=require('./runtime.cjs');
 const {validateLegacyArchive}=require('./legacy.cjs');
+const cacheOperation=require('./cache-operation.cjs');
+const restoreOperation=require('./cache-restore-operation.cjs');
 const REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';
 const ROOT_SOURCE='3ed6fb57-ff38-803d-815a-000b148c6b6e';
 const ROOT_DATABASE='3ed6fb57-ff38-8032-97cc-f017b6104300';
 const CALENDAR='https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule';
 const ROOT_FIELDS={ 'Market Date':{date:{}},'Request ID':{rich_text:{}},'Run ID':{rich_text:{}},'Actions Run ID':{rich_text:{}},'Source Commit':{rich_text:{}},'Payload Hash':{rich_text:{}},'Active Revision':{rich_text:{}},'Screening Status':{rich_text:{}},'Notion Status':{rich_text:{}},'Deploy Status':{rich_text:{}},'Summary':{rich_text:{}},'Selected Count':{number:{}},'Trust Count':{number:{}},'Growth Count':{number:{}},'Low Position Count':{number:{}} };
 const OPERATION_FIELDS={'Generated At':{date:{}},'Quality':{rich_text:{}},'Archive Method':{rich_text:{}},'Archive Source Commit':{rich_text:{}},'Expected Count':{number:{}},'Archived Count':{number:{}},'Child Database ID':{rich_text:{}},'Child Data Source ID':{rich_text:{}},'Actions URL':{url:{}},'Archive URL':{url:{}},'Error Summary':{rich_text:{}},'Financial Cutoff':{rich_text:{}},'Coverage':{rich_text:{}},'Formula Versions':{rich_text:{}}};
-const ALL_ROOT_FIELDS={...ROOT_FIELDS,...OPERATION_FIELDS};
+const ALL_ROOT_FIELDS={...ROOT_FIELDS,...OPERATION_FIELDS,...cacheOperation.CACHE_FIELDS};
 function calendarOpen(rows,day) {
   if(!Array.isArray(rows)||!rows.length) throw Error('calendar_empty');
   const dates=rows.map(row=>{
@@ -46,7 +48,7 @@ function request(state,stage,target,method,url,body,delaySeconds=0.5) {
 function done(state) {return result({...state,stage:'done'},null,0.5);}
 function durable(state) {
   const {op,payload,rawExport,archiveRows,pendingStocks,children,runMatches,...rest}=state;
-  return rest;
+  return restoreOperation.restoreDurable(cacheOperation.cacheDurable(rest));
 }
 function contents(state) {return `${REPO}/contents/operations/days/${state.marketDate}.json`;}
 function archiveContents(state,stage,path){return request(state,stage,'github','GET',`${REPO}/contents/public${path}?ref=${state.archiveCommit}`);}
@@ -86,11 +88,13 @@ function start(input,now=Date.now()) {
   return request({...input,startedAt:now,operationDeadline,deadline:Math.min(now+59*60000,operationDeadline),targetAt:Date.parse(input.marketDate+'T10:45:00Z'),overdueAt,screeningStatus:'pending',notionStatus:'pending',deployStatus:'pending',released:false},'calendar','public','GET',CALENDAR);
 }
 function next(state,now) {
+  if(state.stage.startsWith('cache'))return cacheOperation.nextCache(state,cacheApi(now));
+  if(state.stage.startsWith('restore'))return restoreOperation.nextRestore(state,cacheApi(now));
   switch(state.stage) {
     case 'done':return done(state);
     case 'holiday':return checkpoint({...state,released:true,screeningStatus:'skipped_non_trading',notionStatus:'skipped',deployStatus:'skipped'},'done');
     case 'findRun':return findRuns(state);
-    case 'dispatch':return request({...state,dispatchIntent:true},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate}});
+    case 'dispatch':return request({...state,dispatchIntent:true},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate,source_mode:'publish',...(state.restoreStatus==='verified'?restoreOperation.restoreDispatchInputs(state):{})}});
     case 'pollRun':return request(state,'pollRun','github','GET',`${REPO}/actions/runs/${state.actionsRunId}`,null,15);
     case 'artifactList':return request(state,'artifactList','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);
     case 'publicationExport':return request(state,'publicationExport','github','GET',`${REPO}/contents/public/data/screening-export.json?ref=${state.publication.publishedGitCommit}`);
@@ -108,10 +112,17 @@ function next(state,now) {
     default:throw Error('unknown_stage:'+state.stage);
   }
 }
+function cacheApi(now){return {request,checkpoint,next:state=>next(state,now),fail};}
 function advance(original,response,now=Date.now()) {
   const state={...original}; const status=Number(response?.statusCode??200); let body=response?.body??response?.data;
   if(typeof body==='string'&&!['liveProbe','liveVerify'].includes(state.stage)) {try{body=JSON.parse(body);}catch{/* Redirects may have no JSON body. */}}
   if(state.lockSha&&now>state.deadline) return fail(state,'writer_deadline');
+  if(/^cache_[a-z_]+$/.test(response?.cacheError||''))return fail({...state,cacheStatus:'failed'},response.cacheError);
+  if(['cacheDownload','restoreDownload'].includes(state.stage)&&(status===403||status===429||status>=500||response?.error)){
+    if((state.retry||0)>=(status===429?8:3))return fail({...state,cacheStatus:'failed'},'cache_download_failed');
+    const renewed=state.stage==='restoreDownload'?restoreOperation.nextRestore({...state,stage:'restoreFile',retry:(state.retry||0)+1},cacheApi(now)):cacheOperation.nextCache({...state,stage:'cacheGetFile',retry:(state.retry||0)+1},cacheApi(now));
+    return {...renewed,delaySeconds:status===429?retrySeconds(response.headers?.['retry-after'],now):2**((state.retry||0)+1)};
+  }
   if(status===429) {
     if((state.retry||0)>=8) return fail(state,'rate_limit_exhausted');
     return result({...state,retry:(state.retry||0)+1},state.op,retrySeconds(response.headers?.['retry-after'],now));
@@ -122,6 +133,8 @@ function advance(original,response,now=Date.now()) {
     return {...next({...state,lockSha:body.content.sha,stage:state.nextStage,retry:0},now),ledgerRequired:true};
   }
   if(status>=500||response?.error) {
+    if(['restoreBlobCreate','restoreTreeCreate','restoreCommitCreate','restoreRefCreate'].includes(state.stage))return restoreOperation.ambiguousRestore(state,cacheApi(now));
+    if(['cacheCreateUpload','cacheSendUpload','cacheAppend'].includes(state.stage))return cacheOperation.ambiguousCacheWrite(state,cacheApi(now));
     const readStage={createDaily:'findDaily',createDatabase:'findDatabase',createStock:'queryRows',appendSummary:'summaryRead'}[state.stage];
     if(readStage) return next({...state,stage:readStage,retry:(state.retry||0)+1},now);
     if(state.stage==='dispatch') return findRuns({...state,dispatchIntent:true,runPage:1},15);
@@ -131,12 +144,15 @@ function advance(original,response,now=Date.now()) {
   }
   if(['liveProbe','liveVerify'].includes(state.stage)&&status>=400) return deploymentResult(state,'failed','live_http_'+status,now);
   if(state.stage==='createBranch'&&status===422) return request(state,'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);
-  const allow404=['branch','state'];
+  const allow404=['branch','state','restoreState','restoreBlobGet','restoreTreeGet','restoreCommitGet','restoreRefGet'];
+  if(state.stage==='restoreRefCreate'&&status===422)return restoreOperation.ambiguousRestore(state,cacheApi(now));
   if(state.stage==='dispatch'&&response.preflightFailed===true&&status===400&&body?.message==='Inputs: Invalid JSON') return fail({...state,dispatchIntent:false,screeningStatus:'failed'},'dispatch_preflight_failed',body.message);
   if(status>=400&&!allow404.includes(state.stage)) return fail(state,'external_http_'+status,body?.message);
   try {return advanceSuccess(state,body,status,response,now);} catch(error){return fail(state,error.message.split(':')[0],error.message);}
 }
 function advanceSuccess(state,body,status,response,now) {
+  if(state.stage.startsWith('restore'))return restoreOperation.advanceRestore(state,{...response,body,statusCode:status},now,cacheApi(now));
+  if(state.stage.startsWith('cache'))return cacheOperation.advanceCache(state,{...response,body,statusCode:status},now,cacheApi(now));
   switch(state.stage) {
     case 'calendar': {
       if(state.resolveLatest&&state.mode!=='diagnose') {
@@ -144,6 +160,10 @@ function advanceSuccess(state,body,status,response,now) {
         state={...state,requestedAtDate:state.marketDate,marketDate,requestId:state.automaticRequestId?'stockscreener:'+marketDate.replaceAll('-','')+':v1':state.requestId,targetAt:Date.parse(marketDate+'T10:45:00Z'),overdueAt:Date.parse(marketDate+'T11:30:00Z')};
       }
       const isOpen=calendarOpen(body,state.marketDate);
+      if(isOpen&&state.mode!=='diagnose'&&state.mode!=='legacy_archive') {
+        const previousSessionDate=latestCompletedSession(body,Date.parse(state.marketDate+'T00:00:00Z')-8*3600000);
+        state={...state,previousSessionDate};
+      }
       if(state.mode==='diagnose') return request({...state,isOpen},'diagnoseDatabase','notion','GET',`https://api.notion.com/v1/databases/${ROOT_DATABASE}`);
       if(state.runKind==='scheduled'&&now>=state.operationDeadline) return done({...state,isOpen,errorCategory:'operation_overdue',errorMessage:'19:30 Asia/Taipei deadline passed; explicit manual resume is required.'});
       return request({...state,isOpen},'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);
@@ -170,7 +190,7 @@ function advanceSuccess(state,body,status,response,now) {
       const correctPreflight=!!state.preflightRetryOwner;
       if(correctPreflight&&(!sameRequest||existing?.marketDate!==state.marketDate||existing?.owner!==state.preflightRetryOwner||existing.released!==true||existing.actionsRunId||!existing.dispatchIntent||existing.errorCategory!=='dispatch_run_not_found'))return fail({...state,lockSha:undefined},'preflight_correction_scope');
       if(existing?.requestId&&!sameRequest&&state.mode!=='revision') throw Error('request_correction_requires_revision');
-      if(existing?.released&&sameRequest&&existing.screeningStatus==='complete'&&existing.notionStatus==='complete'&&existing.deployStatus==='verified') return done({...existing,owner:state.owner,screeningStatus:'already_complete'});
+      if(existing?.released&&sameRequest&&existing.screeningStatus==='complete'&&existing.notionStatus==='complete'&&existing.deployStatus==='verified'&&(existing.archiveMethod==='legacy_archive'||existing.cacheStatus==='verified')) return done({...existing,owner:state.owner,screeningStatus:'already_complete'});
       const resume=sameRequest?existing:{};
       const manualOverride=state.runKind==='manual'&&['screen','resume','legacy_archive'].includes(state.mode)&&!!resume.requestId;
       const operationDeadline=manualOverride?state.operationDeadline:(resume.operationDeadline||state.operationDeadline);
@@ -194,7 +214,7 @@ function advanceSuccess(state,body,status,response,now) {
         return findRuns({...state,runPage:1},15);
       }
       if(state.mode==='resume') return fail(state,'resume_run_not_found');
-      return checkpoint({...state,dispatchIntent:true},'dispatch');
+      return restoreOperation.beginRestore(state,cacheApi(now));
     }
     case 'dispatch':return findRuns({...state,dispatchIntent:true,runPage:1},15);
     case 'pollRun': {
@@ -266,7 +286,7 @@ function advanceSuccess(state,body,status,response,now) {
     case 'findDaily': {
       if(body.has_more||body.results?.length>1) throw Error('duplicate_daily_page');
       const page=body.results?.[0];
-      if(page) return checkpoint({...state,pageId:page.id,notionPageId:page.id},state.recordFailure?'writeFailure':'findDatabase');
+      if(page) return checkpoint({...state,pageId:page.id,notionPageId:page.id,cacheActiveManifestHash:readProperty(page.properties?.['Cache Active Revision'])||state.cacheActiveManifestHash},state.recordFailure?'writeFailure':'findDatabase');
       return request(state,'createDaily','notion','POST','https://api.notion.com/v1/pages',{parent:{type:'data_source_id',data_source_id:ROOT_SOURCE},properties:{'名稱':{title:richText(state.marketDate.replaceAll('-',''))},...rootProperties(state,'pending')}});
     }
     case 'createDaily':return checkpoint({...state,pageId:body.id,notionPageId:body.id},state.recordFailure?'writeFailure':'findDatabase');
@@ -340,10 +360,13 @@ function handleRows(state,body) {
   const pendingStocks=selected.filter(stock=>!keys.includes(`${state.payload.payloadHash}:${stock.code}`));
   if(state.stage==='verifyRows'&&pendingStocks.length) throw Error('archive_incomplete');
   if(pendingStocks.length) return createStock({...state,pendingStocks,archiveRows:[],cursor:undefined});
-  return checkpoint({...state,archiveRows:[],cursor:undefined,archivedCount:rows.length,notionStatus:'rows_verified'},'summaryRead');
+  return checkpoint({...state,archiveRows:[],cursor:undefined,archivedCount:rows.length,notionStatus:'rows_verified'},state.archiveMethod==='legacy_archive'?'summaryRead':'cacheRun');
 }
 function createStock(state) {return request(state,'createStock','notion','POST','https://api.notion.com/v1/pages',{parent:{type:'data_source_id',data_source_id:state.dataSourceId},properties:stockProperties(state.pendingStocks[0],state.payload)});}
-function finishNotion(state) {return request(state,'finishNotion','notion','PATCH',`https://api.notion.com/v1/pages/${state.pageId}`,{properties:{...rootProperties(state,'complete'),'Summary':{rich_text:richText(summary(state))}}});}
+function finishNotion(state) {
+  if(state.archiveMethod!=='legacy_archive'&&state.cacheStatus!=='verified')return fail(state,'cache_required_before_archive_completion');
+  return request(state,'finishNotion','notion','PATCH',`https://api.notion.com/v1/pages/${state.pageId}`,{properties:{...rootProperties(state,'complete'),'Summary':{rich_text:richText(summary(state))}}});
+}
 function deploymentResult(state,deployStatus,deployError,now) {
   const updated={...state,deployStatus,deployError};
   if(state.stage==='liveProbe') return checkpoint(updated,'rootSchema');

@@ -1428,7 +1428,7 @@
   },
   "operationalNotionCachePlan": {
     "schema": "market-cache-v1",
-    "status": "producer_and_compressed_verifier_tested_primary_integration_pending",
+    "status": "primary_backup_and_restore_inactive_draft_deployed_live_verification_pending",
     "selectedHistorySeparate": true,
     "roles": [
       "institutional_raw:TWSE",
@@ -1448,7 +1448,7 @@
     "previousBaselineRequired": true,
     "aiRuntime": false,
     "actualNewCacheWrites": 0,
-    "restorationStatus": "pure_python_39_tests_peer_reviewed_runtime_bridge_pending",
+    "restorationStatus": "python_and_n8n_bridge_implemented_peer_reviewed_live_verification_pending",
     "dispatchRestorationValidation": "11_local_tests_passed_not_yet_published",
     "dispatchRestorationPeerReview": "no_high_medium_findings"
   },
@@ -1803,7 +1803,7 @@
     "pythonTestsPassed": 926,
     "sourceHelperTestsPassed": 16,
     "unresolvedHighMediumFindings": 0,
-    "sourcePublicationStatus": "pending",
+    "sourcePublicationStatus": "feature_and_main_exact_head_CI_success",
     "restorationRuntimeBridgeStatus": "pending",
     "marketDataPublicationStatus": "pending",
     "calendarYearBoundary": "fails_explicitly_when_no_authoritative_previous_year_calendar",
@@ -1812,5 +1812,42 @@
     "officialWindowReplaySessions": 11,
     "officialWindowReplayHttpRequests": 0,
     "officialWindowReplayHolidayRequests": 0
+  },
+  "restorationSourcePublication": {
+    "sourceGitCommit": "75839b8cb496c10301ee3bdcf6bd321b264e0b16",
+    "tree": "705cdc4962bf7f2faf4815e56c1357d0e9d6a1b5",
+    "parent": "8eec7416be8146cb45b483cc1fe53489f4a22973",
+    "files": 19,
+    "manifestBytes": 913461,
+    "manifestSha256": "d146c48d99502abdc21a500932ca3ecc674568e06d795c46784e6118901f3b4c",
+    "featureExecution": "897",
+    "featureLedgerRow": 133,
+    "featureCiRun": "37151016499",
+    "featureCiConclusion": "success",
+    "mainExecution": "898",
+    "mainLedgerRow": 134,
+    "mainCiRun": "37151228782",
+    "mainCiConclusion": "success",
+    "sourceOnly": true,
+    "realOctober2DataPublished": false,
+    "nonForced": true
+  },
+  "n8nCompleteCacheDraft": {
+    "workflowId": "huDBNJDss4KuPmn4",
+    "version": "09651afd-e56b-4434-ae93-1fe8b9848f2c",
+    "nodeCount": 93,
+    "active": false,
+    "activeVersionId": null,
+    "rootIndependentParameterReadback": true,
+    "localN8nTestsPassed": 157,
+    "sdkValidation": "passed",
+    "allNodeConfigsValidated": 93,
+    "peerHighMediumFindings": 0,
+    "generatedSdkBytes": 265351,
+    "coverageLinePercent": 99.66,
+    "coverageBranchPercent": 91.9,
+    "runtimeCacheUploadVerified": false,
+    "runtimeCacheRestoreVerified": false,
+    "dailyAiNodes": 0
   }
 }

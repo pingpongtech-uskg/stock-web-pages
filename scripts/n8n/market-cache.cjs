@@ -275,7 +275,7 @@ function validateCacheDownload(file, policy, now = new Date().toISOString()) {
   check(policy && equal(Object.keys(policy).sort(), ['authentication', 'followRedirects', 'responseFormat']) && policy.authentication === 'none' && policy.followRedirects === false && policy.responseFormat === 'file', 'download_policy');
   // Exact documented origin plus the virtual-host origin observed from an
   // authenticated Notion file readback in execution885. Never allow wildcard S3.
-  check(file && typeof file.url === 'string' && file.url.length <= 16384 && /^https:\/\/(?:s3\.us-west-2\.amazonaws\.com\/secure\.notion-static\.com|prod-files-secure\.s3\.us-west-2\.amazonaws\.com)\/[a-zA-Z0-9_./%-]+\?[^\s#]+$/.test(file.url) && !/(?:\/\.\.?\/|%2e|%2f|%5c)/i.test(file.url), 'storage');
+  check(file && typeof file.url === 'string' && file.url.length <= 16384 && /^https:\/\/(?:s3\.us-west-2\.amazonaws\.com\/secure\.notion-static\.com|prod-files-secure\.s3\.us-west-2\.amazonaws\.com)\/[a-zA-Z0-9_./%-]+\?[^\s#]+$/.test(file.url) && !/(?:\/\.\.?\/|%2e|%2f|%5c)/i.test(file.url.split('?')[0]), 'storage');
   check(validUtc(file.expiry_time) && Number.isFinite(Date.parse(now)) && Date.parse(file.expiry_time) > Date.parse(now), 'url_expired');
   check(signedExpiryValid(file.url, file.expiry_time, Date.parse(now)), 'url_expired');
   return true;

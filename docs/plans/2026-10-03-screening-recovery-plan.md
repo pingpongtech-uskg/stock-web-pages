@@ -24,7 +24,7 @@ n8n 是唯一日常排程入口，週一至週五 18:00 Asia/Taipei；先查官�
 
 2026-10-03 的補跑 v2（n8n 890／Actions 37146944320）卡在 9/28 休市日：TPEx 空報表保留了合法日期、24 欄與零列，但增加 presentation metadata，嚴格欄位集合檢查因此拒絕。已用 artifact 11282556816 的完整 SHA／lineage 與原始 1,859 bytes 回應確認；10/2 CSV 本身成功取得且 SHA 與獨立快取一致。修復以官方日曆先跳過休市日，兼容這種合法空報表，不能將交易日未知資料冒充零。尚未重新成功補跑。
 
-完整原始執行證據及既有歸檔審核保存在 docs/n8n/runtime-evidence.json。最新已發布程式來源 8eec7416be8146cb45b483cc1fe53489f4a22973，feature CI 37146657826／main CI 37146801114 success；n8n 887／889、ledger 120／121 驗證非強制 feature／main 更新；這不是 10/2 行情發布。
+完整原始執行證據及既有歸檔審核保存在 docs/n8n/runtime-evidence.json。最新已發布程式來源 75839b8cb496c10301ee3bdcf6bd321b264e0b16，feature CI 37151016499／main CI 37151228782 success；n8n 897／898、ledger 133／134 驗證非強制 feature／main 更新；這不是 10/2 行情發布。
 
 ## 一、五項成長健診與估值規則
 
@@ -150,3 +150,5 @@ v2 真實 runner 在 Fetch official institutional universe 失敗，Actions37146
 目前新增還原整合已通過 926 項 Python 測試及獨立審查：還原僅補財報／營收／股息輸入，既有有效輸入優先，官方新輸入最後覆蓋；同日價格、asOf、法人與策略結果均由當日重算。六項可選 restore dispatch inputs 必須同時提供並逐项驗證，Actions 維持可信 main 程式，資料 commit 僅作還原來源。主流程的 Notion 備份／Git 資料橋仍待完整實際驗收。
 
 已知跨年限制：新的官方日曆檢查要求完整窗口年份都有權威日曆，缺少前一年時明確停止；不可把未覆蓋日期當作休市。跨年窗口日曆保留／還原需在宣稱全年無人操作前完成驗收。
+
+完整 Notion 備份與還原資料橋已部署為停用的 93 節點 n8n 草稿（version 09651afd-e56b-4434-ae93-1fe8b9848f2c），157 項本機測試與 SDK／全部節點設定驗證通過，獨立參數讀回一致。附件保存發送及附加前持久化意圖；不確定結果先查既有上傳／附件，避免重試重複。還原資料使用 manifest 原始時間建立確定性、無程式、無父 commit 的 Git 資料樹，交由可信 main 程式驗證；同份快取在不同操作時間產生相同 commit。尚未驗證實際完整快取上傳／日常還原；主排程繼續停用。

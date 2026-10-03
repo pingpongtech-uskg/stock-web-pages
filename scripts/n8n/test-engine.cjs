@@ -80,7 +80,7 @@ test('read requests use bounded retries and rate limiting exhaustion persists fa
   const checkpointFailure=engine.advance({...state,stage:'checkpoint'},response({},503),now);assert.equal(checkpointFailure.route,'done');assert.equal(checkpointFailure.state.errorCategory,'checkpoint_failed');
 });
 test('live 404 preserves archive and retries; terminal deploy failure still finalizes Notion',()=>{
-  const state={...input,stage:'liveVerify',deadline:now+100000,lockSha:'blob',payload:{runId:'run',sourceGitCommit:'a'.repeat(40),generatedAt:'2026-10-02T10:00:00Z',freshness:'current',revision:'b'.repeat(12),payloadHash:'c'.repeat(64),selectedStocks:[],strategies:{trust:[],growth:[],lowPosition:[]},coverage:{},formulaVersions:{}},pageId:'page',actionsRunId:'123'};
+  const state={...input,stage:'liveVerify',cacheStatus:'verified',deadline:now+100000,lockSha:'blob',payload:{runId:'run',sourceGitCommit:'a'.repeat(40),generatedAt:'2026-10-02T10:00:00Z',freshness:'current',revision:'b'.repeat(12),payloadHash:'c'.repeat(64),selectedStocks:[],strategies:{trust:[],growth:[],lowPosition:[]},coverage:{},formulaVersions:{}},pageId:'page',actionsRunId:'123'};
   assert.equal(engine.advance(state,response({},404),now).state.stage,'liveVerify');
   const terminal=engine.advance({...state,deployAttempts:20},response({},404),now);assert.equal(terminal.state.stage,'finishNotion');assert.equal(terminal.state.deployStatus,'failed');assert.equal(terminal.op.body.properties['Notion Status'].rich_text[0].text.content,'complete');
 });
@@ -120,7 +120,7 @@ test('manual resume after cutoff has an explicit new window but cannot steal a l
   assert.equal(busy.state.errorCategory,'writer_busy');assert.equal(busy.op,null);
 });
 test('completed scheduled recovery makes no CAS, artifact or archive mutation',()=>{
-  const previous={...input,owner:'old',released:true,screeningStatus:'complete',notionStatus:'complete',deployStatus:'verified'};
+  const previous={...input,owner:'old',released:true,cacheStatus:'verified',screeningStatus:'complete',notionStatus:'complete',deployStatus:'verified'};
   const state={...engine.start({...input,runKind:'scheduled'},now).state,stage:'state',isOpen:true};
   const out=engine.advance(state,response({sha:'sha',content:Buffer.from(JSON.stringify(previous)).toString('base64')}),now);
   assert.equal(out.route,'done');assert.equal(out.op,null);assert.equal(out.state.screeningStatus,'already_complete');

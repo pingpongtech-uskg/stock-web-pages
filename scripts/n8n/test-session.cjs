@@ -43,7 +43,7 @@ test('explicit confirmed-preflight correction requires exact released failed own
 });
 test('normal automatic manual adopts same-day corrected request for exact resume and identical retry',()=>{
  const now=Date.parse('2026-10-03T01:00:00Z');const initial=engine.start(base,now).state;
- const prior={marketDate:'2026-10-02',requestId:'stockscreener:20261002:v2',owner:'previous',mode:'revision',released:true,deadline:now-120000,actionsRunId:'456',dispatchIntent:true,screeningStatus:'complete',notionStatus:'complete',deployStatus:'verified',payloadHash:'a'.repeat(64)};
+ const prior={marketDate:'2026-10-02',requestId:'stockscreener:20261002:v2',owner:'previous',mode:'revision',released:true,deadline:now-120000,actionsRunId:'456',dispatchIntent:true,cacheStatus:'verified',screeningStatus:'complete',notionStatus:'complete',deployStatus:'verified',payloadHash:'a'.repeat(64)};
  const state={...initial,stage:'state',marketDate:prior.marketDate,requestId:'stockscreener:20261002:v1',isOpen:true};const read=value=>({statusCode:200,body:{sha:'observed',content:Buffer.from(JSON.stringify(value)).toString('base64')}});
  const complete=engine.advance(state,read(prior),now);assert.equal(complete.state.requestId,prior.requestId);assert.equal(complete.state.actionsRunId,'456');assert.equal(complete.state.screeningStatus,'already_complete');assert.equal(complete.op,null);
  const resume=engine.advance(state,read({...prior,screeningStatus:'pending',notionStatus:'pending',deployStatus:'pending'}),now);assert.equal(resume.state.nextStage,'pollRun');assert.equal(resume.state.actionsRunId,'456');assert.equal(resume.state.requestId,prior.requestId);assert.equal(resume.state.automaticRequestAdoptedFrom,'stockscreener:20261002:v1');
