@@ -13,6 +13,7 @@ _INCOME_FIELDS = {
     "OperatingIncome": "operatingProfit",
     "PreTaxIncome": "pretaxProfit",
     "IncomeAfterTaxes": "netIncome",
+    "IncomeAfterTax": "netIncome",  # FinMind bank/financial-holding spelling.
     # FinMind EquityAttributableToOwnersOfParent is comprehensive income, not net income.
     "NetIncomeAttributableToOwnersOfParent": "parentNetIncome",
     "EPS": "eps",

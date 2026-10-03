@@ -1,3 +1,5 @@
+import pytest
+
 from pipeline.growth_health import evaluate_growth_health
 from pipeline.health_inputs import merge_health_inputs, normalize_finmind_health_inputs
 
@@ -135,3 +137,59 @@ def test_ytd_without_predecessor_labels_quarter_origin_unavailable():
     assert row["inputOrigin"] == "unavailable"
     assert row["cumulativeValues"]["eps"] == 5
     assert row.get("eps") is None
+
+
+@pytest.mark.parametrize("code,prior,current,expected", [
+    ("2801", 4994544000, 6093217000, "pass"),
+    ("2883", -3233297000, 16755995000, "unknown"),
+    ("2884", 7965811000, 11397921000, "pass"),
+    ("2887", 5489921000, 22776682000, "pass"),
+    ("2890", 5505747000, 13531320000, "pass"),
+    ("2891", 16203095000, 16850130000, "pass"),
+    ("2892", 6740361000, 9554372000, "pass"),
+])
+def test_actual_bank_aftertax_alias_recovers_only_reported_same_quarter_amounts(code, prior, current, expected):
+    # Published Oct2 raw FinMind rows: the bank spelling is singular, with the
+    # same Chinese accounting label as the existing IncomeAfterTaxes mapping.
+    raw = [{"date": day, "stock_id": code, "type": "IncomeAfterTax",
+            "origin_name": "本期稅後淨利（淨損）", "value": value}
+           for day, value in [("2025-06-30", prior), ("2026-06-30", current)]]
+    financial = {"incomeStatement": raw}
+    original = {"incomeStatement": [dict(row) for row in raw]}
+    inputs = normalize_finmind_health_inputs(financial, [])
+    assert [row["netIncome"] for row in inputs["incomeQuarterly"]] == [prior, current]
+    assert all(row["amountUnit"] == "TWD" and row["periodType"] == "quarter"
+               and row.get("availableAt") is None and row.get("publishedAt") is None
+               and row.get("eps") is None and row.get("grossProfit") is None
+               and row.get("operatingProfit") is None for row in inputs["incomeQuarterly"])
+    result = evaluate_growth_health([], inputs["incomeQuarterly"], as_of="2026-10-02")
+    check = result["checks"][4]
+    assert check["status"] == expected and check["period"] == "2026 Q2 vs 2025 Q2"
+    assert check["sourceRefs"] == ["FinMind:TaiwanStockFinancialStatements"]
+    assert check["value"] == (pytest.approx(current / prior - 1) if prior > 0 else None)
+    assert all(result["checks"][index]["status"] == "unknown" for index in (1, 2, 3))
+    assert financial == original and raw[0]["type"] == "IncomeAfterTax"
+
+
+def test_bank_aftertax_alias_respects_cutoff_and_does_not_alias_continuing_pretax():
+    inputs = normalize_finmind_health_inputs({"incomeStatement": [
+        {"date": "2025-06-30", "type": "IncomeAfterTax", "value": 100},
+        {"date": "2026-06-30", "type": "IncomeAfterTax", "value": 120, "availableAt": "2026-10-03"},
+        {"date": "2026-06-30", "type": "IncomeBeforeTaxFromContinuingOperations", "value": 150},
+    ]}, [])
+    latest = inputs["incomeQuarterly"][-1]
+    assert latest["netIncome"] == 120 and latest["availableAt"] == "2026-10-03"
+    assert latest.get("pretaxProfit") is None
+    result = evaluate_growth_health([], inputs["incomeQuarterly"], as_of="2026-10-02")
+    assert result["checks"][4]["status"] == "unknown" and result["checks"][4]["value"] is None
+
+
+def test_bank_aftertax_alias_cannot_compare_different_amount_units():
+    inputs = normalize_finmind_health_inputs({"incomeStatement": [
+        {"date": "2026-06-30", "type": "IncomeAfterTax", "value": 120},
+    ]}, [])
+    merged = merge_health_inputs({"incomeQuarterly": [
+        {"year": 2025, "quarter": 2, "netIncome": 100, "amountUnit": "TWD_thousands"}
+    ]}, inputs)
+    result = evaluate_growth_health([], merged["incomeQuarterly"], as_of="2026-10-02")
+    assert result["checks"][4]["status"] == "unknown" and result["checks"][4]["value"] is None
