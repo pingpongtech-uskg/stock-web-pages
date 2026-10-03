@@ -1,15 +1,25 @@
 import importlib
+import io
 import json
+import subprocess
+from http.client import HTTPException, HTTPResponse, IncompleteRead
 from pathlib import Path
 
 import pytest
 
-from pipeline.test_institutional_probe import DATES, FEED, Response, transport
+from pipeline.test_institutional_probe import DATES, FEED, Response as FixtureResponse, transport
+
+
+class Response(FixtureResponse):
+    def read(self, size=None):
+        payload = super().read()
+        return payload if size is None else payload[:size]
 
 
 @pytest.fixture(autouse=True)
 def actions_environment(monkeypatch):
     monkeypatch.setenv('GITHUB_ACTIONS', 'true')
+    monkeypatch.setattr(module(), 'sleep', lambda seconds: None)
 
 
 def module():
@@ -43,7 +53,7 @@ def test_cli_public_source_then_three_ranges_only_checkpoint_writes(tmp_path, mo
         assert req.get_header('Authorization') is None
         return Response(FEED)
     monkeypatch.setattr(script, 'urlopen', official)
-    monkeypatch.setenv('FINMIND_TOKEN', 'secret-test-token')
+    monkeypatch.setenv('FINMIND_TOKEN', 'dummy')
     assert script.main(options) == 0
     summary = json.loads((tmp_path / 'summary.json').read_text())
     assert summary['outcome'] == 'complete' and not summary['publicationEligible']
@@ -67,11 +77,11 @@ def test_wrong_official_date_no_finmind_calls_sanitized_summary(tmp_path, monkey
     calls = transport(monkeypatch)
     script = module()
     monkeypatch.setattr(script, 'urlopen', lambda *a, **k: Response([{**row, 'Date': '1151001'} for row in FEED]))
-    monkeypatch.setenv('FINMIND_TOKEN', 'secret-test-token')
+    monkeypatch.setenv('FINMIND_TOKEN', 'dummy')
     assert script.main(options) == 0
     result = json.loads((tmp_path / 'summary.json').read_text())
     assert result['outcome'] == 'unavailable' and result['errorCategory'] == 'official_source_invalid'
-    assert not calls and 'secret-test-token' not in json.dumps(result)
+    assert not calls and 'dummy' not in json.dumps(result)
 
 
 def test_invalid_calendar_before_source_request(tmp_path, monkeypatch):
@@ -87,12 +97,12 @@ def test_official_transport_error_checkpoint_summary_no_exception_text(tmp_path,
     options = args(tmp_path)
     script = module()
     def unavailable(*args, **kwargs):
-        raise OSError('secret-test-token')
+        raise OSError('dummy')
     monkeypatch.setattr(script, 'urlopen', unavailable)
     assert script.main(options) == 0
     result = json.loads((tmp_path / 'summary.json').read_text())
     assert result['errorCategory'] == 'official_source_unavailable' and result['actualAttempts'] == 0
-    assert 'secret-test-token' not in json.dumps(result)
+    assert 'dummy' not in json.dumps(result)
 
 
 def test_output_in_public_forbidden_before_io(tmp_path, monkeypatch):
@@ -128,7 +138,111 @@ def test_official_non200_json_is_not_source_evidence(tmp_path, monkeypatch):
         def getcode(self):
             return 201
     monkeypatch.setattr(script, 'urlopen', lambda *a, **k: Non200(FEED))
-    monkeypatch.setenv('FINMIND_TOKEN', 'secret-test-token')
+    monkeypatch.setenv('FINMIND_TOKEN', 'dummy')
     assert script.main(args(tmp_path)) == 0
     assert not calls
     assert json.loads((tmp_path / 'summary.json').read_text())['errorCategory'] == 'official_source_unavailable'
+
+
+def test_incomplete_official_http_body_saves_sanitized_summary_before_finmind(tmp_path, monkeypatch):
+    script = module()
+    calls = []
+    class BrokenBody(Response):
+        def read(self, *args):
+            raise IncompleteRead(b'dummy', 42)
+    def official(request, timeout):
+        calls.append(request.full_url)
+        return BrokenBody(FEED)
+    monkeypatch.setattr(script, 'urlopen', official)
+    monkeypatch.setattr(script, 'run_institutional_probe', lambda *a, **k: pytest.fail('FinMind after invalid HTTP'))
+    monkeypatch.setenv('FINMIND_TOKEN', 'dummy')
+    assert script.main(args(tmp_path)) == 0
+    summary = json.loads((tmp_path / 'summary.json').read_text())
+    assert summary['errorCategory'] == 'official_source_unavailable'
+    assert summary['actualAttempts'] == summary['dataRequests'] == 0
+    assert summary['cases'] == [] and summary['outcome'] == 'unavailable'
+    assert summary['publicationEligible'] is summary['globalCompleteness'] is False
+    assert summary['tokenPresent'] is True
+    assert 'dummy' not in json.dumps(summary)
+    assert len(calls) == 2
+    artifact_check = '''
+const fs=require('fs');const {sourceValidateArtifact}=require('./scripts/n8n/source-probe-artifact.cjs');
+const summary=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));
+const state={plan:{requestId:'probe:test',marketDate:summary.marketDate,probeHeadSha:'a'.repeat(40)},runId:'1',runAttempt:1};
+const provenance={requestId:'probe:test',marketDate:summary.marketDate,sourceMode:'institutional_probe',sourceGitCommit:'a'.repeat(40),actionsRunId:'1',actionsRunAttempt:'1',repository:'pingpongtech-uskg/stock-web-pages'};
+sourceValidateArtifact({'summary.json':summary,'provenance.json':provenance,byteHashes:{summary:'b'.repeat(64),provenance:'c'.repeat(64)}},state);
+'''
+    subprocess.run(['node', '-e', artifact_check, str(tmp_path / 'summary.json')], cwd=script.ROOT, check=True)
+
+
+def test_bounded_read_recovers_one_truncated_transport_then_validates_full_json(tmp_path, monkeypatch):
+    script = module()
+    calls = transport(monkeypatch)
+    reads = []
+    class Body(Response):
+        def read(self, size=None):
+            reads.append(size)
+            assert size == 2 * 1024 * 1024 + 1
+            if len(reads) == 1:
+                raise IncompleteRead(b'{"Date":', 1000)
+            return super().read(size)
+    monkeypatch.setattr(script, 'urlopen', lambda *a, **k: Body(FEED))
+    monkeypatch.setenv('FINMIND_TOKEN', 'dummy')
+    assert script.main(args(tmp_path)) == 0
+    assert len(reads) == 2 and len(calls) == 4
+    assert json.loads((tmp_path / 'summary.json').read_text())['outcome'] == 'complete'
+
+
+@pytest.mark.parametrize('body', [b'x' * (2 * 1024 * 1024 + 1), b'[{"Date":"1151002"'])
+def test_oversize_or_incomplete_json_never_retried_or_accepted(tmp_path, monkeypatch, body):
+    script = module()
+    calls = []
+    class Body(Response):
+        def read(self, size=None):
+            assert size == 2 * 1024 * 1024 + 1
+            return body
+    def official(request, timeout):
+        calls.append(request.full_url)
+        return Body(FEED)
+    monkeypatch.setattr(script, 'urlopen', official)
+    monkeypatch.setattr(script, 'run_institutional_probe', lambda *a, **k: pytest.fail('Invalid JSON reaches FinMind'))
+    assert script.main(args(tmp_path)) == 0
+    assert len(calls) == 1
+    assert json.loads((tmp_path / 'summary.json').read_text())['actualAttempts'] == 0
+
+
+def test_real_http_response_wrong_content_length_accepts_only_complete_bounded_json(monkeypatch):
+    script = module()
+    body = json.dumps(FEED).encode()
+    wire = b'HTTP/1.1 200 OK\r\nContent-Length: ' + str(len(body) + 1000).encode() + b'\r\n\r\n' + body
+    class Socket:
+        def makefile(self, *args):
+            return io.BytesIO(wire)
+    def response():
+        result = HTTPResponse(Socket())
+        result.begin()
+        return result
+    with pytest.raises(IncompleteRead):
+        response().read()
+    monkeypatch.setattr(script, 'urlopen', lambda *a, **k: response())
+    raw, rows = script.fetch_official_json()
+    assert raw == body and rows == FEED
+
+
+@pytest.mark.parametrize('exception', [HTTPException('dummy'), 'http_status'])
+def test_nontransport_http_failures_not_retried_and_remain_sanitized(tmp_path, monkeypatch, exception):
+    from urllib.error import HTTPError
+    script = module()
+    calls = []
+    def unavailable(request, timeout):
+        calls.append(request.full_url)
+        if exception == 'http_status':
+            raise HTTPError(request.full_url, 503, 'dummy', {}, None)
+        raise exception
+    monkeypatch.setattr(script, 'urlopen', unavailable)
+    monkeypatch.setattr(script, 'run_institutional_probe', lambda *a, **k: pytest.fail('FinMind invoked'))
+    assert script.main(args(tmp_path)) == 0
+    assert len(calls) == 1
+    summary = json.loads((tmp_path / 'summary.json').read_text())
+    assert summary['errorCategory'] == 'official_source_unavailable' and summary['actualAttempts'] == 0
+    assert 'dummy' not in json.dumps(summary)

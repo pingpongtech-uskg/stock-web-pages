@@ -243,3 +243,13 @@ Same payload 重試：相同 date/request/run/hash 不新 dispatch、不多建 r
 順序：本機 TDD、審查與 exact-head CI → 已核准的非強制 main 發布 → 一次受控 probe → 獨立讀回实际 token presence／quota／attempts／日期／零值與 checkpoint。這次 probe 的結果不會把 10/2 網站更新或排程驗收改為成功。
 
 三檔程式最終 targeted tests 54 項通過，production module line coverage 94.86%、CLI 88.42%；全量 Python 514 項曾於最後一個 aggregate 修正前通過，修正後相關測試已通過，exact-head CI 將再驗证全量。審查修正 checkpoint 平面格式、原始與正規化雜湊、有效部分資料的零 HTTP 重試、部分覆蓋 outcome、200 response 要求及 CLI 輸出路徑隔離。此為程式證據，實際 FinMind token presence、用量與三檔結果仍未取得。
+
+### 已授權發布與第一輪探測的實際結果
+
+修復來源程式已經非強制發布至 main：`ea9c4bb76e54ea664d5c32ee17b0a07668f36515`，feature CI `37089055365` 與 main CI `37089217029` 均成功。這是來源程式發布，沒有新行情或篩選資料發布。
+
+單次三檔探測 request `institutional-probe:20261002:v1`／n8n 848／Actions `37089432229` 實際失敗。獨立讀取該次 job log 的去敏摘要（850／ledger 99）確認 token 存在；`http.client.IncompleteRead` 發生於 `probe_institutional_history.py:101` 的官方 TPEx `response.read()`。呼叫順序證明錯誤在 FinMind client 及用量查詢之前，因此該次 FinMind 呼叫數為 0；實際帳戶額度仍未知。原始 log、例外內容及簽名網址未持久保存，診斷 helper 已封存，沒有重送原失敗探測。
+
+下一步只修復已證實的官方 HTTP 回應讀取：限制回應大小、僅對官方讀取採有限重試、捕捉 HTTP transport 例外並寫出有效去敏摘要；不能把失敗當成空資料或零值。TDD 與精確來源 CI 通過後，才使用新的 request revision 受控驗證；共享每日 300 次及實際剩餘額度 80% 約束維持。仍未完成 10/2 新行情、全市場十一日投信資料、成長估值、canonical export、新日 Notion 股票歸檔或排程啟用。
+
+官方傳輸窄修正已完成本機驗證：全套 Python 522 項、三檔探測相關 61 項、source helper/schema 19 項均通過；CLI line coverage 89.29%，獨立審查無 HIGH／MEDIUM 問題。回應上限 2 MiB，只有公開官方傳輸可最多再試一次，FinMind 每請求一次的限制不變。包含真實 stdlib HTTPResponse 的錯誤 Content-Length 回歸及 n8n artifact schema 相容測試。這些測試沒有發出實際網路請求；來源恢復仍待發布後的受控真實驗證。

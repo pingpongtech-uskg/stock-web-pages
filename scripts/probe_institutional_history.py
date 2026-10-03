@@ -8,7 +8,10 @@ import json
 import os
 import sys
 from datetime import date, timedelta
+from http.client import HTTPException, IncompleteRead, RemoteDisconnected
 from pathlib import Path
+from time import sleep
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +23,30 @@ from pipeline.institutional_probe import (  # noqa: E402
     OFFICIAL_URL, exact_date, run_institutional_probe,
 )
 from pipeline.trading_calendar import SOURCE_URL, is_open  # noqa: E402
+
+MAX_OFFICIAL_BYTES = 2 * 1024 * 1024
+
+
+def fetch_official_json() -> tuple[bytes, object]:
+    """Read a bounded complete JSON document; retry transport failure once."""
+    for attempt in range(2):
+        try:
+            request = Request(OFFICIAL_URL,
+                headers={'User-Agent': 'taiwan-stock-screener/institutional-probe'}, method='GET')
+            with urlopen(request, timeout=20) as response:
+                if response.getcode() != 200:
+                    raise ValueError('Official source requires HTTP 200')
+                raw = response.read(MAX_OFFICIAL_BYTES + 1)
+            if len(raw) > MAX_OFFICIAL_BYTES:
+                raise ValueError('Official source exceeds size limit')
+            return raw, json.loads(raw)
+        except HTTPError:
+            raise
+        except (OSError, IncompleteRead, RemoteDisconnected):
+            if attempt:
+                raise
+            sleep(0.5)
+    raise RuntimeError('Official read attempts exhausted')  # Defensive; loop always returns or raises.
 
 
 def expected_sessions(calendar: dict, market_date: str) -> list[str]:
@@ -94,13 +121,8 @@ def main(argv=None) -> int:
         'expectedDates': dates, 'cases': [], 'actualAttempts': 0, 'dataRequests': 0, 'cacheHits': 0,
         'accountLimit': None, 'observedRemaining': None, 'tokenPresent': bool(token.strip())}
     try:
-        request = Request(OFFICIAL_URL, headers={'User-Agent': 'taiwan-stock-screener/institutional-probe'}, method='GET')
-        with urlopen(request, timeout=20) as response:
-            if response.getcode() != 200:
-                raise ValueError('Official source requires HTTP 200')
-            raw = response.read()
-        rows = json.loads(raw)
-    except (OSError, ValueError):
+        raw, rows = fetch_official_json()
+    except (OSError, ValueError, HTTPException):
         summary = {**summary, 'errorCategory': 'official_source_unavailable'}
     else:
         try:

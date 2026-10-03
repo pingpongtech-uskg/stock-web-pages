@@ -838,5 +838,63 @@
       "runtimeTransportLimitEmpiricallyProved": false,
       "remoteCapacityPatchPending": true
     }
+  },
+  "institutionalProbeActualExecution": {
+    "status": "failed_before_finmind_official_transport_incomplete_read",
+    "sourceCommit": "ea9c4bb76e54ea664d5c32ee17b0a07668f36515",
+    "sourceTree": "7296bcae64ba85ab67a9d92c54aef5e95647233c",
+    "featureCiRunId": "37089055365",
+    "featureCiConclusion": "success",
+    "mainCiRunId": "37089217029",
+    "mainCiConclusion": "success",
+    "publicationExecutions": [
+      "846",
+      "847"
+    ],
+    "publicationLedgerIds": [
+      94,
+      95
+    ],
+    "requestId": "institutional-probe:20261002:v1",
+    "marketDate": "2026-10-02",
+    "n8nExecutionId": "848",
+    "actionsRunId": "37089432229",
+    "actionsRunAttempt": 1,
+    "jobId": "111106414367",
+    "jobConclusion": "failure",
+    "diagnosticExecutionId": "850",
+    "diagnosticLedgerId": 99,
+    "tokenPresent": true,
+    "actualFinMindCalls": 0,
+    "accountQuotaQueried": false,
+    "actualAccountQuota": null,
+    "actualRemainingAccountQuota": null,
+    "failureClass": "IncompleteRead",
+    "failureFile": "probe_institutional_history.py",
+    "failureLine": 101,
+    "zeroCallEvidence": "Official source response.read raised before run_institutional_probe or FinMind client invocation.",
+    "rawLogsPersisted": false,
+    "signedUrlsPersisted": false,
+    "diagnosticHelperArchived": true,
+    "sourceHelperDefaultMode": "inspect",
+    "sameFailedProbeRedispatched": false,
+    "actualParameterTransportVerified": true,
+    "newDataPublished": false,
+    "newDayNotionStocksCreated": false,
+    "scheduleActivated": false
+  },
+  "institutionalTransportRepair": {
+    "status": "locally_verified_pending_exact_head_ci",
+    "failureClass": "IncompleteRead",
+    "officialResponseLimitBytes": 2097152,
+    "officialTransportAttemptsLimit": 2,
+    "finMindAttemptsPerRequestLimit": 1,
+    "pythonTestsPassed": 522,
+    "probeTestsPassed": 61,
+    "helperTestsPassed": 19,
+    "cliLineCoveragePercent": 89.29,
+    "independentHighMediumFindings": 0,
+    "actualNetworkCallsDuringVerification": 0,
+    "actualSourceRecoveryProven": false
   }
 }
