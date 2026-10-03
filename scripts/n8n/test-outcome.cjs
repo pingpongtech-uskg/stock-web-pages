@@ -21,3 +21,11 @@ test('native dispatch 204/empty success and failed transport always continue exa
  assert.equal(helpers.nativeDispatchResponse({error:{httpCode:'429'}}).statusCode,429);
  assert.equal(helpers.nativeDispatchResponse({error:{httpCode:'429',headers:{'retry-after':'10'}}}).headers['retry-after'],'10');
 });
+test('native local invalid JSON preserves a sanitized confirmed preflight failure',()=>{
+ for(const error of ['Inputs: Invalid JSON',{message:'Inputs: Invalid JSON'}]) {
+  const response=helpers.nativeDispatchResponse({error});
+  assert.equal(response.statusCode,400);assert.equal(response.preflightFailed,true);
+  assert.equal(response.body.message,'Inputs: Invalid JSON');assert.equal(response.error,undefined);
+ }
+ assert.equal(helpers.nativeDispatchResponse({error:'ETIMEDOUT'}).preflightFailed,undefined);
+});

@@ -11,6 +11,14 @@ test('canvas exposes native dispatch and named business archive, publication and
  for(const name of ['Confirm GitHub main publication','Create Notion daily record','Create Notion inline daily database','Create missing stock row','Read back Notion rows and values','Verify live exact payload','Show durable operation outcome'])assert.ok(graph.nodes.some(node=>node.name===name),name);
  assert.equal(graph.active,false);assert.equal(graph.settings.saveDataSuccessExecution,'none');assert.equal(graph.settings.timezone,'Asia/Taipei');
 });
+test('native GitHub dispatch inputs satisfy its actual JSON.parse preflight contract',()=>{
+ const node=graph.nodes.find(node=>node.name==='GitHub Dispatch Actions');
+ const input={request_id:'stockscreener:20261002:v1',market_date:'2026-10-02'};
+ const expression=node.parameters.inputs.replace(/^=\{\{\s*|\s*\}\}$/g,'');
+ const value=new Function('$json','return ('+expression+');')({op:{body:{inputs:input}}});
+ assert.equal(typeof value,'string');assert.deepEqual(JSON.parse(value),input);
+ assert.throws(()=>JSON.parse(input),SyntaxError); // Previous object-valued expression fails before any GitHub request.
+});
 test('expired writer records terminal outcome and cannot enter a credential request again',()=>{
  const node=graph.nodes.find(node=>node.name==='Gate writer deadline and allowed origins');
  const evaluate=new Function('$input','Date',node.parameters.jsCode);
@@ -33,4 +41,7 @@ test('live publication verification preserves exact JSON bytes rather than parse
  assert.equal(failed[0].json.response.liveReadError,'live_binary_missing');
  const large=await evaluate.call({helpers:{getBinaryDataBuffer:async()=>Buffer.alloc(3000001)}},{first:()=>item},()=>({item:{json:{state:{stage:'liveVerify'}}}}));assert.equal(large[0].json.response.liveReadError,'live_file_too_large');assert.equal(large[0].json.response.statusCode,200);
  const unreadable=await evaluate.call({helpers:{getBinaryDataBuffer:async()=>{throw Error('storage');}}},{first:()=>item},()=>({item:{json:{state:{stage:'liveVerify'}}}}));assert.equal(unreadable[0].json.response.liveReadError,'live_binary_read_failed');
+ const engine=require('./engine.cjs');const state={stage:'liveVerify',marketDate:'2026-10-02',requestId:'unit-only',siteUrl:'https://stockscreener.andyshih.uk',lockSha:'known',deadline:100000,op:{method:'GET',url:'https://stockscreener.andyshih.uk/data/screening-export.json'}};
+ const persisted=engine.advance(state,large[0].json.response,0);assert.equal(persisted.state.deployError,'live_file_too_large');assert.equal(persisted.delaySeconds,15);
+ const limited=engine.advance(state,{...large[0].json.response,statusCode:429,headers:{'retry-after':'7'}},0);assert.equal(limited.delaySeconds,7);
 });

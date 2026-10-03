@@ -1,7 +1,7 @@
 # 每日選股、網站與 Notion 修復計畫 v2
 
 日期：2026-10-03，Asia/Taipei。
-狀態：使用者已對指定合併問題明確回覆「核准上述發布、補跑、Notion 匯入與排程啟用」，可信任授權現已收到，涵蓋修復程式發布、2026-10-02 真實更新、六個留存日與新日歸檔、重試驗證及週一至週五 18:00 Asia/Taipei 排程。授權已解除外部寫入等待，但不代表執行成功；精確來源 CI、GitHub main、正式網站、Notion 獨立 audit 與排程 active version 仍須逐項以實際證據驗收。
+狀態：使用者已對指定合併問題明確回覆「核准上述發布、補跑、Notion 匯入與排程啟用」，可信任授權現已收到，涵蓋修復程式發布、2026-10-02 真實更新、六個留存日與新日歸檔、重試驗證及週一至週五 18:00 Asia/Taipei 排程。修復來源的精確 head CI、非強制 GitHub main 發布及正式前端資產 bytes 已驗證；授權與程式發布不代表新資料成功。2026-10-02 實際行情、fingerprint／export、Notion 獨立 audit、same-payload retry 與排程 active version 仍須逐項驗收。
 
 ## 1. 交付目標與現況
 
@@ -27,7 +27,7 @@
 
 目前純函式診斷舊資料得到：同日價格 100；PE reported 80、可合法 derived 12、缺 8；TTM EPS 可推導 12、缺 88；多年度 EPS 成長可推導 9（包含負成長）、缺 91；已確認完整年度股利 0。這些是舊資料診斷，不是新的金融資料發布。
 
-### 本次實作與驗證進度（正式執行前）
+### 本次實作與驗證進度（程式已發布，資料驗收進行中）
 
 以下列出已修改的本機程式及實際測試範圍，不把本機 fixture 或 inactive draft 視為正式資料成功。
 
@@ -41,7 +41,25 @@
 | O1／O3 | 審查中的 n8n inactive draft `f4adc9fb-3aed-42d9-9274-ef23ddb03dde` 已有 58 個可見業務節點；主 manual 選最近完成官方交易日、恢復既有 exact run，診斷另行標示。Python／JavaScript 新 coverage 驗證已對齊；53 項 n8n 測試通過，n8n 模組 line coverage 99.03%、branch coverage 90.80%。 | draft 尚未 publish；真實 Actions、Notion null／0 讀回與重試實數尚待驗收。 |
 | 發布權限／秘密 | 唯讀 execution 765 確認 main `2451036717641cd4827dbdc3856f8af8ac462fc6` 與 active daily workflow；Actions secret-name metadata 回傳 403，因此不宣稱已獨立確認 token。新補缺步驟只記 `finmind_token_present=true/false`，不記值。 | 受控執行時確認實際環境存在 token；不要求擴充讀秘密權限。 |
 
-本機最終驗證已通過 437 項 Python、74 項 UI 及 53 項 n8n 測試，typecheck／build 通過；本次受影響前端模組 line coverage 89.07%，逐檔均達 80% 門檻（statement 80.85%、branch 74.02%，不宣稱 branch 達 80%）。新發布重載時 history revision 同步、保留 URL 篩選，以及 eligible universe／未標版本新欄位的回歸已通過。最終整合結果、修改 commit、精確 head CI、正式資料日／run／hash 與 Notion 筆數另以實際執行證據更新。原始六日不可變 legacy revision 不重算、不覆寫。
+原始恢復版本本機驗證已通過 437 項 Python、74 項 UI 及 53 項 n8n 測試，typecheck／build 通過；本次受影響前端模組 line coverage 89.07%，逐檔均達 80% 門檻（statement 80.85%、branch 74.02%，不宣稱 branch 達 80%）。新發布重載時 history revision 同步、保留 URL 篩選，以及 eligible universe／未標版本新欄位的回歸已通過。最終整合結果、修改 commit、精確 head CI、正式資料日／run／hash 與 Notion 筆數另以實際執行證據更新。原始六日不可變 legacy revision 不重算、不覆寫。
+
+2026-10-03 來源發布實證：修復 commit `a50389a9c6bea6db326c9914f4e866d1f2893560`，tree `5bd2eb2352c3cf454b697b3cf260898fe78e28e9`；[feature CI 37081771666](https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37081771666) 與 [main CI 37081980505](https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37081980505) 均為此 exact head 的 success。來源修復包含實際 n8n text response 改寫 JSON bytes 的 binary transport 回歸、獨立 Notion child／tag／rank／null／0 audit，以及有界 100 ms browser timer 測試修正；整合 UI 74、n8n 55 項通過。Native execution 814 以非強制更新把 main 從 `2451036` 推進至 `a50389a`，815／816 獨立讀回 main SHA 與 tree。Pages 的 `/assets/index-CTH1Ibo1.js`（249289 bytes，SHA-256 `812f283337c2e2c635fb06319fe37979596715cbe6e73ef997cfa2021fe4831c`）及 `/assets/index-De-S0dI5.css`（19407 bytes，SHA-256 `9f194b89fb1a7a749dc7881e158d91c1d6560a657ecbc946fb88829bd780f182`）實際 HTTP 200 bytes 與 reviewed build 相同。此段證明程式來源部署，不把仍待驗收的新行情、fingerprint 或 Notion 結果宣告成功。
+
+真實操作進度：六個原始留存日已匯入 Notion，三策略聯集總計 25 列；獨立 audit execution 818 及同 payload 實際重試確認每日 root／inline database／股票列數沒有增加。新日仍未成功。Execution 819 的 native GitHub node 把 object 輸入交給實際 `JSON.parse` preflight，沒有建立 Actions run；已用 JSON 字串化及 released exact-owner／no-Actions／先搜尋的恢復護欄修正，59 項 n8n 回歸通過。獨立讀回 820／821／822 均確認 exact request 尚無 run 後，授權的 same-request corrective execution 823 建立 [Actions 37083078413](https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37083078413)，source `a50389a`、request `stockscreener:20261002:v1`、目標日 `2026-10-02`。
+
+該 Actions 已失敗於步驟 11「Fetch official institutional universe」，未進入行情刷新、FinMind 或 canonical export／publication。Authenticated job-log 診斷 827／828 的 sanitized ledger 89／90 證明三次 TPEx `https://www.tpex.org.tw/www/zh-tw/insti/sitcStat` 請求都回報 `Remote end closed connection without response`。此 run 的 FinMind calls 為 0；`finmind_token_present` 所在步驟 skipped，因此 token 是否存在仍未由 job 確認。原始 logs 與 signed URL 不保存。另已以 RED→GREEN 修正 daily 官方母體 fetch 漏傳 `--as-of "$MARKET_DATE"`，20 項 snapshot／workflow 回歸通過；TPEx transport 修復仍須同來源實證、回歸及精確來源 CI 後才能重跑。Notion 10/2 目前只記 failure metadata，不建立假零檔 child database。10/2 成長估值、正式行情／fingerprint／export、Notion 新日與排程啟用仍待完成。
+
+### 外部來源依賴與恢復 gate
+
+測試過的 TPEx `sitcStat` 報表與執行環境尚未取得所需 JSON，不據此宣稱 TPEx 所有服務都故障。限定一次的 credential-free n8n GET probe 829／ledger 91，使用官方已確認的 `type=Daily`、`date=2026/10/02`、`searchType=buy`，20 秒 timeout、redirect off；結果為 timeout，沒有 HTTP response、stat、日期或 tables。本機普通 GET／POST 亦未取得該日期 report。正常瀏覽器的官方[每日投信頁](https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html) 沒有初始或 10/2 表格，console 出現 `sitcStat` 錯誤；官方 CSV 點擊後的 tab 8 inventory 顯示 `This Site Can't Be Reached`，URL 的公開查詢為同一 `type=Daily`、目標日、`searchType=buy`、空 `id`、`response=csv`，沒有取得下載。不綁定或繞過瀏覽器的 internal error page；此處僅使用可見 title／URL 證據。沒有 CAPTCHA／安全提示，也未採取繞過措施。
+
+官方 `tables.js` 顯示 ordinary AJAX request 會加 `response=json`，目前 Python client 漏傳；這是可用回歸修正的 request contract 缺陷。但補上該參數的普通 POST 仍 connection reset，因此此 client bug 修正不能宣稱外部來源已恢復。官方 OpenAPI／歷史 CSV fallback 的調查仍須保留可核對的相同日期、完整市場資料與來源，不以舊母體、部分股票或新假零檔代替。
+
+本次後續修正已完成指定日期傳遞、TPEx `response=json`、native dispatch 字串輸入與限定 preflight 恢復、正常入口採用同日已保存的更正 request，以及新日 immutable export 的獨立 audit。整合本機結果為 Python 449、UI 74、n8n 63 項通過；npm audit 零漏洞、installed Python dependency audit 無已知漏洞、diff／秘密字串檢查通過。此修正仍須取得新的 exact-head CI 及非強制 main 發布證據；不將本機測試當作來源已恢复。
+
+2026-10-03 01:06:04 UTC 的公開官方 [TPEx OpenAPI](https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading) GET 實際 HTTP 200，910 列全部日期 `1151002`（2026-10-02），投信 buy／sell／net 單位為 shares，保留負 net。官方 [Swagger](https://www.tpex.org.tw/openapi/swagger.json) 三個相關資料集沒有宣告 historical parameters；同日 documented `insti/dailyTrade` 普通 POST 亦 connection reset，CSV 尚未取得。這證明當日完整市場 API 可讀，仍未提供篩選要求的 11 個完整交易日；不得拿舊 100 檔子集或猜測 historical query 補足。資料 dispatch 與排程啟用繼續等待完整來源 gate。
+
+恢復 gate：先取得 TPEx 與 TWSE 同目標日及相鄰十日窗口所需的完整官方資料，驗證 actual source date／rows／units；再對已審查的 date／request-contract／native-operation 修正跑完整測試與 exact-head CI，才允許新的受控資料重試。該重試必須重新證明 freshness、成長可計算股票與缺漏診斷、FinMind 真實 token presence／attempts／remaining quota／cache／queue、canonical export／fingerprint、正式網站以及新日 Notion 獨立讀回。六日回填成功、source CI 或前端部署成功均不能替代这些 gate。未取得外部來源時保留上次有效行情，整體交付維持未完成；排程仍 inactive，待真實閉環驗收後才啟用。
 
 ## 2. 保留的產品決策
 

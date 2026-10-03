@@ -1,8 +1,42 @@
+import json
+import urllib.parse
+from datetime import date
+
 from pipeline.official_institutional import (
     aggregate_window,
     parse_tpex_payload,
     parse_twse_payload,
 )
+
+
+def test_tpex_request_matches_official_json_post_contract(monkeypatch):
+    from pipeline.official_institutional import fetch_tpex_day, TPEX_ENDPOINT
+    requests = []
+    payload = {"date": "20261002", "stat": "ok", "tables": [{
+        "fields": ["排行", "代號", "名稱", "買進", "賣出", "買賣超(張數)"],
+        "data": [["1", "2330", "台積電", "10", "2", "8"]]}]}
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self): return json.dumps(payload).encode()
+    def respond(request, **kwargs):
+        requests.append(request)
+        return Response()
+    monkeypatch.setattr("urllib.request.urlopen", respond)
+    rows = fetch_tpex_day(date(2026, 10, 2))
+    assert len(requests) == 1
+    request = requests[0]
+    assert request.full_url == TPEX_ENDPOINT
+    assert request.get_method() == "POST"
+    assert urllib.parse.parse_qs(request.data.decode()) == {
+        "type": ["Daily"], "date": ["2026/10/02"], "searchType": ["buy"], "response": ["json"]}
+    assert rows[0]["netShares"] == 8000
+
+
+def test_tpex_json_contract_still_rejects_a_different_report_date(monkeypatch):
+    import pipeline.official_institutional as official
+    monkeypatch.setattr(official, "_get_json", lambda *args, **kwargs: {"date": "20261001"})
+    assert official.fetch_tpex_day(date(2026, 10, 2)) == []
 
 
 def test_parse_twse_report_keeps_share_units():

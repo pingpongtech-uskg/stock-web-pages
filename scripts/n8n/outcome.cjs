@@ -10,6 +10,8 @@ function operationOutcome(state) {
 function nativeDispatchResponse(value) {
   const error=value?.error;
   const code=Number(value?.statusCode||error?.statusCode||error?.httpCode||error?.cause?.statusCode||0);
+  // Github v1.1 throws this exact local validation error before githubApiRequest.
+  if(error&&code===0&&(error.message||error)==='Inputs: Invalid JSON')return {statusCode:400,body:{message:'Inputs: Invalid JSON'},headers:{},preflightFailed:true};
   const statusCode=code>=100&&code<600?code:error?503:204;
   return {statusCode,body:error?{message:safeOutcomeText(error.message||error)}:{},headers:value?.headers||error?.headers||error?.response?.headers||{},...(error&&statusCode>=500?{error:true}:{})};
 }

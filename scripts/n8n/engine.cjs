@@ -79,6 +79,7 @@ function start(input,now=Date.now()) {
   if(!/^[a-zA-Z0-9_.:-]{1,160}$/.test(input.requestId)||!['screen','resume','diagnose','revision','legacy_archive'].includes(input.mode)) throw Error('invalid_operator_input');
   if(input.mode==='legacy_archive'&&(input.runKind!=='manual'||!['2026-09-08','2026-09-11','2026-09-18','2026-09-23','2026-09-24','2026-10-01'].includes(input.marketDate)))throw Error('legacy_operator_scope');
   if(input.actionsRunId!==undefined&&!/^\d{1,24}$/.test(String(input.actionsRunId))) throw Error('invalid_actions_run_id');
+  if(input.preflightRetryOwner!==undefined&&(input.runKind!=='manual'||input.mode!=='screen'||!/^\d{1,24}$/.test(input.preflightRetryOwner)))throw Error('invalid_preflight_retry_owner');
   if(input.siteUrl!=='https://stockscreener.andyshih.uk') throw Error('invalid_site_url');
   const overdueAt=Date.parse(input.marketDate+'T11:30:00Z');
   const operationDeadline=input.runKind==='scheduled'?overdueAt:now+90*60000;
@@ -131,6 +132,7 @@ function advance(original,response,now=Date.now()) {
   if(['liveProbe','liveVerify'].includes(state.stage)&&status>=400) return deploymentResult(state,'failed','live_http_'+status,now);
   if(state.stage==='createBranch'&&status===422) return request(state,'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);
   const allow404=['branch','state'];
+  if(state.stage==='dispatch'&&response.preflightFailed===true&&status===400&&body?.message==='Inputs: Invalid JSON') return fail({...state,dispatchIntent:false,screeningStatus:'failed'},'dispatch_preflight_failed',body.message);
   if(status>=400&&!allow404.includes(state.stage)) return fail(state,'external_http_'+status,body?.message);
   try {return advanceSuccess(state,body,status,response,now);} catch(error){return fail(state,error.message.split(':')[0],error.message);}
 }
@@ -160,14 +162,21 @@ function advanceSuccess(state,body,status,response,now) {
     case 'state': {
       const existing=status===404?null:JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));
       if(existing?.owner!==state.owner&&!existing?.released&&existing?.owner&&now<Number(existing.deadline)+60000) return fail(state,'writer_busy');
+      if(state.mode==='screen'&&state.automaticRequestId&&!state.preflightRetryOwner&&existing?.marketDate===state.marketDate&&existing.archiveMethod!=='legacy_archive'&&existing.requestId!==state.requestId){
+        if(!/^[a-zA-Z0-9_.:-]{1,160}$/.test(existing.requestId||'')||(existing.actionsRunId&&!/^\d{1,24}$/.test(String(existing.actionsRunId))))throw Error('invalid_stored_request_lineage');
+        state={...state,requestId:existing.requestId,automaticRequestAdoptedFrom:state.requestId};
+      }
       const sameRequest=existing?.requestId===state.requestId||(state.mode==='legacy_archive'&&existing?.archiveMethod==='legacy_archive');
+      const correctPreflight=!!state.preflightRetryOwner;
+      if(correctPreflight&&(!sameRequest||existing?.marketDate!==state.marketDate||existing?.owner!==state.preflightRetryOwner||existing.released!==true||existing.actionsRunId||!existing.dispatchIntent||existing.errorCategory!=='dispatch_run_not_found'))return fail({...state,lockSha:undefined},'preflight_correction_scope');
       if(existing?.requestId&&!sameRequest&&state.mode!=='revision') throw Error('request_correction_requires_revision');
       if(existing?.released&&sameRequest&&existing.screeningStatus==='complete'&&existing.notionStatus==='complete'&&existing.deployStatus==='verified') return done({...existing,owner:state.owner,screeningStatus:'already_complete'});
       const resume=sameRequest?existing:{};
       const manualOverride=state.runKind==='manual'&&['screen','resume','legacy_archive'].includes(state.mode)&&!!resume.requestId;
       const operationDeadline=manualOverride?state.operationDeadline:(resume.operationDeadline||state.operationDeadline);
       const audit=manualOverride?{scheduledCutoff:resume.scheduledCutoff||resume.overdueAt,manualDeadlineOverride:true,manualResumedAt:now}:{};
-      const saved={...state,...resume,...audit,owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl};
+      const correction=correctPreflight?{dispatchIntent:false,preflightRetryOwner:undefined,confirmedPreflightCorrectionFrom:state.preflightRetryOwner,errorCategory:'',errorMessage:''}:{};
+      const saved={...state,...resume,...audit,...correction,owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl};
       const stage=!state.isOpen?'holiday':state.mode==='legacy_archive'?'legacyRef':saved.actionsRunId?'pollRun':'findRun';
       return checkpoint(saved,stage);
     }

@@ -223,6 +223,8 @@ def test_stale_four_year_limitations_are_removed() -> None:
 def test_daily_workflow_runs_v3_refresh_and_gate() -> None:
     workflow = (ROOT / ".github" / "workflows" / "daily.yml").read_text(encoding="utf-8")
     universe_fetch = workflow.index("python scripts/fetch_research_universe.py --source official")
+    fetch_command = workflow[universe_fetch:].splitlines()[0]
+    assert '--as-of "$MARKET_DATE"' in fetch_command
     universe_gate = workflow.index(
         "python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json"
     )

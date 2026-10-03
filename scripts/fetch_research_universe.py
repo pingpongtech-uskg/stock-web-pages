@@ -15,7 +15,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
@@ -274,13 +274,20 @@ def update_official_tracked_config(
     return payload
 
 
-def fetch_official_universe(*, limit: int = 100) -> dict[str, Any]:
-    snapshots = fetch_recent_complete_days(sessions=11, lookback_days=35)
+def fetch_official_universe(*, limit: int = 100, as_of: date | None = None) -> dict[str, Any]:
+    snapshots = fetch_recent_complete_days(as_of=as_of, sessions=11, lookback_days=35)
     return {
         "snapshots": snapshots,
         "current": aggregate_window([snapshot["rows"] for snapshot in snapshots[:10]])[:limit],
         "previous": aggregate_window([snapshot["rows"] for snapshot in snapshots[1:11]])[:limit],
     }
+
+
+def _iso_date(value: str) -> date:
+    parsed = date.fromisoformat(value)
+    if parsed.isoformat() != value:
+        raise argparse.ArgumentTypeError("as-of must use YYYY-MM-DD")
+    return parsed
 
 
 def main() -> int:
@@ -292,11 +299,12 @@ def main() -> int:
     parser.add_argument("--print-codes", action="store_true")
     parser.add_argument("--sessions", type=int, default=11, help="complete sessions to fetch; 11 supports adjacent 10-session windows")
     parser.add_argument("--lookback-days", type=int, default=35)
+    parser.add_argument("--as-of", type=_iso_date, help="latest requested official market date (YYYY-MM-DD)")
     parser.add_argument("--allow-stale", action="store_true", help="keep the last complete universe when the official source is unavailable")
     args = parser.parse_args()
     try:
         if args.source == "official":
-            snapshots = fetch_recent_complete_days(sessions=args.sessions, lookback_days=args.lookback_days)
+            snapshots = fetch_recent_complete_days(as_of=args.as_of, sessions=args.sessions, lookback_days=args.lookback_days)
             payload = update_official_tracked_config(snapshots, Path(args.config))
         else:
             rows = parse_rankings(fetch_document(args.url))

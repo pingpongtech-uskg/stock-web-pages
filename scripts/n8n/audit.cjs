@@ -3,12 +3,16 @@ function auditText(property){return property?.rich_text?.map(part=>part.plain_te
 function auditRequest(state,url,body,method='POST'){return {state,op:{method,url,body},route:'read',delaySeconds:0.5};}
 function auditDaily(state){return auditRequest({...state,stage:'daily'},'https://api.notion.com/v1/data_sources/3ed6fb57-ff38-803d-815a-000b148c6b6e/query',{filter:{property:'名稱',title:{equals:state.dates[state.index].replaceAll('-','')}},page_size:100});}
 function auditNext(state,result){const next={...state,index:state.index+1,results:[...state.results,result],rows:[]};return next.index<next.dates.length?auditDaily(next):{state:{...next,stage:'done'},op:null,route:'done',delaySeconds:0.5};}
-function auditStart(dates,owner,expectedStocks){if(!Array.isArray(dates)||!dates.length||dates.some(date=>!/^\d{4}-\d{2}-\d{2}$/.test(date)))throw Error('audit_dates');return auditDaily({dates,index:0,owner,results:[],rows:[],...(expectedStocks?{expectedStocks}:{})});}
+function auditStart(dates,owner,expectedStocks,expectedArchives){if(!Array.isArray(dates)||!dates.length||dates.some(date=>!/^\d{4}-\d{2}-\d{2}$/.test(date)))throw Error('audit_dates');return auditDaily({dates,index:0,owner,results:[],rows:[],...(expectedStocks?{expectedStocks}:{}),...(expectedArchives?{expectedArchives}:{})});}
 function auditBlocks(state,cursor){return auditRequest({...state,stage:'blocks'},`https://api.notion.com/v1/blocks/${state.current.pageId}/children?page_size=100${cursor?'&start_cursor='+encodeURIComponent(cursor):''}`,null,'GET');}
 function auditValues(rows,expectedStocks){
  const rankNames={trust:'投信排名',growth:'成長排名',lowPosition:'低位階排名'};let checkedNumbers=0,nullNumbers=0,zeroNumbers=0;
  const verified=rows.length===expectedStocks.length&&rows.every(row=>{
   const expected=expectedStocks.find(stock=>stock.code===auditText(row.properties['股票代號']));if(!expected)return false;
+  if(expected.name!==undefined&&row.properties['名稱']?.title?.map(part=>part.plain_text||part.text?.content||'').join('')!==expected.name)return false;
+  if(expected.sector!==undefined&&auditText(row.properties['產業'])!==expected.sector)return false;
+  if(expected.metricsJson!==undefined&&auditText(row.properties['指標'])!==expected.metricsJson)return false;
+  if(expected.provenanceJson!==undefined&&auditText(row.properties['來源'])!==expected.provenanceJson)return false;
   const tags=row.properties['策略']?.multi_select?.map(item=>item.name).sort().join(',');if(tags!==expected.strategies.map(item=>item.strategy).sort().join(','))return false;
   if(Object.entries(rankNames).some(([name,field])=>row.properties[field]?.number!==(expected.strategies.find(item=>item.strategy===name)?.rank??null)))return false;
   return Object.entries(expected.metrics).every(([name,value])=>{checkedNumbers++;if(value===null)nullNumbers++;if(value===0)zeroNumbers++;return row.properties[name]?.number===value;});
@@ -24,6 +28,8 @@ function auditAdvance(state,response){
   if(body.results.length!==1||body.has_more)return auditNext(state,{marketDate:date,status:body.results.length?'failed':'missing',error:'daily_page_count',pageCount:body.results.length});
   const page=body.results[0];const p=page.properties;const current={marketDate:date,pageId:page.id,dataSourceId:auditText(p['Child Data Source ID']),databaseId:auditText(p['Child Database ID']),payloadHash:auditText(p['Payload Hash']),revision:auditText(p['Active Revision']),notionStatus:auditText(p['Notion Status']),expectedCount:p['Expected Count']?.number,archivedCount:p['Archived Count']?.number};
   if(!/^[a-f0-9-]{36}$/.test(current.dataSourceId)||!/^[a-f0-9]{64}$/.test(current.payloadHash)||!/^[a-f0-9]{12}$/.test(current.revision)||!Number.isInteger(current.expectedCount)||current.expectedCount<0)return auditNext(state,{...current,status:'failed',error:'root_archive_metadata'});
+  const evidence=state.expectedArchives?.[date];
+  if(evidence&&(evidence.payloadHash!==current.payloadHash||evidence.revision!==current.revision||[['requestId','Request ID'],['actionsRunId','Actions Run ID'],['runId','Run ID'],['sourceGitCommit','Source Commit']].some(([key,field])=>evidence[key]!==undefined&&auditText(p[field])!==evidence[key])))return auditNext(state,{...current,status:'failed',error:'root_evidence_mismatch'});
   return state.expectedStocks?auditBlocks({...state,current,rows:[],childDatabases:[]}):auditRows({...state,current,rows:[]});
  }
  if(state.stage==='blocks'){

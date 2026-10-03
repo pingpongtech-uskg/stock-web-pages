@@ -173,7 +173,7 @@ def fetch_twse_day(day: date) -> list[dict[str, Any]]:
 def fetch_tpex_day(day: date) -> list[dict[str, Any]]:
     payload = _get_json(
         TPEX_ENDPOINT,
-        data={"type": "Daily", "date": day.strftime("%Y/%m/%d"), "searchType": "buy"},
+        data={"type": "Daily", "date": day.strftime("%Y/%m/%d"), "searchType": "buy", "response": "json"},
     )
     if str(payload.get("date") or "") != day.strftime("%Y%m%d"):
         return []

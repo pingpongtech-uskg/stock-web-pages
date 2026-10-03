@@ -29,3 +29,21 @@ test('independent audit checks inline database uniqueness and exact numeric null
  const wrong=audit.auditAdvance(out.state,{statusCode:200,body:{results:[{...actual,properties:{...actual.properties,ttmEps:{number:0}}}],has_more:false}}).state.results[0];assert.equal(wrong.status,'failed');assert.equal(wrong.stockValuesVerified,false);
  const duplicate=audit.auditAdvance({...out.state,stage:'blocks',childDatabases:[]},{statusCode:200,body:{results:[{id:'db',type:'child_database',child_database:{title:'20260908'}},{id:'db2',type:'child_database',child_database:{title:'20260908'}}],has_more:false}});assert.equal(duplicate.state.results[0].error,'child_database_count');
 });
+test('independent audit binds expected immutable root lineage before accepting stock rows',()=>{
+ const lineage={[date]:{payloadHash:'c'.repeat(64),revision:'b'.repeat(12),requestId:'approved-request',actionsRunId:'123',runId:'approved-run'}};
+ let out=audit.auditStart([date],'owner',{},lineage);
+ out=audit.auditAdvance(out.state,{statusCode:200,body:{results:[root],has_more:false}});
+ assert.equal(out.route,'done');assert.equal(out.state.results[0].error,'root_evidence_mismatch');
+ const match={...root,properties:{...root.properties,'Payload Hash':text('c'.repeat(64)),'Request ID':text('approved-request'),'Actions Run ID':text('123'),'Run ID':text('approved-run'),'Source Commit':text('a'.repeat(40))}};
+ const required={[date]:{...lineage[date],sourceGitCommit:'a'.repeat(40)}};
+ const start=audit.auditStart([date],'owner',{},required);
+ assert.equal(audit.auditAdvance(start.state,{statusCode:200,body:{results:[match]}}).state.stage,'blocks');
+ for(const field of ['Active Revision','Request ID','Actions Run ID','Run ID','Source Commit'])assert.equal(audit.auditAdvance(start.state,{statusCode:200,body:{results:[{...match,properties:{...match.properties,[field]:text(field==='Active Revision'?'d'.repeat(12):'wrong')}}]}}).state.results[0].error,'root_evidence_mismatch');
+});
+test('modern independent audit checks text name sector metrics and provenance against immutable bytes',()=>{
+ const expectedStock={code:'0050',name:'Approved name',sector:'Approved sector',strategies:[{strategy:'trust',rank:1}],metrics:{currentPrice:0},metricsJson:'{"currentPrice":0,"growthMethod":"eps_growth"}',provenanceJson:'{"marketDate":"2026-09-08"}'};
+ let out=audit.auditStart([date],'owner',{[date]:[expectedStock]});out=audit.auditAdvance(out.state,{statusCode:200,body:{results:[root]}});out=audit.auditAdvance(out.state,{statusCode:200,body:{results:[{id:'22222222-2222-2222-2222-222222222222',type:'child_database',child_database:{title:'20260908'}}]}});
+ const row={...stock,properties:{...stock.properties,'名稱':{title:[{text:{content:expectedStock.name}}]},'產業':text(expectedStock.sector),'指標':text(expectedStock.metricsJson),'來源':text(expectedStock.provenanceJson),'策略':{multi_select:[{name:'trust'}]},'投信排名':{number:1},'成長排名':{number:null},'低位階排名':{number:null},currentPrice:{number:0}}};
+ assert.equal(audit.auditAdvance(out.state,{statusCode:200,body:{results:[row]}}).state.results[0].status,'verified');
+ for(const field of ['名稱','產業','指標','來源'])assert.equal(audit.auditAdvance(out.state,{statusCode:200,body:{results:[{...row,properties:{...row.properties,[field]:field==='名稱'?{title:[{text:{content:'wrong'}}]}:text('wrong')}}]}}).state.results[0].stockValuesVerified,false);
+});

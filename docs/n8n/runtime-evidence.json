@@ -1,12 +1,15 @@
 {
-  "recordedAt": "2026-10-02T14:52:30Z",
+  "recordedAt": "2026-10-03T00:53:27Z",
   "workflowId": "huDBNJDss4KuPmn4",
   "active": false,
   "draftVerification": {
-    "versionId": "1f1f9102-0ba0-4a87-ae72-353335e3254b",
-    "nodeCount": 22,
+    "versionId": "761e1213-7701-4f00-853e-438e72ad9f3c",
+    "nodeCount": 59,
     "parameterDriftAgainstGeneratedWorkflow": [],
-    "existingCredentialsVerified": true
+    "existingCredentialsVerified": true,
+    "normalBlankFieldsRestored": true,
+    "preflightRetryFieldBlank": true,
+    "active": false
   },
   "calendarNotionDiagnostic": {
     "executionId": "707",
@@ -33,24 +36,57 @@
     "diagnosticCleanupStatus": 404
   },
   "screeningAndArchiveEndToEnd": {
-    "status": "automatic_approval_review_rejected_live_execution",
+    "status": "actual_actions_screening_failed_failure_metadata_verified",
     "fixtureOnly": false,
     "requestedMarketDate": "2026-10-02",
     "requestId": "stockscreener:20261002:v1",
-    "rootMainGateSha": "2451036717641cd4827dbdc3856f8af8ac462fc6",
-    "executionId": null,
-    "actionsRunId": null,
-    "dispatchOccurred": false,
-    "rejectionReason": "This manual execution can dispatch GitHub Actions, write state and Notion records, and publish production data through the main-to-Cloudflare path; the user requested the workflow but did not explicitly authorize this exact live screening and its production side effects.",
+    "rootMainGateSha": "a50389a9c6bea6db326c9914f4e866d1f2893560",
+    "executionId": "823",
+    "actionsRunId": "37083078413",
+    "dispatchOccurred": true,
+    "durableFinalRowId": 88,
+    "screeningStatus": "failed",
+    "notionStatus": "failure_metadata",
+    "deployStatus": "pending",
+    "notionFailurePageId": "3ee6fb57-ff38-810f-bcb4-f4c15930ebbf",
+    "stockDatabaseCreated": false,
+    "newPayloadPublished": false,
+    "actionsFailedStepNumber": 11,
+    "financialTokenBooleanStep": "skipped_before_financial_supplement",
+    "financialTokenPresenceBoolean": null,
+    "finmindCallsThisAttempt": 0,
+    "rootCauseStatus": "authenticated_job_log_official_report_transport_failed",
     "operatorDefaultsRestored": true,
-    "restoredWorkflowVersionId": "c7d9cbf2-7e19-4514-8ffd-71185d85ff0d",
-    "restoredSdkValidation": "valid_22_nodes",
-    "workflowActive": false
+    "restoredWorkflowVersionId": "3da765b2-87c3-43af-bcac-46578b1633a7",
+    "workflowActive": false,
+    "rootCause": "OfficialInstitutionalError: official report request failed; Remote end closed connection without response (three attempts)",
+    "authenticatedLogDiagnostic": {
+      "executionId": "827",
+      "ledgerRowId": 89,
+      "actionsRunId": "37083078413",
+      "jobId": "111087617217",
+      "logBytes": 41784,
+      "officialUniverseErrorCount": 3,
+      "finmindTokenPresence": [],
+      "rawLogsOrSignedUrlPersisted": false,
+      "executionIds": [
+        "827",
+        "828"
+      ],
+      "ledgerRowIds": [
+        89,
+        90
+      ],
+      "officialMarket": "TPEx",
+      "officialEndpoint": "https://www.tpex.org.tw/www/zh-tw/insti/sitcStat"
+    }
   },
   "localValidation": {
-    "tests": 39,
-    "lineCoverage": 98.02,
-    "branchCoverage": 88.69
+    "tests": 63,
+    "lineCoverage": 98.58,
+    "branchCoverage": 90.93,
+    "productionModuleBranchMinimum": 81.82,
+    "actualAcceptanceSeparate": true
   },
   "retentionDiagnostic": {
     "executionId": "709",
@@ -65,7 +101,7 @@
     "saveDataErrorExecution": "none"
   },
   "legacyArchiveEndToEnd": {
-    "status": "first_import_automatic_approval_review_rejected_remote_archive_unverified",
+    "status": "complete_actual_six_dates_and_identical_retry_independently_verified",
     "firstControlledAttempt": {
       "attemptedAt": "2026-10-02T23:43:31Z",
       "marketDate": "2026-09-08",
@@ -92,18 +128,210 @@
       "2026-09-24",
       "2026-10-01"
     ],
-    "remoteArchiveVerified": false
+    "remoteArchiveVerified": true,
+    "explicitHumanApproval": "核准上述發布、補跑、Notion 匯入與排程啟用",
+    "refreshedMarketData": false,
+    "finMindCalls": 0,
+    "actionsDispatches": 0,
+    "sourceCommit": "2451036717641cd4827dbdc3856f8af8ac462fc6",
+    "results": [
+      {
+        "marketDate": "2026-09-08",
+        "pageId": "3ed6fb57-ff38-8156-8a86-d687ba5fe5f4",
+        "dataSourceId": "dd5f99f5-6bb6-4123-a241-9bf994a92937",
+        "databaseId": "7165cb20-4380-4b3c-8194-42b7cc890692",
+        "payloadHash": "4264de01fe4820c49101ffd855e32036fc95255a4c23c41480e9e10d7240a85c",
+        "revision": "ccb3596e98a8",
+        "notionStatus": "complete",
+        "expectedCount": 8,
+        "archivedCount": 8,
+        "childDatabaseCount": 1,
+        "stockValuesVerified": true,
+        "checkedNumbers": 128,
+        "nullNumbers": 128,
+        "zeroNumbers": 0,
+        "status": "verified",
+        "rowCount": 8,
+        "uniqueRowKeys": 8,
+        "codes": [
+          "3711",
+          "3034",
+          "2881",
+          "2454",
+          "2382",
+          "2330",
+          "2317",
+          "2303"
+        ],
+        "executionId": "766",
+        "deployStatus": "verified"
+      },
+      {
+        "marketDate": "2026-09-11",
+        "pageId": "3ee6fb57-ff38-81dc-b0c8-f49fe2df8be1",
+        "dataSourceId": "df006ef2-a1c9-4b5f-8459-5b8be3831751",
+        "databaseId": "6c3b288e-fa46-4232-bdf9-572c90fb7972",
+        "payloadHash": "f925fedf3be0ae04fb4d81f7ea23547e6b4b36eb93e4558127616bfdaf637d9f",
+        "revision": "162326e71257",
+        "notionStatus": "complete",
+        "expectedCount": 5,
+        "archivedCount": 5,
+        "childDatabaseCount": 1,
+        "stockValuesVerified": true,
+        "checkedNumbers": 80,
+        "nullNumbers": 70,
+        "zeroNumbers": 0,
+        "status": "verified",
+        "rowCount": 5,
+        "uniqueRowKeys": 5,
+        "codes": [
+          "3413",
+          "2610",
+          "2609",
+          "2382",
+          "2353"
+        ],
+        "executionId": "797",
+        "deployStatus": "verified"
+      },
+      {
+        "marketDate": "2026-09-18",
+        "pageId": "3ee6fb57-ff38-8140-8d6e-da9ba892a83c",
+        "dataSourceId": "3cd5637e-5fbb-4d52-9efa-ff3cdf661175",
+        "databaseId": "ef398a0e-38c8-47ae-b0a9-31a79a9e9a03",
+        "payloadHash": "2f5341c457fd00701c20f949030ea7a2e2ffe5845bdd0f449e8a108cdf287b12",
+        "revision": "b2755a21ba22",
+        "notionStatus": "complete",
+        "expectedCount": 7,
+        "archivedCount": 7,
+        "childDatabaseCount": 1,
+        "stockValuesVerified": true,
+        "checkedNumbers": 112,
+        "nullNumbers": 92,
+        "zeroNumbers": 0,
+        "status": "verified",
+        "rowCount": 7,
+        "uniqueRowKeys": 7,
+        "codes": [
+          "3293",
+          "3005",
+          "2618",
+          "2382",
+          "2376",
+          "1513",
+          "1504"
+        ],
+        "executionId": "799",
+        "deployStatus": "verified"
+      },
+      {
+        "marketDate": "2026-09-23",
+        "pageId": "3ee6fb57-ff38-8160-93bc-c8f33c634cf9",
+        "dataSourceId": "be3a4f6f-1846-4512-855a-1ed739ee9f87",
+        "databaseId": "dadecc11-36f8-4361-8fdd-27ae033b6ebb",
+        "payloadHash": "c9c087778d9933ecb6f8edb722bc32a106198f37951d7c8683f80e4325fca60a",
+        "revision": "093bf8a2850a",
+        "notionStatus": "complete",
+        "expectedCount": 2,
+        "archivedCount": 2,
+        "childDatabaseCount": 1,
+        "stockValuesVerified": true,
+        "checkedNumbers": 32,
+        "nullNumbers": 29,
+        "zeroNumbers": 0,
+        "status": "verified",
+        "rowCount": 2,
+        "uniqueRowKeys": 2,
+        "codes": [
+          "3293",
+          "2618"
+        ],
+        "executionId": "800",
+        "deployStatus": "verified"
+      },
+      {
+        "marketDate": "2026-09-24",
+        "pageId": "3ee6fb57-ff38-8189-a970-e1d355386c25",
+        "dataSourceId": "5f758de8-ab81-4842-bd11-09461d5bf856",
+        "databaseId": "71df9fd7-d312-46b3-9ff3-4daf0c4f4c0a",
+        "payloadHash": "f37395a253e6593dd28fa59c163922d6ff8466c353d36f4eb464eaaf61e730f7",
+        "revision": "1c1fbbf2a1c6",
+        "notionStatus": "complete",
+        "expectedCount": 2,
+        "archivedCount": 2,
+        "childDatabaseCount": 1,
+        "stockValuesVerified": true,
+        "checkedNumbers": 32,
+        "nullNumbers": 29,
+        "zeroNumbers": 0,
+        "status": "verified",
+        "rowCount": 2,
+        "uniqueRowKeys": 2,
+        "codes": [
+          "3293",
+          "2610"
+        ],
+        "executionId": "804",
+        "deployStatus": "verified"
+      },
+      {
+        "marketDate": "2026-10-01",
+        "pageId": "3ee6fb57-ff38-8133-8b91-cbea998e3456",
+        "dataSourceId": "42d9df38-72cd-445e-924c-7f576dc414a0",
+        "databaseId": "4eb93784-6a72-4c48-b0a1-8aaea8671efb",
+        "payloadHash": "a755cc6681f1fb7b9411bca0d6591b54a7a2494f1bece274b9958b6af899faaf",
+        "revision": "533ec3fcd1fd",
+        "notionStatus": "complete",
+        "expectedCount": 1,
+        "archivedCount": 1,
+        "childDatabaseCount": 1,
+        "stockValuesVerified": true,
+        "checkedNumbers": 16,
+        "nullNumbers": 15,
+        "zeroNumbers": 0,
+        "status": "verified",
+        "rowCount": 1,
+        "uniqueRowKeys": 1,
+        "codes": [
+          "3293"
+        ],
+        "executionId": "807",
+        "deployStatus": "verified"
+      }
+    ],
+    "totalSelectedRows": 25,
+    "numericReadback": {
+      "checked": 400,
+      "null": 363,
+      "available": 37,
+      "zero": 0,
+      "tagsAndRanksVerified": true
+    },
+    "retryProof": {
+      "executionId": "813",
+      "ledgerRowId": 76,
+      "outcome": "already_complete",
+      "preAuditExecutionId": "811",
+      "preAuditLedgerRowId": 74,
+      "postAuditExecutionId": "818",
+      "postAuditLedgerRowId": 77,
+      "allSixAuditResultsIdentical": true,
+      "dayCASBlobSha": "8ea37c414d393f7e56886f881e79ec7a441b5f7c",
+      "dayCASBlobUnchanged": true
+    }
   },
   "authoritativeCountAudit": {
     "workflowId": "TIgXL66Fg0bw5NqQ",
-    "status": "baseline_read_completed_import_acceptance_pending",
+    "status": "six_legacy_dates_and_identical_retry_verified_actual_read_only_queries",
     "notionWrites": false,
     "ledgerWrites": true,
     "project": "personal",
-    "nodeCount": 7,
+    "nodeCount": 8,
     "baselineExecutionId": "722",
     "baselineLedgerRowId": 4,
-    "baselinePagesPerDate": 0
+    "baselinePagesPerDate": 0,
+    "latestExecutionId": "818",
+    "latestLedgerRowId": 77
   },
   "independentReview": {
     "reviewer": "pipeline_findings",
@@ -166,10 +394,10 @@
     "screeningRunProof": false
   },
   "revisedWorkflowV2": {
-    "status": "inactive_draft_verified_first_legacy_execution_rejected_by_automatic_approval_review",
-    "versionId": "f4adc9fb-3aed-42d9-9274-ef23ddb03dde",
+    "status": "inactive_actual_legacy_verified_modern_actions_failed",
+    "versionId": "761e1213-7701-4f00-853e-438e72ad9f3c",
     "functionalAlignmentVersionId": "0530d5c4-3852-45ac-8449-370ad5bbeb46",
-    "nodeCount": 58,
+    "nodeCount": 59,
     "manualDefault": "screen",
     "blankManualDate": "latest_completed_official_session_13_30_Taipei",
     "saturdayResolverLocalProof": "2026-10-03 resolves 2026-10-02",
@@ -178,7 +406,7 @@
       50,
       8
     ],
-    "sdkValidation": "valid_58_nodes",
+    "sdkValidation": "valid_59_nodes",
     "remoteConfigCredentialConnectionDrift": [],
     "updateOperationsApplied": [
       100,
@@ -187,16 +415,252 @@
       3
     ],
     "workflowActive": false,
-    "nativeDispatchEmptySuccessProof": "pending_actual_run",
-    "screeningExecutionId": null,
-    "actionsRunId": null,
+    "nativeDispatchEmptySuccessProof": "actual_dispatch_and_followup_exact_run_proven; exact_HTTP_204_status_not_retained",
+    "screeningExecutionId": "823",
+    "actionsRunId": "37083078413",
     "canvasWarning": "TOP_LEVEL_ITEMS_OVER_CEILING; named business rows retained intentionally",
     "nativeDispatchTimeout": "no_configurable_timeout_in_installed_schema",
     "nativeDispatchUnknownError": "exact_request_search_no_redispatch",
     "growthContractAlignment": "Python-equivalent denominator, exact terminal fields, canonical version, valuation/input inequality and unique positive reason counts; RED regression then GREEN",
     "finalChangedCodeConfigsValidated": 3,
-    "localTests": 53,
-    "lineCoverage": 99.03,
-    "branchCoverage": 90.80
+    "localTests": 62,
+    "lineCoverage": 99.06,
+    "branchCoverage": 90.3
+  },
+  "rawPublicationTransportProof": {
+    "diagnosticWorkflowId": "MI9bX1JGksEsThjh",
+    "archived": true,
+    "binaryExecutionId": "794",
+    "binaryLedgerRowId": 26,
+    "textExecutionId": "796",
+    "textLedgerRowId": 27,
+    "status": 200,
+    "contentType": "application/json",
+    "binaryBytes": 5563,
+    "textBytes": 5553,
+    "binarySha256": "f925fedf3be0ae04fb4d81f7ea23547e6b4b36eb93e4558127616bfdaf637d9f",
+    "textSha256": "02a2f5189a675f4de4fe1325a02ed8aa516239937ddc615deb234f6c87c7aefe",
+    "repair": "liveProbe/liveVerify file response and raw binary buffer decoding; expected hash unchanged",
+    "failedImportExecutionId": "776",
+    "failedImportLedgerRowId": 25,
+    "recoveryExecutionId": "797",
+    "recoveryLedgerRowId": 36,
+    "recoverySameFiveRowsVerified": true,
+    "helperRetentionRestoredNone": true
+  },
+  "revisedBackendPromotion": {
+    "mainSha": "a50389a9c6bea6db326c9914f4e866d1f2893560",
+    "tree": "5bd2eb2352c3cf454b697b3cf260898fe78e28e9",
+    "featureCommitExecutionId": "808",
+    "featureReferenceExecutionId": "809",
+    "featureCiRunId": "37081771666",
+    "featureCiStatus": "success",
+    "promotionExecutionId": "814",
+    "force": false,
+    "priorMainSha": "2451036717641cd4827dbdc3856f8af8ac462fc6",
+    "mainShaReadExecutionId": "815",
+    "mainTreeReadExecutionId": "816",
+    "mainCiRunId": "37081980505",
+    "mainCiStatus": "success",
+    "productionAssets": {
+      "verifiedBy": "release_integration",
+      "javascriptBytes": 249289,
+      "javascriptSha256": "812f283337c2e2c635fb06319fe37979596715cbe6e73ef997cfa2021fe4831c",
+      "cssBytes": 19407,
+      "cssSha256": "9f194b89fb1a7a749dc7881e158d91c1d6560a657ecbc946fb88829bd780f182",
+      "matchReviewedBuild": true
+    }
+  },
+  "currentModernScreen": {
+    "status": "actual_actions_screening_failed_failure_metadata_verified",
+    "fixtureOnly": false,
+    "requestedMarketDate": "2026-10-02",
+    "requestId": "stockscreener:20261002:v1",
+    "rootMainGateSha": "a50389a9c6bea6db326c9914f4e866d1f2893560",
+    "executionId": "823",
+    "actionsRunId": "37083078413",
+    "dispatchOccurred": true,
+    "durableFinalRowId": 88,
+    "screeningStatus": "failed",
+    "notionStatus": "failure_metadata",
+    "deployStatus": "pending",
+    "notionFailurePageId": "3ee6fb57-ff38-810f-bcb4-f4c15930ebbf",
+    "stockDatabaseCreated": false,
+    "newPayloadPublished": false,
+    "actionsFailedStepNumber": 11,
+    "financialTokenBooleanStep": "skipped_before_financial_supplement",
+    "financialTokenPresenceBoolean": null,
+    "finmindCallsThisAttempt": 0,
+    "rootCauseStatus": "authenticated_job_log_official_report_transport_failed",
+    "operatorDefaultsRestored": true,
+    "restoredWorkflowVersionId": "3da765b2-87c3-43af-bcac-46578b1633a7",
+    "workflowActive": false,
+    "firstPreflightAttempt": {
+      "status": "first_normal_manual_failed_before_any_observed_actions_run",
+      "executionId": "819",
+      "marketDate": "2026-10-02",
+      "requestId": "stockscreener:20261002:v1",
+      "sourceGitCommit": "a50389a9c6bea6db326c9914f4e866d1f2893560",
+      "durableFinalRowId": 81,
+      "errorCategory": "dispatch_run_not_found",
+      "actionsRunId": null,
+      "readOnlyActionsSearchExecutions": [
+        "820",
+        "821"
+      ],
+      "observedExactRuns": 0,
+      "nativeInputsRootCause": "Object expression does not satisfy native Github v1.1 validateJSON JSON.parse contract; original exact runtime error was not retained.",
+      "correctedDraftVersion": "3343e851-7b29-4cf3-b187-8185d372e098",
+      "correctiveRetryStatus": "pending_fresh_peer_readback_and_exact_run_absence",
+      "scheduleActive": false
+    },
+    "correctiveRetryExecutionId": "823",
+    "correctiveExactRunAbsenceSearch": "822",
+    "correctionFromReleasedOwner": "819",
+    "actualSaturdayResolver": "2026-10-03 to 2026-10-02",
+    "scheduleActive": false,
+    "rootCause": "OfficialInstitutionalError: official report request failed; Remote end closed connection without response (three attempts)",
+    "authenticatedLogDiagnostic": {
+      "executionId": "827",
+      "ledgerRowId": 89,
+      "actionsRunId": "37083078413",
+      "jobId": "111087617217",
+      "logBytes": 41784,
+      "officialUniverseErrorCount": 3,
+      "finmindTokenPresence": [],
+      "rawLogsOrSignedUrlPersisted": false,
+      "executionIds": [
+        "827",
+        "828"
+      ],
+      "ledgerRowIds": [
+        89,
+        90
+      ],
+      "officialMarket": "TPEx",
+      "officialEndpoint": "https://www.tpex.org.tw/www/zh-tw/insti/sitcStat"
+    }
+  },
+  "nativeDispatchPreflightRepair": {
+    "inputs": "={{ JSON.stringify($json.op.body.inputs) }}",
+    "nativeVersion": "1.1",
+    "installedSchema": "inputs supports IDataObject|string|Expression<string>, but runtime validateJSON calls JSON.parse before githubApiRequest",
+    "primarySourceUrls": [
+      "https://raw.githubusercontent.com/n8n-io/n8n/master/packages/nodes-base/nodes/Github/Github.node.ts",
+      "https://raw.githubusercontent.com/n8n-io/n8n/master/packages/nodes-base/nodes/Github/GenericFunctions.ts"
+    ],
+    "tests": 59,
+    "tdd": "three failing tests reproduced object parse rejection/known preflight cause; narrow owner correction test failed before implementation, then passed",
+    "sdkValidNodes": 59,
+    "changedConfigsValid": 8,
+    "remoteParameterDrift": 0,
+    "draftActive": false,
+    "confirmedLocalPreflightErrorWhitelist": "Inputs: Invalid JSON",
+    "oneTimeOperatorCorrection": "preflight_retry_execution_id=819, only after released exact owner/date/request, no Actions ID, prior dispatch_run_not_found, independent exact run absence; CAS claim then exact-run search before dispatch",
+    "unknownTransportRetries": "never clear or resend automatically"
+  },
+  "historicalDraftVerification": {
+    "versionId": "1f1f9102-0ba0-4a87-ae72-353335e3254b",
+    "nodeCount": 22,
+    "parameterDriftAgainstGeneratedWorkflow": [],
+    "existingCredentialsVerified": true
+  },
+  "historicalScreeningApprovalRejection": {
+    "status": "automatic_approval_review_rejected_live_execution",
+    "fixtureOnly": false,
+    "requestedMarketDate": "2026-10-02",
+    "requestId": "stockscreener:20261002:v1",
+    "rootMainGateSha": "2451036717641cd4827dbdc3856f8af8ac462fc6",
+    "executionId": null,
+    "actionsRunId": null,
+    "dispatchOccurred": false,
+    "rejectionReason": "This manual execution can dispatch GitHub Actions, write state and Notion records, and publish production data through the main-to-Cloudflare path; the user requested the workflow but did not explicitly authorize this exact live screening and its production side effects.",
+    "operatorDefaultsRestored": true,
+    "restoredWorkflowVersionId": "c7d9cbf2-7e19-4514-8ffd-71185d85ff0d",
+    "restoredSdkValidation": "valid_22_nodes",
+    "workflowActive": false
+  },
+  "modernIndependentAuditAdapter": {
+    "status": "local_TDD_SDK_config_valid_no_modern_actual_export_yet",
+    "tests": 63,
+    "sdkValidNodes": 8,
+    "nodeConfigsValid": 8,
+    "requiredEvidence": "Authenticated immutable publication export bytes plus exact marketDate/requestId/actionsRunId/sourceGitCommit",
+    "rootBinds": [
+      "payloadHash",
+      "revision",
+      "requestId",
+      "actionsRunId",
+      "runId",
+      "sourceGitCommit"
+    ],
+    "stockChecks": [
+      "code",
+      "name",
+      "sector",
+      "strategy tags",
+      "strategy ranks",
+      "16 numeric metrics preserving null/zero",
+      "metrics JSON",
+      "provenance JSON"
+    ],
+    "actualModernReadback": false,
+    "helperRemoteUpdated": false
+  },
+  "normalAfterRevisionRecovery": {
+    "status": "installed_inactive_independent_peer_readback_verified",
+    "tests": 63,
+    "autoScreen": "Adopts bounded same-market-date nonlegacy persisted request after active-owner check; validated stored Actions ID resumes exact run.",
+    "completedDay": "Full verified state returned without CAS/dispatch/archive mutation.",
+    "strictPaths": [
+      "Explicit differing request",
+      "Preflight correction owner/request scope",
+      "Different market date",
+      "Legacy archive state",
+      "Malformed stored request or run ID"
+    ],
+    "ambiguousDispatchIntent": "Preserved; search-only, never cleared automatically",
+    "changedCodeConfigsValid": 3,
+    "sdkValidNodes": 59,
+    "actualVerifiedModernRetry": false,
+    "versionId": "761e1213-7701-4f00-853e-438e72ad9f3c",
+    "parameterDrift": 0,
+    "independentPeer": "release_integration: fresh761e59node retention/default/guard readback, 15targetedtests pass, noP0P1"
+  },
+  "officialInstitutionalSourceObservation": {
+    "observedAt": "2026-10-03T01:06:04.403368+00:00",
+    "sourceUrl": "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading",
+    "documentationUrl": "https://www.tpex.org.tw/openapi/swagger.json",
+    "method": "GET",
+    "httpStatus": 200,
+    "rowCount": 910,
+    "rawDates": [
+      "1151002"
+    ],
+    "marketDate": "2026-10-02",
+    "unit": "shares",
+    "documentedHistoricalParameters": [],
+    "sample": {
+      "Date": "1151002",
+      "SecuritiesCompanyCode": "3324",
+      "CompanyName": "雙鴻",
+      "SecuritiesInvestmentTrustCompanies-TotalBuy": "707",
+      "SecuritiesInvestmentTrustCompanies-TotalSell": "504000",
+      "SecuritiesInvestmentTrustCompanies-Difference": "-503293"
+    },
+    "historicalDetailProbe": {
+      "endpoint": "https://www.tpex.org.tw/www/zh-tw/insti/dailyTrade",
+      "method": "POST",
+      "params": {
+        "type": "Daily",
+        "date": "2026/10/02",
+        "sect": "AL",
+        "response": "json"
+      },
+      "error": "ConnectionResetError"
+    },
+    "scope": "Sanitized observations of completed public probes; not a complete eleven-session release.",
+    "releaseGate": "incomplete_eleven_complete_sessions_no_new_dispatch",
+    "relatedSwaggerDatasetsWithNoHistoricalParameters": 3
   }
 }

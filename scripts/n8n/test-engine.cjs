@@ -37,6 +37,12 @@ test('ambiguous dispatch resumes exact request run search, never dispatches twic
   const out=engine.advance({...input,stage:'dispatch',deadline:now+100000,lockSha:'blob'},response({},503),now);
   assert.equal(out.op.method,'GET');assert.ok(out.op.url.includes('/actions/workflows/daily.yml/runs'));
 });
+test('confirmed native dispatch preflight failure releases its intent without claiming an API attempt',()=>{
+ const out=engine.advance({...input,stage:'dispatch',dispatchIntent:true,deadline:now+100000,lockSha:'blob'}, {statusCode:400,preflightFailed:true,body:{message:'Inputs: Invalid JSON'}},now);
+ assert.equal(out.state.errorCategory,'dispatch_preflight_failed');assert.equal(out.state.errorMessage,'Inputs: Invalid JSON');
+ assert.equal(out.state.dispatchIntent,false);assert.equal(out.state.released,true);assert.equal(out.state.screeningStatus,'failed');
+ assert.equal(out.state.nextStage,'done');assert.equal(out.op.method,'PUT');
+});
 test('Notion 429 waits advertised duration; ambiguous create returns to read',()=>{
   assert.equal(typeof engine.advance,'function');
   const state={...input,stage:'createDaily',deadline:now+100000,lockSha:'blob',op:{target:'notion',method:'POST',url:'https://api.notion.com/v1/pages',body:{}},retry:0};
