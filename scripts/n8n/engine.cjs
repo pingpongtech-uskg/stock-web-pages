@@ -144,7 +144,7 @@ function advance(original,response,now=Date.now()) {
   }
   if(['liveProbe','liveVerify'].includes(state.stage)&&status>=400) return deploymentResult(state,'failed','live_http_'+status,now);
   if(state.stage==='createBranch'&&status===422) return request(state,'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);
-  const allow404=['branch','state','restoreState','restoreBlobGet','restoreTreeGet','restoreCommitGet','restoreRefGet'];
+  const allow404=['branch','state','restoreState','restoreIndex','restoreBlobGet','restoreTreeGet','restoreCommitGet','restoreRefGet'];
   if(state.stage==='restoreRefCreate'&&status===422)return restoreOperation.ambiguousRestore(state,cacheApi(now));
   if(state.stage==='dispatch'&&response.preflightFailed===true&&status===400&&body?.message==='Inputs: Invalid JSON') return fail({...state,dispatchIntent:false,screeningStatus:'failed'},'dispatch_preflight_failed',body.message);
   if(status>=400&&!allow404.includes(state.stage)) return fail(state,'external_http_'+status,body?.message);
@@ -161,8 +161,13 @@ function advanceSuccess(state,body,status,response,now) {
       }
       const isOpen=calendarOpen(body,state.marketDate);
       if(isOpen&&state.mode!=='diagnose'&&state.mode!=='legacy_archive') {
-        const previousSessionDate=latestCompletedSession(body,Date.parse(state.marketDate+'T00:00:00Z')-8*3600000);
-        state={...state,previousSessionDate};
+        try {
+          const previousSessionDate=latestCompletedSession(body,Date.parse(state.marketDate+'T00:00:00Z')-8*3600000);
+          state={...state,previousSessionDate,previousSessionResolution:'official_calendar'};
+        } catch(error) {
+          if(error.message!=='calendar_year_boundary')throw error;
+          state={...state,previousSessionDate:null,previousSessionResolution:'calendar_boundary'};
+        }
       }
       if(state.mode==='diagnose') return request({...state,isOpen},'diagnoseDatabase','notion','GET',`https://api.notion.com/v1/databases/${ROOT_DATABASE}`);
       if(state.runKind==='scheduled'&&now>=state.operationDeadline) return done({...state,isOpen,errorCategory:'operation_overdue',errorMessage:'19:30 Asia/Taipei deadline passed; explicit manual resume is required.'});

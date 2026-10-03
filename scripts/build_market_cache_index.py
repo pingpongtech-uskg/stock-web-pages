@@ -15,7 +15,7 @@ import re
 import shutil
 import sys
 import tempfile
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -26,7 +26,7 @@ from pipeline.financial_periods import dividend_period, normalized_date
 from pipeline.growth_health import evaluate_growth_health
 from pipeline.screening_export import validate_export
 from pipeline.valuation import derive_growth_inputs
-from pipeline.trading_calendar import is_open
+from pipeline.trading_calendar import calendar_years, recent_sessions
 from pipeline.official_institutional import (TWSE_ENDPOINT, TPEX_ENDPOINT, parse_twse_json_response,
                                              parse_tpex_csv, OfficialInstitutionalError)
 from pipeline.source_receipts import safe_directory
@@ -280,12 +280,11 @@ def assemble_index(*, data_dir: Path, config: Path, source_cache_dir: Path, mark
     dates = next(group['dates'] for group in groups if group['key'] == 'institutional_normalized:TWSE')
     _require(len(dates) == 11, 'window')
     calendar = next(group['body'] for group in groups if group['key'] == 'calendar_normalized')
-    _require(calendar.get('schemaVersion') == 'trading-calendar-v1', 'calendar')
-    calendar_dates = []
-    for offset in range(40):
-        day = (date.fromisoformat(market_date) - timedelta(days=offset)).isoformat()
-        if is_open(calendar, day): calendar_dates.append(day)
-        if len(calendar_dates) == 11: break
+    try:
+        _require(int(market_date[:4]) in calendar_years(calendar), 'calendar')
+        calendar_dates = recent_sessions(calendar, market_date, count=11)
+    except (ValueError, TypeError, KeyError) as exc:
+        raise MarketCacheError('cache_calendar_window') from exc
     _require(dates == list(reversed(calendar_dates)), 'calendar_window')
     payload = {'marketDate': market_date, 'previousTradingDate': dates[-2], 'generatedAt': release['generatedAt'], 'source': source, 'groups': groups}
     expected = {**{key: value for key, value in payload.items() if key != 'groups'},

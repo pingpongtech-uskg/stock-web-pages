@@ -155,6 +155,39 @@ def test_calendar_independently_rejects_an_eleven_date_window_skipping_open_sess
     with pytest.raises(MarketCacheError): assemble_index(**kwargs)
 
 
+def test_assembler_accepts_official_calendar_set_for_cross_year_capable_sources(tmp_path):
+    from pipeline.market_cache import canonical, sha
+    from pipeline.trading_calendar import compose_calendar_set
+    from scripts.build_market_cache_index import write_institutional_cache, assemble_index
+
+    snapshots, kwargs = setup_inputs(tmp_path)
+    source = kwargs['source_cache_dir']
+    write_institutional_cache(snapshots, source)
+    index_path = source / 'calendar-receipt-index.json'
+    fragment = json.loads(index_path.read_bytes())
+    raw_group = next(group for group in fragment['groups'] if group['kind'] == 'calendar_raw')
+    normalized_group = next(group for group in fragment['groups'] if group['kind'] == 'calendar_normalized')
+    current = {'schemaVersion': 'trading-calendar-v1', 'timezone': 'Asia/Taipei', 'year': 2026,
+               'closedDates': [], 'openExceptions': [],
+               'sourceUrl': 'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'}
+    prior = {**current, 'year': 2025}
+    composite = compose_calendar_set([prior, current])
+    raw = canonical({'receipts': [{'requestYear': 2025}, {'requestYear': 2026}]})
+    normalized = canonical(composite)
+    (source / raw_group['bodyFile']).write_bytes(raw)
+    (source / normalized_group['bodyFile']).write_bytes(normalized)
+    digest = sha(raw)
+    raw_group['sourceSha256'] = digest
+    normalized_group['sourceSha256'] = digest
+    normalized_group['normalizedFromSha256'] = digest
+    index_path.write_bytes(canonical(fragment))
+
+    payload, _ = assemble_index(**kwargs)
+
+    calendar = next(group['body'] for group in payload['groups'] if group['key'] == 'calendar_normalized')
+    assert calendar == composite
+
+
 @pytest.mark.parametrize('field,value', [('publishedAt', '2026-10-10'), ('availableAt', '2026-10-10'), ('exDate', '2026-10-10'), ('publishedAt', 'invalid')])
 def test_cash_dividend_all_dates_must_be_known_by_cutoff(field, value):
     from scripts.build_market_cache_index import stock_metrics

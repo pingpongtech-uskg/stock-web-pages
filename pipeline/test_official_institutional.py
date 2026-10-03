@@ -479,6 +479,17 @@ def test_recent_complete_days_calendar_requires_valid_coverage_before_http(monke
                                             calendar=calendar)
 
 
+def test_recent_complete_days_requires_official_source_url_before_http(monkeypatch):
+    import pipeline.official_institutional as official
+    calendar = {"schemaVersion": "trading-calendar-v1", "timezone": "Asia/Taipei", "year": 2026,
+                "closedDates": [], "openExceptions": []}
+    monkeypatch.setattr(official, "fetch_complete_day", lambda *args, **kwargs:
+                        pytest.fail("calendar without source provenance must fail before request"))
+    with pytest.raises(ValueError, match="calendar"):
+        official.fetch_recent_complete_days(as_of=date(2026, 10, 2), sessions=1, lookback_days=1,
+                                            calendar=calendar)
+
+
 def test_recent_complete_days_does_not_treat_missing_open_session_as_closed(monkeypatch):
     import pipeline.official_institutional as official
     from pipeline.trading_calendar import SOURCE_URL
@@ -503,6 +514,23 @@ def test_recent_complete_days_requires_explicit_calendar_coverage_across_year_bo
         official.fetch_recent_complete_days(as_of=date(2027, 1, 4), sessions=3, lookback_days=5,
                                             calendar=calendar)
     assert calls == [date(2027, 1, 4), date(2027, 1, 1)]
+
+
+def test_recent_complete_days_uses_two_year_calendar_and_skips_official_closure(monkeypatch):
+    import pipeline.official_institutional as official
+    from pipeline.trading_calendar import compose_calendar_set
+    source = "https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule"
+    prior = {"schemaVersion":"trading-calendar-v1","timezone":"Asia/Taipei","year":2026,
+             "closedDates":["2026-12-25"],"openExceptions":[],"sourceUrl":source}
+    current = {"schemaVersion":"trading-calendar-v1","timezone":"Asia/Taipei","year":2027,
+               "closedDates":["2027-01-01"],"openExceptions":[],"sourceUrl":source}
+    calendar = compose_calendar_set([current, prior])
+    calls = []
+    monkeypatch.setattr(official, "fetch_complete_day", lambda day: calls.append(day) or [{"code":"2330"}])
+    result = official.fetch_recent_complete_days(as_of=date(2027, 1, 4), sessions=2,
+        lookback_days=10, calendar=calendar)
+    assert [row["date"] for row in result] == ["2027-01-04", "2026-12-31"]
+    assert calls == [date(2027, 1, 4), date(2026, 12, 31)]
     calendar["sourceUrl"] = "https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule"
     calendar["year"] = 2025
     with pytest.raises(ValueError, match="calendar"):

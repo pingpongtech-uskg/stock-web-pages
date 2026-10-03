@@ -153,11 +153,43 @@ function rowCoverage(group, rows) {
   check(unique(keys), 'coverage');
 }
 function validateCalendar(body, expected) {
-  check(body && body.year === expected.calendarYear && body.timezone === 'Asia/Taipei', 'calendar');
-  for (const field of ['closedDates', 'openExceptions']) check(Array.isArray(body[field]) && unique(body[field]) && body[field].every(value => validDate(value) && Number(value.slice(0, 4)) === body.year), 'calendar');
-  check(!body.closedDates.some(date => body.openExceptions.includes(date)), 'calendar');
-  const dates = expected.groups.filter(group => group.kind !== 'calendar_raw' && group.kind !== 'calendar_normalized').flatMap(group => group.dates);
-  check(dates.every(date => !body.closedDates.includes(date) && (body.openExceptions.includes(date) || ![0, 6].includes(new Date(`${date}T00:00:00Z`).getUTCDay()))), 'calendar');
+  const validateYear = calendar => {
+    check(calendar && (!calendar.schemaVersion || calendar.schemaVersion === 'trading-calendar-v1') && Number.isInteger(calendar.year) && calendar.timezone === 'Asia/Taipei', 'calendar');
+    for (const field of ['closedDates', 'openExceptions']) check(Array.isArray(calendar[field]) && unique(calendar[field]) && calendar[field].every(value => validDate(value) && Number(value.slice(0, 4)) === calendar.year), 'calendar');
+    check(!calendar.closedDates.some(value => calendar.openExceptions.includes(value)), 'calendar');
+    return calendar;
+  };
+  let calendars;
+  if (body?.schemaVersion !== 'trading-calendar-set-v1') calendars = [validateYear(body)];
+  else {
+    check(body?.schemaVersion === 'trading-calendar-set-v1' && body.timezone === 'Asia/Taipei' && Array.isArray(body.calendars) && body.calendars.length === 2, 'calendar');
+    calendars = body.calendars.map(calendar => {
+      check(calendar?.schemaVersion === 'trading-calendar-v1', 'calendar');
+      return validateYear(calendar);
+    });
+    check(calendars[0].year + 1 === calendars[1].year && calendars.every(calendar => calendar.sourceUrl === 'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'), 'calendar');
+  }
+  check(Number.isInteger(expected.calendarYear) && expected.calendarYear === Number(expected.marketDate.slice(0, 4)) && calendars.some(calendar => calendar.year === expected.calendarYear), 'calendar');
+  const sessionDates = [];
+  for (let offset = 0; offset < 60 && sessionDates.length < 11; offset++) {
+    const day = new Date(Date.parse(`${expected.marketDate}T00:00:00Z`) - offset * 86400000).toISOString().slice(0, 10);
+    const year = Number(day.slice(0, 4)); const matches = calendars.filter(calendar => calendar.year === year);
+    check(matches.length === 1, 'calendar');
+    const calendar = matches[0];
+    if (!calendar.closedDates.includes(day) && (calendar.openExceptions.includes(day) || ![0, 6].includes(new Date(`${day}T00:00:00Z`).getUTCDay()))) sessionDates.push(day);
+  }
+  if (expected.sessionDates !== undefined) {
+    check(sessionDates.length === 11 && JSON.stringify([...sessionDates].reverse()) === JSON.stringify(expected.sessionDates), 'calendar');
+    check(JSON.stringify(expected.volumeDates) === JSON.stringify(expected.sessionDates.slice(-7)), 'calendar');
+  } else {
+    const dates = expected.groups.filter(group => !group.kind.startsWith('calendar')).flatMap(group => group.dates);
+    check(dates.every(day => {
+      const matches = calendars.filter(calendar => calendar.year === Number(day.slice(0, 4)));
+      if (matches.length !== 1) return false;
+      const calendar = matches[0];
+      return !calendar.closedDates.includes(day) && (calendar.openExceptions.includes(day) || ![0, 6].includes(new Date(`${day}T00:00:00Z`).getUTCDay()));
+    }), 'calendar');
+  }
 }
 function validateRows(group, body, expected) {
   rowCoverage(group, body.rows);

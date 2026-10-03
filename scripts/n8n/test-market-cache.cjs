@@ -34,6 +34,37 @@ function fixture() {
   const input = { marketDate: date, previousTradingDate: prior, generatedAt: '2026-10-03T04:00:00Z', source, groups };
   return { input, expected };
 }
+function crossYearFixture() {
+  const { input, expected } = fixture();
+  const sessions = ['2026-12-17', '2026-12-18', '2026-12-21', '2026-12-22', '2026-12-23',
+    '2026-12-24', '2026-12-28', '2026-12-29', '2026-12-30', '2026-12-31', '2027-01-04'];
+  const volume = sessions.slice(-7);
+  const sourceUrl = 'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule';
+  const calendar = { schemaVersion: 'trading-calendar-set-v1', timezone: 'Asia/Taipei', calendars: [
+    { schemaVersion: 'trading-calendar-v1', year: 2026, timezone: 'Asia/Taipei', closedDates: ['2026-12-25'], openExceptions: [], sourceUrl },
+    { schemaVersion: 'trading-calendar-v1', year: 2027, timezone: 'Asia/Taipei', closedDates: ['2027-01-01'], openExceptions: [], sourceUrl },
+  ] };
+  input.marketDate = '2027-01-04'; input.previousTradingDate = '2026-12-31';
+  for (const group of input.groups) {
+    if (group.kind.startsWith('institutional')) {
+      group.dates = sessions;
+      group.codesByDate = Object.fromEntries(sessions.map(day => [day, [...group.codes]]));
+      if (group.kind.endsWith('_normalized')) group.body.rows = sessions.flatMap(marketDate => group.codes.map(code => ({ marketDate, code, buy: 0, sell: 1000, net: -1000, unit: 'shares' })));
+    } else if (group.kind.startsWith('volume')) {
+      group.dates = volume;
+      if (group.kind.endsWith('_normalized')) group.body.rows = volume.map(marketDate => ({ marketDate, code: '00631L', volume: marketDate === '2027-01-04' ? 2000 : 0, unit: 'shares' }));
+    } else if (group.kind === 'calendar_normalized') {
+      group.dates = ['2027-01-04']; group.body = calendar;
+    } else if (group.kind === 'calendar_raw') group.dates = ['2027-01-04'];
+    else if (group.kind === 'published_stock_inputs') {
+      group.dates = ['2027-01-04']; group.body.rows = group.body.rows.map(row => ({ ...row, marketDate: '2027-01-04' }));
+    }
+  }
+  expected.marketDate = input.marketDate; expected.previousTradingDate = input.previousTradingDate;
+  expected.calendarYear = 2027; expected.sessionDates = sessions; expected.volumeDates = volume;
+  expected.groups = input.groups.map(({ body, ...group }) => group);
+  return { input, expected };
+}
 function built(input = fixture().input, limits) { return cache.buildMarketCache(input, limits); }
 // Fixture trust mimics a manifest digest first obtained from an authenticated
 // exact-run artifact, independently of the later Notion download being checked.
@@ -60,6 +91,19 @@ test('deterministic gzip bundle preserves exact receipts and separates metric co
   assert.equal(proof.metricsComplete, false);
   assert.equal(proof.manifestHash, first.manifest.manifestHash);
   assert.equal(cache.decodeCacheGroup(first.manifest.groups[0], first.files).toString(), 'exact official receipt\n0.0 中文');
+});
+
+test('calendar-set revalidates the exact cross-year eleven-session and seven-volume windows', () => {
+  const { input, expected } = crossYearFixture();
+  const bundle = built(input);
+  assert.equal(verify(bundle, expected).cacheComplete, true);
+  const bad = { ...input, groups: input.groups.map(group => group.kind === 'calendar_normalized'
+    ? { ...group, body: { ...group.body, calendars: group.body.calendars.slice(1) } } : group) };
+  assert.throws(() => verify(built(bad), expected), /cache_calendar/);
+  const wrong = { ...input, groups: input.groups.map(group => group.kind === 'calendar_normalized'
+    ? { ...group, body: { ...group.body, calendars: group.body.calendars.map((calendar, index) => index === 0
+      ? { ...calendar, closedDates: [...calendar.closedDates, '2026-12-31'] } : calendar) } } : group) };
+  assert.throws(() => verify(built(wrong), expected), /cache_calendar/);
 });
 
 test('gzip shards obey both compressed and inflated bounds and reassemble JSON across arbitrary byte boundaries', () => {

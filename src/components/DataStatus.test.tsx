@@ -125,3 +125,26 @@ describe('financial quality status summary', () => {
     expect(markup).not.toContain('未通過 100')
   })
 })
+
+
+describe('trust new-entry summary', () => {
+  it('labels zero new-entry signals without claiming that the current Top10 is empty', () => {
+    const value = { ...release, summary: { ...release.summary, trustSignalCount: 0, trustNewEntryCount: 0, trustValuationVisibleCount: 0 } }
+    const markup = renderToStaticMarkup(<DataStatus release={value} now={Date.parse('2026-09-12T00:00:00Z')} />)
+    expect(markup).toContain('投信 Top10 新進榜 0 檔／PEG 可顯示 0 檔')
+    expect(markup).not.toContain('投信 Top10 0 檔')
+    expect(markup.match(/新進榜/g)).toHaveLength(1)
+  })
+
+  it('shows unavailable new-entry counts as a dash rather than inferring zero', () => {
+    const markup = renderToStaticMarkup(<DataStatus release={release} now={Date.parse('2026-09-12T00:00:00Z')} />)
+    expect(markup).toContain('投信 Top10 新進榜 — 檔')
+    expect(markup).not.toContain('投信 Top10 新進榜 0 檔')
+  })
+
+  it('keeps the trust summary out of compact status displays', () => {
+    const value = { ...release, summary: { ...release.summary, trustSignalCount: 3 } }
+    const markup = renderToStaticMarkup(<DataStatus release={value} compact now={Date.parse('2026-09-12T00:00:00Z')} />)
+    expect(markup).not.toContain('投信 Top10')
+  })
+})

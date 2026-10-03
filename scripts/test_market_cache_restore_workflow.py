@@ -47,3 +47,13 @@ def test_restore_uses_main_code_before_live_collection_and_preserves_original_co
     assert 'ref: ${{ github.sha }}' in job
     assert '--stock-cache-dir .cache/restored-stock-details' in job
     assert 'git checkout' not in block and 'git push' not in block
+
+
+def test_calendar_receives_original_restored_cache_before_window_collection():
+    job = snapshot()
+    calendar = job.split('- name: Fetch authoritative exchange calendar', 1)[1].split('\n      - ', 1)[0]
+    assert 'calendar_restore_args=()' in calendar
+    assert 'if [ -n "$CACHE_MARKET_DATE" ]' in calendar
+    assert '--prior-calendar-cache-dir ".cache/market-source/restored/$CACHE_MARKET_DATE"' in calendar
+    assert '"${calendar_restore_args[@]}"' in calendar
+    assert 'set -euo pipefail' in calendar

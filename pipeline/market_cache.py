@@ -158,13 +158,15 @@ def _group(group: dict[str, Any], header: dict[str, Any], trusted: dict[str, Any
 
 
 def _calendar(body: Any, expected: dict[str, Any]) -> None:
+    from pipeline.trading_calendar import calendar_years, recent_sessions
     _check(type(expected.get('calendarYear')) is int and expected['calendarYear'] == int(expected['marketDate'][:4]), 'calendar')
-    _check(type(body) is dict and body.get('year') == expected.get('calendarYear') and body.get('timezone') == 'Asia/Taipei', 'calendar')
-    for field in ['closedDates', 'openExceptions']:
-        _check(_sorted(body.get(field), lambda day: _date(day) and int(day[:4]) == body['year']), 'calendar')
-    _check(not set(body['closedDates']) & set(body['openExceptions']), 'calendar')
-    dates = [day for g in expected['groups'] for day in g['dates']]
-    _check(all(day not in body['closedDates'] and (day in body['openExceptions'] or date.fromisoformat(day).weekday() < 5) for day in dates), 'calendar')
+    try:
+        years = calendar_years(body)
+        sessions = list(reversed(recent_sessions(body, expected['marketDate'], count=11)))
+    except (ValueError, TypeError, KeyError) as exc:
+        raise MarketCacheError('cache_calendar') from exc
+    _check(expected['calendarYear'] in years, 'calendar')
+    _check(sessions == expected['sessionDates'] and expected['volumeDates'] == sessions[-7:], 'calendar')
 
 
 def _rows(group: dict[str, Any], expected: dict[str, Any]) -> None:

@@ -16,12 +16,24 @@ const restoreSource=p=>({requestId:p.requestId,actionsRunId:p.actionsRunId,sourc
 const restoreName=name=>/^(?:manifest\.json|proof\.json|expected\.json|\d{4}-\d{2}-\d{2}\.[A-Za-z0-9_-]+\.\d+\.[a-f0-9]{64}\.json\.gz)$/.test(name);
 function restoreDurable(state){const {restoreTransient,restorePrior,restoreDescriptor,restoreSignedUrl,restoreChildren,restoreFileMeta,restoreTreeEntries,restoreCommitBody,restoreGitFiles,op,...safe}=state;return safe;}
 function beginRestore(state,api){
+  if(!state.previousSessionDate&&state.previousSessionResolution==='calendar_boundary'){
+    if(state.restoreCacheCandidateDate&&restoreSha(state.restoreInventoryRef))return restoreCandidate(state,api);
+    return api.request({...state,restoreStatus:'checking'},'restoreIndexRef','github','GET',`${RESTORE_REPO}/git/ref/heads/n8n-state`);
+  }
   if(!state.previousSessionDate)return api.checkpoint({...state,dispatchIntent:true,restoreStatus:'missing'},'dispatch');
   restoreCheck(/^\d{4}-\d{2}-\d{2}$/.test(state.previousSessionDate)&&state.previousSessionDate<state.marketDate,'date');
-  return api.request({...state,restoreStatus:'checking'},'restoreState','github','GET',`${RESTORE_REPO}/contents/operations/days/${state.previousSessionDate}.json?ref=n8n-state`);
+  return restoreCandidate({...state,restoreStatus:'checking',restoreCacheCandidateDate:state.previousSessionDate},api);
+}
+function restoreCandidate(state,api){
+  const date=state.restoreCacheCandidateDate;restoreCheck(/^\d{4}-\d{2}-\d{2}$/.test(date||'')&&date<state.marketDate,'candidate_date');
+  return api.request(state,'restoreState','github','GET',`${RESTORE_REPO}/contents/operations/days/${date}.json?ref=${state.restoreInventoryRef||'n8n-state'}`);
+}
+function restoreMissingCandidate(state,api){
+  if(state.restoreCandidates&&state.restoreCandidateCursor+1<state.restoreCandidates.length){const cursor=state.restoreCandidateCursor+1;return restoreCandidate({...state,restoreCandidateCursor:cursor,restoreCacheCandidateDate:state.restoreCandidates[cursor]},api);}
+  return api.checkpoint({...state,restoreStatus:'missing',dispatchIntent:true},'dispatch');
 }
 function validatePrior(p,state){
-  restoreCheck(p.marketDate===state.previousSessionDate&&p.cacheStatus==='verified'&&p.cacheManifestHash===p.cacheActiveManifestHash&&/^[a-f0-9]{64}$/.test(p.cacheManifestHash||'')&&/^[a-f0-9]{64}$/.test(p.cacheProofHash||''),'prior_custody');
+  restoreCheck(p.marketDate===(state.restoreCacheCandidateDate||state.previousSessionDate)&&p.cacheStatus==='verified'&&p.cacheManifestHash===p.cacheActiveManifestHash&&/^[a-f0-9]{64}$/.test(p.cacheManifestHash||'')&&/^[a-f0-9]{64}$/.test(p.cacheProofHash||''),'prior_custody');
   restoreCheck(restoreUuid(p.pageId)&&/^\d{1,24}$/.test(p.actionsRunId||'')&&restoreSha(p.runHeadSha)&&/^[A-Za-z0-9_.:-]{1,160}$/.test(p.requestId||'')&&/^\d{1,20}$/.test(p.cacheArtifactId||'')&&/^\d{1,20}$/.test(p.cacheRunWorkflowId||'')&&/^[a-f0-9]{64}$/.test(p.cacheArtifactSha256||'')&&/^[a-f0-9]{64}$/.test(p.cacheLatestHash||''),'prior_lineage');
   restoreCheck(Array.isArray(p.cacheFileMeta)&&p.cacheFileMeta.length>=3&&p.cacheFileMeta.length<=259&&new Set(p.cacheFileMeta.map(e=>e.name)).size===p.cacheFileMeta.length,'file_metadata');
   let total=0;for(const e of p.cacheFileMeta){restoreCheck(restoreName(e.name)&&/^[a-f0-9]{64}$/.test(e.sha256||'')&&Number.isSafeInteger(e.bytes)&&e.bytes>0&&e.bytes<=(e.name.endsWith('.gz')?4194304:1048576),'file_metadata');total+=e.bytes;}
@@ -66,6 +78,7 @@ function restoreDispatchInputs(state){
 function nextRestore(state,api){
   switch(state.stage){
     case 'restoreState':return beginRestore(state,api);
+    case 'restoreIndexRef':return beginRestore({...state,restoreCacheCandidateDate:undefined},api);
     case 'restoreFile':return restoreGetPart(state,api);
     case 'restoreBlobGet':{
       if(state.restoreBlobCursor>=state.restoreGitFiles.length)return nextRestore({...prepareTree(state),stage:'restoreTreeGet'},api);
@@ -94,10 +107,22 @@ function advanceRestore(state,response,now,api){
     return api.checkpoint({...state,restoreObjectIntent:sha,...(state.stage==='restoreRefGet'?{restoreRefIntent:true}:{})},stage);
   }
   switch(state.stage){
+    case 'restoreIndexRef':
+      restoreCheck(body?.object?.type==='commit'&&restoreSha(body.object.sha),'inventory_ref');
+      return api.request({...state,restoreInventoryRef:body.object.sha},'restoreIndex','github','GET',`${RESTORE_REPO}/contents/operations/days?ref=${body.object.sha}`);
+    case 'restoreIndex':{
+      if(status===404)return restoreMissingCandidate(state,api);
+      restoreCheck(Array.isArray(body)&&body.length<1000&&Buffer.byteLength(JSON.stringify(body))<=1048576,'inventory_bounds');
+      const dates=body.map(entry=>{restoreCheck(entry?.type==='file'&&/^\d{4}-\d{2}-\d{2}\.json$/.test(entry.name||'')&&entry.path==='operations/days/'+entry.name,'inventory_entry');const date=entry.name.slice(0,-5);restoreCheck(new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date,'inventory_date');return date;});
+      restoreCheck(new Set(dates).size===dates.length,'inventory_duplicate');
+      const candidates=dates.filter(date=>date<state.marketDate).sort().reverse().slice(0,35);
+      if(!candidates.length)return restoreMissingCandidate(state,api);
+      return restoreCandidate({...state,restoreCandidates:candidates,restoreCandidateCursor:0,restoreCacheCandidateDate:candidates[0]},api);
+    }
     case 'restoreState':{
-      if(status===404)return api.checkpoint({...state,restoreStatus:'missing',dispatchIntent:true},'dispatch');
+      if(status===404)return restoreMissingCandidate(state,api);
       restoreCheck(typeof body?.content==='string'&&body.content.length<=3000000,'prior_size');const p=JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));
-      if(!p.cacheActiveManifestHash&&!p.cacheManifestHash)return api.checkpoint({...state,restoreStatus:'missing',dispatchIntent:true},'dispatch');
+      if(!Object.prototype.hasOwnProperty.call(p,'cacheActiveManifestHash')&&!Object.prototype.hasOwnProperty.call(p,'cacheManifestHash')&&p.cacheStatus!=='verified')return restoreMissingCandidate(state,api);
       validatePrior(p,state);
       return api.request({...state,restorePrior:p,restoreFileMeta:p.cacheFileMeta,restorePageId:p.pageId,restoreManifestHash:p.cacheManifestHash},'restorePage','notion','GET',`${RESTORE_NOTION}/pages/${p.pageId}`);
     }

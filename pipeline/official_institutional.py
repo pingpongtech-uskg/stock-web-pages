@@ -738,39 +738,18 @@ def fetch_recent_complete_days(
         raise ValueError("invalid institutional session window")
     end = as_of or datetime.now(TAIPEI).date()
     if calendar is not None:
-        from pipeline.trading_calendar import SOURCE_URL, TIMEZONE, is_open
-        if (
-            not isinstance(calendar, dict)
-            or calendar.get("schemaVersion") != "trading-calendar-v1"
-            or calendar.get("timezone") != TIMEZONE
-            or calendar.get("sourceUrl") != SOURCE_URL
-            or type(calendar.get("year")) is not int
-            or not isinstance(calendar.get("closedDates"), list)
-            or not isinstance(calendar.get("openExceptions"), list)
-        ):
-            raise ValueError("authoritative calendar is invalid")
-        parsed_dates = {}
-        for key in ("closedDates", "openExceptions"):
-            values = calendar[key]
-            parsed = set()
-            for value in values:
-                if not isinstance(value, str):
-                    raise ValueError("authoritative calendar dates are invalid")
-                try:
-                    parsed_day = date.fromisoformat(value)
-                except ValueError as exc:
-                    raise ValueError("authoritative calendar dates are invalid") from exc
-                if parsed_day.isoformat() != value or parsed_day.year != calendar["year"] or value in parsed:
-                    raise ValueError("authoritative calendar dates are invalid")
-                parsed.add(value)
-            parsed_dates[key] = parsed
-        if parsed_dates["closedDates"] & parsed_dates["openExceptions"]:
-            raise ValueError("authoritative calendar dates conflict")
+        from pipeline.trading_calendar import SOURCE_URL, calendar_years, is_open
+        years = calendar_years(calendar)
+        members = calendar.get('calendars', []) if calendar.get('schemaVersion') == 'trading-calendar-set-v1' else [calendar]
+        if any(member.get('sourceUrl') != SOURCE_URL for member in members):
+            raise ValueError("authoritative calendar source is invalid")
+        if end.year not in years:
+            raise ValueError("authoritative calendar does not cover requested year")
     result: list[dict[str, Any]] = []
     for offset in range(lookback_days):
         day = end - timedelta(days=offset)
         if calendar is not None:
-            if day.year != calendar["year"]:
+            if day.year not in years:
                 raise ValueError("authoritative calendar does not cover requested year")
             if not is_open(calendar, day.isoformat()):
                 continue

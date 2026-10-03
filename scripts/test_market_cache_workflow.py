@@ -12,7 +12,7 @@ def test_restore_source_receipts_before_collection_and_capture_all_inputs():
     assert job.index('Restore complete daily source receipts') < job.index('Fetch authoritative exchange calendar')
     assert 'market-source-v1-\n' in job
     for script in ['build_trading_calendar.py', 'fetch_research_universe.py', 'refresh_snapshot.py --as-of']:
-        line = next(line for line in job.splitlines() if script in line and ('run:' in line or 'if python' in line))
+        line = next(line for line in job.splitlines() if script in line and ('run:' in line or line.strip().startswith(('python ', 'if python '))))
         assert '--source-cache-dir .cache/market-source' in line
 
 

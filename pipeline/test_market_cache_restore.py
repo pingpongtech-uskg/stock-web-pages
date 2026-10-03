@@ -11,7 +11,7 @@ import pytest
 
 from pipeline.market_cache import canonical, sha, build_market_cache, MarketCacheError
 from pipeline.source_receipts import capture_raw, write_bundle
-from pipeline.trading_calendar import SOURCE_URL, build_calendar
+from pipeline.trading_calendar import SOURCE_URL, build_calendar, compose_calendar_set, recent_sessions
 from pipeline.market_indicators import TWSE_STOCK_DAY
 from scripts.test_build_market_cache_index import setup_inputs
 from scripts.build_market_cache_index import write_institutional_cache, assemble_index
@@ -178,6 +178,66 @@ def test_existing_receipts_idempotent_and_fresh_fragments_preserved(tmp_path):
     proof = restore_market_cache(backup, **kwargs)
     assert proof['restoreUsable'] and (cache / 'calendar-receipt-index.json').read_bytes() == fresh
     assert all(path.read_bytes() == raw for path, raw in before.items())
+
+
+def _calendar_rows(year):
+    from datetime import date
+    entries = [('國曆新年開始交易日', 1, 2), ('中華民國開國紀念日', 1, 1), ('國慶日', 10, 10)]
+    return [{'Name': name, 'Date': f'{year - 1911:03d}{month:02d}{day:02d}',
+             'Weekday': '一二三四五六日'[date(year, month, day).weekday()], 'Description': ''}
+            for name, month, day in entries]
+
+
+def _calendar_receipt(year, retrieved):
+    raw = canonical(_calendar_rows(year))
+    return ({'sourceUrl': SOURCE_URL, 'unit': 'calendar', 'requestYear': year,
+             'retrievedAt': retrieved, 'rawBase64': base64.b64encode(raw).decode(),
+             'rawSha256': sha(raw), 'rawBytes': len(raw)}, raw)
+
+
+def test_official_restore_rederives_cross_year_window_from_both_raw_calendar_receipts():
+    from pipeline.market_cache_restore import _official_semantics
+
+    retrieved = '2026-12-30T00:00:00Z'
+    prior = build_calendar(_calendar_rows(2026), year=2026, fetched_at=retrieved)
+    current = build_calendar(_calendar_rows(2027), year=2027, fetched_at=retrieved)
+    calendar = compose_calendar_set([prior, current])
+    receipts = [_calendar_receipt(year, retrieved)[0] for year in (2026, 2027)]
+    sessions = list(reversed(recent_sessions(calendar, '2027-01-04', count=11)))
+    volume_dates = sessions[-7:]
+    months = sorted({day[:7] for day in volume_dates})
+    volume_receipts = []
+    values = {}
+    for month in months:
+        month_dates = [day for day in volume_dates if day.startswith(month)]
+        payload = {'stat': 'OK', 'date': month.replace('-', '') + '01',
+                   'fields': ['日期', '成交股數'],
+                   'data': [[f'{int(day[:4]) - 1911}/{day[5:7]}/{day[8:]}', '10'] for day in month_dates]}
+        raw = canonical(payload)
+        values.update({day: 10 for day in month_dates})
+        volume_receipts.append(({'sourceUrl': TWSE_STOCK_DAY + '?response=json&date=' + month.replace('-', '') +
+            '01&stockNo=00631L', 'unit': 'shares', 'requestMonth': month,
+            'retrievedAt': retrieved, 'rawBase64': base64.b64encode(raw).decode(),
+            'rawSha256': sha(raw), 'rawBytes': len(raw)}, raw))
+    groups = [
+        {'key': 'calendar_raw', 'body': canonical({'receipts': receipts})},
+        {'key': 'calendar_normalized', 'body': calendar},
+        {'key': 'volume_raw', 'body': canonical({'receipts': [item[0] for item in volume_receipts]})},
+        {'key': 'volume_normalized', 'body': {'rows': [
+            {'marketDate': day, 'code': '00631L', 'volume': amount, 'unit': 'shares'}
+            for day, amount in values.items()]}},
+        {'key': 'published_stock_inputs', 'body': {'rows': []}},
+    ]
+    expected = {'calendarYear': 2027, 'marketDate': '2027-01-04',
+                'previousTradingDate': sessions[-2], 'sessionDates': sessions,
+                'volumeDates': volume_dates, 'metricKeys': []}
+    assert _official_semantics(groups, expected)['calendar_normalized']['body'] == calendar
+
+    wrong_year_receipts = copy.deepcopy(receipts)
+    wrong_year_receipts[0]['requestYear'] = 2027
+    groups[0]['body'] = canonical({'receipts': wrong_year_receipts})
+    with pytest.raises(MarketCacheError, match='cache_restore_calendar'):
+        _official_semantics(groups, expected)
 
 
 def test_conflicting_stock_or_output_symlink_rejected_before_source_install(tmp_path):

@@ -18,7 +18,7 @@ from pipeline.market_cache import (MarketCacheError, canonical, sha, MAX_GZIP, M
     MAX_TOTAL_GZIP, MAX_TOTAL_RAW, MAX_PARTS, _date, _hash, _header, _expectations,
     _group, _rows, _calendar, _utc)
 from pipeline.source_receipts import safe_directory
-from pipeline.trading_calendar import SOURCE_URL, build_calendar, is_open
+from pipeline.trading_calendar import SOURCE_URL, build_calendar, calendar_years, recent_sessions
 from pipeline.market_indicators import TWSE_STOCK_DAY, SYMBOL, _date as volume_date, _volume
 from pipeline.official_institutional import TWSE_ENDPOINT, TPEX_ENDPOINT, _cached_raw
 from scripts.build_market_cache_index import _verify_institutional_groups, stock_metrics
@@ -187,21 +187,28 @@ def _receipts(group):
 
 def _official_semantics(groups, expected):
     by_key = {group['key']: group for group in groups}
+    target = date.fromisoformat(expected['marketDate'])
     calendar = by_key['calendar_normalized']['body']
     receipts = _receipts(by_key['calendar_raw'])
-    _require(len(receipts) == 1, 'calendar')
-    receipt, raw = receipts[0]
-    _require(receipt.get('sourceUrl') == SOURCE_URL and receipt.get('unit') == 'calendar'
-             and receipt.get('requestYear') == expected['calendarYear'], 'calendar')
-    parsed = build_calendar(_json(raw), year=expected['calendarYear'], fetched_at=receipt['retrievedAt'])
-    _require(parsed == calendar, 'calendar')
-    dates = []; target = date.fromisoformat(expected['marketDate'])
-    for offset in range(60):
-        day = (target - timedelta(days=offset)).isoformat()
-        if is_open(calendar, day): dates.append(day)
-        if len(dates) == 11: break
-    _require(list(reversed(dates)) == expected['sessionDates'] and expected['previousTradingDate'] == dates[1]
-             and expected['volumeDates'] == list(reversed(dates[:7])), 'window')
+    try:
+        years = calendar_years(calendar)
+        _require(len(receipts) == len(years) and expected['calendarYear'] in years, 'calendar')
+        parsed_by_year = {}
+        for receipt, raw in receipts:
+            year = receipt.get('requestYear')
+            _require(receipt.get('sourceUrl') == SOURCE_URL and receipt.get('unit') == 'calendar'
+                     and type(year) is int and year in years and year not in parsed_by_year, 'calendar')
+            parsed = build_calendar(_json(raw), year=year, fetched_at=receipt['retrievedAt'])
+            parsed_by_year[year] = parsed
+        if calendar.get('schemaVersion') == 'trading-calendar-v1':
+            _require(parsed_by_year == {calendar['year']: calendar}, 'calendar')
+        else:
+            _require(parsed_by_year == {item['year']: item for item in calendar['calendars']}, 'calendar')
+        dates = list(reversed(recent_sessions(calendar, expected['marketDate'], count=11)))
+    except (ValueError, TypeError, KeyError) as exc:
+        raise MarketCacheError('cache_restore_calendar') from exc
+    _require(expected['sessionDates'] == dates and expected['previousTradingDate'] == dates[-2]
+             and expected['volumeDates'] == dates[-7:], 'window')
     volumes, months = {}, []
     for receipt, raw in _receipts(by_key['volume_raw']):
         month = receipt.get('requestMonth')

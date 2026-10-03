@@ -132,7 +132,14 @@ jobs:
           set -euo pipefail
           python scripts/restore_market_cache.py --restore-commit="$CACHE_RESTORE_COMMIT" --descriptor-sha256="$CACHE_DESCRIPTOR_SHA256" --cache-market-date="$CACHE_MARKET_DATE" --market-date="$MARKET_DATE" --source-git-commit="$CACHE_SOURCE_GIT_COMMIT" --actions-run-id="$CACHE_ACTIONS_RUN_ID" --request-id="$CACHE_REQUEST_ID" --source-cache-dir .cache/market-source --stock-cache-dir .cache/restored-stock-details
       - name: Fetch authoritative exchange calendar
-        run: python scripts/build_trading_calendar.py --market-date "$MARKET_DATE" --source-cache-dir .cache/market-source
+        shell: bash
+        run: |
+          set -euo pipefail
+          calendar_restore_args=()
+          if [ -n "$CACHE_MARKET_DATE" ]; then
+            calendar_restore_args=(--prior-calendar-cache-dir ".cache/market-source/restored/$CACHE_MARKET_DATE")
+          fi
+          python scripts/build_trading_calendar.py --market-date "$MARKET_DATE" --source-cache-dir .cache/market-source "${calendar_restore_args[@]}"
       - name: Fetch official institutional universe
         timeout-minutes: 10
         shell: bash
@@ -148,9 +155,22 @@ jobs:
       - name: Verify independent requested date against fetched official date
         run: python scripts/verify_daily_freshness.py --universe-only --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json
       - run: python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json
+      - name: Restore ownership reference checkpoint
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/ownership_snapshot.json
+          key: ownership-reference-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ownership-reference-v1-
       - name: Fetch ownership reference cache
         timeout-minutes: 8
-        run: python scripts/fetch_ownership.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output .cache/ownership_snapshot.json
+        run: python scripts/fetch_ownership.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output .cache/ownership_snapshot.json --as-of "$MARKET_DATE" --max-runtime-seconds 180 --max-requests 40 --max-history-requests 20
+      - name: Persist ownership reference checkpoint
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/ownership_snapshot.json
+          key: ownership-reference-v1-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Refresh official public-source snapshot first
         timeout-minutes: 25
         run: python scripts/refresh_snapshot.py --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json --source-cache-dir .cache/market-source --stock-cache-dir .cache/restored-stock-details

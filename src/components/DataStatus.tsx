@@ -64,8 +64,8 @@ export function DataStatus({ release, compact = false, now, source = 'network' }
   const effectiveFreshness = getEffectiveFreshness(release, renderNow)
   const overdue = overdueLabel(release, renderNow)
   const quality = release.freshness === 'degraded' ? '降級發布' : release.freshness === 'unavailable' ? '不可用' : '正常'
-  const trustSignalSummary = !compact && typeof release.summary.trustSignalCount === 'number'
-    ? ` · 投信 Top10 ${formatCount(release.summary.trustSignalCount)} 檔／新進榜 ${formatCount(release.summary.trustNewEntryCount)} 檔／PEG 可顯示 ${formatCount(release.summary.trustValuationVisibleCount ?? release.summary.candidateRouteCounts.trust)} 檔`
+  const trustSignalSummary = !compact
+    ? ` · 投信 Top10 新進榜 ${formatCount(release.summary.trustSignalCount)} 檔／PEG 可顯示 ${formatCount(release.summary.trustValuationVisibleCount ?? release.summary.candidateRouteCounts.trust)} 檔`
     : ''
   const showOverdue = Boolean(overdue)
   useEffect(() => {

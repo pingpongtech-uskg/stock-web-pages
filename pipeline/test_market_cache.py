@@ -50,6 +50,47 @@ def fixture():
     return {**header, 'groups': groups}, expected
 
 
+def cross_year_fixture():
+    from datetime import date
+    from pipeline.trading_calendar import compose_calendar_set, recent_sessions
+    payload, expected = fixture()
+    target = '2027-01-04'
+    source_url = 'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'
+    prior = {'schemaVersion':'trading-calendar-v1','timezone':'Asia/Taipei','year':2026,
+             'closedDates':['2026-12-25'],'openExceptions':[],'sourceUrl':source_url}
+    current = {'schemaVersion':'trading-calendar-v1','timezone':'Asia/Taipei','year':2027,
+               'closedDates':['2027-01-01'],'openExceptions':[],'sourceUrl':source_url}
+    calendar_set = compose_calendar_set([prior, current])
+    sessions = list(reversed(recent_sessions(calendar_set, target, count=11)))
+    previous = sessions[-2]
+    mapping = dict(zip(expected['sessionDates'], sessions))
+    payload['marketDate'] = target
+    payload['previousTradingDate'] = previous
+    for group in payload['groups']:
+        if group['kind'].startswith('institutional'):
+            group['dates'] = sessions
+            group['codesByDate'] = {mapping[day]: codes for day, codes in group['codesByDate'].items()}
+        elif group['kind'].startswith('volume'):
+            group['dates'] = sessions[-7:]
+        elif group['kind'] == 'calendar_normalized':
+            group['dates'] = [target]
+            group['body'] = calendar_set
+        elif group['kind'] == 'calendar_raw':
+            group['dates'] = [target]
+        elif group['kind'] == 'published_stock_inputs':
+            group['dates'] = [target]
+            group['body']['rows'] = [{**row, 'marketDate': target} for row in group['body']['rows']]
+        if group['kind'] in {'institutional_normalized', 'volume_normalized'}:
+            for row in group['body']['rows']:
+                row['marketDate'] = mapping[row['marketDate']]
+        elif group['kind'].startswith('institutional') and group['kind'].endswith('_raw'):
+            pass
+    expected = {**expected, 'marketDate': target, 'previousTradingDate': previous,
+                 'sessionDates': sessions, 'volumeDates': sessions[-7:], 'calendarYear': 2027,
+                 'groups': [{key: value for key, value in group.items() if key != 'body'} for group in payload['groups']]}
+    return payload, expected
+
+
 def test_producer_matches_real_js_verifier_and_preserves_null_zero(tmp_path):
     from pipeline.market_cache import build_market_cache
     payload, expected = fixture()
@@ -79,6 +120,30 @@ def test_producer_proof_binds_semantics_to_exact_run_and_dates():
     assert proof['marketDate'] == payload['marketDate']
     assert proof['previousTradingDate'] == payload['previousTradingDate']
     assert proof['source'] == payload['source']
+
+
+def test_cross_year_calendar_set_revalidates_exact_institutional_and_volume_windows():
+    from pipeline.market_cache import build_market_cache
+    from pipeline.trading_calendar import recent_sessions
+    payload, expected = cross_year_fixture()
+    result = build_market_cache(payload, expected)
+    assert result['proof']['cacheComplete'] is True
+    assert expected['sessionDates'] == list(reversed(recent_sessions(
+        payload['groups'][5]['body'], payload['marketDate'], count=11)))
+    assert expected['volumeDates'] == expected['sessionDates'][-7:]
+
+
+def test_cross_year_cache_fails_closed_for_missing_calendar_year_or_wrong_window():
+    from pipeline.market_cache import MarketCacheError, build_market_cache
+    payload, expected = cross_year_fixture()
+    payload['groups'][5]['body']['calendars'].pop(0)
+    with pytest.raises(MarketCacheError, match='calendar'):
+        build_market_cache(payload, expected)
+    payload, expected = cross_year_fixture()
+    payload['groups'][5]['body']['calendars'][0]['closedDates'].append('2026-12-31')
+    payload['groups'][5]['body']['calendars'][0]['closedDates'].sort()
+    with pytest.raises(MarketCacheError, match='calendar'):
+        build_market_cache(payload, expected)
 
 
 def test_shards_reassemble_opaque_receipts_deterministically():

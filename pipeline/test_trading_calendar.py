@@ -1,4 +1,5 @@
 import pytest
+from datetime import date
 from pipeline.trading_calendar import build_calendar, is_open, next_deadline
 ROWS = [
  {'Name': '國曆新年開始交易日', 'Date': '1150102', 'Weekday':'五','Description':'交易'},
@@ -7,6 +8,12 @@ ROWS = [
  {'Name': '農曆春節後開始交易日', 'Date': '1150223', 'Weekday':'一','Description':'交易'},
  {'Name': '國慶日', 'Date': '1151009', 'Weekday':'五','Description':'休市'},
 ]
+
+
+def _year_rows(year):
+ return [{**row, 'Date': f'{year-1911:03d}{row["Date"][3:]}',
+          'Weekday': '一二三四五六日'[date(year, int(row['Date'][3:5]), int(row['Date'][5:])).weekday()]}
+         for row in ROWS]
 
 
 def test_official_open_exceptions_and_closures():
@@ -33,3 +40,50 @@ def test_next_deadline_and_year_rollover_require_calendar():
  assert next_deadline(value,'2026-10-08') == '2026-10-12T19:30:00+08:00'
  with pytest.raises(ValueError): is_open(value,'2027-01-04')
  with pytest.raises(ValueError): next_deadline(value,'2026-12-31')
+
+
+def test_calendar_set_uses_only_verified_year_member_and_fails_on_missing_or_duplicate_year():
+ from pipeline.trading_calendar import compose_calendar_set
+ prior = build_calendar(_year_rows(2025), year=2025, fetched_at='prior')
+ current = build_calendar(ROWS, year=2026, fetched_at='current')
+ calendar_set = compose_calendar_set([current, prior])
+ assert [item['year'] for item in calendar_set['calendars']] == [2025, 2026]
+ assert is_open(calendar_set, '2025-10-02')
+ assert not is_open(calendar_set, '2025-10-09')
+ assert is_open(calendar_set, '2026-01-02')
+ with pytest.raises(ValueError, match='year'):
+  is_open(calendar_set, '2024-12-31')
+ with pytest.raises(ValueError, match='duplicate'):
+  compose_calendar_set([prior, prior])
+
+
+def test_calendar_set_rejects_malformed_holiday_date_members():
+ from pipeline.trading_calendar import compose_calendar_set
+ prior = build_calendar(_year_rows(2025), year=2025, fetched_at='prior')
+ current = build_calendar(ROWS, year=2026, fetched_at='current')
+ prior['closedDates'] = ['2026-12-31']
+ with pytest.raises(ValueError, match='calendar'):
+  compose_calendar_set([prior, current])
+
+
+def test_calendar_set_rejects_unhashable_date_values_as_invalid_input():
+ from pipeline.trading_calendar import compose_calendar_set
+ prior = {'schemaVersion':'trading-calendar-v1','timezone':'Asia/Taipei','year':2026,
+          'closedDates':[[]],'openExceptions':[],
+          'sourceUrl':'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'}
+ current = {'schemaVersion':'trading-calendar-v1','timezone':'Asia/Taipei','year':2027,
+            'closedDates':[],'openExceptions':[],
+            'sourceUrl':'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'}
+ with pytest.raises(ValueError, match='calendar'):
+  compose_calendar_set([prior, current])
+
+
+def test_recent_sessions_cross_year_using_closures_from_both_members():
+ from pipeline.trading_calendar import compose_calendar_set, recent_sessions
+ prior = {'schemaVersion':'trading-calendar-v1','timezone':'Asia/Taipei','year':2026,
+          'closedDates':['2026-12-25'],'openExceptions':[],'sourceUrl':'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'}
+ current = {'schemaVersion':'trading-calendar-v1','timezone':'Asia/Taipei','year':2027,
+            'closedDates':['2027-01-01'],'openExceptions':[],'sourceUrl':'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'}
+ calendar_set = compose_calendar_set([prior, current])
+ assert recent_sessions(calendar_set, '2027-01-04', count=5) == [
+     '2027-01-04','2026-12-31','2026-12-30','2026-12-29','2026-12-28']
