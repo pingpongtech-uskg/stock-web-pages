@@ -170,6 +170,17 @@ function validateGrowthInputAudit(value: unknown): void {
   }
 }
 
+function validateGrowthCheckValue(value: unknown): void {
+  if (value === null || typeof value === 'string') return
+  if (typeof value === 'number') {
+    requireFiniteNumber(value)
+    return
+  }
+  const months = requireArray(value)
+  expect(months.length === 3)
+  months.forEach(requireFiniteNumber)
+}
+
 function validateGrowthStockDiagnostics(value: unknown): void {
   const stock = requireRecord(value)
   const growth = requireRecord(stock.growthValuation)
@@ -191,7 +202,7 @@ function validateGrowthStockDiagnostics(value: unknown): void {
     const check = requireRecord(value)
     requireString(check.label)
     expect(['pass', 'fail', 'unknown', 'not_applicable'].includes(requireString(check.status)))
-    requireString(check.value)
+    validateGrowthCheckValue(check.value)
     requireString(check.period)
     requireString(check.explanation)
     expect(requireArray(check.sourceRefs).every((source) => typeof source === 'string'))

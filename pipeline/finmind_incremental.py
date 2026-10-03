@@ -19,7 +19,7 @@ import fcntl
 
 from pipeline.finmind_client import BudgetExceeded, FinMindClient, FinMindError, SourceBlocked
 from pipeline.financial_periods import dividend_period, normalized_date, normalized_period
-from pipeline.growth_health import evaluate_growth_health
+from pipeline.growth_health import evaluate_growth_health, expected_revenue_month
 from pipeline.health_inputs import merge_health_inputs, normalize_finmind_health_inputs
 from pipeline.valuation import GROWTH_EXTREME_RATE_MAX, derive_stable_eps_growth, derive_ttm_eps
 
@@ -373,7 +373,7 @@ def plan_gaps(details: list[dict[str, Any]], cache: dict[str, Any], as_of: str, 
             (FINANCIAL, financial_missing, financial_period(end), f'{end.year - 4}-01-01'),
             (PER, not safe_pe, as_of, (end - timedelta(days=10)).isoformat()),
             (DIVIDEND, not complete_dividend(health.get('dividends') or [], end.year - 1, as_of), str(end.year), f'{end.year - 1}-01-01'),
-            (REVENUE, growth_health['checks'][0]['status'] == 'unknown', as_of[:7], (end - timedelta(days=550)).isoformat()),
+            (REVENUE, growth_health['checks'][0]['status'] == 'unknown', expected_revenue_month(as_of, health.get('monthlyRevenueOfficial') or []), (end - timedelta(days=550)).isoformat()),
         ]
         for priority, (dataset, missing, period, start) in enumerate(requests):
             stored = cache.get(f'{code}:{dataset}') or {}

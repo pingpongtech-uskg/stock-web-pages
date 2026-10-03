@@ -107,6 +107,18 @@ def _eligible_rows(rows: Iterable[dict[str, Any]], as_of: str | None, *, monthly
     return eligible
 
 
+def expected_revenue_month(as_of: str | None, rows: Iterable[dict[str, Any]] = ()) -> str | None:
+    """Latest ordinarily due month, advanced by known early publication only."""
+    cutoff = normalized_date(as_of)
+    if cutoff is None or len(cutoff) != 10:
+        return None
+    day = date.fromisoformat(cutoff)
+    index = day.year * 12 + day.month - 1 - (1 if day.day >= 10 else 2)
+    ordinary = f"{index // 12:04d}-{index % 12 + 1:02d}"
+    known = [_month_key(row.get("month")) for row in _eligible_rows(rows, cutoff, monthly=True)]
+    return max([ordinary, *(month for month in known if month is not None)])
+
+
 def _sources(rows: Iterable[dict[str, Any] | None]) -> list[str]:
     refs = []
     for row in rows:
@@ -132,7 +144,7 @@ def _summary(checks: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _monthly_check(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
+def _monthly_check(rows: Iterable[dict[str, Any]], *, expected_month: str | None = None) -> dict[str, Any]:
     by_month: dict[str, float] = {}
     evidence: dict[str, dict[str, Any]] = {}
     for row in rows:
@@ -148,6 +160,11 @@ def _monthly_check(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
                 by_month.setdefault(_previous_year_month(month), prior)
                 evidence.setdefault(_previous_year_month(month), row)
     months = sorted(by_month)[-3:]
+    if expected_month and (not months or months[-1] < expected_month):
+        period = f"{months[0]}–{months[-1]}" if months else "未取得營收月份"
+        return _check(CHECK_LABELS[0], "unknown", None,
+                      f"缺少截至評估日應可取得的 {expected_month} 月營收；完整舊月份不能代替最新三個月。",
+                      period=period, refs=_sources(evidence.get(month) for month in months))
     if len(months) != 3 or not _months_are_consecutive(months):
         return _check(CHECK_LABELS[0], "unknown", None, "最近三個月資料不足或月份不連續，無法完成三個月同月比較。")
     prior_months = [_previous_year_month(month) for month in months]
@@ -202,5 +219,6 @@ def evaluate_growth_health(monthly_revenue: Iterable[dict[str, Any]], quarterly_
     # Rebuild cached differences from eligible raw evidence, never from a future
     # predecessor that was already subtracted during an earlier normalization.
     income = [row for row in income if not (row.get("derivationMethod") and _period(row) in raw_ytd_periods)]
-    return _summary([_monthly_check(_eligible_rows(monthly_revenue, as_of, monthly=True)),
+    monthly = _eligible_rows(monthly_revenue, as_of, monthly=True)
+    return _summary([_monthly_check(monthly, expected_month=expected_revenue_month(as_of, monthly)),
                      *_quarter_checks(_eligible_rows(income, as_of))])

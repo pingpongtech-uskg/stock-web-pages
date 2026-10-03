@@ -1,3 +1,4 @@
+import publishedSnapshot from '../../public/data/latest.json'
 import { describe, expect, it } from 'vitest'
 import type { Release } from '../domain/types'
 import { loadLatestRelease, validateRelease } from './api'
@@ -295,5 +296,55 @@ describe('validateRelease', () => {
       growth: [], lowPosition: [], lowBase: [], lowBaseGrowth: [], lowBaseQuality: [],
     }
     expect(() => validateRelease(wrongReason)).toThrow('發布快照格式錯誤')
+  })
+})
+
+
+function releaseWithGrowthValue(value: unknown) {
+  const stock = validGrowthStock()
+  return {
+    ...validRelease(),
+    funnel: {
+      ...validRelease().funnel, growthCoverageVersion: 'growth-coverage-v1', growthEvaluationState: 'not_evaluable',
+      growthInputComplete: 0, growthValuationComplete: 0, growthThresholdCandidates: 0,
+      growthHealthCandidates: 0, growthCandidates: 0, growthMissingReasons: [],
+      universe: 1, instrumentExcluded: 0, strategyCandidates: { trust: 0, growth: 0, lowPosition: 0 },
+      growthTerminalOutcomes: { universe: 1, missing: 1, knownInvalid: 0, extreme: 0, belowThreshold: 0, healthBlocked: 0, selected: 0 },
+    },
+    stocks: [{ ...stock, healthCategories: stock.healthCategories.map(category => ({
+      ...category, checks: category.checks.map((check, index) => index === 0 ? { ...check, value } : check),
+    })) }],
+  }
+}
+
+describe('published growth health evidence', () => {
+  it.each([0, -0.25, null, [0.04, 0.03, 0.06], '—'].map(value => ({ value })))('accepts a producer numeric, three-month or unavailable health value: $value', ({ value }) => {
+    const release = releaseWithGrowthValue(value)
+    expect(validateRelease(release)).toBe(release)
+  })
+
+  it.each([undefined, true, {}, Number.NaN, Number.POSITIVE_INFINITY, [], [0.1], [0.1, 0.2], [0.1, 'bad', 0.2], [0.1, null, 0.2], [[0.1], 0.2, 0.3], [0.1, 0.2, Number.NaN], [0, 1, 2, 3]].map(value => ({ value })))('rejects malformed health evidence rather than relaxing the release boundary: $value', ({ value }) => {
+    expect(() => validateRelease(releaseWithGrowthValue(value))).toThrow('發布快照格式錯誤')
+  })
+
+  it('loads the published producer snapshot from the network instead of silently returning an older browser release', async () => {
+    const body = JSON.stringify(publishedSnapshot)
+    const published = JSON.parse(body)
+    const key = 'taiwan-stock-research:last-valid-release:v1'
+    const previous = window.localStorage.getItem(key)
+    window.localStorage.setItem(key, JSON.stringify(validRelease()))
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, text: async () => body })))
+    try {
+      expect(validateRelease(published)).toBe(published)
+      const loaded = await loadLatestRelease()
+      expect(loaded.source).toBe('network')
+      expect(loaded.release.marketDate).toBe(published.marketDate)
+      expect(loaded.release.runId).toBe(published.runId)
+      expect(JSON.parse(window.localStorage.getItem(key)!).runId).toBe(published.runId)
+    } finally {
+      vi.unstubAllGlobals()
+      if (previous === null) window.localStorage.removeItem(key)
+      else window.localStorage.setItem(key, previous)
+    }
   })
 })

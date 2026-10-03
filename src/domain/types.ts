@@ -198,7 +198,7 @@ export interface RevenuePoint {
 export interface RuleCheck {
   label: string
   status: MetricStatus
-  value: string
+  value: string | number | number[] | null
   period: string
   explanation: string
   sourceRefs: string[]

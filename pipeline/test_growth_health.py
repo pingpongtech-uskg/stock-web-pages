@@ -176,3 +176,44 @@ def test_month_without_publication_evidence_waits_for_next_month_tenth():
     assert evaluate_growth_health(rows, [], as_of='2026-10-10')['checks'][0]['status'] == 'pass'
     published = [*rows[:-1], {**rows[-1], 'availableAt': '2026-10-01'}]
     assert evaluate_growth_health(published, [], as_of='2026-10-02')['checks'][0]['status'] == 'pass'
+
+
+def test_complete_old_revenue_becomes_unknown_only_when_new_month_is_due():
+    rows = [{'month': f'{year}-{month:02d}', 'revenue': value}
+            for year, value in [(2025, 100), (2026, 120)] for month in (6, 7, 8)]
+    for day in ('2026-10-02', '2026-10-09'):
+        assert evaluate_growth_health(rows, [], as_of=day)['checks'][0]['status'] == 'pass'
+    check = evaluate_growth_health(rows, [], as_of='2026-10-10')['checks'][0]
+    assert check['status'] == 'unknown' and check['value'] is None
+    assert '2026-09' in check['explanation'] and '2026-06–2026-08' in check['period']
+
+
+def test_missing_latest_month_does_not_change_four_confirmed_quarter_passes():
+    from pipeline.growth_health import growth_health_qualifies
+    rows = [{'month': f'{year}-{month:02d}', 'revenue': value}
+            for year, value in [(2025, 100), (2026, 120)] for month in (6, 7, 8)]
+    income = [{'year': year, 'quarter': 2, **{field: value for field in
+               ('grossProfit', 'operatingProfit', 'pretaxProfit', 'netIncome')}}
+              for year, value in [(2025, 100), (2026, 120)]]
+    result = evaluate_growth_health(rows, income, as_of='2026-10-10')
+    assert result['checks'][0]['status'] == 'unknown' and result['passCount'] == 4
+    assert growth_health_qualifies(result)
+
+
+@pytest.mark.parametrize('day,expected', [('2026-10-02', '2026-08'), ('2026-10-10', '2026-09'),
+                                         ('2027-01-09', '2026-11'), ('2027-01-10', '2026-12')])
+def test_required_revenue_month_observes_deadline_and_year_boundary(day, expected):
+    from pipeline.growth_health import expected_revenue_month
+    assert expected_revenue_month(day) == expected
+
+
+def test_early_published_latest_revenue_is_required_without_using_future_evidence():
+    from pipeline.growth_health import expected_revenue_month
+    rows = [{'month': f'{year}-{month:02d}', 'revenue': value}
+            for year, value in [(2025, 100), (2026, 120)] for month in (7, 8, 9)]
+    known = [{**row, 'publishedAt': '2026-10-01'} if row['month'] == '2026-09' else row for row in rows]
+    assert expected_revenue_month('2026-10-02', known) == '2026-09'
+    assert evaluate_growth_health(known, [], as_of='2026-10-02')['checks'][0]['status'] == 'pass'
+    future = [{**row, 'publishedAt': '2026-10-03'} if row['month'] == '2026-09' else row for row in rows]
+    assert expected_revenue_month('2026-10-02', future) == '2026-08'
+    assert evaluate_growth_health(future, [], as_of='2026-10-02')['checks'][0]['status'] == 'unknown'
