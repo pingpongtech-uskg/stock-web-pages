@@ -4,9 +4,12 @@ const {validateLegacyArchive}=require('./legacy.cjs');
 const cacheOperation=require('./cache-operation.cjs');
 const restoreOperation=require('./cache-restore-operation.cjs');
 const REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';
+const REPOSITORY_ID='1273106108';
 const ROOT_SOURCE='3ed6fb57-ff38-803d-815a-000b148c6b6e';
 const ROOT_DATABASE='3ed6fb57-ff38-8032-97cc-f017b6104300';
 const CALENDAR='https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule';
+const RETRYABLE_SOURCE_STEPS=new Set(['Fetch authoritative exchange calendar','Fetch official institutional universe','Verify independent requested date against fetched official date']);
+const PUBLICATION_STEPS=new Set(['Build lightweight publication fingerprint','Build canonical screening export','Build and validate complete market cache before publication','Publish validated release to main']);
 const ROOT_FIELDS={ 'Market Date':{date:{}},'Request ID':{rich_text:{}},'Run ID':{rich_text:{}},'Actions Run ID':{rich_text:{}},'Source Commit':{rich_text:{}},'Payload Hash':{rich_text:{}},'Active Revision':{rich_text:{}},'Screening Status':{rich_text:{}},'Notion Status':{rich_text:{}},'Deploy Status':{rich_text:{}},'Summary':{rich_text:{}},'Selected Count':{number:{}},'Trust Count':{number:{}},'Growth Count':{number:{}},'Low Position Count':{number:{}} };
 const OPERATION_FIELDS={'Generated At':{date:{}},'Quality':{rich_text:{}},'Archive Method':{rich_text:{}},'Archive Source Commit':{rich_text:{}},'Expected Count':{number:{}},'Archived Count':{number:{}},'Child Database ID':{rich_text:{}},'Child Data Source ID':{rich_text:{}},'Actions URL':{url:{}},'Archive URL':{url:{}},'Error Summary':{rich_text:{}},'Financial Cutoff':{rich_text:{}},'Coverage':{rich_text:{}},'Formula Versions':{rich_text:{}}};
 const ALL_ROOT_FIELDS={...ROOT_FIELDS,...OPERATION_FIELDS,...cacheOperation.CACHE_FIELDS};
@@ -39,6 +42,47 @@ function selectRun(runs,state) {
   if(matches.length>1) throw Error('ambiguous_actions_runs');
   return matches[0]||null;
 }
+function retryableFailedRun(state,run) {
+  return state.mode==='screen'&&state.runKind==='scheduled'&&state.automaticRequestId===true&&state.automaticRetryCount===undefined&&!state.automaticRetry&&/^[1-9]\d{0,23}$/.test(String(state.actionsRunId||''))&&state.requestId.length<=153&&
+    String(run?.id)===String(state.actionsRunId)&&run?.display_title===`Daily screening | ${state.requestId} | ${state.marketDate}`&&
+    ['.github/workflows/daily.yml','.github/workflows/daily.yml@main','.github/workflows/daily.yml@refs/heads/main'].includes(run?.path)&&run?.event==='workflow_dispatch'&&run?.head_branch==='main'&&/^[a-f0-9]{40}$/.test(run?.head_sha||'')&&
+    Number.isSafeInteger(run?.run_attempt)&&run.run_attempt>0&&run?.status==='completed'&&run?.conclusion==='failure';
+}
+function retryableSourceFailure(body,state) {
+  if(!Array.isArray(body?.jobs)||body.jobs.length!==2||body.total_count!==body.jobs.length) return null;
+  const jobs=body.jobs;
+  if(jobs.some(job=>String(job?.run_id)!==String(state.actionsRunId)||job?.run_attempt!==state.failedRunAttempt||job?.head_sha!==state.failedRunHeadSha)) return null;
+  const probes=jobs.filter(job=>job?.name==='institutional_probe');
+  if(probes.length!==1||probes[0].status!=='completed'||probes[0].conclusion!=='skipped') return null;
+  const job=jobs.find(candidate=>candidate?.name==='snapshot');
+  if(job?.name!=='snapshot'||job.status!=='completed'||job.conclusion!=='failure'||!Array.isArray(job.steps)) return null;
+  if(job.steps.some(step=>step?.status!=='completed'||!['success','skipped','failure'].includes(step?.conclusion))) return null;
+  const failed=job.steps.filter(step=>step?.conclusion==='failure');
+  if(failed.length!==1||!RETRYABLE_SOURCE_STEPS.has(failed[0].name)||failed[0].status!=='completed') return null;
+  if(job.steps.some(step=>step?.conclusion&&!['success','skipped','failure'].includes(step.conclusion))) return null;
+  if(job.steps.some(step=>PUBLICATION_STEPS.has(step.name)&&step.conclusion==='success')) return null;
+  return failed[0].name;
+}
+function retryArtifactsAbsent(body,state) {
+  if(!Array.isArray(body?.artifacts)||!Number.isSafeInteger(body.total_count)||body.total_count!==body.artifacts.length||body.total_count>100) return false;
+  const expectedNames=new Set([`market-source-checkpoint-${state.failedRunAttempt}`,`finmind-checkpoint-${state.failedRunAttempt}`]);
+  const seen=new Set();
+  for(const artifact of body.artifacts) {
+    const artifactId=typeof artifact?.id==='number'?artifact.id:typeof artifact?.id==='string'&&/^[1-9]\d{0,19}$/.test(artifact.id)?Number(artifact.id):NaN;
+    if(!artifact||typeof artifact!=='object'||Array.isArray(artifact)||!Number.isSafeInteger(artifactId)||artifactId<1||
+      typeof artifact.name!=='string'||!expectedNames.has(artifact.name)||seen.has(artifact.name)||artifact.expired!==false) return false;
+    const run=artifact.workflow_run;
+    if(!run||typeof run!=='object'||String(run.id)!==String(state.actionsRunId)||run.head_sha!==state.failedRunHeadSha||
+      String(run.repository_id)!==REPOSITORY_ID||String(run.head_repository_id)!==REPOSITORY_ID||
+      (run.head_branch!==undefined&&run.head_branch!=='main')||(run.run_attempt!==undefined&&run.run_attempt!==state.failedRunAttempt)||
+      (run.event!==undefined&&run.event!=='workflow_dispatch')) return false;
+    seen.add(artifact.name);
+  }
+  return true;
+}
+function failedRun(state,conclusion) {
+  return checkpoint({...state,screeningStatus:'failed',recordFailure:true,errorCategory:'screening_failed',errorMessage:String(conclusion)},'rootSchema');
+}
 function result(state,op,delaySeconds=0.5) {
   return {state:{...state,op},op,route:op?.target||'done',delaySeconds,ledgerRequired:['calendar','done'].includes(state.stage)};
 }
@@ -53,10 +97,11 @@ function durable(state) {
 function contents(state) {return `${REPO}/contents/operations/days/${state.marketDate}.json`;}
 function archiveContents(state,stage,path){return request(state,stage,'github','GET',`${REPO}/contents/public${path}?ref=${state.archiveCommit}`);}
 function contentBytes(body){if(body.encoding!=='base64'||typeof body.content!=='string'||body.size>3000000)throw Error('archive_contents_schema');return Buffer.from(body.content,'base64').toString('utf8');}
-function checkpoint(state,nextStage) {
-  const saved={...durable(state),stage:nextStage};
-  const body={message:`[CF-Pages-Skip] chore: checkpoint Stockscreener ${state.marketDate}`,branch:'n8n-state',content:Buffer.from(JSON.stringify(saved)).toString('base64'),...(state.lockSha?{sha:state.lockSha}:{})};
-  return request({...state,nextStage},'checkpoint','github','PUT',contents(state),body);
+function checkpoint(state,nextStage,now=Date.now()) {
+  const prepared=nextStage==='dispatch'?{...state,dispatchStartedAt:now}:state;
+  const saved={...durable(prepared),stage:nextStage};
+  const body={message:`[CF-Pages-Skip] chore: checkpoint Stockscreener ${prepared.marketDate}`,branch:'n8n-state',content:Buffer.from(JSON.stringify(saved)).toString('base64'),...(prepared.lockSha?{sha:prepared.lockSha}:{})};
+  return request({...prepared,nextStage},'checkpoint','github','PUT',contents(prepared),body);
 }
 function fail(state,category,message) {
   const updated={...state,...(state.op?.target==='notion'?{notionStatus:'failed'}:{}),errorCategory:category,errorMessage:String(message||category).slice(0,1000)};
@@ -94,7 +139,9 @@ function next(state,now) {
     case 'done':return done(state);
     case 'holiday':return checkpoint({...state,released:true,screeningStatus:'skipped_non_trading',notionStatus:'skipped',deployStatus:'skipped'},'done');
     case 'findRun':return findRuns(state);
-    case 'dispatch':return request({...state,dispatchIntent:true},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate,source_mode:'publish',...(state.restoreStatus==='verified'?restoreOperation.restoreDispatchInputs(state):{})}});
+    case 'failedRunJobs':return request(state,'failedRunJobs','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/jobs?per_page=100`);
+    case 'failedRunArtifacts':return request(state,'failedRunArtifacts','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);
+    case 'dispatch':return request({...state,dispatchIntent:true,dispatchStartedAt:state.dispatchStartedAt||now},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate,source_mode:'publish',...(state.restoreStatus==='verified'?restoreOperation.restoreDispatchInputs(state):{})}});
     case 'pollRun':return request(state,'pollRun','github','GET',`${REPO}/actions/runs/${state.actionsRunId}`,null,15);
     case 'artifactList':return request(state,'artifactList','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);
     case 'publicationExport':return request(state,'publicationExport','github','GET',`${REPO}/contents/public/data/screening-export.json?ref=${state.publication.publishedGitCommit}`);
@@ -112,7 +159,7 @@ function next(state,now) {
     default:throw Error('unknown_stage:'+state.stage);
   }
 }
-function cacheApi(now){return {request,checkpoint,next:state=>next(state,now),fail};}
+function cacheApi(now){return {request,checkpoint:(state,nextStage)=>checkpoint(state,nextStage,now),next:state=>next(state,now),fail};}
 function advance(original,response,now=Date.now()) {
   const state={...original}; const status=Number(response?.statusCode??200); let body=response?.body??response?.data;
   if(typeof body==='string'&&!['liveProbe','liveVerify'].includes(state.stage)) {try{body=JSON.parse(body);}catch{/* Redirects may have no JSON body. */}}
@@ -215,7 +262,7 @@ function advanceSuccess(state,body,status,response,now) {
       }
       if(match) return checkpoint({...state,actionsRunId:String(match.id),runHeadSha:match.head_sha,runPage:1,runMatches:[]},'pollRun');
       if(state.dispatchIntent) {
-        if(now-state.startedAt>5*60000) return fail(state,'dispatch_run_not_found','Dispatch was attempted; never resend without new operator request ID.');
+        if(now-(state.dispatchStartedAt||state.startedAt)>5*60000) return fail(state,'dispatch_run_not_found','Dispatch was attempted; never resend without new operator request ID.');
         return findRuns({...state,runPage:1},15);
       }
       if(state.mode==='resume') return fail(state,'resume_run_not_found');
@@ -225,8 +272,25 @@ function advanceSuccess(state,body,status,response,now) {
     case 'pollRun': {
       if(!selectRun([body],state)||String(body.id)!==state.actionsRunId) throw Error('actions_run_lineage');
       if(body.status!=='completed') return next({...state,stage:'pollRun'},now);
-      if(body.conclusion!=='success') return checkpoint({...state,screeningStatus:'failed',recordFailure:true,errorCategory:'screening_failed',errorMessage:String(body.conclusion)},'rootSchema');
+      if(body.conclusion!=='success') {
+        if(retryableFailedRun(state,body)) return checkpoint({...state,failedRunAttempt:body.run_attempt,failedRunTitle:body.display_title,failedRunHeadSha:body.head_sha},'failedRunJobs');
+        return failedRun(state,body.conclusion);
+      }
       return checkpoint({...state,screeningStatus:'complete',runHeadSha:body.head_sha},'artifactList');
+    }
+    case 'failedRunJobs': {
+      const failedStep=retryableSourceFailure(body,state);
+      if(!failedStep) return failedRun(state,'failure');
+      return checkpoint({...state,automaticRetryCandidateStep:failedStep},'failedRunArtifacts');
+    }
+    case 'failedRunArtifacts': {
+      if(!retryArtifactsAbsent(body,state)) return failedRun(state,'failure');
+      if(state.requestId.length>153) return failedRun(state,'failure');
+      const originalRequestId=state.requestId;
+      const retryRequestId=`${originalRequestId}:retry1`;
+      return checkpoint({...state,requestId:retryRequestId,originalRequestId,automaticRetryCount:1,
+        automaticRetry:{count:1,originalRequestId,originalActionsRunId:String(state.actionsRunId),failedStep:state.automaticRetryCandidateStep,failedHeadSha:state.failedRunHeadSha,failedAttempt:state.failedRunAttempt},
+        actionsRunId:undefined,runHeadSha:undefined,dispatchIntent:false,dispatchStartedAt:undefined,runPage:1,runMatches:[],screeningStatus:'pending',recordFailure:false,errorCategory:'',errorMessage:''},'findRun');
     }
     case 'artifactList': {
       const artifacts=body.artifacts?.filter(artifact=>artifact.name==='screening-export'&&!artifact.expired);

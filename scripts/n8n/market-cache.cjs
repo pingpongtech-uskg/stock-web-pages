@@ -21,12 +21,19 @@ const equal = (a, b) => a === undefined || b === undefined ? a === b : canonical
 const unique = values => new Set(values).size === values.length;
 const integer = value => Number.isSafeInteger(value) && value >= 0;
 
+function plainJsonObject(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  if (Object.prototype.toString.call(value) !== '[object Object]' || value.constructor?.name !== 'Object') return false;
+  return Object.getOwnPropertySymbols(value).length === 0
+    && !Object.keys(value).some(key => ['constructor', 'prototype', '__proto__', 'toJSON'].includes(key));
+}
+
 function canonical(value, depth = 0) {
   check(depth <= 24, 'json_depth');
   if (value === null || typeof value === 'boolean' || typeof value === 'string') return JSON.stringify(value);
   if (typeof value === 'number') { check(Number.isFinite(value), 'numbers'); return JSON.stringify(value); }
   if (Array.isArray(value)) return `[${value.map(item => canonical(item, depth + 1)).join(',')}]`;
-  check(value && Object.getPrototypeOf(value) === Object.prototype, 'json');
+  check(plainJsonObject(value), 'json');
   const keys = Object.keys(value).sort();
   check(!keys.some(key => /^(token|api_?key|password|authorization|accountIdentity|accountEmail|rawLogs|signedUrl)$/i.test(key)), 'secret');
   return `{${keys.map(key => `${JSON.stringify(key)}:${canonical(value[key], depth + 1)}`).join(',')}}`;
@@ -68,7 +75,7 @@ function validateGroup(group, marketDate, previousTradingDate) {
   check(kind.startsWith('calendar') ? group.codes.length === 0 : group.codes.length > 0, 'codes');
   if (kind.startsWith('institutional')) {
     const membership = group.codesByDate;
-    check(membership && Object.getPrototypeOf(membership) === Object.prototype && equal(Object.keys(membership).sort(), group.dates), 'membership');
+    check(plainJsonObject(membership) && equal(Object.keys(membership).sort(), group.dates), 'membership');
     const perDate = group.dates.map(date => membership[date]);
     check(perDate.every(codes => Array.isArray(codes) && codes.length > 0 && unique(codes) && codes.every(code => group.codes.includes(code)) && equal(codes, [...codes].sort())), 'membership');
     check(equal([...new Set(perDate.flat())].sort(), group.codes), 'membership');

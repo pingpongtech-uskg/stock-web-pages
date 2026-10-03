@@ -24,6 +24,7 @@ function beginCache(state,api){
 }
 function cacheContents(state,stage,name,api){
   cacheCheck(/^[a-f0-9]{40}$/.test(state.publication?.publishedGitCommit||''),'published_commit');
+  if(name==='latest.json')return api.request(state,stage,'public','GET',`https://raw.githubusercontent.com/pingpongtech-uskg/stock-web-pages/${state.publication.publishedGitCommit}/public/data/latest.json`);
   return api.request(state,stage,'github','GET',`${CACHE_REPO}/contents/public/data/${name}?ref=${state.publication.publishedGitCommit}`);
 }
 function cacheContentBytes(body,maxBytes=1048576){

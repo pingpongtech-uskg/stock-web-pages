@@ -331,3 +331,51 @@ test('signed AWS credential query separators are accepted while encoded path sep
  const policy={authentication:'none',followRedirects:false,responseFormat:'file'};const now='2026-10-03T04:00:00Z';const base='https://prod-files-secure.s3.us-west-2.amazonaws.com/abc/cache.json.gz';const query='?X-Amz-Date=20261003T040000Z&X-Amz-Expires=3600&X-Amz-Credential=public%2F20261003%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=dummy';const file={url:base+query,expiry_time:'2026-10-03T05:00:00Z'};
  assert.equal(cache.validateCacheDownload(file,policy,now),true);assert.throws(()=>cache.validateCacheDownload({...file,url:base.replace('/abc/','/%2F/')+query},policy,now),/cache_storage/);
 });
+
+test('plain JSON from another Code realm preserves canonical hashes and membership validation', () => {
+  const vm = require('node:vm'), bundle = built(), { bytes, expected } = producerEvidence(bundle);
+  const realmJson = value => vm.runInNewContext('JSON.parse(input)', { input: JSON.stringify(value) });
+  const result = cache.verifyCompressedMarketCache(realmJson(bundle.manifest), bundle.files, realmJson(expected), bytes);
+  assert.equal(result.manifestHash, bundle.manifest.manifestHash);
+  assert.equal(result.verificationLevel, 'compressed_backup_verified');
+  assert.equal(result.metricsComplete, false);
+  assert.equal(verify(bundle, realmJson(fixture().expected)).cacheComplete, true);
+});
+
+test('structural plain JSON guard rejects classes, dates, null prototypes and undefined data', () => {
+  const vm = require('node:vm'), bundle = built(), { bytes, expected } = producerEvidence(bundle);
+  const badSources = [new Date(), new (class Source {})(), Object.create(null), { ...source, extra: undefined },
+    vm.runInNewContext('new Date()'), vm.runInNewContext('new (class Source {})()')];
+  for (const bad of badSources) assert.throws(() => cache.verifyCompressedMarketCache({ ...bundle.manifest, source: bad }, bundle.files, expected, bytes), /cache_json|cache_lineage/);
+  const membership = expected.groups.find(group => group.codesByDate);
+  for (const bad of [Object.create(null), vm.runInNewContext('new (class Membership {})()')]) {
+    Object.assign(bad, membership.codesByDate);
+    const altered = { ...expected, groups: expected.groups.map(group => group === membership ? { ...group, codesByDate: bad } : group) };
+    assert.throws(() => cache.verifyCompressedMarketCache(bundle.manifest, bundle.files, altered, bytes), /cache_membership|cache_json/);
+  }
+});
+
+
+test('parsed JSON boundary rejects reserved own keys and unsupported symbol/function/nonfinite values', () => {
+  const bundle = built(), { bytes, expected } = producerEvidence(bundle);
+  const safeGroup = bundle.manifest.groups[0];
+  for (const key of ['constructor', 'prototype', '__proto__', 'toJSON']) {
+    const data = JSON.parse(JSON.stringify(safeGroup));
+    Object.defineProperty(data, key, { value: 'untrusted', enumerable: true });
+    assert.throws(() => cache.verifyCompressedMarketCache({ ...bundle.manifest, groups: [data, ...bundle.manifest.groups.slice(1)] }, bundle.files, expected, bytes), /cache_json/);
+  }
+  for (const value of [undefined, Symbol('untrusted'), () => null, Infinity, NaN]) {
+    const data = { ...safeGroup, untrusted: value };
+    assert.throws(() => cache.verifyCompressedMarketCache({ ...bundle.manifest, groups: [data, ...bundle.manifest.groups.slice(1)] }, bundle.files, expected, bytes), /cache_json|cache_numbers/);
+  }
+  const symbolKey = { ...safeGroup, [Symbol('untrusted')]: 'metadata' };
+  assert.throws(() => cache.verifyCompressedMarketCache({ ...bundle.manifest, groups: [symbolKey, ...bundle.manifest.groups.slice(1)] }, bundle.files, expected, bytes), /cache_json/);
+});
+
+test('authenticated JSON parsing removes nonserialized prototype metadata rather than trusting reflection identity', () => {
+  const vm = require('node:vm'), bundle = built(), { bytes, expected } = producerEvidence(bundle);
+  const typed = Object.assign(Object.create({ inheritedMetadata: 'not JSON data' }), expected);
+  const parsed = vm.runInNewContext('JSON.parse(input)', { input: JSON.stringify(typed) });
+  assert.equal(Object.hasOwn(parsed, 'inheritedMetadata'), false);
+  assert.equal(cache.verifyCompressedMarketCache(bundle.manifest, bundle.files, parsed, bytes).manifestHash, bundle.manifest.manifestHash);
+});
