@@ -181,7 +181,7 @@ function advance(original,response,now=Date.now()) {
     const committed={...state,lockSha:body.content.sha,stage:state.nextStage,retry:0};
     try {return {...next(committed,now),ledgerRequired:true};}
     catch {
-      const terminal={...committed,released:true,screeningStatus:committed.screeningStatus==='pending'?'failed':committed.screeningStatus||'failed',recordFailure:false,errorCategory:'checkpoint_advance_failed',errorMessage:'The state checkpoint was saved, but the next request could not be prepared. Resume from saved state.'};
+      const terminal={...committed,released:true,nextStage:undefined,transitionTerminal:true,screeningStatus:committed.screeningStatus==='pending'?'failed':committed.screeningStatus||'failed',recordFailure:false,errorCategory:'checkpoint_advance_failed',errorMessage:'The state checkpoint was saved, but the next request could not be prepared. Resume from saved state.'};
       return checkpoint(terminal,'done',now);
     }
   }
@@ -248,12 +248,14 @@ function advanceSuccess(state,body,status,response,now) {
       const correctPreflight=!!state.preflightRetryOwner;
       if(correctPreflight&&(!sameRequest||existing?.marketDate!==state.marketDate||existing?.owner!==state.preflightRetryOwner||existing.released!==true||existing.actionsRunId||!existing.dispatchIntent||existing.errorCategory!=='dispatch_run_not_found'))return fail({...state,lockSha:undefined},'preflight_correction_scope');
       if(existing?.requestId&&!sameRequest&&state.mode!=='revision') throw Error('request_correction_requires_revision');
+      const resumeTerminal=existing?.transitionTerminal===true&&existing.released===true&&sameRequest&&state.marketDate===existing.marketDate&&state.mode==='resume'&&state.runKind==='manual'&&/^\d{1,24}$/.test(String(existing.actionsRunId||''))&&/^[a-f0-9]{40}$/.test(existing.runHeadSha||'');
+      if(existing?.transitionTerminal===true&&existing.released&&sameRequest&&!resumeTerminal) return done({...existing,owner:state.owner});
       if(existing?.released&&sameRequest&&existing.screeningStatus==='complete'&&existing.notionStatus==='complete'&&existing.deployStatus==='verified'&&(existing.archiveMethod==='legacy_archive'||existing.cacheStatus==='verified')) return done({...existing,owner:state.owner,screeningStatus:'already_complete'});
       const resume=sameRequest?existing:{};
       const manualOverride=state.runKind==='manual'&&['screen','resume','legacy_archive'].includes(state.mode)&&!!resume.requestId;
       const operationDeadline=manualOverride?state.operationDeadline:(resume.operationDeadline||state.operationDeadline);
       const audit=manualOverride?{scheduledCutoff:resume.scheduledCutoff||resume.overdueAt,manualDeadlineOverride:true,manualResumedAt:now}:{};
-      const correction=correctPreflight?{dispatchIntent:false,preflightRetryOwner:undefined,confirmedPreflightCorrectionFrom:state.preflightRetryOwner,errorCategory:'',errorMessage:''}:{};
+      const correction=correctPreflight?{dispatchIntent:false,preflightRetryOwner:undefined,confirmedPreflightCorrectionFrom:state.preflightRetryOwner,errorCategory:'',errorMessage:''}:resumeTerminal?{transitionTerminal:undefined,errorCategory:'',errorMessage:'',recordFailure:false}:{};
       const saved={...state,...resume,...audit,...correction,owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl};
       const stage=!state.isOpen?'holiday':state.mode==='legacy_archive'?'legacyRef':saved.actionsRunId?'pollRun':'findRun';
       return checkpoint(saved,stage);

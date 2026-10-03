@@ -142,6 +142,9 @@ test('checkpoint transition exceptions persist a sanitized terminal result with 
   assert.equal(saved.errorMessage.includes('unknown_stage'),false);
   const done=engine.advance(transition.state,{statusCode:200,body:{content:{sha:'terminal-sha-2'}}},now);
   assert.equal(done.route,'done');assert.equal(done.state.errorCategory,'checkpoint_advance_failed');assert.equal(done.ledgerRequired,true);
+  const recovery={...engine.start({...base,runKind:'scheduled',owner:'recovery'},now).state,stage:'state',isOpen:true};
+  const resumed=engine.advance(recovery,{statusCode:200,body:{sha:'terminal-sha-2',content:Buffer.from(JSON.stringify(saved)).toString('base64')}},now);
+  assert.equal(resumed.route,'done');assert.equal(resumed.op,null);assert.equal(resumed.state.errorCategory,'checkpoint_advance_failed');
  }
 });
 test('successful checkpoint with missing CAS sha stops without issuing a follow-up request',()=>{
@@ -149,4 +152,23 @@ test('successful checkpoint with missing CAS sha stops without issuing a follow-
  const out=engine.advance({...engine.start({...base,runKind:'scheduled'},now).state,stage:'checkpoint',nextStage:'cache_unrecognized',lockSha:'old-sha',deadline:now+60000},
   {statusCode:200,body:{content:{}}},now);
  assert.equal(out.route,'done');assert.equal(out.state.errorCategory,'checkpoint_write_ambiguous');assert.equal(out.op,null);
+});
+test('explicit manual resume of a terminal checkpoint continues the saved run without redispatch or losing upload intent',()=>{
+ const now=Date.parse('2026-10-02T10:30:00Z');
+ const interrupted={...engine.start({...base,runKind:'scheduled'},now).state,stage:'checkpoint',nextStage:'cache_unrecognized',lockSha:'old-sha',deadline:now+60000,actionsRunId:'123',runHeadSha:'a'.repeat(40),cacheUploadIntent:'cache-payload-1.gz',cacheUploadId:'upload-123',cacheSendAttempted:true};
+ const failedTransition=engine.advance(interrupted,{statusCode:200,body:{content:{sha:'fresh-sha-1'}}},now);
+ const terminal=JSON.parse(Buffer.from(failedTransition.op.body.content,'base64').toString('utf8'));
+ const resume={...engine.start({...base,mode:'resume',runKind:'manual',owner:'recovery'},now).state,stage:'state',isOpen:true,mode:'resume'};
+ const restored=engine.advance(resume,{statusCode:200,body:{sha:'terminal-sha-2',content:Buffer.from(JSON.stringify(terminal)).toString('base64')}},now);
+ assert.equal(restored.state.stage,'checkpoint');assert.equal(restored.state.nextStage,'pollRun');
+ const saved=JSON.parse(Buffer.from(restored.op.body.content,'base64').toString('utf8'));
+ assert.equal(saved.transitionTerminal,undefined);assert.equal(saved.errorCategory,'');assert.equal(saved.actionsRunId,'123');
+ assert.equal(saved.cacheUploadIntent,'cache-payload-1.gz');assert.equal(saved.cacheUploadId,'upload-123');assert.equal(saved.cacheSendAttempted,true);
+ const continueRun=engine.advance(restored.state,{statusCode:200,body:{content:{sha:'resume-sha-3'}}},now);
+ assert.equal(continueRun.op.method,'GET');assert.ok(continueRun.op.url.includes('/actions/runs/123'));
+ assert.equal(continueRun.op.url.includes('/dispatches'),false);
+ for(const invalid of [{...terminal,actionsRunId:'../123'},{...terminal,runHeadSha:'not-a-sha'},{...terminal,marketDate:'2026-10-01'}]) {
+  const rejected=engine.advance(resume,{statusCode:200,body:{sha:'terminal-sha-2',content:Buffer.from(JSON.stringify(invalid)).toString('base64')}},now);
+  assert.equal(rejected.route,'done');assert.equal(rejected.op,null);
+ }
 });
