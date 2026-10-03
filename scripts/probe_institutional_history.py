@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
+import io
 import json
 import os
 import sys
-from datetime import date, timedelta
+import zlib
+from datetime import date, datetime, timedelta
 from http.client import HTTPException, IncompleteRead, RemoteDisconnected
 from pathlib import Path
 from time import sleep
@@ -20,11 +23,52 @@ if str(ROOT) not in sys.path:
 
 from pipeline.finmind_incremental import atomic_json  # noqa: E402
 from pipeline.institutional_probe import (  # noqa: E402
-    OFFICIAL_URL, exact_date, run_institutional_probe,
+    OFFICIAL_URL, exact_date, run_institutional_probe, select_probe_cases,
 )
 from pipeline.trading_calendar import SOURCE_URL, is_open  # noqa: E402
 
 MAX_OFFICIAL_BYTES = 2 * 1024 * 1024
+EVIDENCE_KEYS = {'schemaVersion', 'sourceUrl', 'documentationUrl', 'requestMethod',
+    'httpStatus', 'contentType', 'retrievedAt', 'rawDate', 'marketDate', 'unit',
+    'rowCount', 'sha256', 'bytes'}
+
+
+def read_captured_official(evidence_dir: Path, market_date: str) -> tuple[bytes, object]:
+    """Validate original official capture without substituting a live response."""
+    with (evidence_dir / f'{market_date}.metadata.json').open('rb') as stream:
+        metadata_raw = stream.read(65537)
+    if len(metadata_raw) > 65536:
+        raise ValueError('Evidence metadata exceeds size limit')
+    metadata = json.loads(metadata_raw)
+    day = date.fromisoformat(market_date)
+    expected = {'schemaVersion': 'official-institutional-evidence-v1', 'sourceUrl': OFFICIAL_URL,
+        'documentationUrl': 'https://www.tpex.org.tw/openapi/swagger.json', 'requestMethod': 'GET',
+        'httpStatus': 200, 'contentType': 'application/json', 'rawDate': f'{day.year - 1911:03d}{day:%m%d}',
+        'marketDate': market_date, 'unit': 'shares'}
+    if (not isinstance(metadata, dict) or set(metadata) != EVIDENCE_KEYS or
+        any(metadata.get(key) != value for key, value in expected.items()) or
+        type(metadata.get('rowCount')) is not int or metadata['rowCount'] < 3 or
+        type(metadata.get('bytes')) is not int or not 0 < metadata['bytes'] <= MAX_OFFICIAL_BYTES or
+        not isinstance(metadata.get('retrievedAt'), str) or
+        datetime.fromisoformat(metadata['retrievedAt']).tzinfo is None):
+        raise ValueError('Evidence metadata mismatch')
+    with (evidence_dir / f'{market_date}.json.gz').open('rb') as stream:
+        compressed = stream.read(MAX_OFFICIAL_BYTES + 1)
+    if len(compressed) > MAX_OFFICIAL_BYTES:
+        raise ValueError('Compressed evidence exceeds size limit')
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(compressed)) as archive:
+            raw = archive.read(MAX_OFFICIAL_BYTES + 1)
+    except (OSError, EOFError, zlib.error) as exc:
+        raise ValueError('Invalid evidence archive') from exc
+    if (len(raw) > MAX_OFFICIAL_BYTES or len(raw) != metadata['bytes'] or
+        hashlib.sha256(raw).hexdigest() != metadata['sha256']):
+        raise ValueError('Evidence size or hash mismatch')
+    rows = json.loads(raw)
+    select_probe_cases(rows, market_date)
+    if len(rows) != metadata['rowCount']:
+        raise ValueError('Evidence row count mismatch')
+    return raw, rows
 
 
 def fetch_official_json() -> tuple[bytes, object]:
@@ -105,6 +149,7 @@ def main(argv=None) -> int:
     parser.add_argument('--budget-date', type=_date_arg, required=True)
     parser.add_argument('--summary', type=Path, required=True)
     parser.add_argument('--max-data-requests', type=_max_calls, default=3)
+    parser.add_argument('--official-evidence-dir', type=Path)
     args = parser.parse_args(argv)
     try:
         _check_outputs(args.cache_dir, args.summary, args.calendar)
@@ -121,9 +166,15 @@ def main(argv=None) -> int:
         'expectedDates': dates, 'cases': [], 'actualAttempts': 0, 'dataRequests': 0, 'cacheHits': 0,
         'accountLimit': None, 'observedRemaining': None, 'tokenPresent': bool(token.strip())}
     try:
-        raw, rows = fetch_official_json()
-    except (OSError, ValueError, HTTPException):
-        summary = {**summary, 'errorCategory': 'official_source_unavailable'}
+        if args.official_evidence_dir is not None:
+            print('official_evidence_mode=captured')
+            raw, rows = read_captured_official(args.official_evidence_dir, args.market_date)
+        else:
+            raw, rows = fetch_official_json()
+    except (OSError, ValueError, HTTPException) as exc:
+        summary = {**summary, 'errorCategory': 'official_source_invalid' if args.official_evidence_dir is not None
+                   and isinstance(exc, ValueError)
+                   else 'official_source_unavailable'}
     else:
         try:
             summary = run_institutional_probe(rows, market_date=args.market_date, expected_dates=dates,

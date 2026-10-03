@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "official-institutional-evidence-v1",
+  "sourceUrl": "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading",
+  "documentationUrl": "https://www.tpex.org.tw/openapi/swagger.json",
+  "requestMethod": "GET",
+  "httpStatus": 200,
+  "contentType": "application/json",
+  "retrievedAt": "2026-10-03T01:12:54.281658+00:00",
+  "rawDate": "1151002",
+  "marketDate": "2026-10-02",
+  "unit": "shares",
+  "rowCount": 910,
+  "sha256": "2d058996bf67a375e152f381dda1a8610c32cf3ecd1ed31240c89ac7fd020402",
+  "bytes": 861949
+}

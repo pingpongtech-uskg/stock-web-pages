@@ -113,3 +113,14 @@ def test_probe_shell_blocks_have_valid_syntax():
         script = '\n'.join(line.removeprefix('          ') for line in block.splitlines())
         result = subprocess.run(['bash', '-n'], input=script, capture_output=True, text=True)
         assert result.returncode == 0, result.stderr
+
+
+def test_captured_official_evidence_is_opt_in_and_probe_only():
+    _, snapshot, probe = sections()
+    flag = '--official-evidence-dir pipeline/source_evidence/tpex'
+    assert flag not in snapshot
+    assert probe.count(flag) == 1
+    command = next(line for line in probe.splitlines() if 'python scripts/probe_institutional_history.py ' in line)
+    assert flag in command
+    assert '--market-date "$MARKET_DATE"' in command
+    assert '--max-data-requests 3' in command

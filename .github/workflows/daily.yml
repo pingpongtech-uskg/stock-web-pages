@@ -260,7 +260,7 @@ jobs:
           fi
           BUDGET_DATE="$(python scripts/prepare_finmind_budget.py --previous-date "$BUDGET_DATE" --cache-dir .cache/finmind)"
           echo "BUDGET_DATE=$BUDGET_DATE" >> "$GITHUB_ENV"
-          python scripts/probe_institutional_history.py --market-date "$MARKET_DATE" --calendar .cache/institutional-probe/trading-calendar.json --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --summary .artifacts/institutional-probe/summary.json --max-data-requests 3
+          python scripts/probe_institutional_history.py --market-date "$MARKET_DATE" --calendar .cache/institutional-probe/trading-calendar.json --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --summary .artifacts/institutional-probe/summary.json --max-data-requests 3 --official-evidence-dir pipeline/source_evidence/tpex
       - name: Persist probe checkpoint
         if: always()
         uses: actions/cache/save@v4

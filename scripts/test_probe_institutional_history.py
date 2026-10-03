@@ -1,4 +1,6 @@
 import importlib
+import gzip
+import hashlib
 import io
 import json
 import subprocess
@@ -246,3 +248,84 @@ def test_nontransport_http_failures_not_retried_and_remain_sanitized(tmp_path, m
     summary = json.loads((tmp_path / 'summary.json').read_text())
     assert summary['errorCategory'] == 'official_source_unavailable' and summary['actualAttempts'] == 0
     assert 'dummy' not in json.dumps(summary)
+
+
+def captured_args(tmp_path, *, rows=FEED, raw=None, metadata_change=None, compressed=None):
+    options = args(tmp_path)
+    evidence = tmp_path / 'evidence'
+    evidence.mkdir()
+    body = json.dumps(rows).encode() if raw is None else raw
+    metadata = {'schemaVersion': 'official-institutional-evidence-v1',
+        'sourceUrl': module().OFFICIAL_URL, 'documentationUrl': 'https://www.tpex.org.tw/openapi/swagger.json',
+        'requestMethod': 'GET', 'httpStatus': 200, 'contentType': 'application/json',
+        'retrievedAt': '2026-10-03T01:12:54.281658+00:00', 'rawDate': '1151002',
+        'marketDate': '2026-10-02', 'unit': 'shares', 'rowCount': len(rows),
+        'sha256': hashlib.sha256(body).hexdigest(), 'bytes': len(body), **(metadata_change or {})}
+    (evidence / '2026-10-02.json.gz').write_bytes(gzip.compress(body, mtime=0) if compressed is None else compressed)
+    (evidence / '2026-10-02.metadata.json').write_text(json.dumps(metadata))
+    return [*options, '--official-evidence-dir', str(evidence)], body
+
+
+def test_captured_source_replay_no_official_http_and_original_hash_summary(tmp_path, monkeypatch, capsys):
+    calls = transport(monkeypatch)
+    script = module()
+    options, raw = captured_args(tmp_path)
+    original_metadata = (tmp_path / 'evidence/2026-10-02.metadata.json').read_bytes()
+    monkeypatch.setattr(script, 'urlopen', lambda *a, **k: pytest.fail('Captured mode must not use HTTP'))
+    monkeypatch.setenv('FINMIND_TOKEN', 'dummy')
+    assert script.main(options) == 0
+    assert len(calls) == 4
+    summary = json.loads((tmp_path / 'summary.json').read_text())
+    assert summary['officialSha256'] == hashlib.sha256(raw).hexdigest()
+    assert summary['officialRowCount'] == len(FEED) and summary['outcome'] == 'complete'
+    assert (tmp_path / 'evidence/2026-10-02.metadata.json').read_bytes() == original_metadata
+    assert 'official_evidence_mode=captured' in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('change', [
+    {'sha256': 'a' * 64}, {'bytes': 42}, {'marketDate': '2026-10-01'}, {'rawDate': '1151001'},
+    {'unit': 'lots'}, {'sourceUrl': 'https://untrusted.example/data'}, {'httpStatus': 201},
+    {'retrievedAt': '2026-10-03T01:12:54'}, {'rowCount': 910}, {'rowCount': True},
+    {'schemaVersion': 'unknown'}, {'unexpected': 'dummy'}])
+def test_invalid_captured_metadata_no_network_no_finmind(tmp_path, monkeypatch, change):
+    script = module()
+    options, raw = captured_args(tmp_path, metadata_change=change)
+    monkeypatch.setattr(script, 'urlopen', lambda *a, **k: pytest.fail('No HTTP fallback'))
+    monkeypatch.setattr(script, 'run_institutional_probe', lambda *a, **k: pytest.fail('Unverified evidence reaches FinMind'))
+    assert script.main(options) == 0
+    summary = json.loads((tmp_path / 'summary.json').read_text())
+    assert summary['actualAttempts'] == summary['dataRequests'] == 0
+    assert summary['cases'] == [] and summary['errorCategory'] == 'official_source_invalid'
+
+
+@pytest.mark.parametrize('variant', ['missing', 'corrupt', 'deflate_corrupt', 'decompressed_oversize', 'compressed_oversize',
+                                     'malformed_json', 'wrong_date', 'duplicate_code', 'bad_shares'])
+def test_captured_archive_rejection_before_finmind_without_http_fallback(tmp_path, monkeypatch, variant):
+    script = module()
+    raw = None; compressed = None; rows = FEED
+    if variant == 'decompressed_oversize':
+        raw = b' ' * (2 * 1024 * 1024 + 1)
+    elif variant == 'compressed_oversize':
+        compressed = b'x' * (2 * 1024 * 1024 + 1)
+    elif variant == 'corrupt':
+        compressed = b'not-gzip'
+    elif variant == 'deflate_corrupt':
+        compressed = b'\x1f\x8b\x08\x00' + b'\0' * 6 + b'\xff' * 20
+    elif variant == 'malformed_json':
+        raw = b'[{"Date":"1151002"'
+    elif variant == 'wrong_date':
+        rows = [{**row, 'Date': '1151001'} for row in FEED]
+    elif variant == 'duplicate_code':
+        rows = [*FEED, FEED[0]]
+    elif variant == 'bad_shares':
+        rows = [{**FEED[0], 'SecuritiesInvestmentTrustCompanies-TotalBuy': None}, *FEED[1:]]
+    options, body = captured_args(tmp_path, rows=rows, raw=raw, compressed=compressed,
+        metadata_change={'bytes': 1} if variant == 'decompressed_oversize' else None)
+    if variant == 'missing':
+        (tmp_path / 'evidence/2026-10-02.json.gz').unlink()
+    monkeypatch.setattr(script, 'urlopen', lambda *a, **k: pytest.fail('No HTTP fallback'))
+    monkeypatch.setattr(script, 'run_institutional_probe', lambda *a, **k: pytest.fail('Bad captured source reaches FinMind'))
+    assert script.main(options) == 0
+    summary = json.loads((tmp_path / 'summary.json').read_text())
+    assert summary['actualAttempts'] == summary['dataRequests'] == 0
+    assert summary['errorCategory'] in {'official_source_invalid', 'official_source_unavailable'}

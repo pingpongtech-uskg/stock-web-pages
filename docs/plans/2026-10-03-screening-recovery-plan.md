@@ -253,3 +253,19 @@ Same payload 重試：相同 date/request/run/hash 不新 dispatch、不多建 r
 下一步只修復已證實的官方 HTTP 回應讀取：限制回應大小、僅對官方讀取採有限重試、捕捉 HTTP transport 例外並寫出有效去敏摘要；不能把失敗當成空資料或零值。TDD 與精確來源 CI 通過後，才使用新的 request revision 受控驗證；共享每日 300 次及實際剩餘額度 80% 約束維持。仍未完成 10/2 新行情、全市場十一日投信資料、成長估值、canonical export、新日 Notion 股票歸檔或排程啟用。
 
 官方傳輸窄修正已完成本機驗證：全套 Python 522 項、三檔探測相關 61 項、source helper/schema 19 項均通過；CLI line coverage 89.29%，獨立審查無 HIGH／MEDIUM 問題。回應上限 2 MiB，只有公開官方傳輸可最多再試一次，FinMind 每請求一次的限制不變。包含真實 stdlib HTTPResponse 的錯誤 Content-Length 回歸及 n8n artifact schema 相容測試。這些測試沒有發出實際網路請求；來源恢復仍待發布後的受控真實驗證。
+
+### 擴大免費建庫的持續恢復設計（尚未執行）
+
+三檔來源驗證成功後，採既有 `daily.yml` 的獨立 source mode 及 n8n 建庫入口，共用 `daily-snapshot` concurrency 和 FinMind 預算；固定十一日目標／calendar／資格政策與雜湊，將建庫 queue 放在獨立 namespace，保留財務 queue。建庫未完整時只回報進度，不產生正式零檔結果。跨曆日恢復需要先取得最新可信累積 rows，再合併當日 attempts／ceilings；現有僅恢復當日 artifact 的程式仍須調整與測試，避免第二日重查已完成股票。
+
+名冊不可只取當日 788 檔。免費 [TaiwanStockInfo](https://finmind.github.io/tutor/TaiwanMarket/Technical/#taiwanstockinfo) 與 [TaiwanStockDelisting](https://finmind.github.io/tutor/TaiwanMarket/Fundamental/#taiwanstockdelisting) 的整表查詢可協助發現转板／下市代碼，兩次查詢都必須先取得有效餘額、計入共同預算並保存來源雜湊。StockInfo 必須保留所有歷史市場列；其 date 是更新日期，不能當成上市日期。Delisting 的 date 邊界與原市場仍須交換所證據確認。這兩份 metadata 只能建立保守候選聯集，不能直接證明每日成員或將缺列補零。
+
+每個必需 symbol/date 取得有效投信 buy／sell／net shares 或獨立證實的不適用日期後，才交給既有 `rank_adjacent_windows()`。按 symbol/date 合併官方 TWSE 與備援資料，保留官方值且不得雙加；完整後再走正常發布、canonical export、網站、新日 Notion audit 與重試驗收。從此每天保存完整當日官方快照，減少再次大量逐股回補。建庫排程、實際餘額／queue、歷史名冊完整性尚未驗證，不標示已啟用。
+
+傳輸修正 `2768c12ea54a8888ef6c870a5d63488d0b121693` 已非強制發布 main；feature CI `37090380867`／main CI `37090516507` 均成功，遠端 tree 與 parent 已獨立核對。新的單次受控請求 `institutional-probe:20261002:v2`／n8n 853 已啟動；未重送 v1。新請求的實際配額、呼叫數、三檔覆蓋尚未讀回，不能沿用 v1 的零呼叫數描述 v2。
+
+v2 的真實 artifact 已讀回（Actions `37090657735`／ledger 103）：診斷 job 執行成功，但來源結果 `official_source_unavailable`，token 存在、FinMind attempts／data requests 都為 0、配額未知、cases 空、沒有 FinMind checkpoint artifact。不能以 Actions success 宣稱資料或篩選成功。
+
+改用已先前真實 GET 200 保存、獨立核對的 10/2 TPEx 原始 OpenAPI evidence，加入 Git 固定的 gzip＋metadata（原始 861949 bytes、SHA-256 `2d058996bf67a375e152f381dda1a8610c32cf3ecd1ed31240c89ac7fd020402`、910 列、取得時間 `2026-10-03T01:12:54.281658+00:00`）。它是一次真實來源擷取的保存，並非測試 fixture 或新日期資料。Probe 以 opt-in 路徑讀取，核對網址／GET 200／日期／單位／雜湊／列數與全列一致性；壓縮與展開都限制 2 MiB，損壞或不符時不查 FinMind，也不重送官方即時來源。既有即時模式與正常發布路徑保持。此 evidence 仍只涵蓋 1／11 日，只用於三檔當日比對；完整歷史與新日產品驗收仍未完成。
+
+保存來源模式已完成本機驗證：Python 全套 545 項、探測相關 83 項、n8n helper/schema 19 項均通過，CLI line coverage 91.10%。獨立審查已核對真實保存檔與原始 cache 的逐 byte 一致性；損壞 DEFLATE 回歸已修正，無剩餘 HIGH／MEDIUM 問題。尚未發布這個保存來源修正或執行新的真實探測。
