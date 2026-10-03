@@ -962,7 +962,22 @@
         "deployStatus": "not_requested"
       }
     ],
-    "limitations": "V2 successful Actions diagnostic is unavailable source evidence, not three-case validation or market publication. No observed positive/negative/genuine-zero sample, no quota reading, no new stock archive or schedule activation."
+    "limitations": "V2 successful Actions diagnostic is unavailable source evidence, not three-case validation or market publication. No observed positive/negative/genuine-zero sample, no quota reading, no new stock archive or schedule activation.",
+    "hourlyRuntimeAdapter": {
+      "workflowId": "u955NdZSl26dxfJJ",
+      "versionId": "28776444-7a0f-4bca-9310-bb588c406d42",
+      "active": false,
+      "activeVersion": false,
+      "nodeCount": 22,
+      "defaultMode": "inspect",
+      "retention": "none",
+      "manualExecutionDataSaved": false,
+      "executionProgressSaved": false,
+      "sourceCodeByteParity": true,
+      "initSha256": "3b34dbeacc26ace7d119a703974c97171dc20a4035ff05f371883690cecef2be",
+      "artifactCodeSha256": "11fe2c5e95604a0bf7bd5f826be9bdb0d4c2568f4d4bf3cb486f2ce99031aa77",
+      "executionRequested": false
+    }
   },
   "institutionalProbeActualExecution": {
     "status": "failed_before_finmind_official_transport_incomplete_read",
@@ -1052,7 +1067,7 @@
     "diagnosticSuccessIsScreeningSuccess": false
   },
   "capturedOfficialSourceFailover": {
-    "status": "locally_verified_pending_exact_head_ci",
+    "status": "published_v3_actual_partial",
     "marketDate": "2026-10-02",
     "sourceUrl": "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading",
     "retrievedAt": "2026-10-03T01:12:54.281658+00:00",
@@ -1071,6 +1086,363 @@
     "cliLineCoveragePercent": 91.1,
     "independentHighMediumFindings": 0,
     "corruptDeflateFailureRegressionPassed": true,
-    "actualNetworkCallsDuringVerification": 0
+    "actualNetworkCallsDuringVerification": 0,
+    "sourceCommit": "3c5fcb6b24281e9c892727079e46762f9b759459",
+    "sourceTree": "973fd3ca387b210cb62e3f658de0e1036c91fef0",
+    "sourceParent": "2768c12ea54a8888ef6c870a5d63488d0b121693",
+    "featureCiRunId": "37094159114",
+    "mainCiRunId": "37094354929",
+    "featureCiConclusion": "success",
+    "mainCiConclusion": "success",
+    "featurePublicationExecutionId": "855",
+    "mainPublicationExecutionId": "856",
+    "requestId": "institutional-probe:20261002:v3",
+    "probeExecutionId": "857",
+    "actionsRunId": "37094557187",
+    "resultLedgerId": 107,
+    "probeOutcome": "partial",
+    "actualFinMindAttempts": 4,
+    "actualFinMindDataRequests": 3,
+    "dailyAttempts": 4,
+    "accountLimit": 600,
+    "observedRemainingAtQuotaCheck": 600,
+    "accountWindowCeiling": 480,
+    "projectCeiling": 300,
+    "cases": [
+      {
+        "code": "1785",
+        "status": "complete",
+        "coverageDays": 11
+      },
+      {
+        "code": "3105",
+        "status": "complete",
+        "coverageDays": 11
+      },
+      {
+        "code": "1240",
+        "status": "partial",
+        "coverageDays": 10,
+        "missingDates": [
+          "2026-09-21"
+        ],
+        "currentDayExplicitZero": true
+      }
+    ],
+    "checkpointArtifactId": "11262758917",
+    "checkpointArtifactContentIndependentlyVerified": false,
+    "summarySha256": "4c07f8bf9734fa4f8db9dc2dadde74aca33ce0eac2aa008c7841c53c3e2ca8f5",
+    "provenanceSha256": "ef382bc62b10f3b040bd7a7369fc8e411e1dfa56a78263965d632ddf19f4f78c",
+    "globalCompletenessProven": false,
+    "publicationEligible": false,
+    "scheduleActivated": false
+  },
+  "humanGrowthDefinitionAudit": {
+    "publishedDataDate": "2026-10-01",
+    "publishedRunId": "enriched-20261002-132035-09cf779b0b",
+    "liveLatestSha256": "2ffbd7360aa095987566f11a1dfde78df22fdd38fda6fadb52db99646876f9fd",
+    "financialQualityStates": {
+      "pass": 0,
+      "fail": 0,
+      "unknown": 100
+    },
+    "reportedGrowthHealthStocks": {
+      "confirmedAtLeastFourPasses": 9,
+      "belowThreshold": 3,
+      "unassessed": 88
+    },
+    "reportedGrowthHealthChecks": {
+      "pass": 52,
+      "fail": 8,
+      "unknown": 440
+    },
+    "sameTop10MemberDates": [
+      "2026-10-01",
+      "2026-09-30"
+    ],
+    "sameTop10Members": true,
+    "top10RankOrderUnchanged": false,
+    "october2Top10Verified": false,
+    "provenCalculationBugs": [
+      "mixed_after_tax_total_vs_parent_income",
+      "health_evidence_after_asof_cutoff"
+    ],
+    "fiveCheckDefinitionRepairStatus": "local_tests_passed_peer_reviewed_not_yet_published",
+    "uiUnknownVersusFailRepairStatus": "local_tests_passed_peer_reviewed_not_yet_published",
+    "finalGrowthThresholdUnchanged": "total_return_pe>=1.20 and at_least_four_confirmed_health_passes",
+    "localRepairValidation": {
+      "pythonTests": 565,
+      "frontendTests": 84,
+      "typecheck": "passed",
+      "build": "passed",
+      "growthHealthLineCoveragePercent": 94,
+      "healthChecksLineCoveragePercent": 98,
+      "peerReviewHighMediumFindings": 0,
+      "newFinancialSourceEvidence": false
+    },
+    "offlineRepairedOutcomeCounts": {
+      "unknown": 90,
+      "qualified": 9,
+      "not_qualified": 1
+    },
+    "offlineRepairedIndividualStatuses": {
+      "unknown": 445,
+      "pass": 52,
+      "fail": 3
+    },
+    "offlineRepaired3293": {
+      "code": "3293",
+      "oldPassCount": 5,
+      "oldStatus": "pass",
+      "oldQualified": true,
+      "newPassCount": 5,
+      "newFailCount": 0,
+      "newUnknownCount": 0,
+      "newCategoryStatus": "pass",
+      "newOutcome": "qualified",
+      "checks": [
+        {
+          "label": "月營收 YOY 連續三個月大於 0",
+          "status": "pass",
+          "value": [
+            0.1717934266409058,
+            0.2585578748485269,
+            0.24804093366160962
+          ],
+          "explanation": "三個月逐月同去年同月比較皆為正。",
+          "period": "2026-06–2026-08 vs 2025-06–2025-08",
+          "sourceRefs": [
+            "TWSE OpenAPI"
+          ]
+        },
+        {
+          "label": "近一季毛利年增率大於 0",
+          "status": "pass",
+          "value": 0.14602519998947816,
+          "explanation": "同口徑最近一季 YOY 大於零。",
+          "period": "2026 Q2 vs 2025 Q2",
+          "sourceRefs": [
+            "TWSE OpenAPI"
+          ]
+        },
+        {
+          "label": "近一季營業利益年增率大於 0",
+          "status": "pass",
+          "value": 0.0863717882246946,
+          "explanation": "同口徑最近一季 YOY 大於零。",
+          "period": "2026 Q2 vs 2025 Q2",
+          "sourceRefs": [
+            "TWSE OpenAPI"
+          ]
+        },
+        {
+          "label": "近一季稅前淨利年增率大於 0",
+          "status": "pass",
+          "value": 0.3631783082353153,
+          "explanation": "同口徑最近一季 YOY 大於零。",
+          "period": "2026 Q2 vs 2025 Q2",
+          "sourceRefs": [
+            "TWSE OpenAPI"
+          ]
+        },
+        {
+          "label": "近一季稅後淨利年增率大於 0",
+          "status": "pass",
+          "value": 0.33583922377118913,
+          "explanation": "同口徑最近一季 YOY 大於零。",
+          "period": "2026 Q2 vs 2025 Q2",
+          "sourceRefs": [
+            "TWSE OpenAPI"
+          ]
+        }
+      ],
+      "detailSha256": "b668b1ac065a1d4b8da9d1abeadef0f6947915fca89727a535cc5152c5f5489a"
+    },
+    "additionalNonGrowthUnknownConversionIssue": {
+      "affected": "healthCategories and healthScore; not primary strategy gates or qualityStatus",
+      "oldPublishedHealthScoreFailCount": 100,
+      "repairStatus": "local_tests_passed_peer_reviewed_not_yet_published"
+    }
+  },
+  "independentProbeCheckpointAudit": {
+    "executionId": "864",
+    "ledgerId": 112,
+    "actionsRunId": "37094557187",
+    "sourceGitCommit": "3c5fcb6b24281e9c892727079e46762f9b759459",
+    "artifactId": 11262758917,
+    "byteDigestAndLineageVerified": true,
+    "historicalDailyRecord": {
+      "attempts": 4,
+      "projectCeiling": 300,
+      "accountWindowCeiling": 480
+    },
+    "cacheEntryCount": 3,
+    "cases": [
+      {
+        "code": "1785",
+        "status": "complete",
+        "coveredDates": 11,
+        "rawRowCount": 55,
+        "normalizedRowCount": 11,
+        "rawSha256Verified": true,
+        "normalizedSha256Verified": true,
+        "sourceParamsVerified": true,
+        "cacheEntryReusable": true
+      },
+      {
+        "code": "3105",
+        "status": "complete",
+        "coveredDates": 11,
+        "rawRowCount": 55,
+        "normalizedRowCount": 11,
+        "rawSha256Verified": true,
+        "normalizedSha256Verified": true,
+        "sourceParamsVerified": true,
+        "cacheEntryReusable": true
+      },
+      {
+        "code": "1240",
+        "status": "partial",
+        "coveredDates": 10,
+        "rawRowCount": 50,
+        "normalizedRowCount": 10,
+        "rawSha256Verified": true,
+        "normalizedSha256Verified": true,
+        "sourceParamsVerified": true,
+        "cacheEntryReusable": true
+      }
+    ],
+    "zeroCaseGap": {
+      "date": "2026-09-21",
+      "rawRowCount": 0,
+      "categories": {},
+      "wholeDayAbsent": true,
+      "investmentTrustPresent": false,
+      "inferredZero": false
+    },
+    "offlineReuseProof": {
+      "verifiedPureCacheEntries": 3,
+      "clientFactoryWouldBeInvoked": false,
+      "networkCallsRequired": 0,
+      "method": "same invariants as committed _cache_result; all three entries resolve before pending-client branch"
+    },
+    "globalCompleteness": false,
+    "publicationEligible": false
+  },
+  "hourlyQuotaCorrection": {
+    "humanCorrectionDate": "2026-10-03",
+    "officialDocumentation": [
+      "https://finmind.github.io/en/quickstart/",
+      "https://finmind.github.io/api_usage_count/"
+    ],
+    "providerFreeLimits": {
+      "withoutTokenPerHour": 300,
+      "verifiedTokenPerHour": 600
+    },
+    "projectPolicy": {
+      "period": "rolling-60-minutes",
+      "maxActualAttempts": 300,
+      "actualRemainingFraction": 0.8,
+      "artificialDailyCap": false,
+      "quotaQueriesFailuresRetriesCounted": true,
+      "cacheAndQueueRetainedAcrossMidnight": true
+    },
+    "implementationStatus": "local_tests_passed_peer_reviewed_not_yet_live_budget_verified",
+    "supersedes": "Prior project daily-300 policy; historical execution counters remain unchanged evidence.",
+    "localValidation": {
+      "pythonTests": 657,
+      "n8nTests": 86,
+      "frontendTests": 84,
+      "typecheck": "passed",
+      "build": "passed",
+      "quotaModuleCombinedLineCoveragePercent": 93,
+      "actualFinMindCallsByThisRepair": 0,
+      "mockFreshSummaryAndExpiredCacheAcceptedByActualN8nValidator": true,
+      "mockExpiredCacheAttempts": 0,
+      "mockExpiredCacheHits": 3
+    }
+  },
+  "latestHumanScope": {
+    "firstCompleteMarketDate": "2026-10-02",
+    "newPreOctober2SelectedHistoryBackfill": false,
+    "necessaryCalculationLookbackRequired": true,
+    "previousDayNotionOperationalCacheRequired": true,
+    "completeDailyUpdateAndBackupRequired": true,
+    "aiAgentInDailyRuntime": false,
+    "humanInstruction": "10/2完整呈現；必要10/1比較及往前計算資料留存Notion；每交易日完整更新與快取；n8n控制、不依賴AI agent"
+  },
+  "latestRepairIntegration": {
+    "baseCommit": "3c5fcb6b24281e9c892727079e46762f9b759459",
+    "sourceManifestExcludingDocsSha256": "9dce121fed31c54b0956ce3ce3e81b3f51baaaad1ef86ca2431fa63b4fbe5ec1",
+    "sourceFileCountExcludingDocs": 28,
+    "pythonTests": 657,
+    "n8nTests": 86,
+    "frontendTests": 84,
+    "affectedFrontendLineCoveragePercent": 91.95,
+    "affectedFrontendStatementCoveragePercent": 88.93,
+    "affectedFrontendBranchCoveragePercent": 75.88,
+    "frontendProductionFileLineCoveragePercent": {
+      "App.tsx": 87.78,
+      "DataStatus.tsx": 100,
+      "domain/coverage.ts": 100
+    },
+    "typecheck": "passed",
+    "build": "passed",
+    "diffCheck": "passed",
+    "npmAuditVulnerabilityCount": 0,
+    "secretReviewFindings": 0,
+    "peerReviewUnresolvedHighMediumFindings": 0,
+    "builtJs": {
+      "path": "/assets/index-CT0mN7j6.js",
+      "bytes": 251641,
+      "sha256": "58df53869751da06115288b8de61e1cb6e359df8bb16f1f85d6e6df2c365c3e0"
+    },
+    "sourcePublicationStatus": "pending_exact_head_CI",
+    "realOctober2DataPublicationStatus": "pending"
+  },
+  "officialGetCsvDiscovery": {
+    "marketDate": "2026-10-02",
+    "endpoint": "https://www.tpex.org.tw/www/zh-tw/insti/sitcStat",
+    "method": "GET",
+    "parameters": {
+      "type": "Daily",
+      "date": "2026/10/02",
+      "searchType": "buy",
+      "id": "",
+      "response": "csv"
+    },
+    "httpStatus": 200,
+    "rawBytes": 1481,
+    "encoding": "cp950",
+    "rawSha256": "231878b83ee9b668debc6ce7d457660fb6c50f5f17d635ac730d71729367bf8b",
+    "rankedRows": 28,
+    "fullMarket": false,
+    "precision": "rounded_integer_lots",
+    "knownPrecisionLoss": {
+      "code": "3131",
+      "capturedOfficialShares": 36,
+      "csvLots": 0
+    },
+    "publicationEligible": false,
+    "jsonFullPrecisionVerification": "pending"
+  },
+  "operationalNotionCachePlan": {
+    "schema": "market-cache-v1",
+    "status": "design_approved_implementation_pending",
+    "selectedHistorySeparate": true,
+    "roles": [
+      "institutional_raw",
+      "institutional_normalized",
+      "calendar",
+      "stock_inputs",
+      "00631L"
+    ],
+    "notionFreeFileLimitBytes": 5242880,
+    "shardCompressedLimitBytes": 4194304,
+    "shardExpandedLimitBytes": 33554432,
+    "requireHashDateCoverageReadback": true,
+    "previousBaselineRequired": true,
+    "aiRuntime": false,
+    "actualNewCacheWrites": 0
   }
 }

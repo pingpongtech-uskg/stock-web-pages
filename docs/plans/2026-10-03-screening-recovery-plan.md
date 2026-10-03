@@ -1,271 +1,120 @@
-# 每日選股、網站與 Notion 修復計畫 v2
+# StockScreener：10/2 起完整資料與每日更新計畫
 
-日期：2026-10-03，Asia/Taipei。
-狀態：使用者已對指定合併問題明確回覆「核准上述發布、補跑、Notion 匯入與排程啟用」，可信任授權現已收到，涵蓋修復程式發布、2026-10-02 真實更新、六個留存日與新日歸檔、重試驗證及週一至週五 18:00 Asia/Taipei 排程。修復來源的精確 head CI、非強制 GitHub main 發布及正式前端資產 bytes 已驗證；授權與程式發布不代表新資料成功。2026-10-02 實際行情、fingerprint／export、Notion 獨立 audit、same-payload retry 與排程 active version 仍須逐項驗收。
+更新日期：2026-10-03。整體交付仍進行中；程式本機修復、source CI 成功或診斷成功，不等於新行情已發布。
 
-## 1. 交付目標與現況
+## 交付範圍
 
-每日由 n8n 在週一至週五 18:00 UTC+8 啟動；先判斷官方交易日，更新網站行情、00631L 指標及三個策略，再把同次發布的三策略入選股票聯集保存至 Notion。網頁、GitHub publication、Notion 必須可以用 date/request/run/hash 相互核對。
+使用者最新要求：「沒必要補之前的資料，我要10/2開始資料完善且每個交易日更新」。以 2026-10-02 為第一個正式修復資料日；之後每個交易日更新網站及同日 Notion。停止新增更早日期的選股歷史發布及通用舊日選股回補工程。使用者進一步明確要求：10/2 必須完整重算，必要的 10/1 與往前比較／計算資料需留存在 Notion，供每日更新和快取備援。既有紀錄保留。
 
-前次部署的程式修正不能視為這個目標完成。目前正式網站仍是 2026-10-01 行情，run 為 enriched-20261002-132035-09cf779b0b。舊發布的成長可計算 aggregate 為 0，但財務輸入不足且新診斷欄位未提供，不能當成全部 100 檔都完成評估後零檔符合的證據。最新歷史日期為 10/1；正式 screening export 尚未提供可驗證 JSON。n8n workflow huDBNJDss4KuPmn4 仍 inactive。
+n8n 是唯一日常排程入口，週一至週五 18:00 Asia/Taipei；先查官方交易日及來源日期，休市日跳過。GitHub main 更新觸發已連接的 Cloudflare Pages。手動與自動共用同一發布／歸檔流程。
 
-使用者 10/3 06:26 的 execution 763 確實完成，但持久化 ledger row 6 是 diagnostic_verified / credential_verified / not_tested，沒有 Actions run、payload hash 或 Notion page ID。手動預設 diagnose，空日期採今天 10/3；這沒有補跑缺少的 10/2。
+指標計算仍可能需要往前資料：投信當日與前日的十日窗口共有 11 個交易日；財報同比、TTM EPS、多年度 EPS 成長需要對照期間。這些作為必要計算輸入及運作快取，與舊日選股歷史回補分開。使用者已明確選擇完整 10/2 計算，因此必須建立必要啟動窗口，不能改成從 10/2 等待累積。日常流程只使用 n8n 排程、確定性程式、GitHub Actions／Pages 及 Notion API；不使用 AI agent 或 LLM 節點。
 
-### 基準時已重現的優先問題
+## 現況與已證實問題
 
-| ID | 問題與證據 | 優先級 | 完成條件 |
-|---|---|---|---|
-| G1 | 新前端顯示新漏斗，舊發布沒有 growthInputComplete 等欄位，因此出現 —。coverage.ts 將缺欄位映射為 null。 | P1 | 新 current release 有完整可核對數字與逐檔來源；相容性驗證拒絕缺欄位的新發布。 |
-| G2 | 舊 100 檔沒有任何完整確認的年度股利；多年度 EPS 成長可推導 9 檔、TTM EPS 12 檔，整體可計算仍為 0。 | P1 | 在真實母體至少一檔走通可驗證成長估值；其他逐檔保留可恢復缺口。 |
-| G3 | evaluate_growth_health 有 4 pass / 1 fail 時 aggregate status=fail，growth_health_qualifies 卻要求 aggregate status=pass。實際排除符合 4/5 的股票。 | P1 | 真實 evaluator 輸出 4 pass / 1 fail 或 4 pass / 1 unknown 均依四個已確認通過項目入選健康門檻。 |
-| G4 | low_rows 的 append/count 還要求 growth_health_qualified，與價格觀察、健康證據分開的契約不符。 | P1 | 合格調整價、Z≤0、正 slope 的股票不因缺 EPS、PEG 或健康未知被隱藏。 |
-| G5 | verify_snapshot 仍要求 growth count≤PEG candidate count，可能攔住使用獨立總報酬本益比的合法成長候選。 | P1 | 發布驗證使用各策略自身漏斗；growth>PEG 可合法通過。 |
-| G6 | 股利期間解析接受上半年度／下半年度，卻漏掉真實 payload 的上半年／下半年配獨立年度。 | P1 | 保存的真實欄位形狀回歸測試通過，年度／季度／半年不重複相加。 |
-| O1 | manual 預設只有 diagnose，週末空日期不補最近完成交易日；診斷成功容易被誤認資料更新成功。 | P1 | 正常手動入口做實際更新或同次 resume；診斷入口分開，目標日期及結果可見。 |
-| O2 | 只有節點／本機測試，沒有 Actions→main→Pages→Notion 的真實閉環與 retry 實數。 | P1 | 真實執行、相同 payload 重試與獨立讀回全部通過。 |
-| O3 | 排程未 publish；GitHub／Notion 業務步驟藏在通用 HTTP 與 Code 狀態機。 | P1 | 畫布可辨識各步驟；驗收後 active version 與時區／cron 可核對。 |
+| 項目 | 實際證據 | 修復與驗收 |
+| --- | --- | --- |
+| 正式網站仍是舊行情 | latest.json 資料日 10/1；run enriched-20261002-132035-09cf779b0b；00631L 仍為 10/1、0.74 倍 | 真實 10/2 行情、前五個完整交易日成交量及發布 fingerprint 必須一致 |
+| 投信關注沒有新進榜 | 已發布的 10/1 與 9/30 Top10 成員相同、排名順序不同；這兩日的新進榜 0 合理。10/2 尚未驗證 | 顯示資料／比較日期；只有完整兩個窗口才能判定 10/2 新進榜，缺資料不能顯示有效的零檔 |
+| 成長股最後為 0 | 舊資料 100 檔中已有 9 檔五項健診全通過，但正式成長估值可計算 0 | 分開健診與估值門檻；補齊真實估值輸入，不為了產生候選而放寬規則 |
+| 財務品質 0/100 誤導 | qualityStatus 實際 pass 0／fail 0／unknown 100 | 顯示明確通過、未通過、未知、不適用、未提供；未知不等於失敗 |
+| 健診計算缺陷 | 稅後淨利兩期可能混用總額／母公司口徑；未來發布資料可能越過 asOf | 比較共同同一欄位；按評估日先過濾原始資料，再由 YTD 推單季 |
+| 其他健診把缺資料當失敗 | 非成長分類存在 blanket unknown-to-fail；AR／存貨、歷史股利等缺欄位亦判失敗 | 未知保留未知；已知完整輸入且未達條件才失敗；不影響三策略的既定門檻 |
+| 自動發布未完成閉環 | 新日 Actions 因 TPEx 歷史來源失敗；10/2 未發布／未有股票歸檔，主排程 inactive | 完成一次真實網站發布、Notion 值讀回與同 payload 重試，才啟用主排程 |
 
-目前純函式診斷舊資料得到：同日價格 100；PE reported 80、可合法 derived 12、缺 8；TTM EPS 可推導 12、缺 88；多年度 EPS 成長可推導 9（包含負成長）、缺 91；已確認完整年度股利 0。這些是舊資料診斷，不是新的金融資料發布。
+完整原始執行證據及既有歸檔審核保存在 docs/n8n/runtime-evidence.json。最新已發布程式來源 3c5fcb6b24281e9c892727079e46762f9b759459，feature CI 37094159114／main CI 37094354929 success；這不是 10/2 行情發布。
 
-### 本次實作與驗證進度（程式已發布，資料驗收進行中）
+## 一、五項成長健診與估值規則
 
-以下列出已修改的本機程式及實際測試範圍，不把本機 fixture 或 inactive draft 視為正式資料成功。
+五個檢查逐項保存 pass／fail／unknown、實際數值、比較期間及來源：
 
-| 範圍 | 新版本本機證據 | 正式驗收狀態 |
-|---|---|---|
-| G3／G4／G5 | 真實五項 evaluator 的 4P1F／4P1U 選股流程、低位策略獨立性，以及 growth>PEG 合法發布回歸已通過。 | 新資料 Actions／網站結果尚待核對。 |
-| G6／財務輸入 | 上半年／下半年期間映射、股數可比性與年度／季度重複證據處理已修改；金融來源及 quota 模組有針對性回歸。 | 至少一檔真實 A 母體成長估值恢復尚未證明。 |
-| 免費補缺與恢复 | 排程按可閉合的估值證據鏈排序，保存跨日公平 queue，恢復保留最新 checkpoint queue；每日專案上限與實際剩餘帳戶 80% 仍保留。 | 真實 calls／cache hit／queue／執行時間尚未測量。 |
-| G1／發布契約 | 新 producer 的 nested `funnel.growthCoverageVersion`、守恆計數、逐檔診斷、canonical export 與新 history projection 已修改；daily 使用 `--require-growth-coverage`，既有 legacy CI 保持相容。 | Python／JavaScript coverage 契約已對齊；最後整合測試與精確來源 CI 仍是發布前 gate。 |
-| 網站發布識別 | `/data/publication.json` 包含 date／run／generatedAt 及 exact `latest.json` bytes SHA-256；daily 建立後於 Git publish 前重查；回到頁面或低頻輪詢提示重新載入。producer 及 workflow 39 項針對性測試通過，producer line coverage 96%。 | 新正式 fingerprint、cache header、同日更正與瀏覽器操作尚待驗收。 |
-| O1／O3 | 審查中的 n8n inactive draft `f4adc9fb-3aed-42d9-9274-ef23ddb03dde` 已有 58 個可見業務節點；主 manual 選最近完成官方交易日、恢復既有 exact run，診斷另行標示。Python／JavaScript 新 coverage 驗證已對齊；53 項 n8n 測試通過，n8n 模組 line coverage 99.03%、branch coverage 90.80%。 | draft 尚未 publish；真實 Actions、Notion null／0 讀回與重試實數尚待驗收。 |
-| 發布權限／秘密 | 唯讀 execution 765 確認 main `2451036717641cd4827dbdc3856f8af8ac462fc6` 與 active daily workflow；Actions secret-name metadata 回傳 403，因此不宣稱已獨立確認 token。新補缺步驟只記 `finmind_token_present=true/false`，不記值。 | 受控執行時確認實際環境存在 token；不要求擴充讀秘密權限。 |
+1. 最新可取得、連續三个月的月營收，同比各自大於 0；不能用三月合計或單一正值替代。
+2. 最新可取得單季毛利「金額」，相對去年同季年增率大於 0；不能以毛利率替代。
+3. 最新可取得單季營業利益金額，相對去年同季年增率大於 0。
+4. 最新可取得單季稅前淨利金額，相對去年同季年增率大於 0。
+5. 最新可取得單季稅後淨利金額，相對去年同季年增率大於 0；兩期必須是同一淨利口徑。
 
-原始恢復版本本機驗證已通過 437 項 Python、74 項 UI 及 53 項 n8n 測試，typecheck／build 通過；本次受影響前端模組 line coverage 89.07%，逐檔均達 80% 門檻（statement 80.85%、branch 74.02%，不宣稱 branch 達 80%）。新發布重載時 history revision 同步、保留 URL 篩選，以及 eligible universe／未標版本新欄位的回歸已通過。最終整合結果、修改 commit、精確 head CI、正式資料日／run／hash 與 Notion 筆數另以實際執行證據更新。原始六日不可變 legacy revision 不重算、不覆寫。
+保留已核准門檻：至少 4/5 確認通過，另需總報酬本益比（本站整理）可計算且 ≥1.20。移除原本未揭露的營收成長 ≥15% 額外門檻。健診合格不等於最終估值合格。
 
-2026-10-03 來源發布實證：修復 commit `a50389a9c6bea6db326c9914f4e866d1f2893560`，tree `5bd2eb2352c3cf454b697b3cf260898fe78e28e9`；[feature CI 37081771666](https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37081771666) 與 [main CI 37081980505](https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37081980505) 均為此 exact head 的 success。來源修復包含實際 n8n text response 改寫 JSON bytes 的 binary transport 回歸、獨立 Notion child／tag／rank／null／0 audit，以及有界 100 ms browser timer 測試修正；整合 UI 74、n8n 55 項通過。Native execution 814 以非強制更新把 main 從 `2451036` 推進至 `a50389a`，815／816 獨立讀回 main SHA 與 tree。Pages 的 `/assets/index-CTH1Ibo1.js`（249289 bytes，SHA-256 `812f283337c2e2c635fb06319fe37979596715cbe6e73ef997cfa2021fe4831c`）及 `/assets/index-De-S0dI5.css`（19407 bytes，SHA-256 `9f194b89fb1a7a749dc7881e158d91c1d6560a657ecbc946fb88829bd780f182`）實際 HTTP 200 bytes 與 reviewed build 相同。此段證明程式來源部署，不把仍待驗收的新行情、fingerprint 或 Notion 結果宣告成功。
+未發布季度／月營收不能用；periodEnd 不是發布日期。缺明確發布證據時使用保守既有申報期限；已知提前發布且期間完成者依實際證據處理。YTD 差分要求前季同口徑完整資料；不能用已混入未來前季的快取結果。去年基期非正值維持未知，不擅自更改負基期年增率定義。
 
-真實操作進度：六個原始留存日已匯入 Notion，三策略聯集總計 25 列；獨立 audit execution 818 及同 payload 實際重試確認每日 root／inline database／股票列數沒有增加。新日仍未成功。Execution 819 的 native GitHub node 把 object 輸入交給實際 `JSON.parse` preflight，沒有建立 Actions run；已用 JSON 字串化及 released exact-owner／no-Actions／先搜尋的恢復護欄修正，59 項 n8n 回歸通過。獨立讀回 820／821／822 均確認 exact request 尚無 run 後，授權的 same-request corrective execution 823 建立 [Actions 37083078413](https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37083078413)，source `a50389a`、request `stockscreener:20261002:v1`、目標日 `2026-10-02`。
+本機已完成同欄位與 asOf 修復。對原正式 10/1 資料離線重算：健診合格 9、確定未達 1、未知 90；500 個檢查為 pass 52／fail 3／unknown 445。3293 五項皆通過：6–8 月營收 YoY +17.18%、+25.86%、+24.80%；2026 Q2 對 2025 Q2 毛利 +14.60%、營益 +8.64%、稅前 +36.32%、稅後 +33.58%。這是既有真實資料重算，不宣稱取得新財報或恢復最終估值。
 
-該 Actions 已失敗於步驟 11「Fetch official institutional universe」，未進入行情刷新、FinMind 或 canonical export／publication。Authenticated job-log 診斷 827／828 的 sanitized ledger 89／90 證明三次 TPEx `https://www.tpex.org.tw/www/zh-tw/insti/sitcStat` 請求都回報 `Remote end closed connection without response`。此 run 的 FinMind calls 為 0；`finmind_token_present` 所在步驟 skipped，因此 token 是否存在仍未由 job 確認。原始 logs 與 signed URL 不保存。另已以 RED→GREEN 修正 daily 官方母體 fetch 漏傳 `--as-of "$MARKET_DATE"`，20 項 snapshot／workflow 回歸通過；TPEx transport 修復仍須同來源實證、回歸及精確來源 CI 後才能重跑。Notion 10/2 目前只記 failure metadata，不建立假零檔 child database。10/2 成長估值、正式行情／fingerprint／export、Notion 新日與排程啟用仍待完成。
+其他分類缺值修復同步進行。股利歷史必須來自五個連續、完整、已確認年度；重複同年、斷年、未發布、未確認資料不能直接通過。真實已知負 CFO、低殖利率仍可失敗。既有 ≥500 價格筆數只保留為明示代理，不宣稱已驗證正式上市三年。
 
-### 外部來源依賴與恢復 gate
+## 二、缺少估值輸入的補救順序
 
-測試過的 TPEx `sitcStat` 報表與執行環境尚未取得所需 JSON，不據此宣稱 TPEx 所有服務都故障。限定一次的 credential-free n8n GET probe 829／ledger 91，使用官方已確認的 `type=Daily`、`date=2026/10/02`、`searchType=buy`，20 秒 timeout、redirect off；結果為 timeout，沒有 HTTP response、stat、日期或 tables。本機普通 GET／POST 亦未取得該日期 report。正常瀏覽器的官方[每日投信頁](https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html) 沒有初始或 10/2 表格，console 出現 `sitcStat` 錯誤；官方 CSV 點擊後的 tab 8 inventory 顯示 `This Site Can't Be Reached`，URL 的公開查詢為同一 `type=Daily`、目標日、`searchType=buy`、空 `id`、`response=csv`，沒有取得下載。不綁定或繞過瀏覽器的 internal error page；此處僅使用可見 title／URL 證據。沒有 CAPTCHA／安全提示，也未採取繞過措施。
+每檔建立 input audit，明列來源為 reported／derived／missing／not-applicable，缺漏原因可以重疊，但最終分類守恆。
 
-官方 `tables.js` 顯示 ordinary AJAX request 會加 `response=json`，目前 Python client 漏傳；這是可用回歸修正的 request contract 缺陷。但補上該參數的普通 POST 仍 connection reset，因此此 client bug 修正不能宣稱外部來源已恢復。官方 OpenAPI／歷史 CSV fallback 的調查仍須保留可核對的相同日期、完整市場資料與來源，不以舊母體、部分股票或新假零檔代替。
+- missing_pe：先查同日官方 PE；只有現價與可驗證同口徑 TTM EPS 皆合法時，才推導 PE = 價格／TTM EPS。
+- missing_eps_history：補連續、可比的完整年度及季度 EPS；不能用營收成長當 EPS 成長，不能把代理當正式資料。
+- nonconsecutive_quarters：補缺季；只有一致期間、口徑與股數基礎支持時才由 YTD 差分。年度／季度資料不能重複加總。
+- missing_dividend：取得已確認完整年度現金股利。只有來源證明完整年度現金股利為零，才寫零；查無資料不是零。
+- 股本變動、拆股與重編：確認可比 basis 後才計算多年成長，不以未調整 EPS 任意外推。
 
-本次後續修正已完成指定日期傳遞、TPEx `response=json`、native dispatch 字串輸入與限定 preflight 恢復、正常入口採用同日已保存的更正 request，以及新日 immutable export 的獨立 audit。整合本機結果為 Python 449、UI 74、n8n 63 項通過；npm audit 零漏洞、installed Python dependency audit 無已知漏洞、diff／秘密字串檢查通過。此修正來源已發布為 `e91dfe2f374eb8911b9519339f5a35bebdae9e4c`、tree `f7be1cae264b51f0db76028a214da4455d31ea56`：[feature CI 37085405629](https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37085405629) 與 [main CI 37085556137](https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/37085556137) 均在 exact head success。Execution 840 先讀回 main／feature／精確 feature CI，再以非強制更新將 main 從 `a50389a` 推進至 `e91dfe2`；841 獨立讀回 SHA／tree／parent 相符。此證明來源修正发布，不將本機或 CI 測試當作官方報表已恢復。
+優先補能關閉整檔估值證據鏈的項目；先利用已合法可推导的值，再花 API 額度。余下任務保存 queue，可續跑；網站同時顯示未補齊的原因。
 
-2026-10-03 01:06:04 UTC 的公開官方 [TPEx OpenAPI](https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading) GET 實際 HTTP 200，910 列全部日期 `1151002`（2026-10-02），投信 buy／sell／net 單位為 shares，保留負 net。官方 [Swagger](https://www.tpex.org.tw/openapi/swagger.json) 三個相關資料集沒有宣告 historical parameters；同日 documented `insti/dailyTrade` 普通 POST 亦 connection reset，CSV 尚未取得。這證明當日完整市場 API 可讀，仍未提供篩選要求的 11 個完整交易日；不得拿舊 100 檔子集或猜測 historical query 補足。資料 dispatch 與排程啟用繼續等待完整來源 gate。
+## 三、FinMind 免費每小時限制
 
-恢復 gate：先取得 TPEx 與 TWSE 同目標日及相鄰十日窗口所需的完整官方資料，驗證 actual source date／rows／units；再對已審查的 date／request-contract／native-operation 修正跑完整測試與 exact-head CI，才允許新的受控資料重試。該重試必須重新證明 freshness、成長可計算股票與缺漏診斷、FinMind 真實 token presence／attempts／remaining quota／cache／queue、canonical export／fingerprint、正式網站以及新日 Notion 獨立讀回。六日回填成功、source CI 或前端部署成功均不能替代这些 gate。未取得外部來源時保留上次有效行情，整體交付維持未完成；排程仍 inactive，待真實閉環驗收後才啟用。
+官方規則：[快速開始](https://finmind.github.io/en/quickstart/) 為未帶 token 300 次／小時、驗證帳戶 token 600 次／小時；[使用次數](https://finmind.github.io/api_usage_count/) 提供 account limit 與 user_count。先前每日 300 限制是錯誤設定，已由使用者修正。
 
-## 2. 保留的產品決策
+現行專案自己的保守規則：最近連續 60 分鐘所有 runs 合計最多 300 次 actual HTTP attempts，且不超過已查實際剩餘帳戶額度的 80%。這不推測供應商是整點重置還是滑動窗口。沒有人工每日 300 上限。
 
-- 三策略仍共用官方投信十日買超前 100 的 A 母體，不偷偷扩大母體或放寬估值門檻。
-- 成長主策略：總報酬本益比≥1.20，且五项健康至少四項已確認 pass；移除未公開的營收≥15% 額外 gate。
-- 五項為三個連續月份營收 YOY 皆正（合計一項），及最近單季毛利、營業利益、稅前淨利、稅後淨利同比各一項。unknown 不算 pass；四個真實 pass 足以達到 4/5。
-- 祖魯 PEG 為成長的交叉參考；不重新成為成長、投信新進榜或低位觀察的共同必要條件。
-- 保留極端成長／估值外推限制、可比股數基礎、公告截止日與同日價格要求。
-- 最終候選可以合法為 0。只有可評估股票已被正確計算、原因可追溯，才可顯示「條件未達」；全無估值時顯示「財務建庫／資料不足」。
-- 行情、財務可用性、資料新鮮度、Notion、部署是不同狀態。金融缺漏不阻止已驗證的當日行情更新，但不能把成長策略宣告已恢復。
-- FinMind 免費方案；不新增付費來源、不在每日 workflow 執行 LLM、不把 token 放進公開檔案或執行報告。
+每次 HTTP 前持久化唯一事件與 UTC 時間；用量查詢、失敗、重試都計數。跨小時、午夜、同日重跑不清空近期事件；財務與投信補件共用同一 ledger 及 Actions concurrency。402／429 依實際 Retry-After 停止；quota 不明或 token 缺失時禁止資料請求。
 
-推薦沿用「n8n 協調、GitHub Actions 做既有 Python 更新與 Git publication、Cloudflare main Git integration 發布」；改成可讀的業務節點。將全部金融運算搬進 n8n 會增加重寫、快取與秘密管理成本，這次不採用。
+配額觀測有有效期，不能靠重查同一個窗口無條件擴張 allowance；過期後須有新的實際用量證據。舊 checkpoint 沒有逐次時間時保守遷移近期計數，不當成空 ledger。rows／queue 跨小時及跨日保留，trusted artifact 恢復合併事件、不重置配額。新每小時摘要與舊每日格式分開驗證；損壞 checkpoint 的使用量保留 null，不能宣稱零。
 
-## 3. Phase 0：凍結基準、文件與 API 查證
+新核心與格式 adapter 已通過本機整合與審查；尚未以新限制執行正式補件。不使用付費整市場資料集，不取回或展示 FINMIND_TOKEN。
 
-工作：
-1. 保存現有公開 JSON 的 date/run/hash、100 檔逐項缺漏矩陣、manual ledger 763 與目前 draft。
-2. 每個問題記錄「程式修改／本機測試／真實執行／正式網站／Notion／排程」六種不同完成狀態。
-3. 逐條對照策略顯示、producer、validator、export，移除文件中過時的成長 15% 或共同 PEG 限制描述。
+## 四、10/2 投信啟動資料與後續日資料
 
-依據：docs/GROWTH_VALUATION.md；docs/RESEARCH_PROTOCOL.md；src/domain/coverage.ts:25；scripts/refresh_snapshot.py:402、554、1200、1462；scripts/verify_snapshot.py:280；docs/n8n/runtime-evidence.json。
+先優先使用完整官方 TWSE／TPEx 日快照，驗證來源日期、rows、股／張單位及普通股資格。小數張必須精確換成整股，不能先截小數再乘 1,000；buy − sell 必須等於 net。已修復並以 0.036 張＝36 股、98／0.059／97.941 張＝98,000／59／97,941 股等案例驗證。無效 common-stock 數值使整份來源失敗，不默默漏列。已保存的 TPEx 10/2 OpenAPI 真實回應有 910 rows，原始 SHA-256 2d058996bf67a375e152f381dda1a8610c32cf3ecd1ed31240c89ac7fd020402；只有這一天的完整來源，不是十一日完成證明。
 
-已查可用 API：GitHub node 1.1 的 workflow.dispatch；Notion node 3 的 dataSource.get、databasePage.getAll/create；HTTP Request 4.4 的既有 credential 認證。Notion inline database create 使用官方 2025-09-03 API，database ID 與 data-source ID 分開。Native propertiesUi 的 null／零值／完整 metric projection 仍須先測試，不直接假設支援等價行為。
+既有 institutional_universe 的 dailyRows 每日只有 81–89 列，因為已篩成當前 100 檔，不能當全市場窗口。當日與前日十日排名需固定十一日：9/16、9/17、9/18、9/21、9/22、9/23、9/24、9/29、9/30、10/1、10/2。
 
-驗收：問題清單有來源及基準；不把 API schema 查到、metadata GET 或本機 fixture 當成正式寫入成功。
+首日必須完整呈現 10/2，因此取得並保存這個必要窗口，含 10/1 比較基準；不能以累積中取代已要求的完整計算。不能為了發布把 unavailable 變成有效零檔。
 
-## 4. Phase 1：先修真正的選股與發布 gate
+免費單股區間備援已真實驗證：v3 request／n8n 857／Actions 37094557187 共 4 attempts（用量 1、資料 3）。用量觀測時 limit／remaining 皆 600；這是當時數值，不是現在餘額。1785、3105 十一日完整；1240 缺 9/21。1240 的 10/2 buy／sell／net 都是明確零值。
 
-工作：
-1. 用 evaluate_growth_health 的真實五條檢查結果判定至少四個 pass；不再使用 aggregate status=pass 當額外必要條件。
-2. 低位觀察只由合格價格／回歸位置決定；健康、EPS、PEG 留作證據與欄位，不當隱藏排除條件。
-3. 成長發布 gate 改用總報酬本益比漏斗，不要求候選數小於祖魯 PEG 池。
-4. 修上半年／下半年等已觀測期間映射；逐條處理 known-invalid、non-positive growth、extreme 與 missing，不把已知負成長報成缺資料。
+獨立 readonly 864／ledger 112 驗證 checkpoint artifact 11262758917 的 lineage、ZIP digest、三筆 raw／normalized SHA 及來源參數。1240 的 9/21 整天五種法人皆缺；不能將缺列補零。三筆快取可零 HTTP 重用；診斷未推網站或進 Notion。必要缺日只做有界定點重查／官方交叉證據，不廣泛重跑已完成部分。
 
-先寫會失敗的回歸：
-- real evaluator→eligibility→build_release→rankings→funnel→export 的 4P1F、4P1U、5P、3P2U 案例。
-- 合格調整價、Z≤0、正 slope、健康 unknown、EPS／PEG 缺漏，仍在 lowPosition。
-- growth 候選為 1、PEG 池為 0，策略契約／snapshot／export 驗證可通過。
-- 真實股利欄位上半年／下半年＋ROC 年度，正現金與確認零現金、年度與季度重複列。
+10/2 起每天先保存完整官方日來源；往後只加入新日並滑動窗口，避免每次重新回補舊日期。
 
-依據與可沿用測試：pipeline/growth_health.py:64；pipeline/test_growth_health.py；pipeline/test_refresh_snapshot.py:9、261、400；pipeline/test_valuation.py:65；pipeline/financial_periods.py:124；scripts/test_verify_snapshot.py；pipeline/test_screening_export.py。
+新的只讀來源證據：使用者目前開啟的相同 sitcStat 路由，以 GET、完整 type／date／searchType／id／response 查詢可取得 10/2 CSV；原始 SHA-256 231878b83ee9b668debc6ce7d457660fb6c50f5f17d635ac730d71729367bf8b，cp950 編碼，28 排名列。這份 buy 報告只有買超側，張數取整，3131 的 36 股顯示為 0 張；不能當完整精確全市場日資料。正在驗證同路由 JSON 的完整側別、日期及精度；此前 POST 失敗不代表此 GET 也失敗。
 
-驗收：4/5 不變成 5/5；unknown 不升級 pass；三策略獨立；原始來源 fixture 一路通過發布與匯出。模組須符合至少 80% coverage，新增測試檢查真實資料流而非手造不可能的 aggregate。
+## 五、網站與 Notion 發布閉環
 
-## 5. Phase 2：財務補齊、備援與免費配額
+n8n 可見節點涵蓋：選交易日、GitHub 原生 dispatch、claim/checkpoint、Actions 狀態、main publication 驗證、canonical export、網站真實 bytes fingerprint、Notion schema／當日頁／子資料庫／逐列讀回。實際 main 資料提交在 Actions 的 Publish validated release to main；n8n 必須再讀回確認，不能只看 dispatch 成功。
 
-來源顺序：既有可靠 cache、同次公開批次、合法可推導值、FinMind 補缺。所有值保留 source、period、availableAt、unit、reported/derived/unavailable 與公式。
+網站顯示資料日、更新時間、run、品質狀態。刷新日期及 00631L 日期必須與官方已完成 session 一致。旧版 aggregate growth funnel 未提供時保留未知，仍顯示該發布實際保存的逐檔五項健診與估值缺漏，不捏造 input audit。區分「未取得資料」、「已知不符」及「有效零候選」。
 
-| 缺口 | 合法處理 |
-|---|---|
-| missing_pe | 同日官方正 PE；缺時用同日 raw close／正值、可比、連續四季 TTM EPS。 |
-| missing_eps_history | 補已完成年度與季度；CAGR 至少四個完整可比年度，用實際起迄年距。 |
-| nonconsecutive_quarters | 補缺季度；兼容 YTD 可以回推單季，EPS 差額另需股數與計算基礎一致。 |
-| missing_dividend | 補完整已確認年度／四季／兩半年，按期間去重；提案、抓取日、部分半年不假裝年度確認。 |
-| 已知負成長／虧損／極端 | 記 known-invalid／not-applicable／extreme；可展示輸入但不發布不合格估值。 |
-| 健康比較缺口 | 同季去年／逐月去年比較，確認金額單位、年度、期間與來源相容。 |
+Notion 使用 Notion account 2，根資料庫 StockScreener；每個交易日一個 YYYYMMDD 頁面／inline 股票子資料庫。
 
-冷 cache 用現有 planner 會產生 308 jobs（財報100、PE20、股利100、月營收88），另有 quota query／retry，超過每天 300 attempts。改成優先關閉「整檔股票還缺的最後證據」，先利用已有 EPS 及可 derived PE 的股票补確認年度股利；避免查已能合法推導的 PE。剩餘任務存持久化 queue，跨日接續。
+日頁保存 MarketDate、RunId、RequestId、PayloadHash、SourceGitCommit、PublishedGitCommit、資料品質、三策略筆數、發布／歸檔狀態及可去敏錯誤。股票子表保存代碼（文字）、名稱、市場、多選策略標籤、各策略排名、價格、PE、TTM EPS、股利／殖利率、EPS 成長、總報酬本益比、五項健診狀態與比較期間、估值／資料來源及缺漏原因。
 
-硬限制：每個臺北曆日所有 runs 合計≤300 HTTP attempts，並≤已查實際剩餘配額的80%；quota query 和 retry 都計數。402/429、quota 不明、token 缺少便停止 supplement；保存 rows、usage、queue、block state。任何午夜後的 request 使用正確曆日或停止，不能透過重跑重置計數。
+收錄當日任一三策略入選股票的聯集，一個股票一列、多策略用 tags。缺值存 null，真零存 0。資料不完整的失敗日可以保存失敗 metadata，但不可偽裝成成功的零股票紀錄。
 
-依據：pipeline/finmind_incremental.py:167、237；pipeline/finmind_client.py；pipeline/financial_periods.py:73；scripts/refresh_snapshot.py:521、554；scripts/fetch_finmind.py；scripts/prepare_finmind_budget.py；docs/OPERATIONS.md。
+同 payload 重試不得增加日頁、子資料庫或股票列；同日合法修正保留 revision 證據，不能默默覆蓋不同 payload。發布成功但 Notion 失敗時只恢復 Notion 步驟，不重新抓行情／重算／推 GitHub。
 
-驗收：100 檔皆有輸入／缺漏診斷；至少一檔真實 A 母體股票具有可查證正 TTM、合法 PE、完成年度 EPS 成長、確認股利且 growthValuation.status=available，才宣告成長估值恢復可用。最終候選不強求非零。若來源與限額不能達成，保持「財務建庫未完成」，列出具體缺口而不報修復完成。
+## 六、完整運作快取與 Notion 備援
 
-## 6. Phase 3：producer／前端契約與完整網站驗收
+選股子資料庫與完整運作快取分開。每個交易日日頁附 market-cache-v1 manifest 及 gzip 分片，保存完整全市場法人原始來源／正規化日資料、官方交易日曆、00631L 計算窗口及實際發布所用逐檔財務／估值輸入。必要的 10/1 基準和十一日啟動窗口亦保存；當前 Top100 子集不能冒充全市場完整快取。
 
-工作：
-1. 增加明確的 `funnel.growthCoverageVersion="growth-coverage-v1"`；既有通用 `funnel.version="funnel-v2-independent-trust-low-position"` 保持不變。新 current release 的同一 funnel 必須包含 growthInputComplete、growthValuationComplete、growthThresholdCandidates、growthHealthCandidates、growthMissingReasons、growthEvaluationState 及 growthTerminalOutcomes；每個數字由同 run 的全母體 detail 計算。
-2. 完整輸入、可計算、門檻達標、健康達標、最終列表的人數要可逐檔核對。缺漏原因可重疊，另提供互斥淘汰階段，避免原因數相加誤超母體。
-3. 新 producer 缺字段是發布錯誤；舊 revision 保持不可變、標 legacy。舊 current snapshot 的整組新成長漏斗明示「此發布尚未提供診斷／等待重算」，不混搭未知新欄位與舊 default-zero。前端 src/data/api.ts 做版本／型別驗證；建置／發布 gate 必須核對 producer 與 consumer 相容。
-4. 顯示行情完整度與財務完整度兩個百分比、建庫進度／缺漏股票清單、實際交易日／更新時間／run／下一個交易日截止。
-5. 成長空名單分清「無可評估股票」「已計算但估值未達」「健康未達」。即使未入選，也能查看已評估股票的輸入與淘汰理由。
-6. 核對投信、成長、低位、00631L、歷史、日期／快取／新鮮度，不以單一 growth tab screenshot 代表全站完成。
-7. 同版本診斷保留在 canonical export 及新歷史 revision 的 projection，更新 pipeline/history_archive.py 與 history 型別；歷史缺診斷明示 legacy，不依最新規則回推歷史統計。
-8. 現有頁面只在 mount 讀一次 latest；在回到頁面或低頻讀取輕量發布識別時提示「有新發布」及重新載入，保留篩選條件。避免頻繁下載完整快照或呼叫金融 API，並驗證同日 correction 也能辨识。
+每個分片保留資料日、來源日期／URL／單位、schema、來源 lineage、原始／壓縮 SHA-256、大小、列數與代碼集合 hash；分片壓縮最大 4 MiB、解壓最大 32 MiB。Notion 免費方案單檔上限 5 MiB，所以使用多片，不能把約 8.1 MB 壓縮的現有 100 檔明細塞成單檔。檔案透過既有 Notion account 2 上傳並掛在日頁，逐片重新讀回、匿名下載、驗證 hash／資料日／覆蓋率後才標記 complete。簽名下載 URL 有期限，每次從授權頁面取得新 URL，不永久保存 URL 當備援。
 
-全站回歸矩陣：
-- 投信：官方十市場日、TPEx 張轉股、完整兩期 Top10 差集；缺 PE 不隱藏真實新進榜。
-- 成長：1.20＋4/5；沒有額外 15% 或 PEG gate；無缺值補零。
-- 低位：3.5 年調整價、Z≤0、正 slope、signalEligible；raw proxy 或短歷史不升級正式訊號；健康未知不隱藏合法價格觀察。
-- 00631L：交易日等於發布日；今日量除前五個完成交易日均量，排除今日；缺任一期就明示未知。
-- 歷史：三策略 rows 與日／月／revision 一致，更正保留舊 revision；搜尋、排序、日期條件、返回最新資料可操作。
-- Freshness：頁面開著跨 deadline 自動更新；週末／假日使用下一個應更新交易日；網路失敗 cache 不偽裝最新。
+完整快取 bytes 不代表每個財務指標皆可計算；明確記錄各項 coverage 與 null／0，缺來源／缺日期仍為 pending，不能提供正式比较基準。來源完整度要求依角色與完整代碼集合驗證，不能靠檔案存在判成功。最新日行情不能由前日快取冒充。前日快取只提供真實比較、既有合法財報及恢復用途。
 
-依據：src/App.tsx:262；src/domain/coverage.ts；src/domain/types.ts；scripts/verify_snapshot.py；scripts/verify_daily_freshness.py；pipeline/market_indicators.py；pipeline/test_official_institutional.py；pipeline/test_market_indicators.py；src/App.test.tsx；src/components/DataStatus.test.tsx。
+同一 hash 重試重用已驗證附件與檔案 IDs；修正版保留原版本，只有新版本全部讀回成功才切換 active hash。寫入不明時先讀回再重試。发布成功但快取／Notion 歸檔失敗，只恢復歸檔，不再次抓行情、計算或推 GitHub。快取不得含 token、帳戶身分、配額 ledger 或原始診斷日志。執行仍為確定性程式，不依賴 AI agent。
 
-驗收：新發布漏斗沒有因缺 producer 欄位而出現 —；數字、策略股票列表與 detail／export 同源。真實資料不足可以是 0／null，但有逐檔理由及獨立建庫狀態。用 360／768／1440 viewport 的瀏覽器實際驗證核心操作與錯誤／空狀態。
+## 七、驗證與啟用順序
 
-## 7. Phase 4：可讀的 n8n 正常入口與恢复
+1. 凍結健康檢查、未知顯示及每小時配額修復；TDD、有效模組至少 80% line coverage、peer review，修完 HIGH／MEDIUM。
+2. 整合 Python、UI、n8n 契約；typecheck、build、差異／secret review。精確 feature head CI 成功後，非強制發布 main，再獨立確認 main CI 與 Pages JS/CSS bytes。
+3. 使用新受控 request revision 取得 10/2 真實日行情與指標輸入；不重送已知失敗舊 request。報告 actual attempts、account observation、cache hit、queue、完整／缺日數及實際耗時。
+4. 驗證 10/2 日期、00631L 今日量／五日均量、Top10／比較窗口、五項健診與可計算估值、canonical export 及 fingerprint。合格 0 檔只在來源完整且逐檔淘汰原因可驗證時接受；不強迫產生標的。
+5. 推 main 後獨立讀正式網站 date／run／hash；建立 20261002 Notion 日紀錄並讀回 rows、tags、rank、每個 numeric null／0／數值；完整運作快取與 10/1 比較基準逐片驗證並標記完成。
+6. 同 payload 重試，讀回證明沒有重複頁／DB／列、没有再次 FinMind 查詢或 GitHub dispatch。測一次 Notion 復原，不重跑發布。
+7. 通過真實閉環後啟用主 workflow huDBNJDss4KuPmn4 的週一至週五 18:00 Asia/Taipei；官方休市跳過，當日來源未就緒則在有限截止時間內重試，避免發布昨日當今日。
+8. 交付實際 code commit、CI、10/2 data run、網站 fingerprint、Notion 日頁／筆數、workflow active version 與排程 readback。沒有這些證據，整體仍未完成。
 
-主 manual 入口做真實更新；診斷分開。未指定日期時以官方 calendar、收盤時間與來源水位選最近已完成交易日；10/3 星期六補缺少的 10/2，已有 exact run 就 resume、已完整完成就回報不重跑。不可單純今天減一天，也不可將 stale Oct1 當作正確 Oct2。
-
-畫布明確呈現：
-1. 解析目標交易日／假日與操作種類。
-2. GitHub SHA CAS claim／讀取 checkpoint。
-3. GitHub Dispatch Actions（native workflow.dispatch）。
-4. 找 exact run、Wait、取得狀態、讀取與驗證 artifact。
-5. 確認 GitHub main publication。
-6. 查找／建立 Notion YYYYMMDD 記錄及 inline database。
-7. 查 child data source／row keys，逐檔建立缺少股票列。
-8. 獨立讀回 Notion 筆數、值、策略 tags／revision；核對正式網站 exact payload。
-9. 更新各階段狀態／Active Revision，呈現 date/run/count/error/Actions 與 Notion links。
-
-Git push 仍由 Actions 的 Publish validated release to main 執行，n8n 畫布清楚標示驗證 publication 的步驟。Cloudflare main Git integration 為唯一正式部署路徑。
-
-API／模式：GitHub node1.1 workflow.dispatch；Notion3 databasePage.getAll/dataSource.get。Notion page create 僅在 null／0／前導零代號／tag／長 provenance projection 的 schema 與實際讀回驗證通過後採 native；否則使用明確命名的 credential HTTP 業務節點。Inline database create 用 HTTP Request4.4、Notion-Version2025-09-03、lowercaseHeaders=false。
-
-保留：dispatch intent 先保存、歧義回應查 exact request title 不重送、SHA CAS、59分鐘 owner＋60秒接管間隔、Wait 後 deadline gate、scheduled19:30 絕對截止、manual override 留審計。Notion 每次間隔至少500ms；429 尊重 Retry-After；不 blanket retry create。
-
-依據與可複製位置：scripts/n8n/engine.cjs:42、126、143、174、245、282；runtime.cjs:33、70；build-workflow.cjs:21、58；test-engine.cjs；test-archive-flow.cjs；audit.cjs:6。不要採 dispatchAndWait：安裝版等待 webhook callback，而既有 daily workflow 沒有該 callback，且 instance 上限3600秒。
-
-驗收：按主 manual 看得到目標日与正式工作結果；診斷明確顯示「不更新行情／不建立歸檔」。使用者不用猜隐藏 mode、Code state 或已刪除的 execution data；sanitized ledger／結果面板提供持久狀態，signed URL、token 不保存。
-
-## 8. Phase 5：真實發布、Notion 與六日回填
-
-先前 09/08 歷史匯入嘗試被自動核准審查拒絕，理由是指定外部寫入尚缺可信任的明確同意。此後使用者已對精確合併問題回覆「核准上述發布、補跑、Notion 匯入與排程啟用」；可信任授權現已收到。範圍包含修復程式的 GitHub feature CI 與非強制 main 發布、2026-10-02 Actions 真實更新及網站驗證、六個真實歷史日與新日 Notion 匯入、same-payload 重試，以及 weekday 18:00 Asia/Taipei 排程。維持 FinMind 免費每日 300 attempts／實際剩餘帳戶配額 80% 約束；不擴大秘密或權限範圍。發布仍先通過精確來源 CI 及 coordinator release gate，以下資料、歸檔、部署與排程項目仍以真實讀回結果判定成功。
-
-受控第一次運作：
-1. 對官方確認已完成的缺漏交易日跑一次，保存 source commit、request ID、Actions run ID。
-2. 查實際 FinMind quota／attempts／cache hit／queue／耗時；金融欄位映射不符合時修 adapter 回歸，不放寬資料可信政策。
-3. Snapshot／freshness／完整策略發布驗證通過後，Actions 發布 main、上傳 canonical export 與 publication。
-4. 正式網站 latest、00631L、history、export 同日同 run；查 exact bytes/hash/cache headers。
-5. Notion 根資料庫中每個日期一筆 YYYYMMDD 記錄，內含同名 inline DB。存三策略聯集、tags、各策略 ranks、metrics、input evidence／缺漏、公式、revision/hash；代號使用文字保留前導零。
-6. 獨立讀回筆數、唯一碼／Row Key、策略集合與重要 numeric/null 值，與 canonical export 對照。
-
-回填六個實際留存日期：20260908、20260911、20260918、20260923、20260924、20261001。Pin已驗證 repo commit、index/month/revision hash，保留原始入選資料、缺值與 legacy 標示；不重新篩選、不呼叫 FinMind。完成本次新日期後同樣獨立 audit。
-
-Same payload 重試：相同 date/request/run/hash 不新 dispatch、不多建 root page／child DB／stock row。更正 append 新 revision，舊列保留，全部驗證後才切 Active Revision。合法零檔與來源失敗、假日 skip、歸檔失敗、部署待完成各自記錄。
-
-依據：pipeline/screening_export.py:118、166；.github/workflows/daily.yml:126；scripts/verify_history_production.py；scripts/n8n/legacy.cjs；test-legacy.cjs；test-archive-flow.cjs；audit.cjs。
-
-驗收：資料真實到 GitHub、Pages、Notion 三端；現有六日＋新日各有可讀的實際紀錄；第二次 retry 的實際筆數與 run 不增加。Notion read credential 成功不等於 create/write 成功，Actions CI 成功不等於資料 refresh 成功。
-
-## 9. Phase 6：排程啟用與營運交付
-
-驗收前述階段後 publish n8n：週一至週五 18:00 Asia/Taipei，先 official holiday check；晚間每10分鐘 checkpoint 同次 recovery。目標18:45，scheduled最晚19:30；逾期或失敗保持上次有效資料並明確顯示未更新，不新增假零檔紀錄。
-
-交付報告逐項列：
-- 問題ID、修改commit、測試結果與 coverage。
-- 真實 request／Actions run／published commit／payload hash。
-- 網站實際資料日、00631L、三策略人數與財務可計算人數。
-- FinMind 實際 calls／剩餘配額／queue，不用估計冒充測量。
-- 七個日期的 Notion page／childDB／dataSource、expected／actual count、retry 實數。
-- n8n activeVersion 與 cron／timezone／checkpoint／manual入口。
-- 真實 bootstrap 尚缺資料與恢復操作；沒有真實證據的項目標未完成。
-
-本機必要檢查：
-
-    .venv/bin/python -m pytest pipeline scripts -q
-    npm run test:unit
-    node --test scripts/n8n/test-*.cjs
-    npm run typecheck
-    npm run build
-    .venv/bin/python scripts/verify_snapshot.py
-    .venv/bin/python scripts/verify_daily_freshness.py --market-date YYYY-MM-DD --data-dir public/data --config config/tracked_symbols.json
-    .venv/bin/python scripts/verify_history_production.py --base-url https://stockscreener.andyshih.uk/ --expected-dir public/data
-
-實際 node schema／SDK 驗證、security review、npm audit／pip audit、git diff review 都在發布前完成。最終狀態不得只寫「測試都通過」；必須附產品與營運閉環的真實證據。
-
-
-目前日期完整 OpenAPI 原始 bytes 已另存 ignored local cache，861949 bytes／SHA-256 `2d058996bf67a375e152f381dda1a8610c32cf3ecd1ed31240c89ac7fd020402`；910 唯一代號、全部日期正確、整數 shares 及 buy−sell=net 逐列通過。正 net 28、負 net 28、真實零 net 854。此備份仍只涵蓋 1／11 個所需交易日，未匯入公開資料、未發布假零檔，沒有新增 FinMind calls。
-
-最後一次限定診斷 execution 843／ledger 92 從 n8n 環境發出官方 documented POST，完整 form 為 `type=Daily&date=2026/10/02&searchType=buy&response=json`，不帶 credentials、redirect off、20 秒上限；實際結果 timeout、沒有 HTTP response 或 report 日期／表格。Raw payload 不保留，temporary helper 已 archive。不再重送相同診斷或資料 job；此只說明受測 endpoint／環境，仍不宣稱 TPEx 全站故障。
-
-### 免費歷史備援的下一步：先驗證三檔，不先假設全市場可補齊
-
-本輪單次 ordinary TPEx POST 重查仍 connection reset；audit checkout、原始使用者 checkout、可用 Git refs 及既知外部 cache 路徑均未找到前十日完整資料。沒有更改原始使用者 checkout。
-
-[FinMind 官方籌碼文件](https://finmind.github.io/tutor/TaiwanMarket/Chip/) 支援免費單股歷史區間；省略 `data_id` 的全市場日資料限 Backer／Sponsor。[官方 SDK](https://github.com/FinMind/FinMind/blob/master/FinMind/data/finmind_api.py) 的 `stock_id_list` 會建立逐股 HTTP，不能把它當成一個配額的批次呼叫。910 個當日代碼包含 788 普通股及 122 其他商品；查全部代碼至少 910 次區間查詢，並非 910×11。每日 300 上限下至少四日，還須扣用量查詢、重試及財務補件；實際剩餘帳戶額度 80% 可能進一步降低速度。
-
-正式 A 母體只包含合格普通股，擴大備援時應先確認窗口內的普通股名冊，避免花配額查 122 種不參與母體的其他商品。若最終所需恰為當日 788 普通股，300 上限下理想至少三日；若實際帳戶剩餘量只有 300，80% 限制與用量查詢使其至少四日。歷史成員異動、缺日期、其他補件及失敗請求可能延長，不能先承諾完成日期。
-
-沿用已核准的免費備援範圍，先在同一 GitHub Actions `daily.yml` 增加隔離的 `institutional_probe` 手動模式。此模式只驗證三種普通股案例：10/2 官方投信正買超、負買超、明確零值各一檔。每檔查 9/16–10/2 的十一個已確認交易日；每個 HTTP 最多一次，最多三次資料查詢，另有計入共同預算的用量查詢。實際 token 只在 Actions secret 環境使用，報告僅記存在布林值及用量數字。
-
-資料存 `.cache/finmind/state.json`／`rows.json`，與金融補件共用同一曆日 300 上限及 80% 帳戶餘額限制，不改金融 queue。每次取得後先保存 checkpoint，再更新進度；同範圍 cache 重試不重查已保存資料。新模式沿用 `daily-snapshot` concurrency、trusted checkpoint 恢復及 `always()` 保存；只輸出 sanitized probe summary，不發布股票資料、不建立 canonical export、不推網站、不進 Notion 股票歸檔。
-
-三檔驗證須核對 exact symbol／十一個日期／整數 shares／buy−sell，以及 10/2 官方 buy／sell。空回應、缺日期、缺 Investment_Trust 列都維持未知，不能補零。即使三檔通過，也只證明三檔資料可用；尚不能宣稱完整歷史母體或十日全市場排名。擴大建庫前需另外解決歷史上市／下市／轉板成員與所有必需日期的覆蓋。
-
-順序：本機 TDD、審查與 exact-head CI → 已核准的非強制 main 發布 → 一次受控 probe → 獨立讀回实际 token presence／quota／attempts／日期／零值與 checkpoint。這次 probe 的結果不會把 10/2 網站更新或排程驗收改為成功。
-
-三檔程式最終 targeted tests 54 項通過，production module line coverage 94.86%、CLI 88.42%；全量 Python 514 項曾於最後一個 aggregate 修正前通過，修正後相關測試已通過，exact-head CI 將再驗证全量。審查修正 checkpoint 平面格式、原始與正規化雜湊、有效部分資料的零 HTTP 重試、部分覆蓋 outcome、200 response 要求及 CLI 輸出路徑隔離。此為程式證據，實際 FinMind token presence、用量與三檔結果仍未取得。
-
-### 已授權發布與第一輪探測的實際結果
-
-修復來源程式已經非強制發布至 main：`ea9c4bb76e54ea664d5c32ee17b0a07668f36515`，feature CI `37089055365` 與 main CI `37089217029` 均成功。這是來源程式發布，沒有新行情或篩選資料發布。
-
-單次三檔探測 request `institutional-probe:20261002:v1`／n8n 848／Actions `37089432229` 實際失敗。獨立讀取該次 job log 的去敏摘要（850／ledger 99）確認 token 存在；`http.client.IncompleteRead` 發生於 `probe_institutional_history.py:101` 的官方 TPEx `response.read()`。呼叫順序證明錯誤在 FinMind client 及用量查詢之前，因此該次 FinMind 呼叫數為 0；實際帳戶額度仍未知。原始 log、例外內容及簽名網址未持久保存，診斷 helper 已封存，沒有重送原失敗探測。
-
-下一步只修復已證實的官方 HTTP 回應讀取：限制回應大小、僅對官方讀取採有限重試、捕捉 HTTP transport 例外並寫出有效去敏摘要；不能把失敗當成空資料或零值。TDD 與精確來源 CI 通過後，才使用新的 request revision 受控驗證；共享每日 300 次及實際剩餘額度 80% 約束維持。仍未完成 10/2 新行情、全市場十一日投信資料、成長估值、canonical export、新日 Notion 股票歸檔或排程啟用。
-
-官方傳輸窄修正已完成本機驗證：全套 Python 522 項、三檔探測相關 61 項、source helper/schema 19 項均通過；CLI line coverage 89.29%，獨立審查無 HIGH／MEDIUM 問題。回應上限 2 MiB，只有公開官方傳輸可最多再試一次，FinMind 每請求一次的限制不變。包含真實 stdlib HTTPResponse 的錯誤 Content-Length 回歸及 n8n artifact schema 相容測試。這些測試沒有發出實際網路請求；來源恢復仍待發布後的受控真實驗證。
-
-### 擴大免費建庫的持續恢復設計（尚未執行）
-
-三檔來源驗證成功後，採既有 `daily.yml` 的獨立 source mode 及 n8n 建庫入口，共用 `daily-snapshot` concurrency 和 FinMind 預算；固定十一日目標／calendar／資格政策與雜湊，將建庫 queue 放在獨立 namespace，保留財務 queue。建庫未完整時只回報進度，不產生正式零檔結果。跨曆日恢復需要先取得最新可信累積 rows，再合併當日 attempts／ceilings；現有僅恢復當日 artifact 的程式仍須調整與測試，避免第二日重查已完成股票。
-
-名冊不可只取當日 788 檔。免費 [TaiwanStockInfo](https://finmind.github.io/tutor/TaiwanMarket/Technical/#taiwanstockinfo) 與 [TaiwanStockDelisting](https://finmind.github.io/tutor/TaiwanMarket/Fundamental/#taiwanstockdelisting) 的整表查詢可協助發現转板／下市代碼，兩次查詢都必須先取得有效餘額、計入共同預算並保存來源雜湊。StockInfo 必須保留所有歷史市場列；其 date 是更新日期，不能當成上市日期。Delisting 的 date 邊界與原市場仍須交換所證據確認。這兩份 metadata 只能建立保守候選聯集，不能直接證明每日成員或將缺列補零。
-
-每個必需 symbol/date 取得有效投信 buy／sell／net shares 或獨立證實的不適用日期後，才交給既有 `rank_adjacent_windows()`。按 symbol/date 合併官方 TWSE 與備援資料，保留官方值且不得雙加；完整後再走正常發布、canonical export、網站、新日 Notion audit 與重試驗收。從此每天保存完整當日官方快照，減少再次大量逐股回補。建庫排程、實際餘額／queue、歷史名冊完整性尚未驗證，不標示已啟用。
-
-傳輸修正 `2768c12ea54a8888ef6c870a5d63488d0b121693` 已非強制發布 main；feature CI `37090380867`／main CI `37090516507` 均成功，遠端 tree 與 parent 已獨立核對。新的單次受控請求 `institutional-probe:20261002:v2`／n8n 853 已啟動；未重送 v1。新請求的實際配額、呼叫數、三檔覆蓋尚未讀回，不能沿用 v1 的零呼叫數描述 v2。
-
-v2 的真實 artifact 已讀回（Actions `37090657735`／ledger 103）：診斷 job 執行成功，但來源結果 `official_source_unavailable`，token 存在、FinMind attempts／data requests 都為 0、配額未知、cases 空、沒有 FinMind checkpoint artifact。不能以 Actions success 宣稱資料或篩選成功。
-
-改用已先前真實 GET 200 保存、獨立核對的 10/2 TPEx 原始 OpenAPI evidence，加入 Git 固定的 gzip＋metadata（原始 861949 bytes、SHA-256 `2d058996bf67a375e152f381dda1a8610c32cf3ecd1ed31240c89ac7fd020402`、910 列、取得時間 `2026-10-03T01:12:54.281658+00:00`）。它是一次真實來源擷取的保存，並非測試 fixture 或新日期資料。Probe 以 opt-in 路徑讀取，核對網址／GET 200／日期／單位／雜湊／列數與全列一致性；壓縮與展開都限制 2 MiB，損壞或不符時不查 FinMind，也不重送官方即時來源。既有即時模式與正常發布路徑保持。此 evidence 仍只涵蓋 1／11 日，只用於三檔當日比對；完整歷史與新日產品驗收仍未完成。
-
-保存來源模式已完成本機驗證：Python 全套 545 項、探測相關 83 項、n8n helper/schema 19 項均通過，CLI line coverage 91.10%。獨立審查已核對真實保存檔與原始 cache 的逐 byte 一致性；損壞 DEFLATE 回歸已修正，無剩餘 HIGH／MEDIUM 問題。尚未發布這個保存來源修正或執行新的真實探測。
+最終本機驗證：657 項 Python、86 項 n8n、84 項 UI 通過，typecheck／build／diff check 通過。受影響三份前端 production 檔案 line coverage 分別 87.78%／100%／100%，合計 91.95%；branch 75.88%，不宣稱 branch 達 80%。配額模組 combined line coverage 93%，health_checks 99%、growth_health 94%、官方投信模組 80%。npm audit 漏洞 0、secret review 0、未解決 HIGH／MEDIUM 0。實際 Python producer 在無網路 fixture 下產生新每小時摘要，通過實際 n8n validator；已過期額度的三筆快取重用也以 0 attempts／3 cache hits 通過。上述不是新金融資料發布。

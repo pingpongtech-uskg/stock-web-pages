@@ -86,6 +86,41 @@ def test_pe_query_remains_when_price_or_eps_is_not_safely_derivable(change):
     assert any(job['dataset'] == retrieval.PER for job in retrieval.plan_gaps([detail], {}, '2026-10-02'))
 
 
+def test_future_revenue_cannot_close_historical_retrieval_gap():
+    detail = stock('2330', full_eps=True, reported_pe=True)
+    detail['healthInputs']['monthlyRevenueOfficial'] = [
+        {'month': f'{year}-{month:02d}', 'revenue': 120 if year == 2026 else 100,
+         'source': 'TWSE fixture', 'publishedAt': '2026-10-10' if year == 2026 else '2025-10-10'}
+        for year in [2025, 2026] for month in [7, 8, 9]]
+    jobs = retrieval.plan_gaps([detail], {}, '2026-10-02')
+    assert any(job['dataset'] == retrieval.REVENUE for job in jobs)
+
+
+@pytest.mark.parametrize('evidence', ['future_quarter', 'cached_ytd_difference'])
+def test_ineligible_income_cannot_close_financial_health_gap(evidence):
+    detail = stock('2330', full_eps=True, reported_pe=True, revenue=True)
+    fields = ['grossProfit', 'operatingProfit', 'pretaxProfit', 'netIncome']
+    if evidence == 'future_quarter':
+        detail['healthInputs']['incomeQuarterly'] += [
+            {'year': year, 'quarter': 3, 'periodType': 'quarter', 'eps': 3,
+             'source': 'FinMind fixture', 'amountUnit': 'TWD',
+             'publishedAt': f'{year}-10-10', **{field: 120 if year == 2026 else 100 for field in fields}}
+            for year in [2025, 2026]]
+    else:
+        detail['healthInputs']['incomeQuarterly'] = [
+            {**row, **({field: 180 if row['year'] == 2026 else 150 for field in fields}
+             if row['quarter'] == 2 else {}),
+             **({'derivationMethod': 'ytd subtraction'} if row['quarter'] == 2 else {})}
+            for row in detail['healthInputs']['incomeQuarterly']]
+        detail['healthInputs']['incomeYtd'] = [
+            {'year': year, 'quarter': quarter, 'periodType': 'ytd',
+             'availableAt': '2026-10-10' if year == 2026 and quarter == 1 else f'{year}-08-15',
+             **{field: value for field in fields}}
+            for year, quarter, value in [(2025, 1, 100), (2025, 2, 250), (2026, 1, 200), (2026, 2, 380)]]
+    jobs = retrieval.plan_gaps([detail], {}, '2026-10-02')
+    assert any(job['dataset'] == retrieval.FINANCIAL for job in jobs)
+
+
 def test_tiny_free_allowance_closes_dividend_evidence_before_generic_financial_jobs(tmp_path, monkeypatch):
     output = release(tmp_path, cold_universe())
     calls = []
@@ -107,12 +142,14 @@ def test_tiny_free_allowance_closes_dividend_evidence_before_generic_financial_j
         detail = json.loads((output / 'releases' / 'official' / 'stocks' / f'{code}.json').read_text())
         assert retrieval.complete_dividend(detail['healthInputs']['dividends'], 2025, '2026-10-02')
     checkpoint = json.loads((tmp_path / 'cache' / 'state.json').read_text())
-    assert checkpoint['queue'] and checkpoint['days']['2026-10-02']['attempts'] == 4
+    assert checkpoint['queue'] and checkpoint['rollingHour']['totalAttempts'] == 4
 
 
 def test_failed_first_symbol_moves_behind_pending_jobs_on_next_day(tmp_path, monkeypatch):
     output = release(tmp_path, [stock('1000'), stock('1001'), stock('1002')])
     day = ['2026-10-02']
+    clock = [1790899200.0]
+    monkeypatch.setattr(retrieval.time, 'time', lambda: clock[0])
     monkeypatch.setattr(retrieval, 'current_taipei_day', lambda: day[0])
     data_calls = []
     def respond(request, **kwargs):
@@ -126,12 +163,13 @@ def test_failed_first_symbol_moves_behind_pending_jobs_on_next_day(tmp_path, mon
     first = retrieval.supplement_snapshot(['1000', '1001', '1002'], output, '2026-10-02', budget_date=day[0], **kwargs)
     assert data_calls == ['1000'] * 3 and first['requests'] == 4
     day[0] = '2026-10-03'
+    clock[0] += 86400
     second = retrieval.supplement_snapshot(['1000', '1001', '1002'], output, '2026-10-02', budget_date=day[0], **kwargs)
     assert data_calls[3:] == ['1001'] * 3
     assert second['requests'] == 4
     checkpoint = json.loads((tmp_path / 'cache' / 'state.json').read_text())
-    assert checkpoint['days']['2026-10-02']['attempts'] == 4
-    assert checkpoint['days']['2026-10-03']['attempts'] == 4
+    assert checkpoint['rollingHour']['totalAttempts'] == 8
+    assert second['actual_attempts'] == 4
 
 
 @pytest.mark.parametrize('row', [
@@ -186,6 +224,8 @@ def test_stock_distribution_reopens_financial_basis_gap_even_with_reported_pe_an
 def test_incomplete_sources_keep_bounded_calendar_retry_queue(tmp_path, monkeypatch, per_rows, deferred_count):
     output = release(tmp_path, [stock('2330')])
     day = ['2026-10-02']
+    clock = [1790899200.0]
+    monkeypatch.setattr(retrieval.time, 'time', lambda: clock[0])
     monkeypatch.setattr(retrieval, 'current_taipei_day', lambda: day[0])
     calls = []
     def respond(request, **kwargs):
@@ -219,10 +259,11 @@ def test_incomplete_sources_keep_bounded_calendar_retry_queue(tmp_path, monkeypa
         assert deferred['queued'] == deferred_count and deferred['skipped'] == 'deferred'
         assert len(calls) == previous_calls
     day[0] = '2026-10-09'
+    clock[0] += 7 * 86400
     previous_calls = len(calls)
     recovered = retrieval.supplement_snapshot(['2330'], output, '2026-10-02', budget_date=day[0], **kwargs)
     assert len(calls) - previous_calls == deferred_count + 1  # One counted quota check plus due gaps.
     assert recovered['requests'] == deferred_count + 1 and recovered['queued'] == deferred_count
     ledger = json.loads((tmp_path / 'cache' / 'state.json').read_text())
-    assert ledger['days']['2026-10-02']['attempts'] == 5
-    assert ledger['days']['2026-10-09']['attempts'] == deferred_count + 1
+    assert ledger['rollingHour']['totalAttempts'] == 5 + deferred_count + 1
+    assert recovered['actual_attempts'] == deferred_count + 1

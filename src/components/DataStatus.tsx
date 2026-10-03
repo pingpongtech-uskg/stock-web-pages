@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Coverage, Freshness, Release } from '../domain/types'
+import { qualityStatusCounts } from '../domain/coverage'
 import { trackEventOnce } from '../domain/events'
 import { statusLabels } from './StatusPill'
 
@@ -98,12 +99,16 @@ export function DataStatus({ release, compact = false, now, source = 'network' }
 
 export function CoverageLine({ release }: { release: Release }) {
   const { coverage } = release
+  const quality = qualityStatusCounts(release.stocks ?? [])
+  const qualitySummary = release.stocks?.length
+    ? `通過 ${quality.pass} · 未通過 ${quality.fail} · 未評估 ${quality.unknown} · 不適用 ${quality.notApplicable} · 未提供 ${quality.unreported}`
+    : `逐檔狀態未提供；發布摘要明確通過 ${coverage.financialCompleteCount} 檔`
   return (
     <div className="coverage-line" aria-label="資料覆蓋狀態">
       <span>母體 {formatCount(coverage.universeCount)}</span>
       <span>已建庫 {formatCount(coverage.databaseCount)}（追蹤 {formatCount(coverage.trackedCompleteCount ?? coverage.databaseCount)}/{formatCount(coverage.trackedCount ?? coverage.databaseCount)}）</span>
       <span>待補 {formatCount(coverage.pendingCount)}</span>
-      <span>財報完整 {formatCount(coverage.financialCompleteCount)}</span>
+      <span>財務品質狀態：{qualitySummary}</span>
       <span>資料狀態：{coverage.queueStatus || statusLabels.unknown}</span>
     </div>
   )

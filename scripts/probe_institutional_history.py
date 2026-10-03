@@ -23,7 +23,7 @@ if str(ROOT) not in sys.path:
 
 from pipeline.finmind_incremental import atomic_json  # noqa: E402
 from pipeline.institutional_probe import (  # noqa: E402
-    OFFICIAL_URL, exact_date, run_institutional_probe, select_probe_cases,
+    OFFICIAL_URL, exact_date, run_institutional_probe, select_probe_cases, _budget_metadata,
 )
 from pipeline.trading_calendar import SOURCE_URL, is_open  # noqa: E402
 
@@ -164,7 +164,12 @@ def main(argv=None) -> int:
     summary = {'probeVersion': 'institutional-probe-v1', 'outcome': 'unavailable',
         'publicationEligible': False, 'globalCompleteness': False, 'marketDate': args.market_date,
         'expectedDates': dates, 'cases': [], 'actualAttempts': 0, 'dataRequests': 0, 'cacheHits': 0,
-        'accountLimit': None, 'observedRemaining': None, 'tokenPresent': bool(token.strip())}
+        'accountLimit': None, 'observedRemaining': None, 'tokenPresent': bool(token.strip()),
+        **_budget_metadata(args.cache_dir / 'state.json', args.budget_date)}
+    if summary.get('errorCategory') == 'checkpoint_unavailable':
+        atomic_json(args.summary, summary)
+        print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+        return 0
     try:
         if args.official_evidence_dir is not None:
             print('official_evidence_mode=captured')

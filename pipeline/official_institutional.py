@@ -13,6 +13,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta
+from decimal import Decimal, InvalidOperation, localcontext
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -24,6 +25,7 @@ TWSE_SOURCE = "TWSE:TWT44U"
 TPEX_SOURCE = "TPEx:insti/sitcStat"
 USER_AGENT = "taiwan-stock-screener/official-institutional-v1"
 TAIPEI = ZoneInfo("Asia/Taipei")
+MAX_SOURCE_NUMBER_CHARS = 64
 
 
 class OfficialInstitutionalError(RuntimeError):
@@ -38,18 +40,48 @@ def _clean_code(value: Any) -> str:
     return re.sub(r"\s+", "", _clean_text(value)).upper()
 
 
-def _number(value: Any) -> int | None:
-    text = _clean_text(value).replace(",", "")
+def _number(value: Any, *, multiplier: int = 1) -> int | None:
+    """Parse exact source quantities and convert only whole shares."""
+
+    if isinstance(value, bool):
+        raise ValueError("boolean is not a source quantity")
+    text = str(value if value is not None else "").replace("\u3000", " ").strip()
     if not text or text in {"-", "--", "—", "…", "N/A", "無"}:
         return None
+    if len(text) > MAX_SOURCE_NUMBER_CHARS:
+        raise ValueError("source quantity exceeds length limit")
     negative = text.startswith("(") and text.endswith(")")
     if negative:
         text = text[1:-1].strip()
+        if text.startswith(("+", "-")):
+            raise ValueError("accounting negative quantity cannot include a sign")
+    elif "(" in text or ")" in text:
+        raise ValueError("malformed negative source quantity")
+    if not re.fullmatch(r"[+-]?(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)", text):
+        raise ValueError("malformed source quantity")
     try:
-        result = int(float(text))
-    except (TypeError, ValueError):
-        return None
-    return -result if negative else result
+        quantity = Decimal(text.replace(",", ""))
+    except InvalidOperation as exc:
+        raise ValueError("malformed source quantity") from exc
+    if not quantity.is_finite():
+        raise ValueError("non-finite source quantity")
+    if negative:
+        quantity = quantity.copy_negate()
+    coefficient_digits = len(text.replace(",", "").replace(".", "").lstrip("+-"))
+    with localcontext() as context:
+        context.prec = max(1, coefficient_digits + len(str(multiplier)) + 1)
+        shares = quantity * multiplier
+    if shares != shares.to_integral_value():
+        raise ValueError("source quantity is not a whole share")
+    return int(shares)
+
+
+def _is_empty_row(row: list[Any]) -> bool:
+    return not any(str(value).replace("\u3000", " ").strip() for value in row if value is not None)
+
+
+def _parse_amounts(row: list[Any], indexes: tuple[int, int, int], *, multiplier: int = 1) -> tuple[int | None, ...]:
+    return tuple(_number(_row_value(row, index), multiplier=multiplier) for index in indexes)
 
 
 def _field_index(fields: list[Any], *names: str) -> int:
@@ -79,12 +111,25 @@ def parse_twse_payload(payload: dict[str, Any]) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     for row in rows:
         if not isinstance(row, list):
-            continue
+            raise OfficialInstitutionalError("TWSE report contains a malformed row")
         code = _clean_code(_row_value(row, code_i))
-        buy = _number(_row_value(row, buy_i))
-        sell = _number(_row_value(row, sell_i))
-        net = _number(_row_value(row, net_i))
-        if not code or buy is None or sell is None or net is None:
+        if not code:
+            if _is_empty_row(row):
+                continue
+            raise OfficialInstitutionalError("TWSE report row has no identifiable security code")
+        try:
+            buy, sell, net = _parse_amounts(row, (buy_i, sell_i, net_i))
+        except ValueError as exc:
+            if is_common_stock_code(code):
+                raise OfficialInstitutionalError("TWSE common-stock row contains an invalid quantity") from exc
+            continue
+        if buy is None or sell is None or net is None:
+            if is_common_stock_code(code):
+                raise OfficialInstitutionalError("TWSE common-stock row is missing a quantity")
+            continue
+        if buy < 0 or sell < 0 or buy - sell != net:
+            if is_common_stock_code(code):
+                raise OfficialInstitutionalError("TWSE common-stock row has inconsistent quantities")
             continue
         result.append({
             "code": code,
@@ -126,20 +171,34 @@ def parse_tpex_payload(payload: dict[str, Any]) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     for row in rows:
         if not isinstance(row, list):
-            continue
+            raise OfficialInstitutionalError("TPEx report contains a malformed row")
         code = _clean_code(_row_value(row, code_i))
-        buy_lots = _number(_row_value(row, buy_i))
-        sell_lots = _number(_row_value(row, sell_i))
-        net_lots = _number(_row_value(row, net_i))
-        if not code or buy_lots is None or sell_lots is None or net_lots is None:
+        if not code:
+            if _is_empty_row(row):
+                continue
+            raise OfficialInstitutionalError("TPEx report row has no identifiable security code")
+        try:
+            buy_shares, sell_shares, net_shares = _parse_amounts(
+                row, (buy_i, sell_i, net_i), multiplier=1000)
+        except ValueError as exc:
+            if is_common_stock_code(code):
+                raise OfficialInstitutionalError("TPEx common-stock row contains an invalid quantity") from exc
+            continue
+        if buy_shares is None or sell_shares is None or net_shares is None:
+            if is_common_stock_code(code):
+                raise OfficialInstitutionalError("TPEx common-stock row is missing a quantity")
+            continue
+        if buy_shares < 0 or sell_shares < 0 or buy_shares - sell_shares != net_shares:
+            if is_common_stock_code(code):
+                raise OfficialInstitutionalError("TPEx common-stock row has inconsistent quantities")
             continue
         result.append({
             "code": code,
             "name": _clean_text(_row_value(row, name_i)),
             "market": "TPEx",
-            "buyShares": buy_lots * 1000,
-            "sellShares": sell_lots * 1000,
-            "netShares": net_lots * 1000,
+            "buyShares": buy_shares,
+            "sellShares": sell_shares,
+            "netShares": net_shares,
         })
     return result
 

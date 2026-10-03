@@ -101,16 +101,23 @@ def _category(exc: Exception, *, quota: bool = False) -> str:
     return 'quota_unavailable' if quota else 'transport_unavailable'
 
 
-def _save_progress(path: Path, summary: dict[str, Any]) -> None:
-    state = read_json(path, {'version': 2, 'days': {}, 'queue': []})
-    atomic_json(path, {**state, 'institutionalProbe': summary})
+def _save_progress(path: Path, summary: dict[str, Any], budget_date: str) -> None:
+    DailyBudget(path, budget_date).update_metadata({'institutionalProbe': summary})
 
 
 def _budget_metadata(path: Path, day: str) -> dict[str, Any]:
-    state = read_json(path, {'days': {}})
-    record = state.get('days', {}).get(day, {})
-    return {'dailyAttempts': record.get('attempts'), 'projectCeiling': record.get('ceiling', 300),
-            'accountWindowCeiling': record.get('accountCeiling')}
+    value = {'quotaPolicy': 'rolling-hour-v1', 'rollingHourAttempts': 0,
+             'projectHourlyCap': 300, 'accountAllowanceRemaining': None, 'quotaObservedAt': None}
+    if not path.exists():
+        return value
+    try:
+        budget = DailyBudget(path, day)
+        return {**value, 'rollingHourAttempts': min(300, budget.rolling_used),
+                'projectHourlyCap': budget.record['projectCap'],
+                'accountAllowanceRemaining': budget.account_remaining,
+                'quotaObservedAt': budget.record.get('quotaCheckedAt')}
+    except (FinMindError, ValueError, OSError):
+        return {**value, 'rollingHourAttempts': None, 'errorCategory': 'checkpoint_unavailable'}
 
 
 def _cache_result(entry: Any, case: dict[str, Any], dates: list[str]) -> dict[str, Any] | None:
@@ -138,7 +145,7 @@ def _cache_result(entry: Any, case: dict[str, Any], dates: list[str]) -> dict[st
 def run_institutional_probe(official_rows: Any, *, market_date: str, expected_dates: list[str],
         cache_dir: Path, budget_date: str, token: str, max_data_requests: int = 3,
         client_factory=FinMindClient) -> dict[str, Any]:
-    """Use shared daily quota and durable case caches; make at most three data calls."""
+    """Use shared rolling-hour quota and durable case caches; make at most three data calls."""
     exact_date(budget_date); exact_date(market_date)
     if (not isinstance(expected_dates, list) or len(expected_dates) != 11 or
         [exact_date(day) for day in expected_dates] != sorted(set(expected_dates)) or
@@ -155,7 +162,10 @@ def run_institutional_probe(official_rows: Any, *, market_date: str, expected_da
         'expectedDates': expected_dates, 'globalCompleteness': False, 'publicationEligible': False,
         'tokenPresent': bool(token.strip()), 'actualAttempts': 0, 'dataRequests': 0,
         'cacheHits': 0, 'accountLimit': None, 'observedRemaining': None, 'cases': [],
-        'outcome': 'unavailable', 'errorCategory': None}
+        'outcome': 'unavailable', 'errorCategory': None,
+        **_budget_metadata(state_path, budget_date)}
+    if summary['errorCategory'] == 'checkpoint_unavailable':
+        return summary
     pending = []
     for case in cases:
         cached = _cache_result(entries.get(_key(case['code'], expected_dates)), case, expected_dates)
@@ -219,7 +229,7 @@ def run_institutional_probe(official_rows: Any, *, market_date: str, expected_da
             for key in ('status', 'coverage', 'missingDates')}, 'errorCategory': error}],
             'actualAttempts': budget.used - before if budget else 0,
             **_budget_metadata(state_path, budget_date)}
-        _save_progress(state_path, summary)
+        _save_progress(state_path, summary, budget_date)
         if budget:
             budget.state = read_json(state_path, {})
     complete = sum(case['status'] == 'complete' for case in summary['cases'])
@@ -228,5 +238,5 @@ def run_institutional_probe(official_rows: Any, *, market_date: str, expected_da
         'actualAttempts': budget.used - before if budget else 0,
         **_budget_metadata(state_path, budget_date),
         'cases': sorted(summary['cases'], key=lambda case: ['positive', 'negative', 'zero'].index(case['case']))}
-    _save_progress(state_path, summary)
+    _save_progress(state_path, summary, budget_date)
     return summary

@@ -83,7 +83,8 @@ describe('growth coverage UI', () => {
     expect(markup).toContain('已確認股利 20 檔')
     expect(markup).toContain('成長健康 ≥ 4/5')
     expect(markup).toContain('追蹤行情完整度 <strong>75.0%</strong>')
-    expect(markup).toContain('資料庫財務品質檢查通過率 <strong>30.0%</strong>')
+    expect(markup).toContain('財務品質逐檔狀態')
+    expect(markup).toContain('發布摘要明確通過 24 檔')
     expect(markup).toContain('成長估值輸入建置 <strong>13.3%</strong>')
   })
 
@@ -125,6 +126,47 @@ describe('growth coverage UI', () => {
     expect(markup).not.toContain('成長估值輸入完整 0 檔')
   })
 
+  it('shows legacy per-stock evidence without treating absent aggregate coverage as zero', () => {
+    const checks = [
+      ['月營收 YOY 連續三個月大於 0', 'unknown'],
+      ['近一季毛利年增率大於 0', 'unknown'],
+      ['近一季營業利益年增率大於 0', 'unknown'],
+      ['近一季稅前淨利年增率大於 0', 'unknown'],
+      ['近一季稅後淨利年增率大於 0', 'unknown'],
+    ].map(([label, status]) => ({ label, status, explanation: '舊發布沒有來源值', value: '—', period: '—', sourceRefs: [] }))
+    const stocks = [{
+      code: '2330', name: '台積電', qualityStatus: 'unknown', growthHealthEligible: false,
+      growthValuation: { status: 'unavailable', reason: '缺少正確的現價、PE 或 TTM EPS' },
+      healthCategories: [{ key: 'growth', checks, passCount: 0, total: 5, threshold: 4, status: 'unknown' }],
+    }] as unknown as StockSummary[]
+    const markup = renderToStaticMarkup(<CoverageFunnelView strategy="growth" marketDate="2026-10-01" funnel={{
+      universe: 100, priceComplete: 100, valuationComplete: 66, growthInputComplete: null,
+      growthValuationComplete: null, growthThresholdCandidates: null, growthHealthCandidates: null,
+      growthMissingReasons: null, growthEvaluationState: null, growthTerminalOutcomes: null,
+      pegCandidates: 27, strategyCandidates: 0, formalValuations: 0, proxyValuations: 66,
+    }} coverage={{ ...coverage, databaseCount: 1, financialCompleteCount: 0 }} growthStocks={stocks} />)
+    expect(markup).toContain('明確通過 0 · 明確未通過 0 · 未評估 1')
+    expect(markup).toContain('此舊版發布未提供成長覆蓋診斷')
+    expect(markup).toContain('逐檔成長估值診斷 (1 檔)')
+    expect(markup).toContain('健康未定（未知可能影響 4/5；已確認通過 0/5）')
+    expect(markup).toContain('缺少正確的現價、PE 或 TTM EPS')
+    expect(markup).toContain('近一季毛利年增率大於 0：unknown')
+    expect(markup).toContain('健康合格仍須估值可計算且總報酬本益比 ≥ 1.20 才能入選')
+    expect(markup).not.toContain('估值輸入完整</small><strong>0</strong>')
+  })
+
+  it('dates trust Top10 claims to the published market date and avoids claiming an unverified newer session', () => {
+    const markup = renderToStaticMarkup(<CoverageFunnelView strategy="trust" marketDate="2026-10-01" funnel={{
+      universe: 100, priceComplete: 100, valuationComplete: 0, growthInputComplete: null,
+      growthValuationComplete: null, growthThresholdCandidates: null, growthHealthCandidates: null,
+      growthMissingReasons: null, growthEvaluationState: null, growthTerminalOutcomes: null,
+      pegCandidates: 0, strategyCandidates: 0, formalValuations: 0, proxyValuations: 0,
+    }} coverage={coverage} trustSignalCount={0} trustNewEntryCount={0} />)
+    expect(markup).toContain('本次比較只涵蓋發布資料日 2026-10-01；較新交易日尚未驗證')
+    expect(markup).toContain('Top10 新進榜 0 檔')
+    expect(markup).not.toContain('2026-10-02')
+  })
+
   it('renders stock-level evaluation reason, health outcome, and source provenance', () => {
     const stock = {
       code: '2330', name: '台積電', growthHealthEligible: false,
@@ -136,14 +178,21 @@ describe('growth coverage UI', () => {
           ttmEps: { origin: 'unavailable', sourcePeriod: null, method: null, source: null, reason: 'nonconsecutive_quarters' },
         },
       },
-      healthCategories: [{ key: 'growth', label: '成長', passCount: 3, total: 5, threshold: 4, status: 'fail', checks: [] }],
+      healthCategories: [{ key: 'growth', label: '成長', passCount: 3, total: 5, threshold: 4, status: 'fail', checks: [
+        { label: '月營收 YOY 連續三個月大於 0', status: 'pass' },
+        { label: '近一季毛利年增率大於 0', status: 'pass' },
+        { label: '近一季營業利益年增率大於 0', status: 'pass' },
+        { label: '近一季稅前淨利年增率大於 0', status: 'fail' },
+        { label: '近一季稅後淨利年增率大於 0', status: 'fail' },
+      ] }],
     } as unknown as StockSummary
     const markup = renderToStaticMarkup(<GrowthStockDiagnosticsView stocks={[stock]} />)
     expect(markup).toContain('台積電 (2330)')
     expect(markup).toContain('缺少完整年度股利')
-    expect(markup).toContain('健康條件未達')
+    expect(markup).toContain('健康未達（確定失敗至少兩項；已確認通過 3/5）')
     expect(markup).toContain('價格：來源報告 · 2026-10-01 · TWSE')
     expect(markup).toContain('季度不連續')
+    expect(markup).toContain('健康未達')
   })
 
   it('keeps trust Top10 newcomers visible when the PEG pool is empty', () => {

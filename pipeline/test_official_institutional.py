@@ -2,7 +2,10 @@ import json
 import urllib.parse
 from datetime import date
 
+import pytest
+
 from pipeline.official_institutional import (
+    OfficialInstitutionalError,
     aggregate_window,
     parse_tpex_payload,
     parse_twse_payload,
@@ -78,6 +81,121 @@ def test_parse_tpex_report_converts_lots_to_shares():
             "netShares": 2565000,
         }
     ]
+
+
+def test_parse_tpex_numeric_zero_values_are_not_treated_as_missing():
+    payload = {"tables": [{
+        "fields": ["代號", "名稱", "買進", "賣出", "買賣超"],
+        "data": [["3081", "聯亞", 0, 0, 0]],
+    }]}
+
+    assert parse_tpex_payload(payload)[0]["netShares"] == 0
+
+
+@pytest.mark.parametrize(
+    ("buy", "sell", "net", "expected"),
+    [
+        ("0.036", "0", "0.036", (36, 0, 36)),
+        ("98", "0.059", "97.941", (98000, 59, 97941)),
+        ("0", "158.675", "(158.675)", (0, 158675, -158675)),
+        ("1,234.5", "1,234.464", "0.036", (1234500, 1234464, 36)),
+    ],
+)
+def test_parse_tpex_fractional_lots_exactly_to_whole_shares(buy, sell, net, expected):
+    payload = {"tables": [{
+        "fields": ["代號", "名稱", "買進", "賣出", "買賣超"],
+        "data": [["3081", "聯亞", buy, sell, net]],
+    }]}
+
+    row = parse_tpex_payload(payload)[0]
+
+    assert (row["buyShares"], row["sellShares"], row["netShares"]) == expected
+
+
+@pytest.mark.parametrize(
+    ("buy", "sell", "net"),
+    [
+        ("0.0001", "0", "0.0001"),  # One tenth of a share.
+        ("-1", "0", "-1"),
+        ("10", "1", "8"),  # Buy/sell/net mismatch.
+        ("NaN", "0", "NaN"),
+        (True, 0, 1),
+    ],
+)
+def test_tpex_invalid_common_stock_rows_fail_instead_of_disappearing(buy, sell, net):
+    payload = {"tables": [{
+        "fields": ["代號", "名稱", "買進", "賣出", "買賣超"],
+        "data": [["3081", "聯亞", buy, sell, net]],
+    }]}
+
+    with pytest.raises(OfficialInstitutionalError):
+        parse_tpex_payload(payload)
+
+
+def test_tpex_decimal_precision_never_rounds_fractional_shares_or_large_values():
+    fields = ["代號", "名稱", "買進", "賣出", "買賣超"]
+    fractional = {"tables": [{"fields": fields, "data": [[
+        "3081", "聯亞", "1.000000000000000000000000000001", "0",
+        "1.000000000000000000000000000001",
+    ]]}]}
+    with pytest.raises(OfficialInstitutionalError):
+        parse_tpex_payload(fractional)
+
+    lots = "12345678901234567890123456789"
+    large = {"tables": [{"fields": fields, "data": [["3081", "聯亞", lots, "0", lots]]}]}
+    assert parse_tpex_payload(large)[0]["buyShares"] == int(lots) * 1000
+
+
+@pytest.mark.parametrize("value", ["(-1)", "1" * 65])
+def test_tpex_rejects_signed_accounting_negative_and_oversized_numeric_text(value):
+    payload = {"tables": [{
+        "fields": ["代號", "名稱", "買進", "賣出", "買賣超"],
+        "data": [["3081", "聯亞", "1", "0", value]],
+    }]}
+
+    with pytest.raises(OfficialInstitutionalError):
+        parse_tpex_payload(payload)
+
+
+def test_tpex_missing_common_stock_quantity_and_unidentified_row_fail_closed():
+    fields = ["代號", "名稱", "買進", "賣出", "買賣超"]
+    for row in (["3081", "聯亞", None, 0, 0], ["", "未知", 1, 0, 1], ["", "", 0, 0, 0]):
+        with pytest.raises(OfficialInstitutionalError):
+            parse_tpex_payload({"tables": [{"fields": fields, "data": [row]}]})
+
+
+def test_tpex_valid_noncommon_rows_keep_parser_output_and_invalid_ones_are_ignored():
+    fields = ["代號", "名稱", "買進", "賣出", "買賣超"]
+    payload = {"tables": [{"fields": fields, "data": [
+        ["0050", "元大台灣50", "10", "2", "8"],
+        ["0051", "元大中型100", "bad", "0", "bad"],
+    ]}]}
+
+    assert parse_tpex_payload(payload) == [{
+        "code": "0050", "name": "元大台灣50", "market": "TPEx",
+        "buyShares": 10000, "sellShares": 2000, "netShares": 8000,
+    }]
+
+
+@pytest.mark.parametrize("value", ["1.5", "NaN", "Infinity", True])
+def test_twse_share_values_must_be_finite_whole_shares(value):
+    payload = {
+        "fields": ["證券代號", "證券名稱", "買進股數", "賣出股數", "買賣超股數"],
+        "data": [["2303", "聯電", value, 0, value]],
+    }
+
+    with pytest.raises(OfficialInstitutionalError):
+        parse_twse_payload(payload)
+
+
+def test_twse_rows_validate_nonnegative_buys_and_net_identity():
+    payload = {
+        "fields": ["證券代號", "證券名稱", "買進股數", "賣出股數", "買賣超股數"],
+        "data": [["2303", "聯電", 1, 0, 0]],
+    }
+
+    with pytest.raises(OfficialInstitutionalError):
+        parse_twse_payload(payload)
 
 
 def test_aggregate_window_sums_both_markets_in_shares():

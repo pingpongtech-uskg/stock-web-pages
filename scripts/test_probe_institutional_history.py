@@ -104,7 +104,22 @@ def test_official_transport_error_checkpoint_summary_no_exception_text(tmp_path,
     assert script.main(options) == 0
     result = json.loads((tmp_path / 'summary.json').read_text())
     assert result['errorCategory'] == 'official_source_unavailable' and result['actualAttempts'] == 0
+    assert result['quotaPolicy'] == 'rolling-hour-v1' and result['rollingHourAttempts'] == 0
+    assert result['projectHourlyCap'] == 300 and result['accountAllowanceRemaining'] is None
     assert 'dummy' not in json.dumps(result)
+
+
+def test_corrupt_budget_stops_before_even_official_http_with_unknown_usage(tmp_path, monkeypatch):
+    options = args(tmp_path)
+    cache = tmp_path / 'cache'; cache.mkdir()
+    (cache / 'state.json').write_text('broken')
+    script = module()
+    monkeypatch.setattr(script, 'urlopen', lambda *a, **k: pytest.fail('HTTP with corrupt ledger'))
+    assert script.main(options) == 0
+    result = json.loads((tmp_path / 'summary.json').read_text())
+    assert result['quotaPolicy'] == 'rolling-hour-v1' and result['rollingHourAttempts'] is None
+    assert result['errorCategory'] == 'checkpoint_unavailable' and result['cases'] == []
+    assert result['actualAttempts'] == result['dataRequests'] == result['cacheHits'] == 0
 
 
 def test_output_in_public_forbidden_before_io(tmp_path, monkeypatch):

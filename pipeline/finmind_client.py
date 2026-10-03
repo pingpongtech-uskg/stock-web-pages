@@ -99,6 +99,7 @@ class FinMindClient:
         self._last_request_at = 0.0
         self.daily_budget = daily_budget
         self._initial_attempts = daily_budget.used if daily_budget else 0
+        self._run_attempts = 0
         self.budget: RequestBudget | None = None
         self.successful_requests = 0
         self.blocked = False
@@ -211,14 +212,19 @@ class FinMindClient:
             # Check and checkpoint the budget after waits, immediately before HTTP.
             self._wait_for_rate()
             if count_attempt:
+                if self._run_attempts >= self.hard_cap:
+                    raise BudgetExceeded("FinMind run request allowance exhausted")
                 if self.daily_budget:
                     self.daily_budget.consume(require_known=url == DATA_URL)
                 elif self.budget is None and self._initial_attempts >= self.hard_cap:
-                    raise BudgetExceeded("FinMind daily request allowance exhausted")
-                if self.budget is None:
+                    raise BudgetExceeded("FinMind request allowance exhausted")
+                if self.daily_budget:
+                    pass  # The durable rolling ledger is the sole request authority.
+                elif self.budget is None:
                     self._initial_attempts += 1
                 else:
                     self.budget.consume()
+                self._run_attempts += 1
             query = urllib.parse.urlencode(params)
             request = urllib.request.Request(
                 f"{url}?{query}" if query else url,

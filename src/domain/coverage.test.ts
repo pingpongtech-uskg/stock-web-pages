@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Release } from './types'
-import { releaseCoverageFunnel } from './coverage'
+import type { HealthCategory, Release } from './types'
+import { growthHealthOutcome, qualityStatusCounts, releaseCoverageFunnel } from './coverage'
 
 describe('releaseCoverageFunnel', () => {
   it('reads the producer-published stage counts instead of guessing from rankings', () => {
@@ -74,5 +74,43 @@ describe('releaseCoverageFunnel', () => {
       growthEvaluationState: null,
       growthTerminalOutcomes: null,
     })
+  })
+})
+
+describe('legacy financial and growth health diagnostics', () => {
+  it('counts unknown financial states separately from failures and pass-only totals', () => {
+    expect(qualityStatusCounts([
+      { qualityStatus: 'pass' },
+      { qualityStatus: 'fail' },
+      { qualityStatus: 'unknown' },
+      { qualityStatus: 'unknown' },
+      { qualityStatus: 'not_applicable' },
+      {} as { qualityStatus: 'unknown' },
+    ])).toEqual({ pass: 1, fail: 1, unknown: 2, notApplicable: 1, unreported: 1 })
+  })
+
+  it.each([
+    ['4 confirmed passes plus one fail qualifies', ['pass', 'pass', 'pass', 'pass', 'fail'], 'qualified'],
+    ['4 confirmed passes plus one unknown qualifies', ['pass', 'pass', 'pass', 'pass', 'unknown'], 'qualified'],
+    ['3 passes and 2 unknowns remain unknown', ['pass', 'pass', 'pass', 'unknown', 'unknown'], 'unknown'],
+    ['3 passes and 2 known failures cannot qualify', ['pass', 'pass', 'pass', 'fail', 'fail'], 'not_qualified'],
+  ] as const)('%s', (_label, statuses, expected) => {
+    const labels = [
+      '月營收 YOY 連續三個月大於 0',
+      '近一季毛利年增率大於 0',
+      '近一季營業利益年增率大於 0',
+      '近一季稅前淨利年增率大於 0',
+      '近一季稅後淨利年增率大於 0',
+    ]
+    const category = { checks: labels.map((label, index) => ({
+      label, status: statuses[index], value: '—', period: '—', explanation: '', sourceRefs: [],
+    })) }
+    expect(growthHealthOutcome(category)).toBe(expected)
+  })
+
+  it('does not trust aggregate health flags without the exact five checks', () => {
+    const aggregateOnly = { status: 'pass', passCount: 5, checks: [] } as unknown as Pick<HealthCategory, 'checks'>
+    expect(growthHealthOutcome(aggregateOnly)).toBe('unknown')
+    expect(growthHealthOutcome(undefined)).toBe('unreported')
   })
 })

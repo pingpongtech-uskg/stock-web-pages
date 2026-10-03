@@ -9,9 +9,9 @@ used by the publisher and by tests without changing the UI semantics.
 from __future__ import annotations
 
 from typing import Any, Callable, Iterable
-from datetime import date
 from pipeline.growth_health import evaluate_growth_health
 from pipeline.health_inputs import merge_health_inputs
+from pipeline.financial_periods import dividend_period, normalized_date, number
 
 
 CATEGORY_DEFINITIONS: tuple[tuple[str, str, int, tuple[str, ...]], ...] = (
@@ -129,6 +129,40 @@ def health_totals(categories: Iterable[dict[str, Any]]) -> dict[str, int | str]:
     return {"passCount": passed, "total": total, "status": status}
 
 
+def _dividend_history_check(rows: Iterable[dict[str, Any]], as_of: str | None) -> tuple[str, str, str, str]:
+    """Count complete confirmed annual distributions, never missing years as zero."""
+    cutoff = normalized_date(as_of)
+    if cutoff is None or len(cutoff) != 10:
+        return "unknown", "未知", "待建立資料期間", "缺少有效評估日期，無法核對已完成年度股利。"
+    years: dict[int, dict[str, tuple[str, float]]] = {}
+    for row in rows:
+        if not isinstance(row, dict) or row.get("confirmed") is not True:
+            continue
+        parsed = dividend_period(row.get("period") or row.get("year"), row.get("year"))
+        cash = number(row.get("cashPerShare"))
+        dates = [normalized_date(row[field]) for field in ("approvedAt", "publishedAt", "availableAt", "exDate") if row.get(field) not in (None, "")]
+        available = max(dates) if dates and all(day is not None and len(day) == 10 for day in dates) else None
+        if parsed is None or parsed[0] >= int(cutoff[:4]) or cash is None or cash < 0 or not available or len(available) != 10 or available > cutoff:
+            continue
+        periods = years.setdefault(parsed[0], {})
+        previous = periods.get(parsed[1])
+        if previous is None or available >= previous[0]:
+            periods[parsed[1]] = (available, cash)
+    annual = {}
+    for year, periods in years.items():
+        keys = ["annual"] if "annual" in periods else ["Q1", "Q2", "Q3", "Q4"] if set(periods) == {"Q1", "Q2", "Q3", "Q4"} else ["H1", "H2"] if set(periods) == {"H1", "H2"} else []
+        if keys:
+            annual[year] = sum(periods[key][1] for key in keys)
+    latest = sorted(annual)[-5:]
+    period = f"{latest[0]}–{latest[-1]}" if latest else "待建立資料期間"
+    complete = len(latest) == 5 and latest == list(range(latest[-1] - 4, latest[-1] + 1))
+    if not complete:
+        return "unknown", f"已確認 {len(annual)} 個完整年度", period, "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。"
+    positive = all(annual[year] > 0 for year in latest)
+    return ("pass" if positive else "fail", "已確認五個連續年度", period,
+            "五個連續完整年度皆有已確認正現金股利。" if positive else "五個連續完整年度中至少一年已確認現金股利為零。")
+
+
 def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()) -> list[dict[str, Any]]:
     """Fill checks that can be proven from the published snapshot today.
 
@@ -231,14 +265,13 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
         by_key["growth"] = evaluate_category("growth", growth_checks)
 
     # The public snapshot is intentionally scoped to the tracked symbols.  For
-    # those symbols, turn every available latest-period field into an explicit
-    # proxy check. Missing fields are conservative failures with a reason, so
-    # the screen never becomes a wall of unknown while still showing the exact
-    # evidence boundary.
-    has_tracked_evidence = bool(detail.get("qualityProxyChecks") or detail.get("institutionalDaily") or inputs)
+    # those symbols, turn available latest-period fields into explicit proxies.
+    # Missing evidence remains unknown; it does not prove threshold failure.
+    quality_metrics = detail.get("qualityProxyMetrics") if isinstance(detail.get("qualityProxyMetrics"), dict) else {}
+    has_tracked_evidence = bool(detail.get("qualityProxyChecks") or detail.get("institutionalDaily") or inputs or quality_metrics)
     if has_tracked_evidence:
         proxy_refs = list(dict.fromkeys([*official_refs, "yfinance:Ticker.financials/cashflow/balance_sheet"]))
-        metrics = detail.get("qualityProxyMetrics") if isinstance(detail.get("qualityProxyMetrics"), dict) else {}
+        metrics = quality_metrics
         qmap = {str(row.get("label")): row for row in detail.get("qualityProxyChecks", []) if isinstance(row, dict)}
         def metric(key: str) -> float | None:
             return n(metrics.get(key))
@@ -264,7 +297,7 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
         # Quality: latest annual/yfinance proxies, with the available 3.5-year
         # price history proving the listing-age gate for the tracked universe.
         span = len([row for row in detail.get("priceSeries", []) if isinstance(row, dict)])
-        set_check("quality", 0, "公司上市超過三年", "pass" if span >= 500 else "fail", f"{span} 筆價格觀察", "追蹤標的已有至少三年公開日線觀察，作上市年限代理。" if span >= 500 else "價格觀察不足三年，上市年限代理未通過。")
+        set_check("quality", 0, "公司上市超過三年", "pass" if span >= 500 else "unknown", f"{span} 筆價格觀察", "追蹤標的已有至少三年公開日線觀察，作上市年限代理。" if span >= 500 else "價格觀察不足，不能據此推論上市未滿三年。")
         s, v = proxy_status("最近可得年度營業現金流（代理）", positive=True)
         set_check("quality", 1, "自由現金流報酬率較去年沒有下滑", s, v, "最新年度代理", "以最新年度營業現金流正值作 FCF 報酬率穩定代理；尚無五年序列。")
         roe = metric("latestRoe")
@@ -272,8 +305,8 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
         margin = metric("latestOperatingMargin")
         set_check("quality", 3, "過去三年營業利益加總大於 0", "pass" if margin is not None and margin > 0 else "fail" if margin is not None else "unknown", f"{margin:.1%}" if margin is not None else None, "最新年度營業利益率代理", "最新營業利益率為正，作三年營業利益代理。" if margin is not None and margin > 0 else "最新營業利益率未為正。" if margin is not None else "未取得營業利益率。")
         pe_pct, _ = percentile("pe", pe); pb_pct, _ = percentile("pb", pb)
-        composite = [x for x in (pe_pct, pb_pct, 100 - min(dividend_yield or 0, 100)) if x is not None]
-        composite_pct = sum(composite) / len(composite) if composite else None
+        composite = (pe_pct, pb_pct, 100 - min(dividend_yield, 100) if dividend_yield is not None else None)
+        composite_pct = sum(composite) / len(composite) if all(value is not None for value in composite) else None
         set_check("quality", 4, "股價淨值比＋本益比＋殖利率綜合排名前 50 名", "pass" if composite_pct is not None and composite_pct <= 50 else "fail" if composite_pct is not None else "unknown", f"市場代理 {composite_pct:.1f}%" if composite_pct is not None else None, "最新交易日橫截面代理", "PE/PB/殖利率綜合當期百分位在前 50%，作估值排名代理。" if composite_pct is not None and composite_pct <= 50 else "綜合估值代理未在前 50%。" if composite_pct is not None else "估值欄位不足。")
 
         # Chip: ten-session institutional flow is the available ownership proxy.
@@ -282,7 +315,7 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
         set_check("chip", 0, "大股東持股比重連續三個月上升", "pass" if rising3 else "fail" if len(flows) >= 3 else "unknown", f"近三筆投信淨買賣超 {flows[-3:] if flows else []}", "近三筆投信淨買賣超連續增加，作持股上升代理。" if rising3 else "投信淨買賣超未連續增加，代理未通過。")
         rising12 = len(flows) >= 2 and flows[-1] >= flows[0]
         set_check("chip", 1, "董監持股最新值較 12 個月前持平或上升", "pass" if rising12 else "fail" if len(flows) >= 2 else "unknown", f"{flows[0] if flows else '未知'} → {flows[-1] if flows else '未知'}", "以十日窗口首末投信淨買賣超作持平／上升代理。" if rising12 else "代理首末值未上升。")
-        set_check("chip", 2, "總股東人數連續三個月下降", "pass" if len(flows) >= 3 and flows[-1] < 0 else "fail" if flows else "unknown", f"最新投信淨買賣超 {flows[-1]:,.0f}" if flows else None, "以最新投信淨賣超作股東人數下降代理；非 TDCC 直接數據。")
+        set_check("chip", 2, "總股東人數連續三個月下降", "pass" if len(flows) >= 3 and flows[-1] < 0 else "fail" if len(flows) >= 3 else "unknown", f"最新投信淨買賣超 {flows[-1]:,.0f}" if flows else None, "以最新投信淨賣超作股東人數下降代理；非 TDCC 直接數據。")
 
         # Cheap: current valuation percentiles are explicit cross-sectional proxies.
         if pe_pct is not None:
@@ -293,12 +326,14 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
             set_check("cheap", 5, "近五年平均股息殖利率大於 6%", "pass" if dividend_yield > 6 else "fail", f"當期 {dividend_yield:.2f}%", "當期殖利率作五年平均代理。" )
             set_check("dividend", 1, "近五年平均股息殖利率大於 6%", "pass" if dividend_yield > 6 else "fail", f"當期 {dividend_yield:.2f}%", "當期殖利率作五年平均代理。")
         # Turnaround uses a transparent quality proxy score.
-        qpasses = sum(str(row.get("status")) == "pass" for row in detail.get("qualityProxyChecks", []) if isinstance(row, dict))
-        set_check("turnaround", 1, "F-score 在 8 分以上", "pass" if qpasses >= 4 else "fail", f"品質代理 {qpasses}/5", "五項最新年度品質代理至少四項通過，作 F-score ≥8 代理。")
+        qchecks = [row for row in detail.get("qualityProxyChecks", []) if isinstance(row, dict)]
+        qpasses = sum(row.get("status") == "pass" for row in qchecks)
+        qfails = sum(row.get("status") == "fail" for row in qchecks)
+        qstatus = "pass" if qpasses >= 4 else "fail" if qfails >= 2 else "unknown"
+        set_check("turnaround", 1, "F-score 在 8 分以上", qstatus, f"品質代理 {qpasses}/5", "五項最新年度品質代理至少四項通過，作 F-score ≥8 代理；未知資料不當作失敗。")
 
         # Anti-pitfall: cash-flow ratios can be calculated from the latest
-        # annual proxy; turnover fields are conservatively marked as failed
-        # when the public snapshot does not contain AR/inventory balances.
+        # annual proxy; unavailable comparable turnover fields stay unknown.
         cfo, ni = metric("latestOperatingCashFlow"), metric("latestNetIncome")
         ratio = cfo / ni * 100 if cfo is not None and ni not in (None, 0) else None
         fcf_status = "pass" if cfo is not None and cfo > 0 else "fail" if cfo is not None else "unknown"
@@ -308,14 +343,15 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
         set_check("antiPitfall", 2, "營業現金流／淨利近五年有三年大於 100%", ratio_status, f"{ratio:.1f}%" if ratio is not None else None, "最新年度現金流代理", "最新年度 CFO／淨利作五年三年代理。")
         set_check("antiPitfall", 3, "營業現金流／淨利近五年平均大於 100%", ratio_status, f"{ratio:.1f}%" if ratio is not None else None, "最新年度現金流代理", "最新年度 CFO／淨利作五年平均代理。")
         for index, label in ((4, "應收帳款週轉天數小於等於去年同期數據"), (5, "存貨週轉天數小於等於去年同期數據")):
-            set_check("antiPitfall", index, label, "fail", "未取得", "最新可得期間", "公開快照沒有可比的應收帳款／存貨去年同期欄位；保守列為未通過，避免把風險當作通過。")
+            set_check("antiPitfall", index, label, "unknown", None, "最新可得期間", "公開快照沒有可比的應收帳款／存貨去年同期欄位，尚無法判定。")
 
         # Dividend: use official current yield and observed dividend rows.
         if dividend_yield is not None:
             set_check("dividend", 0, "近一年股息殖利率大於 6%", "pass" if dividend_yield > 6 else "fail", f"{dividend_yield:.2f}%", "最新交易日", "當期殖利率公開值。")
         divs = inputs.get("dividends") if isinstance(inputs.get("dividends"), list) else []
         observed_divs = [row for row in divs if n(row.get("cashPerShare")) is not None and n(row.get("cashPerShare")) > 0]
-        set_check("dividend", 2, "連續五年都有發股息", "pass" if len(observed_divs) >= 5 else "fail", f"已觀察 {len(observed_divs)} 筆", "官方股利列數達五筆，作連續五年代理。" if len(observed_divs) >= 5 else "目前公開快照僅觀察到不足五筆股利，代理未通過。")
+        history_status, history_value, history_period, history_reason = _dividend_history_check(divs, detail.get("asOf"))
+        set_check("dividend", 2, "連續五年都有發股息", history_status, history_value, history_period, history_reason)
         eps = n(latest.get("eps")) if latest else None
         cash = n(observed_divs[0].get("cashPerShare")) if observed_divs else None
         payout = cash / eps * 100 if cash is not None and eps not in (None, 0) and eps > 0 else None
@@ -323,16 +359,11 @@ def evaluate_snapshot_health(detail: dict[str, Any], *, refs: Iterable[str] = ()
         set_check("dividend", 3, "股息發放率五年內有三年大於 50%", payout_status, f"{payout:.1f}%" if payout is not None else None, "最新年度代理", "現金股利／EPS 作發放率代理。")
         set_check("dividend", 4, "股息發放率五年平均大於 50%", payout_status, f"{payout:.1f}%" if payout is not None else None, "最新年度代理", "現金股利／EPS 作五年平均代理。")
 
-        # Any remaining unavailable proxy is intentionally a conservative fail,
-        # with the missing field visible in the row explanation.
-        for key, category in list(by_key.items()):
-            for check in category["checks"]:
-                if check.get("status") == "unknown" and key != "growth":
-                    check.update({"status": "fail", "value": "未取得", "explanation": "目前追蹤快照沒有可比欄位；保守列為未通過，待補資料只會提升證據，不會默認通過。"})
-            by_key[key] = evaluate_category(key, category["checks"])
     # Use the same normalized five-check evaluator as the strategy gate.
     normalized = merge_health_inputs({"monthlyRevenueOfficial": revenue_rows}, inputs)
-    growth = evaluate_growth_health(normalized.get("monthlyRevenueOfficial", []), normalized.get("incomeQuarterly", []))
-    growth_checks = [{**check, "period": "最近三個月／最近單季同口徑比較", "sourceRefs": official_refs} for check in growth["checks"]]
+    growth = evaluate_growth_health(normalized.get("monthlyRevenueOfficial", []),
+                                    [*(inputs.get("incomeQuarterly") or []), *(inputs.get("incomeYtd") or [])],
+                                    as_of=detail.get("asOf"))
+    growth_checks = [{**check, "sourceRefs": check.get("sourceRefs") or official_refs} for check in growth["checks"]]
     by_key["growth"] = evaluate_category("growth", growth_checks)
     return [by_key[key] for key, _label, _threshold, _labels in CATEGORY_DEFINITIONS]

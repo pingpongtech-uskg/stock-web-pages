@@ -15,15 +15,98 @@ def test_recovery_never_resets_same_day_attempts_ceiling_or_block():
     assert merged['retryNotBefore'] == 100
 
 
-def test_same_day_artifact_checkpoint_restores_and_old_day_does_not(tmp_path):
+def test_prior_day_artifact_recovers_cumulative_history(tmp_path):
     payload = io.BytesIO()
     with zipfile.ZipFile(payload, 'w') as archive:
         archive.writestr('state.json', json.dumps({'version': 1, 'days': {'2026-10-02': {'attempts': 9, 'ceiling': 200}}}))
         archive.writestr('rows.json', json.dumps({'2330:financial': {'checkedAt': '2026-10-02', 'rows': [{'value':1}]}}))
-    assert not recover_zip(tmp_path, payload.getvalue(), '2026-10-03')
+    assert recover_zip(tmp_path, payload.getvalue(), '2026-10-03')
     assert recover_zip(tmp_path, payload.getvalue(), '2026-10-02')
     assert json.loads((tmp_path/'state.json').read_bytes())['days']['2026-10-02']['attempts'] == 9
     assert json.loads((tmp_path/'rows.json').read_bytes())['2330:financial']['rows'] == [{'value':1}]
+
+
+def test_rolling_checkpoint_restore_deduplicates_attempts_and_keeps_cross_day_budget(tmp_path, monkeypatch):
+    from pipeline.finmind_incremental import DailyBudget
+    clock = [1790956799.0]
+    monkeypatch.setattr('time.time', lambda: clock[0])
+    source = tmp_path / 'source'; target = tmp_path / 'target'
+    source.mkdir(); target.mkdir()
+    budget = DailyBudget(source / 'state.json', '2026-10-02', hard_cap=2)
+    budget.consume(); budget.consume()
+    payload = io.BytesIO()
+    with zipfile.ZipFile(payload, 'w') as archive:
+        archive.writestr('state.json', budget.path.read_bytes())
+        archive.writestr('rows.json', json.dumps({'history': {'rows': [{'date': '2026-10-02'}]}}))
+    clock[0] += 2
+    for _ in range(2):
+        assert recover_zip(target, payload.getvalue(), '2026-10-03')
+    recovered = DailyBudget(target / 'state.json', '2026-10-03', hard_cap=2)
+    assert recovered.used == 2 and recovered.rolling_used == 2
+    from pipeline.finmind_client import BudgetExceeded
+    with pytest.raises(BudgetExceeded):
+        recovered.consume()
+    assert json.loads((target / 'rows.json').read_text())['history']['rows']
+
+
+def test_restore_mutations_use_shared_budget_lock(tmp_path, monkeypatch):
+    import scripts.restore_finmind_checkpoint as module
+    from contextlib import contextmanager
+    active = [False]
+    @contextmanager
+    def fixture_lock(path):
+        active[0] = True
+        try: yield
+        finally: active[0] = False
+    monkeypatch.setattr(module, 'budget_lock', fixture_lock, raising=False)
+    original = type(tmp_path).replace
+    def guarded_replace(path, target):
+        assert active[0], 'restore state replacement must hold shared budget lock'
+        return original(path, target)
+    monkeypatch.setattr(type(tmp_path), 'replace', guarded_replace)
+    raw = io.BytesIO()
+    with zipfile.ZipFile(raw, 'w') as archive:
+        archive.writestr('state.json', json.dumps({'version': 2, 'days': {}}))
+    assert recover_zip(tmp_path, raw.getvalue(), '2026-10-03')
+
+
+def test_main_restores_newest_trusted_prior_day_artifact(tmp_path, monkeypatch):
+    import scripts.restore_finmind_checkpoint as module
+    monkeypatch.setenv('GITHUB_TOKEN', 'fixture-token')
+    artifact = {'id': 10, 'name': 'finmind-checkpoint-1', 'created_at': '2026-10-02T15:59:59Z',
+                'expired': False, 'workflow_run': {'id': 1, 'head_sha': 'a'*40, 'head_branch': 'main'}}
+    def api(path, token):
+        if path.endswith('daily.yml'): return {'id': 50}
+        if path.endswith('runs/1'):
+            return {'id': 1, 'head_sha': 'a'*40, 'head_branch': 'main', 'event': 'workflow_dispatch',
+                    'workflow_id': 50, 'head_repository': {'full_name': 'org/repo'}}
+        return {'artifacts': [artifact] if path.endswith('page=1') else []}
+    monkeypatch.setattr(module, '_api', api)
+    raw = io.BytesIO()
+    with zipfile.ZipFile(raw, 'w') as archive:
+        archive.writestr('state.json', json.dumps({'version': 2, 'days': {'2026-10-02': {'attempts': 300, 'ceiling': 300}}}))
+    downloads = []
+    monkeypatch.setattr(module, '_download', lambda path, token: downloads.append(path) or raw.getvalue())
+    assert module.main(['--cache-dir', str(tmp_path), '--budget-date', '2026-10-03', '--repository', 'org/repo']) == 0
+    assert len(downloads) == 1
+    assert json.loads((tmp_path / 'state.json').read_text())['checkpointAt'] == artifact['created_at']
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_restore_preserves_verified_new_hour_with_equal_provider_counter(tmp_path, monkeypatch, reverse):
+    from pipeline.finmind_incremental import DailyBudget
+    clock = [1790956799.0]
+    monkeypatch.setattr('time.time', lambda: clock[0])
+    budget = DailyBudget(tmp_path / 'state.json', '2026-10-02')
+    budget.consume(); budget.configure(600, 0, checks_started_at=0)
+    for _ in range(10): budget.consume(require_known=True)
+    old = json.loads(budget.path.read_text())
+    clock[0] += 3601
+    budget.consume(); budget.configure(600, 0, checks_started_at=11)
+    new = json.loads(budget.path.read_text())
+    merged = merge_states(old, new) if reverse else merge_states(new, old)
+    assert merged['rollingHour']['accountCeiling'] == 491
+    assert merged['rollingHour']['accountUsed'] == 0
 
 
 def test_restore_main_consumes_artifact_once_and_preserves_more_recent_budget(tmp_path,monkeypatch):
@@ -146,17 +229,63 @@ def test_artifact_redirect_download_never_forwards_repository_auth(monkeypatch):
     class Opener:
         def open(self, request, **kwargs):
             assert request.get_header('Authorization') == 'Bearer fixture authentication'
-            raise HTTPError(request.full_url, 302, 'redirect', {'Location': 'https://storage.example/signed'}, None)
+            raise HTTPError(request.full_url, 302, 'redirect', {'Location': 'https://fixture.blob.core.windows.net/signed'}, None)
     monkeypatch.setattr(module, 'build_opener', lambda handler: Opener())
     def storage(request, **kwargs):
         calls.append(request)
-        assert request.full_url == 'https://storage.example/signed'
+        assert request.full_url == 'https://fixture.blob.core.windows.net/signed'
         assert request.get_header('Authorization') is None
         return io.BytesIO(b'fixture zip')
+    monkeypatch.setattr(module, 'build_opener', lambda handler: type('Opener', (), {'open': lambda self, request, **kwargs: Opener().open(request, **kwargs) if request.full_url.startswith('https://api.github.com') else storage(request, **kwargs)})())
     monkeypatch.setattr(module, 'urlopen', storage)
     assert module._download('/artifact/zip', 'fixture authentication') == b'fixture zip'
     assert len(calls) == 1
     assert module.NoRedirect().redirect_request(None, None, 302, 'redirect', {}, 'https://storage.example') is None
+
+
+@pytest.mark.parametrize('location', ['http://fixture.blob.core.windows.net/signed', 'https://evil.example/signed',
+    'https://user@fixture.blob.core.windows.net/signed', 'https://fixture.blob.core.windows.net:443/signed',
+    'https://fixture.blob.core.windows.net/signed#fragment', 'https://blob.core.windows.net/signed'])
+def test_artifact_rejects_untrusted_signed_storage_before_second_http(monkeypatch, location):
+    import scripts.restore_finmind_checkpoint as module
+    from urllib.error import HTTPError
+    calls = []
+    class Opener:
+        def open(self, request, **kwargs):
+            calls.append(request.full_url)
+            if len(calls) != 1: pytest.fail('untrusted storage HTTP')
+            raise HTTPError(request.full_url, 302, 'redirect', {'Location': location}, None)
+    monkeypatch.setattr(module, 'build_opener', lambda handler: Opener())
+    monkeypatch.setattr(module, 'urlopen', lambda *a, **k: pytest.fail('live network forbidden in redirect fixture'))
+    with pytest.raises(ValueError): module._download('/artifact/zip', 'fixture authentication')
+    assert len(calls) == 1
+
+
+def test_artifact_storage_redirect_is_not_followed(monkeypatch):
+    import scripts.restore_finmind_checkpoint as module
+    from urllib.error import HTTPError
+    calls = []
+    class Opener:
+        def open(self, request, **kwargs):
+            calls.append(request)
+            location = 'https://fixture.actions.githubusercontent.com/signed' if len(calls) == 1 else 'https://evil.example'
+            raise HTTPError(request.full_url, 302, 'redirect', {'Location': location}, None)
+    monkeypatch.setattr(module, 'build_opener', lambda handler: Opener())
+    monkeypatch.setattr(module, 'urlopen', lambda *a, **k: pytest.fail('redirect-following opener used'))
+    with pytest.raises(HTTPError): module._download('/artifact/zip', 'fixture authentication')
+    assert len(calls) == 2 and calls[-1].get_header('Authorization') is None
+
+
+def test_artifact_stream_is_bounded_before_zip_decoding(monkeypatch):
+    import scripts.restore_finmind_checkpoint as module
+    sizes = []
+    class Response(io.BytesIO):
+        def read(self, size=-1):
+            sizes.append(size)
+            return b'x' * size
+    monkeypatch.setattr(module, 'build_opener', lambda handler: type('Opener', (), {'open': lambda *a, **k: Response()})())
+    with pytest.raises(ValueError): module._download('/artifact/zip', 'fixture authentication')
+    assert sizes == [40_000_001]
 
 
 def test_artifact_direct_download_and_api_use_repository_auth(monkeypatch):

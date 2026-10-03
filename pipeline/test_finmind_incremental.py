@@ -31,25 +31,24 @@ def test_default_budget_clock_uses_taipei_midnight(monkeypatch, utc_time, expect
     assert current_taipei_day() == expected
 
 
-def test_midnight_stops_old_day_ledger_without_creating_new_day_allowance(tmp_path, monkeypatch):
+def test_midnight_preserves_same_rolling_ledger_and_queue(tmp_path, monkeypatch):
     day = ['2026-10-02']
-    monkeypatch.setattr('pipeline.finmind_incremental.current_taipei_day', lambda: day[0], raising=False)
+    monkeypatch.setattr('pipeline.finmind_incremental.current_taipei_day', lambda: day[0])
     state = DailyBudget(tmp_path / 'state.json', day[0])
     jobs = [{'code': '2330', 'dataset': 'TaiwanStockFinancialStatements'}]
     state.queue(jobs)
     state.consume()
     day[0] = '2026-10-03'
-    with pytest.raises(BudgetExceeded, match='date changed'):
-        state.consume()
+    recovered = DailyBudget(state.path, day[0])
+    recovered.consume()
     checkpoint = json.loads(state.path.read_text())
-    assert checkpoint['days']['2026-10-02']['attempts'] == 1
-    assert checkpoint['days']['2026-10-02']['stoppedReason'] == 'budget_date_changed'
-    assert '2026-10-03' not in checkpoint['days']
+    assert checkpoint['rollingHour']['totalAttempts'] == 2
+    assert recovered.rolling_used == 2
     assert checkpoint['queue'] == jobs
 
 
 @pytest.mark.parametrize('phase', ['quota_retry', 'data_retry', 'rate_wait', 'after_quota'])
-def test_crossing_midnight_stops_http_and_preserves_supplement_queue(tmp_path, monkeypatch, phase):
+def test_crossing_midnight_does_not_reset_attempts_or_supplement_queue(tmp_path, monkeypatch, phase):
     day = ['2026-10-02']
     monkeypatch.setattr('pipeline.finmind_incremental.current_taipei_day', lambda: day[0], raising=False)
     output, _ = fixture_release(tmp_path)
@@ -75,16 +74,16 @@ def test_crossing_midnight_stops_http_and_preserves_supplement_queue(tmp_path, m
     monkeypatch.setattr(FinMindClient, '_wait_for_rate', rate_wait)
     monkeypatch.setattr('time.sleep', lambda seconds: day.__setitem__(0, '2026-10-03'))
     result = supplement_snapshot(['2330'], output, '2026-10-02', cache_dir=tmp_path / 'cache',
-                                 budget_date='2026-10-02', token=str(uuid.uuid4()))
-    expected = 2 if phase == 'data_retry' else 1
+                                 budget_date='2026-10-02', token=str(uuid.uuid4()), max_requests=4)
+    expected = 3 if phase == 'quota_retry' else 4
     assert len(calls) == expected
     assert result['requests'] == expected
-    assert result['skipped'] == 'BudgetExceeded'
+    assert result['skipped'] == ('FinMindError' if phase == 'quota_retry' else 'BudgetExceeded')
     assert result['queued'] > 0 and result['completed'] == 0
     checkpoint = json.loads((tmp_path / 'cache' / 'state.json').read_text())
     assert checkpoint['queue']
-    assert set(checkpoint['days']) == {'2026-10-02'}
-    assert checkpoint['days']['2026-10-02']['stoppedReason'] == 'budget_date_changed'
+    assert checkpoint['rollingHour']['totalAttempts'] == expected
+    assert len(checkpoint['rollingHour']['events']) == expected
 
 
 def detail(code='2330'):
@@ -101,14 +100,14 @@ def test_daily_budget_survives_recovery_and_never_gets_a_new_ceiling(tmp_path):
     with pytest.raises(BudgetExceeded):
         recovered.consume(require_known=True)
     assert recovered.used == 8
-    assert DailyBudget(tmp_path / 'state.json', '2026-10-03').used == 0
+    assert DailyBudget(tmp_path / 'state.json', '2026-10-03').used == 8
 
 
 def test_check_and_retries_are_checkpointed_before_http(tmp_path, monkeypatch):
     seen = []
     state = DailyBudget(tmp_path / 'state.json', '2026-10-02', hard_cap=3)
     def fail(request, **kwargs):
-        seen.append(json.loads(state.path.read_text())['days']['2026-10-02']['attempts'])
+        seen.append(json.loads(state.path.read_text())['rollingHour']['totalAttempts'])
         assert request.get_header('Authorization') == 'Bearer secret'
         raise urllib.error.URLError('offline')
     monkeypatch.setattr('urllib.request.urlopen', fail)
@@ -260,7 +259,7 @@ def test_partial_budget_leaves_whole_universe_and_resumable_queue(tmp_path, monk
     assert len(list(directory.glob('*.json'))) == 2
     assert result['queued'] == 8  # Six untried jobs plus two partial EPS histories deferred for recovery.
     recovered = supplement_snapshot(['2330', '2317'], output, '2026-10-02', cache_dir=tmp_path / 'cache', budget_date='2026-10-02', token='secret')
-    assert recovered['requests'] == 4
+    assert recovered['requests'] == 3
     assert recovered['skipped'] == 'BudgetExceeded'
 
 
@@ -402,7 +401,8 @@ def test_elapsed_retry_after_allows_only_quota_recheck_until_verified(tmp_path, 
     state.block('HTTP 429', 120)
     with pytest.raises(SourceBlocked):
         state.consume()
-    monkeypatch.setattr('time.time', lambda: state.state['retryNotBefore'] + 1)
+    resumed = state.record['retryNotBefore'] + 1
+    monkeypatch.setattr('time.time', lambda: resumed)
     state.consume()
     with pytest.raises(SourceBlocked):
         state.consume(require_known=True)
@@ -414,7 +414,7 @@ def test_elapsed_retry_after_allows_only_quota_recheck_until_verified(tmp_path, 
     assert state.used == 2
 
 
-def test_verified_quota_reset_restores_window_allowance_but_not_project300(tmp_path):
+def test_verified_quota_reset_restores_window_allowance_but_not_project300(tmp_path, monkeypatch):
     state = DailyBudget(tmp_path / 'state.json', '2026-10-02')
     state.consume()
     state.configure(600, 590)
@@ -422,25 +422,37 @@ def test_verified_quota_reset_restores_window_allowance_but_not_project300(tmp_p
         state.consume(require_known=True)
     with pytest.raises(BudgetExceeded):
         state.consume(require_known=True)
-    state.consume()  # quota recheck consumes project budget
+    with pytest.raises(BudgetExceeded):
+        state.consume()  # Exhausted observations cannot fund repeated checks.
+    now = __import__('time').time()
+    monkeypatch.setattr('time.time', lambda: now + 3601)
+    state.consume()
     state.configure(600, 597, checks_started_at=8)
+    state.consume(require_known=True)
     with pytest.raises(BudgetExceeded):
         state.consume(require_known=True)
-    state.consume()
-    state.configure(600, 0, checks_started_at=9)
-    for _ in range(290):
+    state.configure(600, 0, checks_started_at=8)
+    for _ in range(298):
         state.consume(require_known=True)
-    assert state.used == 300
+    assert state.rolling_used == 300 and state.used == 308
     with pytest.raises(BudgetExceeded):
         state.consume()
 
 
-def test_no_retry_time_402_stays_blocked_until_new_day(tmp_path):
+def test_no_retry_time_402_stays_blocked_across_midnight_until_hourly_quota_check(tmp_path, monkeypatch):
     state = DailyBudget(tmp_path / 'state.json', '2026-10-02')
     state.block('HTTP 402')
     with pytest.raises(SourceBlocked):
         state.consume()
-    assert DailyBudget(state.path, '2026-10-03').used == 0
+    recovered = DailyBudget(state.path, '2026-10-03')
+    with pytest.raises(SourceBlocked):
+        recovered.consume()
+    now = __import__('time').time()
+    monkeypatch.setattr('time.time', lambda: now + 3601)
+    recovered.consume()
+    recovered.configure(600, 0)
+    recovered.consume(require_known=True)
+    assert recovered.used == 2
 
 
 def test_incomplete_cached_history_requests_missing_old_years_again():

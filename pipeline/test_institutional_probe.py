@@ -107,8 +107,11 @@ def test_three_complete_ranges_checkpoint_and_all_cache_hits_skip_quota(tmp_path
     assert result['outcome'] == 'complete'
     assert result['actualAttempts'] == 4 and result['dataRequests'] == 3
     assert len(calls) == 4 and result['globalCompleteness'] is False
-    assert result['dailyAttempts'] == 4 and result['projectCeiling'] == 300
-    assert result['accountWindowCeiling'] == 480
+    assert result['quotaPolicy'] == 'rolling-hour-v1'
+    assert result['rollingHourAttempts'] == 4 and result['projectHourlyCap'] == 300
+    assert result['accountAllowanceRemaining'] == 476
+    assert result['quotaObservedAt'] is not None
+    assert not {'dailyAttempts', 'projectCeiling', 'accountWindowCeiling'} & result.keys()
     rows = json.loads((tmp_path / 'rows.json').read_text())
     assert len([key for key in rows if key.startswith('institutionalProbe:')]) == 3
     assert all(len(entry['rows']) == 11 and entry['unit'] == 'shares'
@@ -173,15 +176,15 @@ def test_unknown_quota_stops_before_data_and_exception_is_sanitized(tmp_path, mo
     assert 'secret-test-token' not in json.dumps(result)
 
 
-def test_shared_daily_budget_exhaustion_no_extra_http(tmp_path, monkeypatch):
+def test_unknown_legacy_budget_timing_blocks_all_http(tmp_path, monkeypatch):
     calls = transport(monkeypatch)
     (tmp_path / 'state.json').write_text(json.dumps({'version': 2, 'queue': [], 'days': {
         '2026-10-03': {'attempts': 299, 'ceiling': 300, 'quotaKnown': False}}}))
     result = run(tmp_path)
-    assert len(calls) == 1 and result['actualAttempts'] == 1
+    assert not calls and result['actualAttempts'] == 0
     assert result['errorCategory'] == 'budget_exhausted'
     state = json.loads((tmp_path / 'state.json').read_text())
-    assert state['days']['2026-10-03']['ceiling'] == 300
+    assert state['rollingHour']['projectCap'] == 300
 
 
 def test_transport_failure_no_retry_records_progress_without_message(tmp_path, monkeypatch):
@@ -219,7 +222,7 @@ def test_probe_entries_restore_with_existing_financial_queue_and_rows(tmp_path, 
     assert len([key for key in restored if key.startswith('institutionalProbe:')]) == 3
     assert restored['9999:financial']['rows'] == [{'value': 1}]
     state = json.loads(target.joinpath('state.json').read_text())
-    assert state['queue'][0]['code'] == '9999' and state['days']['2026-10-03']['attempts'] == 4
+    assert state['queue'][0]['code'] == '9999' and state['rollingHour']['totalAttempts'] == 4
 
 
 @pytest.mark.parametrize('mutation', ['raw', 'source', 'range', 'hash', 'normalized', 'timestamp', 'unit'])
@@ -250,14 +253,14 @@ def test_altered_cache_is_not_trusted_and_only_that_case_is_refetched(tmp_path, 
     assert result['cacheHits'] == 2 and result['dataRequests'] == 1 and len(calls) == 2
 
 
-def test_midnight_budget_change_stops_without_http_and_retains_queue(tmp_path, monkeypatch):
+def test_midnight_budget_date_is_metadata_and_does_not_stop_valid_hour(tmp_path, monkeypatch):
     import pipeline.finmind_incremental as incremental
     calls = transport(monkeypatch)
     monkeypatch.setattr(incremental, 'current_taipei_day', lambda: '2026-10-04')
     result = run(tmp_path)
-    assert not calls and result['errorCategory'] == 'budget_exhausted'
+    assert len(calls) == 4 and result['outcome'] == 'complete'
     state = json.loads((tmp_path / 'state.json').read_text())
-    assert state['days']['2026-10-03']['stoppedReason'] == 'budget_date_changed'
+    assert state['rollingHour']['totalAttempts'] == 4
 
 
 def test_verified_remaining_quota_zero_stops_before_data(tmp_path, monkeypatch):
@@ -272,7 +275,20 @@ def test_operation_limit_does_not_reduce_shared_project_cap(tmp_path, monkeypatc
     result = run(tmp_path, max_data_requests=1)
     assert len(calls) == 2 and result['dataRequests'] == 1 and result['outcome'] == 'partial'
     state = json.loads((tmp_path / 'state.json').read_text())
-    assert state['days']['2026-10-03']['ceiling'] == 300
+    assert state['rollingHour']['projectCap'] == 300
+
+
+def test_corrupt_budget_has_truthful_unavailable_metadata_and_no_http(tmp_path, monkeypatch):
+    calls = transport(monkeypatch)
+    (tmp_path / 'state.json').write_text('corrupt ledger')
+    result = run(tmp_path)
+    assert not calls and result['outcome'] == 'unavailable'
+    assert result['quotaPolicy'] == 'rolling-hour-v1'
+    assert result['rollingHourAttempts'] is None and result['projectHourlyCap'] == 300
+    assert result['accountAllowanceRemaining'] is None and result['quotaObservedAt'] is None
+    assert result['cases'] == [] and result['errorCategory'] == 'checkpoint_unavailable'
+    assert result['actualAttempts'] == result['dataRequests'] == result['cacheHits'] == 0
+    assert (tmp_path / 'state.json').read_text() == 'corrupt ledger'
 
 
 @pytest.mark.parametrize('status', [0, None, 402, 429])

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { Release } from '../domain/types'
-import { DataStatus, getEffectiveFreshness } from './DataStatus'
+import { CoverageLine, DataStatus, getEffectiveFreshness } from './DataStatus'
 
 const release = {
   schemaVersion: '1.0', strategyVersion: 'strategy-v1', formulaVersion: 'formula-v1',
@@ -98,5 +98,30 @@ describe('DataStatus freshness', () => {
       ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = previousActEnvironment
       vi.useRealTimers()
     }
+  })
+})
+
+describe('financial quality status summary', () => {
+  it('shows per-stock unknowns separately from failures and pass counts', () => {
+    const value = {
+      ...release,
+      coverage: { ...release.coverage, financialCompleteCount: 0 },
+      stocks: [
+        { qualityStatus: 'unknown' },
+        { qualityStatus: 'unknown' },
+        { qualityStatus: 'fail' },
+        { qualityStatus: 'pass' },
+      ],
+    } as unknown as Release
+    const markup = renderToStaticMarkup(<CoverageLine release={value} />)
+    expect(markup).toContain('通過 1 · 未通過 1 · 未評估 2')
+    expect(markup).not.toContain('財報完整 0')
+  })
+
+  it('does not infer unknown or failure counts when stock states are absent', () => {
+    const markup = renderToStaticMarkup(<CoverageLine release={release} />)
+    expect(markup).toContain('逐檔狀態未提供')
+    expect(markup).toContain('發布摘要明確通過 0 檔')
+    expect(markup).not.toContain('未通過 100')
   })
 })

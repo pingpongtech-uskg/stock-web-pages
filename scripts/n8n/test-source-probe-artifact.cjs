@@ -23,3 +23,29 @@ test('artifact ZIP metadata allows exactly two flat trusted paths and bounded bu
  await assert.rejects(artifact.sourceReadArtifact(files,async()=>Buffer.alloc(1000001)));await assert.rejects(artifact.sourceReadArtifact(files,async()=>Buffer.from('bad JSON')));
 });
 test('retained tighter project budget is respected, cached cases cannot also consume extra sample requests',()=>{assert.equal(artifact.sourceValidateArtifact(body({...summary,projectCeiling:299}),state).summary.projectCeiling,299);assert.throws(()=>artifact.sourceValidateArtifact(body({...summary,cacheHits:1}),state));});
+function hourlySummary(value=summary){const {dailyAttempts,projectCeiling,accountWindowCeiling,...rest}=value;return {...rest,quotaPolicy:'rolling-hour-v1',rollingHourAttempts:4,projectHourlyCap:300,accountAllowanceRemaining:476,quotaObservedAt:'2026-10-03T04:00:00.123456+00:00'};}
+test('rolling-hour summary preserves account allowance and accepts a run crossing the rolling window',()=>{
+ const parsed=artifact.sourceValidateArtifact(body(hourlySummary()),state).summary;
+ assert.equal(parsed.quotaPolicy,'rolling-hour-v1');assert.equal(parsed.accountAllowanceRemaining,476);
+ assert.equal(Object.hasOwn(parsed,'dailyAttempts'),false);
+ assert.equal(artifact.sourceValidateArtifact(body({...hourlySummary(),rollingHourAttempts:1}),state).summary.actualAttempts,4);
+ assert.equal(artifact.sourceValidateArtifact(body({...hourlySummary(),accountAllowanceRemaining:450,projectHourlyCap:100,quotaObservedAt:'2026-10-03T04:00:00Z'}),state).summary.accountAllowanceRemaining,450);
+});
+test('rolling-hour unavailable artifact keeps quota unknown without inventing account data',()=>{
+ const unavailable={probeVersion:summary.probeVersion,marketDate:summary.marketDate,expectedDates:dates,publicationEligible:false,globalCompleteness:false,tokenPresent:true,actualAttempts:0,dataRequests:0,cacheHits:0,accountLimit:null,observedRemaining:null,outcome:'unavailable',errorCategory:'official_source_unavailable',cases:[]};
+ const parsed=artifact.sourceValidateArtifact(body({...hourlySummary(unavailable),rollingHourAttempts:0,accountAllowanceRemaining:null,quotaObservedAt:null}),state).summary;
+ assert.equal(parsed.quotaObservedAt,null);assert.deepEqual(parsed.cases,[]);
+});
+test('rolling-hour schema rejects mixed legacy metadata, unversioned fields and invalid quota boundaries',()=>{
+ for(const change of [{quotaPolicy:'daily-v1'},{rollingHourAttempts:-1},{rollingHourAttempts:301},{rollingHourAttempts:1.2},{projectHourlyCap:0},{projectHourlyCap:301},{accountAllowanceRemaining:-1},{accountAllowanceRemaining:1.2},{quotaObservedAt:'2026-10-03T04:00:00'},{quotaObservedAt:'2026-10-03T12:00:00+08:00'},{quotaObservedAt:'bad'},...['dailyAttempts','projectCeiling','accountWindowCeiling'].map(key=>({[key]:4}))])assert.throws(()=>artifact.sourceValidateArtifact(body({...hourlySummary(),...change}),state));
+ for(const key of ['quotaPolicy','rollingHourAttempts','projectHourlyCap','accountAllowanceRemaining','quotaObservedAt']){const {[key]:omitted,...rest}=hourlySummary();assert.throws(()=>artifact.sourceValidateArtifact(body(rest),state));}
+ assert.equal(artifact.sourceValidateArtifact(body(summary),state).summary.dailyAttempts,4);
+});
+test('corrupt checkpoint preserves unknown rolling usage only for the exact no-request unavailable outcome',()=>{
+ const unavailable={probeVersion:summary.probeVersion,marketDate:summary.marketDate,expectedDates:dates,publicationEligible:false,globalCompleteness:false,tokenPresent:true,actualAttempts:0,dataRequests:0,cacheHits:0,accountLimit:null,observedRemaining:null,outcome:'unavailable',errorCategory:'checkpoint_unavailable',cases:[]};
+ const corrupt={...hourlySummary(unavailable),rollingHourAttempts:null,accountAllowanceRemaining:null,quotaObservedAt:null};
+ assert.equal(artifact.sourceValidateArtifact(body(corrupt),state).summary.rollingHourAttempts,null);
+ for(const change of [{outcome:'complete',cases},{errorCategory:'official_source_unavailable'},{errorCategory:null},{actualAttempts:1},{dataRequests:1},{cacheHits:1},{accountAllowanceRemaining:0},{quotaObservedAt:'2026-10-03T04:00:00Z'},{projectHourlyCap:299}])assert.throws(()=>artifact.sourceValidateArtifact(body({...corrupt,...change}),state));
+ const {errorCategory:omitted,...missingError}=corrupt;assert.throws(()=>artifact.sourceValidateArtifact(body(missingError),state));
+ assert.throws(()=>artifact.sourceValidateArtifact(body({...hourlySummary(),rollingHourAttempts:null}),state));
+});

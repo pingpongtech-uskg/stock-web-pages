@@ -136,8 +136,8 @@ def test_real_cli_uses_actual_quota_preserves_same_day_budget_and_only_fills_gap
         assert {row['date'] for row in detail['financialInputs']['incomeStatement']} == {'2022-03-31', '2026-06-30'}
     assert invoke(monkeypatch, *args) == 0
     second = json.loads(capsys.readouterr().out)
-    assert second['requests'] == 5  # A counted quota recheck adds no data allowance.
-    assert requests[-1] == {}
+    assert second['requests'] == 4  # Exhausted active observation permits no extra HTTP.
+    assert len(requests) == 4
     assert json.loads((output / 'latest.json').read_bytes())['runId'] == 'official'
 
 

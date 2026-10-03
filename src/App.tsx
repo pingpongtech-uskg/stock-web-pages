@@ -6,7 +6,7 @@ import { StrategyCard } from './components/StrategyCard'
 import { DataStatus } from './components/DataStatus'
 import { PublicationNotice } from './components/PublicationNotice'
 import { loadLatestRelease, type LoadedRelease } from './data/api'
-import { releaseCoverageFunnel, type CoverageFunnel } from './domain/coverage'
+import { growthHealthOutcome, qualityStatusCounts, releaseCoverageFunnel, stockGrowthHealthOutcome, type CoverageFunnel } from './domain/coverage'
 import { trackEvent, trackEventOnce } from './domain/events'
 import type { Coverage, GrowthInputAudit, RankingRow, Release, StockSummary } from './domain/types'
 import { strategyPresentations, type StrategyKey, type StrategyPresentation } from './domain/strategyPresentation'
@@ -202,6 +202,7 @@ function DashboardContent({ release, dataSource, contentHash, onReload, refreshE
           funnel={releaseCoverageFunnel(release, activeKey)}
           strategy={activeKey}
           coverage={release.coverage}
+          marketDate={release.marketDate}
           growthStocks={release.stocks}
           trustSignalCount={release.summary.trustSignalCount}
           trustNewEntryCount={release.summary.trustNewEntryCount}
@@ -277,11 +278,12 @@ const growthReasonLabels: Record<string, string> = {
   dividend: '已確認股利', dividendYield: '已確認股利', extreme: '極端外推', threshold: '總報酬本益比門檻', health: '成長健康檢查',
 }
 
-export function CoverageFunnelView({ funnel, strategy, coverage, growthStocks = [], trustSignalCount, trustNewEntryCount }: {
+export function CoverageFunnelView({ funnel, strategy, coverage, growthStocks = [], marketDate, trustSignalCount, trustNewEntryCount }: {
   funnel: CoverageFunnel
   strategy: StrategyKey
   coverage: Coverage
   growthStocks?: StockSummary[]
+  marketDate?: string | null
   trustSignalCount?: number
   trustNewEntryCount?: number
 }) {
@@ -322,6 +324,10 @@ export function CoverageFunnelView({ funnel, strategy, coverage, growthStocks = 
   const terminalOutcomes = funnel.growthTerminalOutcomes
     ? Object.entries(terminalLabels).map(([key, label]) => `${label} ${funnel.growthTerminalOutcomes?.[key as keyof typeof funnel.growthTerminalOutcomes]} 檔`).join(' · ')
     : null
+  const financialStates = qualityStatusCounts(growthStocks)
+  const financialSummary = growthStocks.length
+    ? `明確通過 ${financialStates.pass} · 明確未通過 ${financialStates.fail} · 未評估 ${financialStates.unknown} · 不適用 ${financialStates.notApplicable} · 未提供 ${financialStates.unreported}`
+    : `財務品質逐檔狀態未提供；發布摘要明確通過 ${coverage.financialCompleteCount} 檔`
   const trackedQuoteCount = coverage.trackedCompleteCount ?? coverage.priceCompleteCount
   const trackedQuoteUniverse = coverage.trackedCount ?? coverage.universeCount
   const growthInputPct = hasGrowthCoverage ? percentage(funnel.growthInputComplete ?? undefined, funnel.growthTerminalOutcomes?.universe) : '—'
@@ -329,7 +335,7 @@ export function CoverageFunnelView({ funnel, strategy, coverage, growthStocks = 
     <section className="coverage-funnel" aria-label="候選資料漏斗">
       <div className="publication-coverage" aria-label="行情與財務建庫進度">
         <span>追蹤行情完整度 <strong>{percentage(trackedQuoteCount, trackedQuoteUniverse)}</strong> ({trackedQuoteCount}/{trackedQuoteUniverse})</span>
-        <span>資料庫財務品質檢查通過率 <strong>{percentage(coverage.financialCompleteCount, coverage.databaseCount)}</strong> ({coverage.financialCompleteCount}/{coverage.databaseCount})</span>
+        <span>財務品質逐檔狀態 <strong>{financialSummary}</strong></span>
         <span>股票資料檔覆蓋 <strong>{coverage.databaseCount}/{coverage.universeCount}</strong></span>
         {growth && <span>成長估值輸入建置 <strong>{growthInputPct}</strong> ({hasGrowthCoverage ? `${funnel.growthInputComplete}/${funnel.growthTerminalOutcomes?.universe} · 缺資料 ${funnel.growthTerminalOutcomes?.missing}` : '未提供診斷'})</span>}
       </div>
@@ -343,12 +349,13 @@ export function CoverageFunnelView({ funnel, strategy, coverage, growthStocks = 
         <p>{growthExplanation}{hasGrowthCoverage ? ' 缺漏原因可能重疊，不可相加。' : ''}</p>
         {hasGrowthCoverage && missingReasons && <p>輸入或淘汰原因（可重疊）：{missingReasons}。</p>}
         {hasGrowthCoverage && terminalOutcomes && <p>互斥結果（普通股母體）：{terminalOutcomes}</p>}
-        {hasGrowthCoverage && <GrowthStockDiagnosticsView stocks={growthStocks} />}
+        <GrowthStockDiagnosticsView stocks={growthStocks} coverageAvailable={hasGrowthCoverage} />
       </>
         : <>
           <p>{strategy === 'trust'
             ? `投信訊號：Top10 新進榜 ${trustSignalCount ?? '—'} 檔；新進榜確認 ${trustNewEntryCount ?? '—'} 檔。條件只依官方排名差集，不受 PE／PEG 缺值影響。`
             : '低位條件：同一 A 母體、合格調整價與 3.5 年回歸可用、Z ≤ 0、slope > 0；健康與估值資料是旁證，不隱藏價格觀察。'}</p>
+          {strategy === 'trust' && <p>本次比較只涵蓋發布資料日 {marketDate || '未知'}；較新交易日尚未驗證。</p>}
           <p>估值旁證：祖魯 PEG 可計算 {funnel.valuationComplete} 檔 · PEG 低於 0.75 {funnel.pegCandidates} 檔 · 正式 EPS {funnel.formalValuations} 檔 · 代理估算 {funnel.proxyValuations} 檔；不作此策略必要門檻。</p>
         </>}
     </section>
@@ -372,18 +379,31 @@ function inputEvidenceLabel(audit: GrowthInputAudit | undefined, key: keyof Grow
   return `${growthInputLabels[key]}：${growthOriginLabels[evidence.origin] ?? evidence.origin}${detail ? ` · ${detail}` : ''}`
 }
 
-export function GrowthStockDiagnosticsView({ stocks }: { stocks: StockSummary[] }) {
+export function GrowthStockDiagnosticsView({ stocks, coverageAvailable = false }: { stocks: StockSummary[]; coverageAvailable?: boolean }) {
   if (!stocks.length) return <p>此發布沒有逐檔成長估值診斷。</p>
+  const outcomes = stocks.reduce((counts, stock) => {
+    counts[stockGrowthHealthOutcome(stock)] += 1
+    return counts
+  }, { qualified: 0, not_qualified: 0, unknown: 0, unreported: 0 })
   return <details className="growth-stock-diagnostics">
     <summary>逐檔成長估值診斷 ({stocks.length} 檔)</summary>
+    <p>{coverageAvailable
+      ? '以下是同次發布的逐檔估值與健康結果。'
+      : '此舊版沒有完整的 growth-coverage-v1 總漏斗；以下只顯示發布已保存的逐檔值，不推算缺少的來源證據或總人數。'}</p>
+    <p>五項健康檢查：月營收連續三個月 YOY 皆大於 0；最近單季毛利「金額」、營業利益、稅前淨利、稅後淨利各自同比大於 0。未知不算通過；四項確定通過即可合格，兩項確定失敗則已不可能達到 4/5。健康合格仍須估值可計算且總報酬本益比 ≥ 1.20 才能入選。</p>
+    <p>逐檔健康狀態：合格 {outcomes.qualified} · 已知未達 {outcomes.not_qualified} · 尚未能判定 {outcomes.unknown} · 未提供檢查 {outcomes.unreported}。</p>
     <ul>{stocks.map((stock) => {
       const growth = stock.growthValuation
       const health = stock.healthCategories?.find((category) => category.key === 'growth')
-      const healthLabel = stock.growthHealthEligible === true
-        ? '健康條件達標'
-        : stock.growthHealthEligible === false
-          ? '健康條件未達'
-          : health ? `健康檢查 ${health.passCount}/${health.total}，狀態${health.status}` : '健康證據未知'
+      const outcome = growthHealthOutcome(health)
+      const passCount = health?.checks?.filter((check) => check.status === 'pass').length
+      const healthLabel = outcome === 'qualified'
+        ? `健康合格 ${passCount}/5`
+        : outcome === 'not_qualified'
+          ? `健康未達（確定失敗至少兩項；已確認通過 ${passCount}/5）`
+          : outcome === 'unknown'
+            ? `健康未定（未知可能影響 4/5；已確認通過 ${passCount}/5）`
+            : '未提供五項健康檢查'
       const statusLabel = growth?.status === 'available' ? '可計算' : growth?.status === 'extreme' ? '極端外推' : growth?.status === 'unavailable' ? '不可計算' : '未提供診斷'
       const missing = growth?.missingReasons?.map((reason) => growthReasonLabels[reason] ?? reason).join('、')
       return <li key={stock.code}>

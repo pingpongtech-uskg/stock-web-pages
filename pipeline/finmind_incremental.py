@@ -6,6 +6,7 @@ whole cache directory even when subsequent refresh or publication fails.
 from __future__ import annotations
 
 import json
+import hashlib
 import math
 import os
 import re
@@ -13,6 +14,8 @@ import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from contextlib import contextmanager
+import fcntl
 
 from pipeline.finmind_client import BudgetExceeded, FinMindClient, FinMindError, SourceBlocked
 from pipeline.financial_periods import dividend_period, normalized_date, normalized_period
@@ -47,86 +50,263 @@ def read_json(path: Path, default: Any) -> Any:
         raise FinMindError('FinMind checkpoint cannot be read; supplemental requests disabled') from exc
 
 
+HOUR_SECONDS = 3600
+
+
+@contextmanager
+def budget_lock(path: Path):
+    path = path.resolve()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = path.parent.parent / ('.' + path.parent.name + '-finmind-budget.lock')
+    with lock_path.open('a') as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def _finite_time(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and value >= 0
+
+
+def _checkpoint_time(state: dict[str, Any]) -> float | None:
+    value = state.get('checkpointAt')
+    if value is None:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+        if parsed.tzinfo is None:
+            raise ValueError('Checkpoint requires timezone')
+        return parsed.timestamp()
+    except (ValueError, TypeError) as exc:
+        raise FinMindError('Invalid FinMind checkpoint timestamp') from exc
+
+
+def normalize_budget_state(state: Any, now: float) -> dict[str, Any]:
+    """Validate v3 events or conservatively migrate counters with unknown timings."""
+    if not isinstance(state, dict) or not isinstance(state.get('days'), dict):
+        raise FinMindError('Invalid FinMind budget checkpoint')
+    version = state.get('version', 2)
+    if type(version) is not int or version not in {1, 2, 3}:
+        raise FinMindError('Unsupported FinMind budget checkpoint')
+    checkpoint_day = state.get('checkpointDay')
+    if checkpoint_day is not None:
+        try:
+            if not isinstance(checkpoint_day, str) or date.fromisoformat(checkpoint_day).isoformat() != checkpoint_day:
+                raise ValueError('Invalid checkpoint day')
+        except (ValueError, TypeError) as exc:
+            raise FinMindError('Invalid FinMind checkpoint day') from exc
+    _checkpoint_time(state)
+    if state.get('version') != 3:
+        counts = []
+        caps = []
+        for day, record in state['days'].items():
+            date.fromisoformat(day)
+            if not isinstance(record, dict) or type(record.get('attempts')) is not int or not 0 <= record['attempts'] <= 300:
+                raise FinMindError('Invalid FinMind legacy attempt count')
+            counts.append(record['attempts'])
+            cap = record.get('projectCap', record.get('ceiling', 300) if state.get('version', 2) == 2 else 300)
+            if type(cap) is not int or not 1 <= cap <= 300:
+                raise FinMindError('Invalid FinMind legacy project cap')
+            caps.append(cap)
+        total = sum(counts)
+        saved = _checkpoint_time(state)
+        until = (saved if saved is not None else now) + HOUR_SECONDS
+        fingerprint = hashlib.sha256(json.dumps(state['days'], sort_keys=True).encode()).hexdigest()
+        debt = [{'id': fingerprint, 'count': min(300, total), 'until': until,
+                 'unknown': saved is None}] if total else []
+        rolling = {'events': [], 'totalAttempts': total, 'projectCap': min(caps, default=300), 'legacyDebt': debt}
+        latest_day = state.get('checkpointDay') or max(state['days'], default='')
+        latest = state['days'].get(latest_day, {})
+        if latest.get('quotaKnown'):
+            old_ceiling = latest.get('accountCeiling', latest.get('ceiling') if state.get('version') == 1 else None)
+            if old_ceiling is not None:
+                if type(old_ceiling) is not int or old_ceiling < 0:
+                    raise FinMindError('Invalid FinMind legacy account ceiling')
+                rolling = {**rolling, 'accountCeiling': total + max(0, old_ceiling - latest['attempts']),
+                           'observedAt': saved if saved is not None else now,
+                           'quotaCheckedAt': datetime.fromtimestamp(saved if saved is not None else now, timezone.utc).isoformat(),
+                           'quotaWindowId': 'legacy-' + fingerprint,
+                           **{key: latest[key] for key in ('accountLimit', 'accountUsed') if key in latest}}
+        if latest.get('blocked'):
+            rolling = {**rolling, 'blocked': latest['blocked'],
+                       'blockedAt': saved if saved is not None else now,
+                       'retryAfterSeconds': latest.get('retryAfterSeconds'),
+                       'retryNotBefore': state.get('retryNotBefore', 0)}
+        state = {**state, 'version': 3, 'rollingHour': rolling}
+    rolling = state.get('rollingHour')
+    if not isinstance(rolling, dict) or type(rolling.get('totalAttempts')) is not int or rolling['totalAttempts'] < 0:
+        raise FinMindError('Invalid FinMind rolling total')
+    if type(rolling.get('projectCap')) is not int or not 1 <= rolling['projectCap'] <= 300:
+        raise FinMindError('Invalid FinMind rolling cap')
+    events, debts = rolling.get('events'), rolling.get('legacyDebt')
+    if not isinstance(events, list) or not isinstance(debts, list):
+        raise FinMindError('Invalid FinMind rolling event list')
+    seen = set()
+    for event in events:
+        if (not isinstance(event, dict) or not isinstance(event.get('id'), str) or not event['id'] or
+            event['id'] in seen or not _finite_time(event.get('at'))):
+            raise FinMindError('Invalid FinMind rolling attempt')
+        seen.add(event['id'])
+    if len(events) > rolling['totalAttempts']:
+        raise FinMindError('FinMind event total mismatch')
+    for debt in debts:
+        if (not isinstance(debt, dict) or not isinstance(debt.get('id'), str) or
+            type(debt.get('count')) is not int or not 0 <= debt['count'] <= 300 or
+            not _finite_time(debt.get('until')) or type(debt.get('unknown')) is not bool):
+            raise FinMindError('Invalid FinMind legacy debt')
+    for key in ('accountCeiling', 'accountLimit', 'accountUsed'):
+        if key in rolling and (type(rolling[key]) is not int or rolling[key] < 0):
+            raise FinMindError('Invalid FinMind quota observation')
+    for key in ('observedAt', 'lastClock', 'retryNotBefore', 'blockedAt', 'retryAfterSeconds'):
+        if key in {'observedAt', 'retryAfterSeconds'} and rolling.get(key) is None:
+            continue
+        if key in rolling and not _finite_time(rolling[key]):
+            raise FinMindError('Invalid FinMind quota clock')
+    if not _finite_time(state.get('retryNotBefore', 0)):
+        raise FinMindError('Invalid FinMind source retry clock')
+    if rolling.get('quotaWindowId') is not None and (not isinstance(rolling['quotaWindowId'], str) or not rolling['quotaWindowId']):
+        raise FinMindError('Invalid FinMind quota cohort identity')
+    if rolling.get('blocked') is not None and not isinstance(rolling['blocked'], str):
+        raise FinMindError('Invalid FinMind source block')
+    if rolling.get('quotaCheckedAt') is not None:
+        _checkpoint_time({'checkpointAt': rolling['quotaCheckedAt']})
+    return state
+
+
 class DailyBudget:
-    """Project daily budget retained across retries, reruns, and later jobs."""
+    """Compatibility name for the durable shared 300-attempt rolling-hour budget."""
     def __init__(self, path: Path, budget_date: str, *, hard_cap: int = 300) -> None:
         date.fromisoformat(budget_date)
-        if not 1 <= hard_cap <= 300:
-            raise ValueError('FinMind project daily cap must be between 1 and 300')
+        if type(hard_cap) is not int or not 1 <= hard_cap <= 300:
+            raise ValueError('FinMind project hourly cap must be between 1 and 300')
         self.path, self.day, self.hard_cap = path, budget_date, hard_cap
-        self.state = read_json(path, {'version': 2, 'days': {}, 'queue': []})
-        if not isinstance(self.state, dict) or not isinstance(self.state.get('days'), dict):
-            raise FinMindError('Invalid FinMind budget checkpoint; supplemental requests disabled')
-        self.record = self.state['days'].get(budget_date, {'attempts': 0, 'ceiling': hard_cap, 'quotaKnown': False})
-        if not isinstance(self.record, dict) or not isinstance(self.record.get('attempts'), int) or self.record['attempts'] < 0:
-            raise FinMindError('Invalid FinMind attempt checkpoint; supplemental requests disabled')
-        legacy = self.state.get('version') == 1
-        ceiling = self.record.get('projectCap', hard_cap) if legacy else self.record.get('ceiling', hard_cap)
-        self.record = {**self.record, 'ceiling': min(hard_cap, ceiling), 'projectCap': min(hard_cap, ceiling)}
-        if legacy and self.record.get('quotaKnown'):
-            self.record = {**self.record, 'accountCeiling': self.state['days'][budget_date]['ceiling']}
-        self.state = {**self.state, 'version': 2}
-        self.save()
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        # Sibling lock stays outside the state.json/rows.json artifact allowlist.
+        with self._locked():
+            self._load()
+            self.record = {**self.record, 'projectCap': min(hard_cap, self.record['projectCap'])}
+            self.save()
+
+    def _locked(self):
+        return budget_lock(self.path)
+
+    def _load(self) -> None:
+        self.state = normalize_budget_state(read_json(self.path, {'version': 2, 'days': {}, 'queue': []}), time.time())
+        self.record = self.state['rollingHour']
 
     @property
     def used(self) -> int:
-        return self.record['attempts']
+        return self.record['totalAttempts']
 
-    def save(self) -> None:
-        self.state = {**self.state, 'days': {**self.state['days'], self.day: self.record},
-                      'checkpointDay': self.day, 'checkpointAt': datetime.now(timezone.utc).isoformat()}
-        atomic_json(self.path, self.state)
+    @property
+    def rolling_used(self) -> int:
+        cutoff = time.time() - HOUR_SECONDS
+        events = sum(event['at'] > cutoff for event in self.record['events'])
+        debt = sum(item['count'] for item in self.record['legacyDebt'] if item['until'] > time.time())
+        return events + debt
+
+    @property
+    def quota_fresh(self) -> bool:
+        observed = self.record.get('observedAt')
+        return observed is not None and 0 <= time.time() - observed < HOUR_SECONDS
+
+    @property
+    def account_remaining(self) -> int | None:
+        if not self.quota_fresh or 'accountCeiling' not in self.record:
+            return None
+        return max(0, self.record['accountCeiling'] - self.used)
 
     @property
     def allowance(self) -> int:
-        return min(self.record['ceiling'], self.record.get('accountCeiling', self.record['ceiling']))
+        return self.used + min(max(0, self.record['projectCap'] - self.rolling_used), self.account_remaining or 0)
+
+    def save(self) -> None:
+        self.state = {**self.state, 'version': 3, 'rollingHour': self.record,
+                      'checkpointDay': self.day,
+                      'checkpointAt': datetime.fromtimestamp(time.time(), timezone.utc).isoformat()}
+        atomic_json(self.path, self.state)
 
     def consume(self, *, require_known: bool = False) -> None:
-        if current_taipei_day() != self.day:
-            self.record = {**self.record, 'stoppedReason': 'budget_date_changed',
-                           'stoppedAt': datetime.now(timezone.utc).isoformat()}
+        import uuid
+        with self._locked():
+            self._load()
+            now = time.time()
+            if now < self.record.get('lastClock', 0):
+                raise BudgetExceeded('FinMind clock moved backwards; retain checkpoint')
+            if any(item['unknown'] and item['until'] > now for item in self.record['legacyDebt']):
+                raise BudgetExceeded('FinMind legacy attempt timestamps unknown; wait for safe expiry')
+            if self.rolling_used >= self.record['projectCap']:
+                raise BudgetExceeded('FinMind rolling-hour project allowance exhausted')
+            until = self.record.get('retryNotBefore', self.state.get('retryNotBefore', 0))
+            blocked = self.record.get('blocked')
+            if now < until or (blocked and require_known):
+                raise SourceBlocked('FinMind source backoff remains blocked')
+            if blocked and not require_known and self.record.get('retryAfterSeconds') is None and now - self.record.get('blockedAt', now) < HOUR_SECONDS:
+                raise SourceBlocked('FinMind source recovery requires a fresh hourly quota check')
+            if require_known and not self.quota_fresh:
+                raise FinMindError('FinMind account quota observation expired or unavailable')
+            if self.quota_fresh and self.account_remaining == 0:
+                raise BudgetExceeded('FinMind account observation allowance exhausted')
+            events = [event for event in self.record['events'] if event['at'] > now - 2 * HOUR_SECONDS]
+            self.record = {**self.record, 'events': [*events, {'id': uuid.uuid4().hex, 'at': now}],
+                           'totalAttempts': self.used + 1, 'lastClock': now}
             self.save()
-            raise BudgetExceeded('FinMind budget date changed; retain checkpoint and resume with a new run')
-        if self.used >= self.record['ceiling']:
-            raise BudgetExceeded('FinMind project daily request allowance exhausted')
-        deferred = time.time() < self.state.get('retryNotBefore', 0)
-        # A known server backoff permits only a quota check after expiry.
-        blocked = self.record.get('blocked') and (require_known or self.record.get('retryAfterSeconds') is None)
-        if blocked or deferred:
-            raise SourceBlocked('FinMind quota/rate-limit checkpoint remains blocked')
-        if require_known and not self.record.get('quotaKnown'):
-            raise FinMindError('FinMind account quota unavailable; supplemental requests disabled')
-        if require_known and self.used >= self.allowance:
-            raise BudgetExceeded('FinMind account window allowance exhausted')
-        self.record = {**self.record, 'attempts': self.used + 1}
-        self.save()
 
     def configure(self, account_limit: int, account_used: int, *, checks_started_at: int = 0) -> None:
-        remaining = max(0, account_limit - account_used)
-        candidate = checks_started_at + math.floor(remaining * 0.8)
-        # A reported decrease in user_count verifies a reset. Rechecking or
-        # retrying an unchanged usage window never creates a fresh allowance.
-        reset = self.record.get('quotaKnown') and account_used < self.record.get('accountUsed', account_used)
-        previous = self.record.get('accountCeiling')
-        ceiling = candidate if previous is None or reset else min(previous, candidate)
-        self.record = {**self.record, 'quotaKnown': True, 'accountLimit': account_limit,
-                       'accountUsed': account_used, 'accountCeiling': ceiling,
-                       'quotaCheckedAt': datetime.now(timezone.utc).isoformat()}
-        if reset:
-            self.record = {**self.record, 'windowStartedAtAttempt': checks_started_at}
-        if remaining > 0:
-            self.record = {**self.record, 'blocked': None, 'retryAfterSeconds': None}
-        self.save()
+        import uuid
+        if type(account_limit) is not int or type(account_used) is not int or account_limit <= 0 or account_used < 0:
+            raise FinMindError('Invalid FinMind account quota')
+        with self._locked():
+            self._load()
+            candidate = checks_started_at + math.floor(max(0, account_limit - account_used) * 0.8)
+            previous = self.record.get('accountCeiling')
+            reset = 'accountUsed' in self.record and account_used < self.record['accountUsed']
+            # A fresh server observation can fund a later cohort even when its
+            # counter equals the original observation (e.g. zero in both hours).
+            # Time alone cannot renew: every previously charged attempt and
+            # unknown legacy cohort must have aged out before this quota check.
+            checks = max(0, self.used - checks_started_at)
+            previous_events = self.record['events'][:-checks] if checks else self.record['events']
+            previous_basis = self.record.get('observedAt')
+            if previous_basis is None:
+                previous_basis = self.record.get('blockedAt')
+            cohort_expired = (not self.quota_fresh and previous_basis is not None and
+                              time.time() - previous_basis >= HOUR_SECONDS and
+                              all(event['at'] <= time.time() - HOUR_SECONDS for event in previous_events) and
+                              all(item['until'] <= time.time() for item in self.record['legacyDebt']))
+            reset = reset or cohort_expired
+            ceiling = candidate if previous is None or reset else min(previous, candidate)
+            self.record = {**self.record, 'accountLimit': account_limit, 'accountUsed': account_used,
+                           'accountCeiling': ceiling, 'observedAt': time.time(),
+                           'quotaWindowId': uuid.uuid4().hex if previous is None or reset else self.record.get('quotaWindowId'),
+                           'quotaCheckedAt': datetime.fromtimestamp(time.time(), timezone.utc).isoformat()}
+            if account_used < account_limit and (not self.record.get('blocked') or reset):
+                self.record = {**self.record, 'blocked': None, 'retryAfterSeconds': None}
+            self.save()
 
     def block(self, reason: str, retry_after: float | None = None) -> None:
-        self.record = {**self.record, 'blocked': reason, 'retryAfterSeconds': retry_after}
-        if retry_after is not None:
-            self.state = {**self.state, 'retryNotBefore': max(self.state.get('retryNotBefore', 0), time.time() + retry_after)}
-        self.save()
+        with self._locked():
+            self._load()
+            self.record = {**self.record, 'blocked': reason, 'blockedAt': time.time(), 'retryAfterSeconds': retry_after,
+                           'retryNotBefore': max(self.record.get('retryNotBefore', 0), time.time() + (retry_after or 0))}
+            self.save()
 
     def queue(self, jobs: list[dict[str, str]]) -> None:
-        self.state = {**self.state, 'queue': jobs}
-        self.save()
+        with self._locked():
+            metadata = {key: self.state[key] for key in ('queuePolicy', 'lastResult') if key in self.state}
+            self._load()
+            self.state = {**self.state, 'queue': jobs, **metadata}
+            self.save()
+
+    def update_metadata(self, changes: dict[str, Any]) -> None:
+        if set(changes) - {'institutionalProbe', 'lastResult', 'queuePolicy'}:
+            raise FinMindError('Budget metadata update cannot replace request authority')
+        with self._locked():
+            self._load()
+            self.state = {**self.state, **changes}
+            self.save()
 
 
 def financial_period(end: date) -> str:
@@ -183,7 +363,8 @@ def plan_gaps(details: list[dict[str, Any]], cache: dict[str, Any], as_of: str, 
         safe_pe = same_day and number(valuation['current_pe']) is not None and valuation['current_pe'] > 0
         growth = valuation['growth'].get('growth')
         closes_valuation = safe_pe and valuation['ttm_eps'] is not None and growth is not None and 0 < growth <= GROWTH_EXTREME_RATE_MAX
-        growth_health = evaluate_growth_health(health.get('monthlyRevenueOfficial') or [], income)
+        growth_health = evaluate_growth_health(health.get('monthlyRevenueOfficial') or [],
+                                               [*income, *(health.get('incomeYtd') or [])], as_of=as_of)
         due_year, due_quarter = financial_period(end).split('-Q')
         latest_period = max((normalized_period(row) for row in income if normalized_period(row) is not None), default=(0, 0))
         financial_missing = (latest_period < (int(due_year), int(due_quarter)) or derive_ttm_eps(validated_income, as_of=as_of) is None or derive_stable_eps_growth(validated_income, as_of=as_of).get('growth') is None
@@ -270,6 +451,7 @@ def supplement_snapshot(codes: list[str], output: Path, as_of: str | None = None
     as_of = as_of or budget_date
     date.fromisoformat(as_of)
     state = DailyBudget(cache_dir / 'state.json', budget_date, hard_cap=max_requests)
+    attempts_before = state.used
     cache = read_json(cache_dir / 'rows.json', {})
     if not isinstance(cache, dict):
         raise FinMindError('Invalid FinMind row cache; supplemental requests disabled')
@@ -346,7 +528,9 @@ def supplement_snapshot(codes: list[str], output: Path, as_of: str | None = None
             atomic_json(paths[original['code']], updated)
             changed += 1
     result = {'run_id': run_id, 'stocks': len(details), 'updated': changed, 'completed': completed,
-              'queued': len(jobs), 'requests': state.used, 'allowed_attempts': state.allowance, 'skipped': skipped}
+              'queued': len(jobs), 'requests': state.rolling_used,
+              'allowed_attempts': state.rolling_used + max(0, state.allowance - state.used),
+              'actual_attempts': state.used - attempts_before, 'skipped': skipped}
     state.state = {**state.state, 'lastResult': result}
     state.queue(jobs)
     return result
