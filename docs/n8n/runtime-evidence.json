@@ -1447,7 +1447,10 @@
     "requireHashDateCoverageReadback": true,
     "previousBaselineRequired": true,
     "aiRuntime": false,
-    "actualNewCacheWrites": 0
+    "actualNewCacheWrites": 0,
+    "restorationStatus": "pure_python_39_tests_peer_reviewed_runtime_bridge_pending",
+    "dispatchRestorationValidation": "11_local_tests_passed_not_yet_published",
+    "dispatchRestorationPeerReview": "no_high_medium_findings"
   },
   "hourlyRepairSourcePublication": {
     "sourceGitCommit": "ce8d2d4e9abdde4cf37e329011d1653bff669885",
@@ -1693,14 +1696,35 @@
         "rawSemanticsIndependent": false,
         "marketCacheComplete": false,
         "diagnosticBlockId": "3ee6fb57-ff38-8123-bb73-d8d9650647ce"
+      },
+      {
+        "execution": "888",
+        "ledgerRow": 119,
+        "outcome": "read_only_storage_guard_rejected_encoded_query",
+        "notionWrites": 0,
+        "anonymousDownloads": 0
+      },
+      {
+        "execution": "891",
+        "ledgerRow": 126,
+        "outcome": "read_only_existing_attachment_compressed_bytes_verified",
+        "notionWrites": 0,
+        "fileReadHttpStatus": 200,
+        "anonymousDownloadHttpStatus": 200,
+        "verifiedBytes": 172,
+        "sha256": "e18d59d0c39bb091d0a9bf348d261729b0a4a6b455e2bc7b3e90f4ede1b1822e",
+        "verificationLevel": "compressed_backup_verified",
+        "independentRawSemanticsVerified": false,
+        "marketCacheComplete": false
       }
     ],
-    "lastVerifiedVersion": "02ec1a7b-2027-48dd-8b8d-b61627ee9c56",
+    "lastVerifiedVersion": "df90e81f-e14d-4801-8aa9-0488b0b0a087",
     "inactive": true,
     "defaultRestored": "inspect",
     "executionDataRetention": "none",
     "rawSemanticVerification": "bounded_python_producer",
-    "backupReadbackVerification": "compressed_bytes_sha256_and_trusted_producer_proof"
+    "backupReadbackVerification": "compressed_bytes_sha256_and_trusted_producer_proof",
+    "tinyUploadAndReadbackCapabilityVerified": true
   },
   "marketCacheSourceBatchValidation": {
     "pythonTestsPassed": 843,
@@ -1708,7 +1732,7 @@
     "officialSourceLineCoveragePercent": 81.8,
     "producerExportAssemblerLineCoveragePercent": 96,
     "unresolvedHighMediumFindings": 0,
-    "currentBatchPublished": false,
+    "currentBatchPublished": true,
     "primaryCacheIntegration": "pending",
     "realOctober2DataPublished": false,
     "assemblerSymlinkReproductionClosed": true,
@@ -1716,5 +1740,77 @@
     "npmAuditVulnerabilityCount": 0,
     "pipAuditVulnerabilityCount": 0,
     "finalIndependentPeerHighMedium": 0
+  },
+  "marketCacheSourcePublication": {
+    "sourceGitCommit": "8eec7416be8146cb45b483cc1fe53489f4a22973",
+    "tree": "64c9f3dfb06c2cb9d248b26c51da99d7b4bc98f6",
+    "parent": "ce8d2d4e9abdde4cf37e329011d1653bff669885",
+    "files": 27,
+    "manifestBytes": 716620,
+    "manifestSha256": "bd7d13d33c91c41754d8e7289972a3ba2ba1b43469a100e8bd055edff96123d4",
+    "featureExecution": "887",
+    "featureLedgerRow": 120,
+    "featureCiRun": "37146657826",
+    "featureCiConclusion": "success",
+    "mainExecution": "889",
+    "mainLedgerRow": 121,
+    "mainCiRun": "37146801114",
+    "mainCiConclusion": "success",
+    "nonForced": true,
+    "helperRestoredInspect": true,
+    "sourceOnly": true,
+    "october2DataStillPending": true
+  },
+  "october2RecoveryV2": {
+    "requestId": "stockscreener:20261002:v2",
+    "marketDate": "2026-10-02",
+    "primaryExecution": "890",
+    "heldPrimaryVersion": "32848824-2a1a-456f-bed0-1dc002fd5261",
+    "actionsRunId": "37146944320",
+    "sourceGitCommit": "8eec7416be8146cb45b483cc1fe53489f4a22973",
+    "workflowId": 353554563,
+    "status": "failed_before_financial_supplement",
+    "notionFullCacheIntegration": "pending",
+    "primaryScheduleActivated": false,
+    "failureStep": "Fetch official institutional universe",
+    "failureJobId": "111272755562",
+    "failureLedgerRow": 129,
+    "notionStatus": "failure_metadata",
+    "finmindSupplementExecuted": false,
+    "newDataPublished": false,
+    "operatorDefaultRestored": true,
+    "failureCause": "TPEx report returned an unexpected JSON response",
+    "authenticatedFailureEvidence": {
+      "execution": "893",
+      "ledgerRow": 130,
+      "jobLogBytes": 51107,
+      "actualErrorOccurrences": 3,
+      "rawSourceArtifactId": "11282556816",
+      "rawSourceArtifactSha256": "57237d980d51dfe06e480a144b7acd7177c8dd769692a76544b6a64ddae1e60b",
+      "rawResponseInspection": "confirmed_holiday_sentinel_with_extra_presentation_fields",
+      "artifactReadExecution": "896",
+      "artifactReadLedgerRow": 132,
+      "failingRequestDate": "2026-09-28",
+      "rawResponseBytes": 1859,
+      "rawResponseSha256": "cd10ed034bb3de598a3feccbcafdd8267c97d141ecd3613dcd8ffb9dd62f64d1",
+      "stat": "無資料可供下載",
+      "rowCount": 0,
+      "fieldCount": 24,
+      "sourceOctober2CsvMatchesIndependentLocalCapture": true
+    }
+  },
+  "restorationSourceBatchValidation": {
+    "pythonTestsPassed": 926,
+    "sourceHelperTestsPassed": 16,
+    "unresolvedHighMediumFindings": 0,
+    "sourcePublicationStatus": "pending",
+    "restorationRuntimeBridgeStatus": "pending",
+    "marketDataPublicationStatus": "pending",
+    "calendarYearBoundary": "fails_explicitly_when_no_authoritative_previous_year_calendar",
+    "npmAuditVulnerabilityCount": 0,
+    "pipAuditVulnerabilityCount": 0,
+    "officialWindowReplaySessions": 11,
+    "officialWindowReplayHttpRequests": 0,
+    "officialWindowReplayHolidayRequests": 0
   }
 }

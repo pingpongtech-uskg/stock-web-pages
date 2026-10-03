@@ -413,6 +413,103 @@ def test_tpex_official_no_data_sentinel_is_empty_only_for_the_requested_date():
         parse_tpex_daily_response(payload, expected_date=date(2026, 10, 2))
 
 
+def test_tpex_holiday_no_data_response_allows_official_presentation_metadata():
+    from pipeline.official_institutional import parse_tpex_daily_response
+    fields = list(csv.reader(io.StringIO(_tpex_csv("3081", "聯亞", "0", "0", "0").decode("cp950"))))[1]
+    payload = json.dumps({
+        "columnNum": 25, "csvName": "sitcStat", "date": "20260928",
+        "stat": "無資料可供下載", "template": "daily",
+        "tables": [{
+            "columnNum": 25, "date": "115/09/28", "data": [], "fields": fields,
+            "notes": ["official presentation note"], "subtitle": "", "summary": ["共0筆"], "title": "",
+            "totalCount": 0,
+        }],
+    }, ensure_ascii=False).encode("utf-8")
+    assert parse_tpex_daily_response(payload, expected_date=date(2026, 9, 28)) == []
+
+
+@pytest.mark.parametrize("change", [
+    {"date": "20260929"},
+    {"stat": "成功"},
+    {"table_data": [["3081"]]},
+    {"total_count": 1},
+    {"field_count": 23},
+])
+def test_tpex_holiday_no_data_response_rejects_non_sentinel_payloads(change):
+    from pipeline.official_institutional import parse_tpex_daily_response
+    fields = list(csv.reader(io.StringIO(_tpex_csv("3081", "聯亞", "0", "0", "0").decode("cp950"))))[1]
+    table = {"date": "115/09/28", "data": [], "fields": fields, "totalCount": 0,
+             "columnNum": 25, "notes": [], "subtitle": "", "summary": [], "title": ""}
+    payload = {"date": "20260928", "stat": "無資料可供下載", "tables": [table],
+               "columnNum": 25, "csvName": "sitcStat", "template": "daily"}
+    if "date" in change: payload["date"] = change["date"]
+    if "stat" in change: payload["stat"] = change["stat"]
+    if "table_data" in change: payload["tables"][0]["data"] = change["table_data"]
+    if "total_count" in change: payload["tables"][0]["totalCount"] = change["total_count"]
+    if "field_count" in change: payload["tables"][0]["fields"] = fields[:change["field_count"]]
+    with pytest.raises(OfficialInstitutionalError):
+        parse_tpex_daily_response(json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+                                  expected_date=date(2026, 9, 28))
+
+
+def test_recent_complete_days_uses_authoritative_calendar_before_request(monkeypatch):
+    import pipeline.official_institutional as official
+    from pipeline.trading_calendar import SOURCE_URL
+    calendar = {"schemaVersion": "trading-calendar-v1", "timezone": "Asia/Taipei", "year": 2026,
+                "sourceUrl": SOURCE_URL, "closedDates": ["2026-09-28"], "openExceptions": []}
+    calls = []
+    def fetch(day, **kwargs):
+        calls.append(day)
+        return [{"code": "2330"}]
+    monkeypatch.setattr(official, "fetch_complete_day", fetch)
+    result = official.fetch_recent_complete_days(as_of=date(2026, 9, 29), sessions=2,
+        lookback_days=5, calendar=calendar)
+    assert [item["date"] for item in result] == ["2026-09-29", "2026-09-25"]
+    assert calls == [date(2026, 9, 29), date(2026, 9, 25)]
+
+
+def test_recent_complete_days_calendar_requires_valid_coverage_before_http(monkeypatch):
+    import pipeline.official_institutional as official
+    calendar = {"schemaVersion": "trading-calendar-v1", "timezone": "Asia/Taipei", "year": 2026,
+                "sourceUrl": "https://example.invalid", "closedDates": [], "openExceptions": []}
+    monkeypatch.setattr(official, "fetch_complete_day", lambda *args, **kwargs:
+                        pytest.fail("invalid calendar must fail before source request"))
+    with pytest.raises(ValueError, match="calendar"):
+        official.fetch_recent_complete_days(as_of=date(2026, 1, 2), sessions=1, lookback_days=1,
+                                            calendar=calendar)
+
+
+def test_recent_complete_days_does_not_treat_missing_open_session_as_closed(monkeypatch):
+    import pipeline.official_institutional as official
+    from pipeline.trading_calendar import SOURCE_URL
+    calendar = {"schemaVersion": "trading-calendar-v1", "timezone": "Asia/Taipei", "year": 2026,
+                "sourceUrl": SOURCE_URL, "closedDates": [], "openExceptions": []}
+    calls = []
+    monkeypatch.setattr(official, "fetch_complete_day", lambda day: calls.append(day) or [])
+    with pytest.raises(OfficialInstitutionalError, match="open session 2026-10-02"):
+        official.fetch_recent_complete_days(as_of=date(2026, 10, 2), sessions=1, lookback_days=1,
+                                            calendar=calendar)
+    assert calls == [date(2026, 10, 2)]
+
+
+def test_recent_complete_days_requires_explicit_calendar_coverage_across_year_boundary(monkeypatch):
+    import pipeline.official_institutional as official
+    from pipeline.trading_calendar import SOURCE_URL
+    calendar = {"schemaVersion": "trading-calendar-v1", "timezone": "Asia/Taipei", "year": 2027,
+                "sourceUrl": SOURCE_URL, "closedDates": [], "openExceptions": []}
+    calls = []
+    monkeypatch.setattr(official, "fetch_complete_day", lambda day: calls.append(day) or [{"code": "2330"}])
+    with pytest.raises(ValueError, match="does not cover requested year"):
+        official.fetch_recent_complete_days(as_of=date(2027, 1, 4), sessions=3, lookback_days=5,
+                                            calendar=calendar)
+    assert calls == [date(2027, 1, 4), date(2027, 1, 1)]
+    calendar["sourceUrl"] = "https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule"
+    calendar["year"] = 2025
+    with pytest.raises(ValueError, match="calendar"):
+        official.fetch_recent_complete_days(as_of=date(2026, 1, 2), sessions=1, lookback_days=1,
+                                            calendar=calendar)
+
+
 def test_tpex_csv_rejects_duplicate_codes_and_malformed_common_rows():
     from pipeline.official_institutional import parse_tpex_csv
     raw = _tpex_csv("3081", "聯亞", "10", "2", "8")

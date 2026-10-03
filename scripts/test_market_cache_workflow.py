@@ -37,3 +37,16 @@ def test_complete_artifact_and_partial_receipts_are_distinct():
     assert 'if: always()' in partial and 'name: market-source-checkpoint-' in partial
     assert 'path: .cache/market-source' in partial and 'if-no-files-found: warn' in partial
     assert '.cache/finmind' not in partial and 'FINMIND_TOKEN' not in partial
+
+
+def test_cache_artifact_uses_stored_zip_for_bounded_remote_readback():
+    # gzip members are already compressed; remote Code has no bounded inflate.
+    completed = snapshot_job().split('- name: Preserve validated complete market cache', 1)[1].split('\n      - ', 1)[0]
+    assert 'compression-level: 0' in completed
+
+
+def test_institutional_collection_uses_authoritative_calendar_before_holiday_probes():
+    job = snapshot_job()
+    assert job.index('Fetch authoritative exchange calendar') < job.index('Fetch official institutional universe')
+    command = next(line for line in job.splitlines() if 'if python scripts/fetch_research_universe.py' in line)
+    assert '--calendar public/data/trading-calendar.json' in command

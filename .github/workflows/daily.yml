@@ -20,6 +20,30 @@ on:
         options:
           - publish
           - institutional_probe
+      restore_commit:
+        description: Data-only Git commit containing verified Notion cache
+        required: false
+        type: string
+      restore_descriptor_sha256:
+        description: SHA256 of independently verified cache restore descriptor
+        required: false
+        type: string
+      restore_cache_market_date:
+        description: Original cached market date
+        required: false
+        type: string
+      restore_source_git_commit:
+        description: Original cache source code commit
+        required: false
+        type: string
+      restore_actions_run_id:
+        description: Original cache Actions run ID
+        required: false
+        type: string
+      restore_request_id:
+        description: Original cache request correlation ID
+        required: false
+        type: string
 permissions:
   contents: write
   actions: read
@@ -35,6 +59,12 @@ jobs:
       REQUEST_ID: ${{ inputs.request_id }}
       MARKET_DATE: ${{ inputs.market_date }}
       SOURCE_MODE: ${{ inputs.source_mode }}
+      CACHE_RESTORE_COMMIT: ${{ inputs.restore_commit }}
+      CACHE_DESCRIPTOR_SHA256: ${{ inputs.restore_descriptor_sha256 }}
+      CACHE_MARKET_DATE: ${{ inputs.restore_cache_market_date }}
+      CACHE_SOURCE_GIT_COMMIT: ${{ inputs.restore_source_git_commit }}
+      CACHE_ACTIONS_RUN_ID: ${{ inputs.restore_actions_run_id }}
+      CACHE_REQUEST_ID: ${{ inputs.restore_request_id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,6 +79,17 @@ jobs:
           assert (os.environ.get('SOURCE_MODE') or 'publish') in {'publish', 'institutional_probe'}, 'invalid source_mode'
           assert re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}', os.environ['REQUEST_ID']), 'invalid request_id'
           assert date.fromisoformat(os.environ['MARKET_DATE']).isoformat() == os.environ['MARKET_DATE'], 'invalid market_date'
+          names = ['CACHE_RESTORE_COMMIT', 'CACHE_DESCRIPTOR_SHA256', 'CACHE_MARKET_DATE', 'CACHE_SOURCE_GIT_COMMIT', 'CACHE_ACTIONS_RUN_ID', 'CACHE_REQUEST_ID']
+          restore = {key: os.environ.get(key, '') for key in names}
+          if any(restore.values()):
+              assert all(restore.values()), 'incomplete cache restore context'
+              for key in ['CACHE_RESTORE_COMMIT', 'CACHE_SOURCE_GIT_COMMIT']:
+                  assert re.fullmatch(r'[a-f0-9]{40}', restore[key]), 'invalid cache commit'
+              assert re.fullmatch(r'[a-f0-9]{64}', restore['CACHE_DESCRIPTOR_SHA256']), 'invalid cache descriptor'
+              cached = date.fromisoformat(restore['CACHE_MARKET_DATE'])
+              assert cached.isoformat() == restore['CACHE_MARKET_DATE'] and cached <= date.fromisoformat(os.environ['MARKET_DATE']), 'invalid cache date'
+              assert re.fullmatch(r'[1-9][0-9]{0,23}', restore['CACHE_ACTIONS_RUN_ID']), 'invalid cache run'
+              assert re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}', restore['CACHE_REQUEST_ID']), 'invalid cache request'
           PY
           mkdir -p .cache/finmind .cache/market-source
           echo "BUDGET_DATE=$(TZ=Asia/Taipei date +%F)" >> "$GITHUB_ENV"
@@ -82,6 +123,14 @@ jobs:
           key: market-source-v1-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             market-source-v1-
+      - name: Restore verified Notion operational cache
+        if: inputs.restore_commit != ''
+        timeout-minutes: 5
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python scripts/restore_market_cache.py --restore-commit="$CACHE_RESTORE_COMMIT" --descriptor-sha256="$CACHE_DESCRIPTOR_SHA256" --cache-market-date="$CACHE_MARKET_DATE" --market-date="$MARKET_DATE" --source-git-commit="$CACHE_SOURCE_GIT_COMMIT" --actions-run-id="$CACHE_ACTIONS_RUN_ID" --request-id="$CACHE_REQUEST_ID" --source-cache-dir .cache/market-source --stock-cache-dir .cache/restored-stock-details
       - name: Fetch authoritative exchange calendar
         run: python scripts/build_trading_calendar.py --market-date "$MARKET_DATE" --source-cache-dir .cache/market-source
       - name: Fetch official institutional universe
@@ -90,7 +139,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in 1 2 3; do
-            if python scripts/fetch_research_universe.py --source official --as-of "$MARKET_DATE" --config config/tracked_symbols.json --output public/data/institutional_universe.json --source-cache-dir .cache/market-source; then
+            if python scripts/fetch_research_universe.py --source official --as-of "$MARKET_DATE" --config config/tracked_symbols.json --output public/data/institutional_universe.json --source-cache-dir .cache/market-source --calendar public/data/trading-calendar.json; then
               exit 0
             fi
             if [ "$attempt" -lt 3 ]; then sleep $((attempt * 15)); fi
@@ -104,7 +153,7 @@ jobs:
         run: python scripts/fetch_ownership.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output .cache/ownership_snapshot.json
       - name: Refresh official public-source snapshot first
         timeout-minutes: 25
-        run: python scripts/refresh_snapshot.py --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json --source-cache-dir .cache/market-source
+        run: python scripts/refresh_snapshot.py --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json --source-cache-dir .cache/market-source --stock-cache-dir .cache/restored-stock-details
       - name: Supplement remaining financial gaps within durable free budget
         timeout-minutes: 26
         shell: bash
@@ -149,6 +198,7 @@ jobs:
         with:
           name: market-cache
           path: .artifacts/market-cache
+          compression-level: 0
           if-no-files-found: error
       - run: python scripts/build_history_archive.py --require-export --as-of "$MARKET_DATE"
       - run: python scripts/verify_history_archive.py

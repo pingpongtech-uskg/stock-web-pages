@@ -327,7 +327,7 @@ def parse_tpex_csv(payload: bytes, *, expected_date: date) -> list[dict[str, Any
 
 
 def parse_tpex_daily_response(payload: bytes, *, expected_date: date) -> list[dict[str, Any]]:
-    """Accept a dated CSV report or TPEx's exact dated no-trading-day sentinel."""
+    """Accept a dated CSV report or TPEx's dated no-trading-day sentinel."""
 
     if payload.lstrip().startswith(b"{"):
         try:
@@ -344,18 +344,37 @@ def parse_tpex_daily_response(payload: bytes, *, expected_date: date) -> list[di
                 or table.get("date") != expected_roc_date
             ):
                 raise OfficialInstitutionalError("TPEx no-data response date mismatch")
-        if (
+        root_required = {"stat", "date", "tables"}
+        root_metadata = {"columnNum", "csvName", "template"}
+        table_required = {"date", "fields", "data", "totalCount"}
+        table_metadata = {"columnNum", "notes", "subtitle", "summary", "title"}
+        fields = table.get("fields") if isinstance(table, dict) else None
+        metadata_valid = (
             isinstance(response, dict)
-            and set(response) == {"stat", "date", "tables"}
-            and response.get("stat") == "無資料可供下載"
-            and str(response.get("date") or "") == expected_date.strftime("%Y%m%d")
+            and set(response).issubset(root_required | root_metadata)
+            and root_required.issubset(response)
+            and ("columnNum" not in response or
+                 (type(response["columnNum"]) is int and 1 <= response["columnNum"] <= 64))
+            and all(isinstance(response.get(key), str) for key in ("csvName", "template") if key in response)
             and isinstance(table, dict)
-            and set(table) == {"date", "fields", "data", "totalCount"}
+            and set(table).issubset(table_required | table_metadata)
+            and table_required.issubset(table)
+            and ("columnNum" not in table or
+                 (type(table["columnNum"]) is int and 1 <= table["columnNum"] <= 64))
+            and ("notes" not in table or isinstance(table["notes"], list))
+            and ("summary" not in table or isinstance(table["summary"], list))
+            and all(isinstance(table.get(key), str) for key in ("subtitle", "title") if key in table)
+        )
+        if (
+            metadata_valid
+            and response.get("stat") == "無資料可供下載"
+            and response.get("date") == expected_date.strftime("%Y%m%d")
             and table.get("date") == expected_roc_date
             and table.get("data") == []
-            and table.get("totalCount") == 0
-            and isinstance(table.get("fields"), list)
-            and len(table["fields"]) == 24
+            and type(table.get("totalCount")) is int
+            and table["totalCount"] == 0
+            and isinstance(fields, list)
+            and len(fields) == 24
         ):
             return []
         raise OfficialInstitutionalError("TPEx report returned an unexpected JSON response")
@@ -711,19 +730,56 @@ def fetch_recent_complete_days(
     sessions: int = 11,
     lookback_days: int = 35,
     source_cache_dir: Path | None = None,
+    calendar: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Return newest-first complete cross-market sessions with row data."""
 
     if sessions < 1 or lookback_days < sessions:
         raise ValueError("invalid institutional session window")
     end = as_of or datetime.now(TAIPEI).date()
+    if calendar is not None:
+        from pipeline.trading_calendar import SOURCE_URL, TIMEZONE, is_open
+        if (
+            not isinstance(calendar, dict)
+            or calendar.get("schemaVersion") != "trading-calendar-v1"
+            or calendar.get("timezone") != TIMEZONE
+            or calendar.get("sourceUrl") != SOURCE_URL
+            or type(calendar.get("year")) is not int
+            or not isinstance(calendar.get("closedDates"), list)
+            or not isinstance(calendar.get("openExceptions"), list)
+        ):
+            raise ValueError("authoritative calendar is invalid")
+        parsed_dates = {}
+        for key in ("closedDates", "openExceptions"):
+            values = calendar[key]
+            parsed = set()
+            for value in values:
+                if not isinstance(value, str):
+                    raise ValueError("authoritative calendar dates are invalid")
+                try:
+                    parsed_day = date.fromisoformat(value)
+                except ValueError as exc:
+                    raise ValueError("authoritative calendar dates are invalid") from exc
+                if parsed_day.isoformat() != value or parsed_day.year != calendar["year"] or value in parsed:
+                    raise ValueError("authoritative calendar dates are invalid")
+                parsed.add(value)
+            parsed_dates[key] = parsed
+        if parsed_dates["closedDates"] & parsed_dates["openExceptions"]:
+            raise ValueError("authoritative calendar dates conflict")
     result: list[dict[str, Any]] = []
     for offset in range(lookback_days):
         day = end - timedelta(days=offset)
+        if calendar is not None:
+            if day.year != calendar["year"]:
+                raise ValueError("authoritative calendar does not cover requested year")
+            if not is_open(calendar, day.isoformat()):
+                continue
         if source_cache_dir is None:
             rows = fetch_complete_day(day)
         else:
             rows = fetch_complete_day(day, source_cache_dir=source_cache_dir, refresh=(day == end))
+        if calendar is not None and not rows:
+            raise OfficialInstitutionalError(f"official sources returned no complete data for open session {day.isoformat()}")
         if rows:
             result.append({"date": day.isoformat(), "rows": rows})
             if len(result) >= sessions:

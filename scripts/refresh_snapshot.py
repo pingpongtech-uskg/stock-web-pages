@@ -59,7 +59,8 @@ from pipeline.health_checks import evaluate_snapshot_health, health_totals  # no
 from pipeline.indicators import trust_metrics  # noqa: E402
 from pipeline.financial_periods import gregorian_year, normalized_date, number, dividend_period
 from pipeline.health_inputs import merge_health_inputs, normalize_finmind_health_inputs  # noqa: E402
-from pipeline.growth_health import growth_health_qualifies as growth_health_checks_qualify
+from pipeline.growth_health import growth_health_qualifies as growth_health_checks_qualify, _eligible_rows
+from pipeline.source_receipts import safe_directory
 from pipeline.growth_coverage import build_growth_coverage
 from pipeline.yahoo_client import (  # noqa: E402
     YAHOO_CHART_SOURCE,
@@ -394,6 +395,128 @@ def baseline_details(data_dir: Path, release: dict[str, Any]) -> list[dict[str, 
                 placeholder[key] = value
             result.append(placeholder)
             known_codes.add(code)
+    return result
+
+
+def _restored_json(path: Path) -> dict[str, Any]:
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("invalid restored stock file")
+    with path.open("rb") as stream:
+        raw = stream.read(32 * 1024 * 1024 + 1)
+    if len(raw) > 32 * 1024 * 1024:
+        raise ValueError("restored stock file exceeds limit")
+    value = json.loads(raw)
+    if not isinstance(value, dict):
+        raise ValueError("invalid restored stock object")
+    return value
+
+
+def _restored_rows(rows, cutoff: str, *, kind: str) -> list[dict[str, Any]]:
+    if rows is not None and not isinstance(rows, list):
+        raise ValueError("invalid restored stock rows")
+    eligible = []
+    for original in rows or []:
+        if not isinstance(original, dict):
+            continue
+        row = dict(original)
+        if kind == "dividend":
+            period = dividend_period(row.get("period") or row.get("year"), row.get("year"))
+            if period is None or period[0] > int(cutoff[:4]):
+                continue
+            dates = [normalized_date(row[field]) for field in ("approvedAt", "publishedAt", "availableAt", "exDate", "exDividendDate", "AnnouncementDate", "CashExDividendTradingDate", "StockExDividendTradingDate") if row.get(field) not in (None, "")]
+            if dates and all(day is not None and len(day) == 10 and day <= cutoff for day in dates):
+                eligible.append(row)
+            continue
+        if kind == "raw_quarter":
+            day = normalized_date(row.get("date"))
+            if day is None or len(day) != 10:
+                continue
+            row = {**row, "year": int(day[:4]), "quarter": (int(day[5:7]) - 1) // 3 + 1, "periodEnd": day}
+        elif kind == "raw_month":
+            normalized = normalize_finmind_health_inputs({}, [row])["monthlyRevenueOfficial"]
+            if not normalized:
+                continue
+            row = normalized[0]
+        if _eligible_rows([row], cutoff, monthly=kind in {"month", "raw_month"}):
+            eligible.append(dict(original))
+    return eligible
+
+
+def _restored_inputs(evidence, cutoff):
+    for field in ("financialInputs", "healthInputs"):
+        if evidence.get(field) is not None and not isinstance(evidence[field], dict):
+            raise ValueError("invalid restored stock input section")
+    financial = {key: _restored_rows(rows, cutoff, kind="dividend" if key == "dividend" else "raw_quarter")
+                 for key, rows in (evidence.get("financialInputs") or {}).items()
+                 if key in {"incomeStatement", "balanceSheet", "cashFlow", "cashFlowsStatement", "dividend"}}
+    health = {key: _restored_rows(rows, cutoff, kind="dividend" if key == "dividends" else "month" if key == "monthlyRevenueOfficial" else "quarter")
+              for key, rows in (evidence.get("healthInputs") or {}).items()
+              if key in {"incomeQuarterly", "incomeYtd", "balanceQuarterly", "cashflowQuarterly", "dividends", "monthlyRevenueOfficial"}}
+    for key in ("source", "fetchedAt", "sourceRefs"):
+        if (evidence.get("healthInputs") or {}).get(key):
+            health[key] = copy.deepcopy(evidence["healthInputs"][key])
+    revenue = _restored_rows(evidence.get("revenueMonthly"), cutoff, kind="raw_month")
+    return financial, health, revenue
+
+
+def _merge_restored_raw(base, overlay) -> list[dict[str, Any]]:
+    merged = {}
+    for row in [*(base or []), *(overlay or [])]:
+        if not isinstance(row, dict):
+            continue
+        key = tuple(str(row.get(field) or "") for field in ("date", "type", "revenue_year", "revenue_month", "year", "month"))
+        merged[key] = {**merged.get(key, {}), **{field: copy.deepcopy(value) for field, value in row.items() if value not in (None, "")}}
+    return list(merged.values())
+
+
+def merge_restored_stock_inputs(details: list[dict[str, Any]], stock_cache_dir: Path, *, as_of: str) -> list[dict[str, Any]]:
+    """Reuse validated installation inputs only; never copy cached market metrics."""
+    target = date.fromisoformat(as_of)
+    if target.isoformat() != as_of:
+        raise ValueError("invalid restored stock cutoff")
+    root = safe_directory(stock_cache_dir)
+    restored = {}
+    for directory in sorted(root.iterdir()) if root.exists() else []:
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", directory.name):
+            continue
+        day = date.fromisoformat(directory.name)
+        if day > target:
+            continue
+        directory = safe_directory(directory)
+        metadata = _restored_json(directory / "restore-metadata.json")
+        source, codes = metadata.get("source"), metadata.get("codes")
+        if (set(metadata) != {"marketDate", "source", "codes"} or metadata["marketDate"] != day.isoformat()
+                or not isinstance(source, dict) or set(source) != {"requestId", "actionsRunId", "sourceGitCommit"}
+                or any(not isinstance(source[key], str) or re.fullmatch(pattern, source[key]) is None for key, pattern in
+                       (("requestId", r"[A-Za-z0-9_.:-]{1,160}"), ("actionsRunId", r"\d{1,24}"), ("sourceGitCommit", r"[a-f0-9]{40}")))
+                or not isinstance(codes, list) or not codes or len(codes) > 10000
+                or any(not isinstance(code, str) or re.fullmatch(r"\d{4,6}[A-Z]?", code) is None for code in codes)
+                or codes != sorted(set(codes))):
+            raise ValueError("invalid restored stock metadata")
+        for code in codes:
+            evidence = _restored_json(directory / (code + ".json"))
+            if evidence.get("code") != code or evidence.get("asOf") != day.isoformat():
+                raise ValueError("restored stock identity mismatch")
+            financial, health, revenue = _restored_inputs(evidence, as_of)
+            previous = restored.get(code, {})
+            financial = {key: _merge_restored_raw((previous.get("financialInputs") or {}).get(key), financial.get(key))
+                         for key in {*financial, *(previous.get("financialInputs") or {})}}
+            revenue = _merge_restored_raw(previous.get("revenueMonthly"), revenue)
+            health = merge_health_inputs(previous.get("healthInputs"), merge_health_inputs(normalize_finmind_health_inputs(financial, revenue), health))
+            restored[code] = {"financialInputs": financial, "healthInputs": health, "revenueMonthly": revenue}
+    result = []
+    for detail in details:
+        cached = restored.get(str(detail.get("code")))
+        if not cached:
+            result.append(copy.deepcopy(detail))
+            continue
+        baseline_financial, baseline_health, baseline_revenue = _restored_inputs(detail, as_of)
+        financial = {key: _merge_restored_raw(cached["financialInputs"].get(key), baseline_financial.get(key))
+                     for key in {*cached["financialInputs"], *baseline_financial}}
+        revenue = _merge_restored_raw(cached["revenueMonthly"], baseline_revenue)
+        health = merge_health_inputs(cached["healthInputs"], normalize_finmind_health_inputs(financial, revenue)) if financial.get("incomeStatement") or revenue else copy.deepcopy(cached["healthInputs"])
+        health = merge_health_inputs(health, {**(detail.get("healthInputs") or {}), **baseline_health})
+        result.append({**copy.deepcopy(detail), "financialInputs": financial, "revenueMonthly": revenue, "healthInputs": health})
     return result
 
 
@@ -1189,7 +1312,7 @@ def release_volume_indicator(data_dir: Path, baseline: dict[str, Any], market_da
                                         calendar=calendar)
 
 
-def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None, recompute_existing: bool = False, source_cache_dir: Path | None = None) -> dict[str, Any]:
+def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None, recompute_existing: bool = False, source_cache_dir: Path | None = None, stock_cache_dir: Path | None = None) -> dict[str, Any]:
     latest_path = data_dir / "latest.json"
     if not latest_path.exists():
         raise FileNotFoundError(f"missing baseline release: {latest_path}")
@@ -1203,6 +1326,8 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     # A daily refresh must query through today's Taipei date. Deriving the end
     # date from the baseline made every run stop at the old snapshot date.
     end = parse_date(as_of, datetime.now(TAIPEI).date()) if as_of else datetime.now(TAIPEI).date()
+    if stock_cache_dir is not None:
+        details = merge_restored_stock_inputs(details, stock_cache_dir, as_of=end.isoformat())
     errors_by_code: dict[str, list[str]] = {}
     enriched: list[dict[str, Any]] = []
     used_sources: list[str] = []
@@ -1833,13 +1958,14 @@ def main() -> int:
     parser.add_argument("--recompute-existing", action="store_true", help="recalculate fresh cached inputs without another network refresh")
     parser.add_argument("--ownership-snapshot", default=None, help="validated ownership cache path; ownership is reference-only")
     parser.add_argument("--source-cache-dir", type=Path, default=None, help="retain verified official raw volume receipts")
+    parser.add_argument("--stock-cache-dir", type=Path, default=None, help="reuse validated restored historical stock inputs")
     args = parser.parse_args()
     codes = list(dict.fromkeys(code.strip() for code in args.codes.split(",") if code.strip()))
     try:
         result = build_release(
             Path(args.output), codes, as_of=args.as_of, offline=args.offline,
             ownership_snapshot=Path(args.ownership_snapshot) if args.ownership_snapshot else None,
-            recompute_existing=args.recompute_existing, source_cache_dir=args.source_cache_dir,
+            recompute_existing=args.recompute_existing, source_cache_dir=args.source_cache_dir, stock_cache_dir=args.stock_cache_dir,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"snapshot_refresh_failed={type(exc).__name__}: {exc}", file=sys.stderr)

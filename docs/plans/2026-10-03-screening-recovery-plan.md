@@ -1,6 +1,6 @@
 # StockScreener：10/2 起完整資料與每日更新計畫
 
-更新日期：2026-10-03。整體交付仍進行中；程式本機修復、source CI 成功或診斷成功，不等於新行情已發布。
+更新日期：2026-10-04。整體交付仍進行中；程式本機修復、source CI 成功或診斷成功，不等於新行情已發布。
 
 ## 交付範圍
 
@@ -15,14 +15,16 @@ n8n 是唯一日常排程入口，週一至週五 18:00 Asia/Taipei；先查官�
 | 項目 | 實際證據 | 修復與驗收 |
 | --- | --- | --- |
 | 正式網站仍是舊行情 | latest.json 資料日 10/1；run enriched-20261002-132035-09cf779b0b；00631L 仍為 10/1、0.74 倍 | 真實 10/2 行情、前五個完整交易日成交量及發布 fingerprint 必須一致 |
-| 投信關注沒有新進榜 | 已發布的 10/1 與 9/30 Top10 成員相同、排名順序不同；這兩日的新進榜 0 合理。10/2 尚未驗證 | 顯示資料／比較日期；只有完整兩個窗口才能判定 10/2 新進榜，缺資料不能顯示有效的零檔 |
+| 投信關注沒有新進榜 | 已發布的 10/1 與 9/30 Top10 成員相同、排名順序不同；這兩日的新進榜 0 合理。10/2 完整官方十一日窗口已重算：Top10 成員相同、排名及淨買超數字改變，新進榜確為 0；尚未正式發布 | 顯示資料／比較日期；只有完整兩個窗口才能判定 10/2 新進榜，缺資料不能顯示有效的零檔 |
 | 成長股最後為 0 | 舊資料 100 檔中已有 9 檔五項健診全通過，但正式成長估值可計算 0 | 分開健診與估值門檻；補齊真實估值輸入，不為了產生候選而放寬規則 |
 | 財務品質 0/100 誤導 | qualityStatus 實際 pass 0／fail 0／unknown 100 | 顯示明確通過、未通過、未知、不適用、未提供；未知不等於失敗 |
 | 健診計算缺陷 | 稅後淨利兩期可能混用總額／母公司口徑；未來發布資料可能越過 asOf | 比較共同同一欄位；按評估日先過濾原始資料，再由 YTD 推單季 |
 | 其他健診把缺資料當失敗 | 非成長分類存在 blanket unknown-to-fail；AR／存貨、歷史股利等缺欄位亦判失敗 | 未知保留未知；已知完整輸入且未達條件才失敗；不影響三策略的既定門檻 |
 | 自動發布未完成閉環 | 新日 Actions 因 TPEx 歷史來源失敗；10/2 未發布／未有股票歸檔，主排程 inactive | 完成一次真實網站發布、Notion 值讀回與同 payload 重試，才啟用主排程 |
 
-完整原始執行證據及既有歸檔審核保存在 docs/n8n/runtime-evidence.json。最新已發布程式來源 ce8d2d4e9abdde4cf37e329011d1653bff669885，feature CI 37142362746／main CI 37142472458 success；n8n 878／879、ledger 113／114 驗證非強制 feature／main 更新；這不是 10/2 行情發布。
+2026-10-03 的補跑 v2（n8n 890／Actions 37146944320）卡在 9/28 休市日：TPEx 空報表保留了合法日期、24 欄與零列，但增加 presentation metadata，嚴格欄位集合檢查因此拒絕。已用 artifact 11282556816 的完整 SHA／lineage 與原始 1,859 bytes 回應確認；10/2 CSV 本身成功取得且 SHA 與獨立快取一致。修復以官方日曆先跳過休市日，兼容這種合法空報表，不能將交易日未知資料冒充零。尚未重新成功補跑。
+
+完整原始執行證據及既有歸檔審核保存在 docs/n8n/runtime-evidence.json。最新已發布程式來源 8eec7416be8146cb45b483cc1fe53489f4a22973，feature CI 37146657826／main CI 37146801114 success；n8n 887／889、ledger 120／121 驗證非強制 feature／main 更新；這不是 10/2 行情發布。
 
 ## 一、五項成長健診與估值規則
 
@@ -136,3 +138,15 @@ Notion 能力驗證尚未完成：881／ledger115 證明遠端 Code 不支援 zl
 發布前補充審查已關閉兩处 assembler 固定 temp symlink 覆寫：以同目錄隨機 mkstemp、target／ancestor guard、atomic replace 與失敗 cleanup 驗證。股利 producer、補件 planner、cache assembler 統一檢查 approvedAt／publishedAt／availableAt／exDate／exDividendDate 的所有已知日期；任一日期不完整、無效或超過資料日都不採用，確認的真零仍保留。新增 RED 後 GREEN 測試與獨立 peer 已通過；npm／pip audit 實際漏洞皆 0。
 
 真實 Notion 885／ledger118 已完成唯一小型公開測試檔的 create upload、multipart send、附件建立與新頁讀回，全部 HTTP 200。既有獨立下載 gate 對實際回傳的 S3 virtual-host hostname 拒絕，所以壓縮 bytes hash 讀回仍待下一次只讀驗證；不重複上傳、不宣稱完整快取成功。主排程仍未啟用。
+
+
+第二批已實際發布 source commit 8eec7416be8146cb45b483cc1fe53489f4a22973：feature n8n887／ledger120／CI37146657826 success；main n8n889／ledger121／CI37146801114 success，皆非強制 ref 更新。Notion891／ledger126 已只讀驗證同一測試附件的 172-byte 壓縮 hash 完全相符；encoded credential query 被舊整條 URL 路徑檢查誤判，改成只檢查 pathname 並通過獨立測試。沒有新增第二份附件，沒有寫股票或完整快取狀態。
+
+已啟動新受控 request stockscreener:20261002:v2，主 workflow890／Actions37146944320，精確 source8eec、main、workflow_dispatch、資料日10/2。沒有續跑舊失敗 v1；n8n已保存 dispatch 與 exact run checkpoint。此刻仍在執行，正式資料、完整 Notion 快取、同 payload retry 和主排程啟用尚未完成。
+
+
+v2 真實 runner 在 Fetch official institutional universe 失敗，Actions37146944320／job111272755562；金融補件沒有執行，新行情未發布。主 workflow890／ledger129 完成 failure_metadata，沒有建立成功股票歸檔。執行結束後恢復正常 operator；沒有盲目重送失敗 request。匿名讀 job logs 被 GitHub 拒絕（403），下一步使用既有 GitHub credential 做一次固定 job 的去敏只讀診斷，確認錯誤後再決定修正。
+
+目前新增還原整合已通過 926 項 Python 測試及獨立審查：還原僅補財報／營收／股息輸入，既有有效輸入優先，官方新輸入最後覆蓋；同日價格、asOf、法人與策略結果均由當日重算。六項可選 restore dispatch inputs 必須同時提供並逐项驗證，Actions 維持可信 main 程式，資料 commit 僅作還原來源。主流程的 Notion 備份／Git 資料橋仍待完整實際驗收。
+
+已知跨年限制：新的官方日曆檢查要求完整窗口年份都有權威日曆，缺少前一年時明確停止；不可把未覆蓋日期當作休市。跨年窗口日曆保留／還原需在宣稱全年無人操作前完成驗收。

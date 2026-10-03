@@ -274,8 +274,12 @@ def update_official_tracked_config(
     return payload
 
 
-def fetch_official_universe(*, limit: int = 100, as_of: date | None = None) -> dict[str, Any]:
-    snapshots = fetch_recent_complete_days(as_of=as_of, sessions=11, lookback_days=35)
+def fetch_official_universe(*, limit: int = 100, as_of: date | None = None,
+                            calendar: dict[str, Any] | None = None) -> dict[str, Any]:
+    options = {"as_of": as_of, "sessions": 11, "lookback_days": 35}
+    if calendar is not None:
+        options["calendar"] = calendar
+    snapshots = fetch_recent_complete_days(**options)
     return {
         "snapshots": snapshots,
         "current": aggregate_window([snapshot["rows"] for snapshot in snapshots[:10]])[:limit],
@@ -302,12 +306,16 @@ def main() -> int:
     parser.add_argument("--as-of", type=_iso_date, help="latest requested official market date (YYYY-MM-DD)")
     parser.add_argument("--allow-stale", action="store_true", help="keep the last complete universe when the official source is unavailable")
     parser.add_argument("--source-cache-dir", type=Path, help="preserve full official receipts before Top100 selection")
+    parser.add_argument("--calendar", type=Path, help="authoritative trading-calendar-v1 JSON file")
     args = parser.parse_args()
     try:
         if args.source == "official":
             options = {"as_of": args.as_of, "sessions": args.sessions, "lookback_days": args.lookback_days}
             if args.source_cache_dir is not None:
                 options["source_cache_dir"] = args.source_cache_dir
+            if args.calendar is not None:
+                calendar = json.loads(args.calendar.read_text(encoding="utf-8"))
+                options["calendar"] = calendar
             snapshots = fetch_recent_complete_days(**options)
             if args.source_cache_dir is not None:
                 from scripts.build_market_cache_index import write_institutional_cache

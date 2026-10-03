@@ -66,6 +66,20 @@ def test_official_api_forwards_historical_target_date(monkeypatch):
     assert result["current"][0]["netShares"] == result["previous"][0]["netShares"] == 10
 
 
+def test_official_api_forwards_optional_authoritative_calendar(monkeypatch):
+    import scripts.fetch_research_universe as fetch
+    from pipeline.trading_calendar import SOURCE_URL
+    calendar = {"schemaVersion": "trading-calendar-v1", "timezone": "Asia/Taipei", "year": 2026,
+                "closedDates": [], "openExceptions": [], "sourceUrl": SOURCE_URL}
+    calls = []
+    snapshots = [{"date": f"2026-10-{day:02d}", "rows": [{"code": "2330", "netShares": 1}]}
+                 for day in range(2, -9, -1)]
+    monkeypatch.setattr(fetch, "fetch_recent_complete_days", lambda **kwargs: calls.append(kwargs) or snapshots)
+    fetch.fetch_official_universe(as_of=date(2026, 10, 2), calendar=calendar)
+    assert calls == [{"as_of": date(2026, 10, 2), "sessions": 11, "lookback_days": 35,
+                      "calendar": calendar}]
+
+
 def test_official_api_collects_only_sessions_at_or_before_historical_target(monkeypatch):
     import scripts.fetch_research_universe as fetch
     import pipeline.official_institutional as official
@@ -82,6 +96,36 @@ def test_official_api_collects_only_sessions_at_or_before_historical_target(monk
     assert len(result["snapshots"]) == 11
     assert result["snapshots"][0]["date"] == target.isoformat()
     assert all(date.fromisoformat(row["date"]).weekday() < 5 for row in result["snapshots"])
+
+
+def test_official_cli_loads_and_forwards_authoritative_calendar(tmp_path, monkeypatch):
+    import scripts.fetch_research_universe as fetch
+    from pipeline.trading_calendar import SOURCE_URL
+    calendar = {"schemaVersion": "trading-calendar-v1", "timezone": "Asia/Taipei", "year": 2026,
+                "closedDates": ["2026-09-28"], "openExceptions": [], "sourceUrl": SOURCE_URL,
+                "fetchedAt": "2026-10-02T00:00:00+00:00"}
+    calendar_path = tmp_path / "calendar.json"
+    calendar_path.write_text(json.dumps(calendar), encoding="utf-8")
+    calls = []
+    snapshots = [{"date": "2026-10-02", "rows": [{"code": "2330", "netShares": 1}]}]
+    monkeypatch.setattr(fetch, "fetch_recent_complete_days", lambda **kwargs: calls.append(kwargs) or snapshots)
+    monkeypatch.setattr(fetch, "update_official_tracked_config", lambda received, path: {"symbols": ["2330"]})
+    monkeypatch.setattr("sys.argv", ["fetch.py", "--calendar", str(calendar_path), "--print-codes"])
+    assert fetch.main() == 0
+    assert calls == [{"as_of": None, "sessions": 11, "lookback_days": 35, "calendar": calendar}]
+
+
+def test_official_cli_rejects_malformed_calendar_before_source_or_write(tmp_path, monkeypatch):
+    import scripts.fetch_research_universe as fetch
+    import pipeline.official_institutional as official
+    path = tmp_path / "calendar.json"
+    path.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(official, "fetch_complete_day", lambda *args, **kwargs:
+                        pytest.fail("invalid calendar must fail before source request"))
+    monkeypatch.setattr(fetch, "update_official_tracked_config", lambda *args:
+                        pytest.fail("invalid calendar must not update config"))
+    monkeypatch.setattr("sys.argv", ["fetch.py", "--calendar", str(path)])
+    assert fetch.main() == 1
 
 
 def test_official_cli_request_failure_does_not_publish_stale_output(tmp_path, monkeypatch):

@@ -11,7 +11,7 @@ function sourceStart(plan,now=Date.now()){
  if(!['inspect','prepare_feature','promote_main','dispatch_probe','read_probe'].includes(plan.mode))throw Error('source_input');
  if(['prepare_feature','promote_main'].includes(plan.mode)&&![plan.baseSha,plan.targetSha,plan.targetTreeSha].every(value=>SOURCE_SHA.test(value||'')))throw Error('source_input');
  if(plan.mode==='prepare_feature'){
-  if(!SOURCE_SHA.test(plan.featureBaseSha||'')||!SOURCE_SHA.test(plan.baseTreeSha||'')||!Array.isArray(plan.blobs)||!Array.isArray(plan.treeEntries)||plan.blobs.length>100||plan.treeEntries.length>100||Buffer.byteLength(JSON.stringify(plan),'utf8')>1000000)throw Error('source_manifest');
+  if(!SOURCE_SHA.test(plan.featureBaseSha||'')||!SOURCE_SHA.test(plan.baseTreeSha||'')||!Array.isArray(plan.blobs)||!Array.isArray(plan.treeEntries)||plan.blobs.length>100||plan.treeEntries.length>100||Buffer.byteLength(JSON.stringify(plan),'utf8')>1500000)throw Error('source_manifest');
   if(plan.blobs.some(item=>!SOURCE_SHA.test(item.sha)||!item.content||!/^[A-Za-z0-9+/]*={0,2}$/.test(item.content))||plan.treeEntries.some(item=>typeof item.path!=='string'||item.path.startsWith('/')||item.path.split('/').some(part=>!part||part==='..'||part==='.')||item.type!=='blob'||item.mode!=='100644'||(item.sha!==null&&!SOURCE_SHA.test(item.sha))))throw Error('source_manifest');
   if(plan.commit?.tree!==plan.targetTreeSha||plan.commit?.parents?.length!==1||plan.commit.parents[0]!==plan.baseSha||typeof plan.commit.message!=='string'||!plan.commit.author||!plan.commit.committer)throw Error('source_manifest');
  }
