@@ -1,6 +1,33 @@
 # StockScreener：10/2 起完整資料與每日更新計畫
 
-更新日期：2026-10-04。整體交付仍進行中；程式本機修復、source CI 成功或診斷成功，不等於新行情已發布。
+更新日期：2026-10-04 09:57 Asia/Taipei。10/2 v6 網站、12檔 Notion 選股、13/13完整快取及獨立還原已驗證；同 payload 正常重跑已證明不新增寫入。最新 source 已由 promotion979／ledger608 非強制發布並讀回，main CI成功；97節點 primary 已啟用且獨立讀回。下一個排程為10/5週一18:00 Taipei；尚未發生的交易日執行不列為已驗證。下列歷史段落保留當時時間及未完成狀態，不代表目前狀態。
+
+## 目前已驗證的交付狀態
+
+| 項目 | 已驗證結果 | 驗收／日常運作界線 |
+| --- | --- | --- |
+| 網站 10/2 行情 | v6 data commit `11ea3f75963779efa5d275425ea86f08103e4267`；Actions `37165596357`；request `stockscreener:20261002:v6`；run `enriched-20261004-084306-55b9107f29` | 網站v6已驗證；後續資料日須各自讀回 date／run／hash |
+| 00631L | 10/2 成交量99,743,650股／前五日均量118,730,520股＝0.8400843355187866倍 | 每日沿用七個必要交易日的真實來源，再補新日 |
+| 成長股 | 神基3005、漢唐2404、技嘉2376，各5/5；母體100、估值輸入完整62、可計算20、入選3 | 缺資料20、已知無效58、極端2、低於門檻17、入選3，合計100；缺值不可造值 |
+| 投信與低位階 | 完整11交易日重算；10/2與10/1 Top10成員相同，排名及買超改變，新進0正確；低位階10檔 | 每日維持完整窗口及可追溯來源 |
+| Notion 20261002 | 三策略聯集12檔、1子資料庫、12唯一鍵；獨立969／972審核192個數值欄位，其中32 null、3真零 | 已完成 v6 選股歸檔及獨立數值驗收 |
+| 完整快取 | 13/13附件讀回驗證；最新 manifest `cc2811ee0c73c8bd9ff6bc2fa3e6d9247a54171819da71699c84ad433fcd7276` | 指標仍 `metricsComplete=false`，20檔真實財務缺漏如實保留 |
+| 快取還原 | 實際 Notion→Git bridge975／ledger604；root `4caa6356e3bd750296dec218e021d18e305dec5e`；Python CLI exit0，100股票、11法人日、7量能日、179檔，移除 token 執行 | 10/5僅還原 readiness；尚未取得、計算或發布10/5行情 |
+| 重試冪等 | 正常重跑978／ledger607 `already_complete`；沿用 Actions37165596357，無新寫入 | 已完成 v6 同 payload 重試驗收 |
+| 每日自動化 | 97節點、無AI；週一至週五18:00 Taipei，另有有限晚間恢復及官方交易日檢查 | 2026-10-04T01:57:28Z獨立讀回ACTIVE=true、activeVersion與draft相同；下一次10/5排程尚未執行 |
+| 最新程式修復 | source `e0ab2fc34fb6cd7b29b4260e8a634dd98e085b92`，parent為v6 data commit；feature CI `37168953934` SUCCESS；211 n8n／994 Python通過，npm／pip audit 0 | promotion979／ledger608 `main_verified`；main CI `37169443313` exact e0ab SUCCESS，active version已讀回 |
+
+快取完整指已取得的原始資料、逐日全市場窗口、逐檔輸入及缺值原因能完整保存與還原，不表示每檔每项財務指標都可合法計算。銀行缺毛利、缺EPS、負基期等仍明確unknown；20檔估值證據鏈缺漏不能用零替代。
+
+最新還原 descriptor SHA為 `d50652c9a6ba8a5b6e6e4627e8fa19cc344c84ef1b0aff90c3566588055fecc7`。修復後，restore bodies 每次由 CAS 讀回後重新取得的 bytes 建立，嚴格重新計算 SHA。實際974原生 POST 回201並取得SHA，但一般 Git tree GET 回404；獨立審核對同一SHA的 recursive view 以一次 GET 回200，修復後975 bridge完成讀回驗證；只能宣稱已驗證這條讀回備援，不能宣稱已證實 timeout。不同 recursive views 的有界讀重試不重播寫入。977因缺少 `ciRunId` 在任何網路操作前拒絕；979使用已驗證的 feature CI ID 執行非強制 promotion，ledger608讀回main_verified；main CI37169443313完成SUCCESS。
+
+先前 v5 失敗（歷史）：n8n954／Actions37162842189在 TPEx 來源 HTTP520 三次重試後停止，未進入FinMind、未發布新行情。v6已恢復成功完成狀態。同日來源備援只允許傳輸故障或明確5xx，重用相同市場、交易日、URL及已驗證原始SHA，重新解析核對；日期／內容錯誤不能回退，不以10/1冒充10/2。來源仍保留原取得時間及 `verified_cached_after_refresh_failure`，不宣稱新抓取。
+
+成功快取的 `lastVerifiedCache` 保存完整原producer來源；修訂失敗不能清掉該描述，只有新版本全部verified才切換。只有active hash而缺完整來源時仍不能猜測恢復。
+
+排程啟用實證：primary `huDBNJDss4KuPmn4` activeVersion `e3d3ed10-3187-4cc8-950d-0a8bcfdf9b49` 與draft一致，97節點、AI節點0；節點／connections／settings無變更。timezone `Asia/Taipei`，主cron `0 18 * * 1-5`、晚間恢復cron `*/10 18-20 * * 1-5`，原19:30截止保持。下一次應為2026-10-05 18:00；只證明設定與active readback，不宣稱未來已成功跑完。
+
+三個臨時診斷／審核helper `TIgXL66Fg0bw5NqQ`、`LVptJ9GOVkBNSb0R`、`2MMHlOWXUb6JycKs` 已獨立確認archived=true；restore probe先還原neutral inspect。source publication helper `u955NdZSl26dxfJJ` 是只供受控程式／文件發布的臨時 inactive helper，不參與日常排程。canonical97節點SDK 300,502 bytes透過只移除空白的esbuild版本292,305 bytes符合300k工具限制，97節點參數一致；正式Git仍保存canonical源碼。
 
 ## 交付範圍
 
@@ -10,7 +37,7 @@ n8n 是唯一日常排程入口，週一至週五 18:00 Asia/Taipei；先查官�
 
 指標計算仍可能需要往前資料：投信當日與前日的十日窗口共有 11 個交易日；財報同比、TTM EPS、多年度 EPS 成長需要對照期間。這些作為必要計算輸入及運作快取，與舊日選股歷史回補分開。使用者已明確選擇完整 10/2 計算，因此必須建立必要啟動窗口，不能改成從 10/2 等待累積。日常流程只使用 n8n 排程、確定性程式、GitHub Actions／Pages 及 Notion API；不使用 AI agent 或 LLM 節點。
 
-## 現況與已證實問題
+## 起始問題與修復紀錄（歷史狀態）
 
 | 項目 | 實際證據 | 修復與驗收 |
 | --- | --- | --- |
@@ -24,7 +51,9 @@ n8n 是唯一日常排程入口，週一至週五 18:00 Asia/Taipei；先查官�
 
 2026-10-03 的補跑 v2（n8n 890／Actions 37146944320）卡在 9/28 休市日：TPEx 空報表保留了合法日期、24 欄與零列，但增加 presentation metadata，嚴格欄位集合檢查因此拒絕。已用 artifact 11282556816 的完整 SHA／lineage 與原始 1,859 bytes 回應確認；10/2 CSV 本身成功取得且 SHA 與獨立快取一致。修復以官方日曆先跳過休市日，兼容這種合法空報表，不能將交易日未知資料冒充零。尚未重新成功補跑。
 
-完整原始執行證據及既有歸檔審核保存在 docs/n8n/runtime-evidence.json。最新已發布程式來源 75839b8cb496c10301ee3bdcf6bd321b264e0b16，feature CI 37151016499／main CI 37151228782 success；n8n 897／898、ledger 133／134 驗證非強制 feature／main 更新；這不是 10/2 行情發布。
+補跑 v3（n8n 901／Actions 37152242700）已成功取得官方法人窗口，但股權參考採集在 20:40:13–20:48:25 UTC 超過 8 分鐘並停止；未進入 FinMind 補件、未發布新行情、未寫入完整 Notion 快取。原始採集最多對 100 檔逐檔查三個月、逐日 GET／POST，缺全域 deadline。修復加入總採集 180 秒／40 次 request、歷史額外最多 20 次，先保存官方批次與已驗證舊值；缺漏仍標示 stale／unknown。主流程已恢复一般輸入、93 節點 inactive；待修復 CI 通過才以新 request 重跑。
+
+完整原始執行證據及既有歸檔審核保存在 docs/n8n/runtime-evidence.json。當時已發布程式來源 65cb430ab55017fbc6064fd43d1c55be48c462b1，feature CI 37154225271／main CI 37154413616 success；n8n 903／904、ledger 144／145 驗證非強制 feature／main 更新；這不是 10/2 行情發布。
 
 ## 一、五項成長健診與估值規則
 
@@ -66,7 +95,7 @@ n8n 是唯一日常排程入口，週一至週五 18:00 Asia/Taipei；先查官�
 
 配額觀測有有效期，不能靠重查同一個窗口無條件擴張 allowance；過期後須有新的實際用量證據。舊 checkpoint 沒有逐次時間時保守遷移近期計數，不當成空 ledger。rows／queue 跨小時及跨日保留，trusted artifact 恢復合併事件、不重置配額。新每小時摘要與舊每日格式分開驗證；損壞 checkpoint 的使用量保留 null，不能宣稱零。
 
-新核心與格式 adapter 已通過本機整合與審查；尚未以新限制執行正式補件。不使用付費整市場資料集，不取回或展示 FINMIND_TOKEN。
+新核心與格式 adapter 已通過本機整合與審查；v6 正式補件實際35次HTTP attempts、rolling requests35、allowed attempts300，47個補件任務完成34個。這是任務數，不是股票數；100檔輸入皆保留。僅驗證token存在布林值，不讀取或展示FINMIND_TOKEN；不使用付費整市場資料集。
 
 ## 四、10/2 投信啟動資料與後續日資料
 
@@ -90,7 +119,7 @@ n8n 是唯一日常排程入口，週一至週五 18:00 Asia/Taipei；先查官�
 
 n8n 可見節點涵蓋：選交易日、GitHub 原生 dispatch、claim/checkpoint、Actions 狀態、main publication 驗證、canonical export、網站真實 bytes fingerprint、Notion schema／當日頁／子資料庫／逐列讀回。實際 main 資料提交在 Actions 的 Publish validated release to main；n8n 必須再讀回確認，不能只看 dispatch 成功。
 
-網站顯示資料日、更新時間、run、品質狀態。刷新日期及 00631L 日期必須與官方已完成 session 一致。實際已核對 10/2 量 99,743,650 股、前五日均量 118,730,520 股、0.8400843355 倍；原始 September／October 回應與七日必要窗口已留存，尚未發布新資料。旧版 aggregate growth funnel 未提供時保留未知，仍顯示該發布實際保存的逐檔五項健診與估值缺漏，不捏造 input audit。區分「未取得資料」、「已知不符」及「有效零候選」。
+網站顯示資料日、更新時間、run、品質狀態。刷新日期及 00631L 日期必須與官方已完成 session 一致。實際已核對 10/2 量 99,743,650 股、前五日均量 118,730,520 股、0.8400843355 倍；原始 September／October 回應與七日必要窗口已留存，並已正式發布 v6。旧版 aggregate growth funnel 未提供時保留未知，仍顯示該發布實際保存的逐檔五項健診與估值缺漏，不捏造 input audit。區分「未取得資料」、「已知不符」及「有效零候選」。
 
 Notion 使用 Notion account 2，根資料庫 StockScreener；每個交易日一個 YYYYMMDD 頁面／inline 股票子資料庫。
 
@@ -121,10 +150,10 @@ Notion 使用 Notion account 2，根資料庫 StockScreener；每個交易日一
 7. 通過真實閉環後啟用主 workflow huDBNJDss4KuPmn4 的週一至週五 18:00 Asia/Taipei；官方休市跳過，當日來源未就緒則在有限截止時間內重試，避免發布昨日當今日。
 8. 交付實際 code commit、CI、10/2 data run、網站 fingerprint、Notion 日頁／筆數、workflow active version 與排程 readback。沒有這些證據，整體仍未完成。
 
-最終本機驗證：657 項 Python、86 項 n8n、84 項 UI 通過，typecheck／build／diff check 通過。受影響三份前端 production 檔案 line coverage 分別 87.78%／100%／100%，合計 91.95%；branch 75.88%，不宣稱 branch 達 80%。配額模組 combined line coverage 93%，health_checks 99%、growth_health 94%、官方投信模組 80%。npm audit 漏洞 0、secret review 0、未解決 HIGH／MEDIUM 0。實際 Python producer 在無網路 fixture 下產生新每小時摘要，通過實際 n8n validator；已過期額度的三筆快取重用也以 0 attempts／3 cache hits 通過。上述不是新金融資料發布。
+早期本機驗證（歷史）：657 項 Python、86 項 n8n、84 項 UI 通過，typecheck／build／diff check 通過。受影響三份前端 production 檔案 line coverage 分別 87.78%／100%／100%，合計 91.95%；branch 75.88%，不宣稱 branch 達 80%。配額模組 combined line coverage 93%，health_checks 99%、growth_health 94%、官方投信模組 80%。npm audit 漏洞 0、secret review 0、未解決 HIGH／MEDIUM 0。實際 Python producer 在無網路 fixture 下產生新每小時摘要，通過實際 n8n validator；已過期額度的三筆快取重用也以 0 attempts／3 cache hits 通過。上述不是新金融資料發布。
 
 
-## 最新完整來源與快取實作驗證
+## 歷史完整來源與快取實作驗證（狀態以當時時間為準）
 
 已用 34 次官方公開請求（17 個日曆日期、兩市場）取得上述十一個完整交易日，FinMind 使用 0 次；原始 bytes、來源參數、hash 與驗證 sidecar 先保存，再篩 Top100。獨立離線重算使用原始來源重新驗證、0 HTTP，證明 10/2 與 10/1 前十成員相同，但排名與十日淨買超不同，因此本日新進榜 0 是有效計算結果。10/2 排名前四：2303 67,309,456 股、2884 35,453,077 股、1303 30,334,589 股、6505 29,716,498 股；尚未發布網站。
 
@@ -142,13 +171,44 @@ Notion 能力驗證尚未完成：881／ledger115 證明遠端 Code 不支援 zl
 
 第二批已實際發布 source commit 8eec7416be8146cb45b483cc1fe53489f4a22973：feature n8n887／ledger120／CI37146657826 success；main n8n889／ledger121／CI37146801114 success，皆非強制 ref 更新。Notion891／ledger126 已只讀驗證同一測試附件的 172-byte 壓縮 hash 完全相符；encoded credential query 被舊整條 URL 路徑檢查誤判，改成只檢查 pathname 並通過獨立測試。沒有新增第二份附件，沒有寫股票或完整快取狀態。
 
-已啟動新受控 request stockscreener:20261002:v2，主 workflow890／Actions37146944320，精確 source8eec、main、workflow_dispatch、資料日10/2。沒有續跑舊失敗 v1；n8n已保存 dispatch 與 exact run checkpoint。此刻仍在執行，正式資料、完整 Notion 快取、同 payload retry 和主排程啟用尚未完成。
+已啟動新受控 request stockscreener:20261002:v2，主 workflow890／Actions37146944320，精確 source8eec、main、workflow_dispatch、資料日10/2。沒有續跑舊失敗 v1；n8n已保存 dispatch 與 exact run checkpoint。該次執行後來失敗，詳見下一段；正式資料、完整 Notion 快取、同 payload retry 和主排程啟用尚未完成。
 
 
 v2 真實 runner 在 Fetch official institutional universe 失敗，Actions37146944320／job111272755562；金融補件沒有執行，新行情未發布。主 workflow890／ledger129 完成 failure_metadata，沒有建立成功股票歸檔。執行結束後恢復正常 operator；沒有盲目重送失敗 request。匿名讀 job logs 被 GitHub 拒絕（403），下一步使用既有 GitHub credential 做一次固定 job 的去敏只讀診斷，確認錯誤後再決定修正。
 
-目前新增還原整合已通過 926 項 Python 測試及獨立審查：還原僅補財報／營收／股息輸入，既有有效輸入優先，官方新輸入最後覆蓋；同日價格、asOf、法人與策略結果均由當日重算。六項可選 restore dispatch inputs 必須同時提供並逐项驗證，Actions 維持可信 main 程式，資料 commit 僅作還原來源。主流程的 Notion 備份／Git 資料橋仍待完整實際驗收。
+當時新增還原整合已通過 926 項 Python 測試及獨立審查：還原僅補財報／營收／股息輸入，既有有效輸入優先，官方新輸入最後覆蓋；同日價格、asOf、法人與策略結果均由當日重算。六項可選 restore dispatch inputs 必須同時提供並逐项驗證，Actions 維持可信 main 程式，資料 commit 僅作還原來源。主流程的 Notion 備份／Git 資料橋仍待完整實際驗收。
 
 已知跨年限制：新的官方日曆檢查要求完整窗口年份都有權威日曆，缺少前一年時明確停止；不可把未覆蓋日期當作休市。跨年窗口日曆保留／還原需在宣稱全年無人操作前完成驗收。
 
 完整 Notion 備份與還原資料橋已部署為停用的 93 節點 n8n 草稿（version 09651afd-e56b-4434-ae93-1fe8b9848f2c），157 項本機測試與 SDK／全部節點設定驗證通過，獨立參數讀回一致。附件保存發送及附加前持久化意圖；不確定結果先查既有上傳／附件，避免重試重複。還原資料使用 manifest 原始時間建立確定性、無程式、無父 commit 的 Git 資料樹，交由可信 main 程式驗證；同份快取在不同操作時間產生相同 commit。尚未驗證實際完整快取上傳／日常還原；主排程繼續停用。
+
+本機跨年修復已通過原始日曆重解析、11／7 日窗口及同儕審查：單年度格式相容，跨年使用相鄰兩個已驗證年度；1 月後續日可從已還原的兩年度快取選出前年日曆，普通同年度還原不誤判。n8n 95 節點產物尚未發布／部署，遠端仍為 93 節點停用版本。必要前一年快取缺漏明確停止，不自行假設休市或以舊排行替代。
+
+2026-10-04 新來源65cb430已通過main CI，95節點停用草稿參數／connections獨立讀回一致。受控10/2 v4（n8n905）已啟動；其operator版本ed1bf930-9a1d-49f0-b6a6-3aab5ea09533維持不變至terminal。尚未完成新行情、Notion完整快取及正式排程驗收。
+
+
+## 歷史10/2發布與快取續作
+
+Actions37154771933 已成功，來源65cb430，資料非強制發布至 main a0e12ef2a4d5c90ff3f7af9dabe1a6bd51071f92。發布資料日2026-10-02，成長候選3檔、低位觀察10檔、投信新進榜0檔；成長估值輸入完整62/100。00631L今日99,743,650股、前五日均量118,730,520股，動能0.8400843355。Notion選股列已讀回，尚不宣稱全部財務指標或完整備份完成。
+
+905／ledger157在完整快取驗證遇cache_latest_hash。實際只讀診斷906返回GitHub檔案描述1140bytes；907改讀固定commit公開原始檔，4822862bytes的SHA256與publication.json完全一致。修復維持固定40hexcommit、精確路徑、無認證／無redirect、有界binary與原始bytes雜湊，不降低驗證。34項聚焦測試與95節點SDK通過。908只恢復同一成功Actions／payload的Notion快取，不重跑金融API。
+
+瀏覽器實際重新載入仍顯示舊10/1快取並提示網路讀取失敗；新增前端loader真實payload檢查，正式網站畫面驗收尚未完成。排程維持停用。月底月營收到期佇列修復已通過71項獨立測試；當日來源失敗的有界自動再執行仍待整合與審查。
+
+
+## 歷史驗收進度（2026-10-04，當時狀態）
+
+前端修正3e9ae6已發布，瀏覽器實際顯示10/2、00631L 0.84倍、估值輸入完整62檔／可計算20檔、神基3005／漢唐2404／技嘉2376三檔成長股。三檔均確認5/5健診。投信Top10與10/1成員相同，排名與買超數字不同，因此新進榜0；低位觀察10檔，三策略去重共12檔。20檔估值證據未齊，不宣稱100檔皆可估值。
+
+97節點修復2b5aec1已通過feature CI37158678981及main CI37159128796；本機187項n8n測試通過，獨立審查清除兩處自動重試MEDIUM。真實925／ledger187證明結構式JSON guard在n8n環境接受JSON資料、拒絕symbol key／class／Date／保留鍵。所有新metadata nodes沿用既有GitHub credential。
+
+927已驗證完整cache artifact並進入13附件上傳；第一份upload ID已保存，但執行在第二次pre-send checkpoint前停止、沒有terminal ledger。929／ledger200只讀確認同一upload仍pending；930／ledger201以小型資料執行實際generated checkpoint成功，所以不宣稱已證實OOM。932以精確SHA釋放確認停止的owner，獨立公開讀回released=true，保留原upload ID與intent；診斷helper已恢復只讀。正在減少重複攜帶完整base64檔案並增加checkpoint例外紀錄；完整附件讀回、Notion日頁完成、實際還原、同payload重試及排程啟用仍未完成。
+
+20節點還原驗證workflow LVptJ9GOVkBNSb0R建立於Andy Shih個人專案根目錄；已讀回no-retention及既有credentials，預設inspect／inactive，尚未執行。其只建立驗證的資料Git objects，不會發布10/3、dispatch Actions、呼叫金融API或寫Notion。主排程保持停用，直至真實閉環驗收。
+
+
+2026-10-04 07:17 Taipei 狀態：Oct2網站已由正式payload顯示00631L0.84倍、成長估值输入完整62／可計算20／候選3。Notion已驗證8/13快取附件；933在169-byte分片binary準備停止，939獨立GET確認同一upload pending，940只以exactSHA CAS重置已證實尚未送HTTP的旗標，保留8附件與uploadID。941正續傳既有Actions37154771933／v4，不重跑provider。Selector .first修復與terminal manual-resume guard已在GitHub main2a89810，featureCI37161070694／mainCI37161197334 success；179既有測試99.71%line、92.50%branch。13附件全部讀回、Notion獨立審核、完整還原與排程啟用仍待完成。
+
+2026-10-04 07:24 Taipei：941／ledger319完成Oct2v4：screening complete、deploy verified、Notion complete、cache verified13/13。945／ledger320獨立Notion審核12行、12unique、1日期childDB；192數值欄、32null、3zero均符合發布payload。944正執行實際Notion→資料限定Git restore bridge；非10/3篩選，無Notion寫入、無Actions dispatch、無網站發布。銀行單數IncomeAfterTax漏接已TDD與peer修復；真實六家稅後YoY轉可判定，負基期仍unknown。新來源4ecc39待CI發布及Oct2重新正規化；195n8n tests99.62%line／91.77%branch、982Python tests、npm及pip audit無已知漏洞。完整Python還原、fresh-run零POST重用、最新修正版資料及排程仍待驗證。
+
+2026-10-04 07:35 Taipei：獨立Python CLI從固定data-only commit112974c39d5aa126d6ea60efca540497fd986ac6完整還原PASS：11法人交易日、7成交量交易日、100股票、179檔，metricsComplete=false如實保留。949同payload重試ledger373 already_complete，原Actions37154771933保持，不重跑API／不重建Notion。944遇新Git tree短暫404，948遇GitHub API剝除commit message末尾LF；均已找到實際差異，新增read-only1/2/4秒有限重查＋單LF精確投影相容，沒有放寬其他SHA／tree／parent／timestamp驗證。201n8n tests99.62%line／91.90%branch，1c9c1bb待CI發布；950正再次實際bridge驗證，fresh-run零POST及排程仍未完成。4ecc39銀行alias已mainCI37161934178 success，但當前Oct2v4數據仍需重新正規化，預定v5修正版。
