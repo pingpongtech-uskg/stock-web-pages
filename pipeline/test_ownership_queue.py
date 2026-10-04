@@ -104,3 +104,81 @@ def test_latest_csv_receipt_limits_roster_and_preserves_original_response_hash(t
     assert b'9999' not in stored and b'2330' in stored
     assert record['rawSanitization']=='roster-filtered-csv-v1'
     assert record['originalResponseSha256']!=record['rawSha256']
+
+
+def test_priority_selected_all_periods_precede_remaining_universe():
+    q=queue_module()
+    state=q.new_state(['2330','3293','2547'],['3293','2547'],'2026-10-02')
+    codes=[job['code'] for job in state['jobs'][3:]]
+    assert codes[:10]==['3293','2547']*5
+    assert codes[10:]==['2330']*5
+
+
+def test_legacy_queue_migration_preserves_evidence_and_resumes_selected_missing_months(tmp_path):
+    q=queue_module()
+    state=q.new_state(['2330','3293','2547'],['3293','2547'],'2026-10-02')
+    globals_=state['jobs'][:3]
+    old_jobs=sorted(state['jobs'][3:],key=lambda job:(0 if job['source']=='TDCC' else 1,job['period'],state['roster'].index(job['code'])))
+    state['jobs']=[*globals_,*old_jobs]
+    state['availableDates']=['2026-07-31','2026-08-28','2026-09-24']
+    for job in state['jobs']:
+        if not job['code'] or job['source']=='TDCC' and job['period']=='2026-07':job['status']='complete'
+    state['cursor']=next(index for index,job in enumerate(state['jobs']) if job['code']=='2330' and job['period']=='2026-08')
+    state['receipts']=[{'evidence':'preserved'}]
+    old_by_key={job['key']:dict(job) for job in state['jobs']}
+    migrated=q.prioritize_state(state)
+    assert migrated['receipts']==state['receipts']
+    assert {job['key']:job for job in migrated['jobs']}==old_by_key
+    assert state['jobs'][3]['period']=='2026-07'
+    calls=[]
+    def worker(job,budget):
+        budget.consume();calls.append((job['code'],job['period']));return {'rows':[]}
+    result=q.run_batch(state,tmp_path,worker,max_requests=2,now=0)
+    assert calls==[('3293','2026-08'),('2547','2026-08')]
+    assert result['receipts']==[{'evidence':'preserved'}]
+
+
+def test_ready_priority_retries_precede_rest_cursor_while_backoff_allows_rest(tmp_path):
+    q=queue_module()
+    state=q.new_state(['2330','3293'],['3293'],'2026-10-02')
+    state['availableDates']=['2026-07-31','2026-08-28','2026-09-24']
+    for job in state['jobs']:job['status']='complete'
+    priority=next(job for job in state['jobs'] if job['code']=='3293' and job['period']=='2026-08')
+    priority.update(status='pending',attempts=1,nextAttemptAt=100)
+    rest=next(job for job in state['jobs'] if job['code']=='2330' and job['period']=='2026-08')
+    rest['status']='pending'
+    state['cursor']=state['jobs'].index(rest)
+    calls=[]
+    def worker(job,budget):
+        budget.consume();calls.append(job['code']);return {'rows':[]}
+    q.run_batch(state,tmp_path/'early',worker,max_requests=1,now=99)
+    assert calls==['2330']
+    calls.clear()
+    q.run_batch(state,tmp_path/'due',worker,max_requests=1,now=100)
+    assert calls==['3293']
+
+
+def test_existing_hundred_stock_cursor_completes_selected_three_months_first(tmp_path):
+    q=queue_module()
+    roster=[str(2000+index) for index in range(100)]
+    selected=roster[:12]
+    state=q.new_state(roster,selected,'2026-10-02')
+    state['availableDates']=['2026-07-31','2026-08-28','2026-09-24']
+    state['jobs']=sorted(state['jobs'],key=lambda job:(0 if not job['code'] else 1,
+        0 if job['source']=='TDCC' else 1,job['period'],state['roster'].index(job['code']) if job['code'] else 0))
+    for job in state['jobs']:
+        if not job['code'] or job['source']=='TDCC' and job['period']=='2026-07' and job['code'] in roster[:31]:
+            job['status']='complete'
+    state['cursor']=next(index for index,job in enumerate(state['jobs']) if job['code']==roster[31] and job['period']=='2026-07')
+    calls=[]
+    def worker(job,budget):
+        budget.consume()
+        if job['source']=='TDCC':budget.consume()
+        calls.append((job['source'],job['code'],job['period']))
+        return {'rows':[]}
+    for batch in range(3):
+        state=q.run_batch(state,tmp_path,worker,max_requests=20,now=batch)
+        assert state['lastBatch']['requests']<=20
+    assert all(code in selected for _,code,_ in calls)
+    assert all(job['status']=='complete' for job in state['jobs'] if job['source']=='TDCC' and job['code'] in selected)
+    assert next(job for job in state['jobs'] if job['code']==roster[31] and job['period']=='2026-07')['status']=='pending'

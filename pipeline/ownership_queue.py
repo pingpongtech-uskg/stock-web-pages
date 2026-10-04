@@ -32,10 +32,42 @@ def new_state(roster: list[str], priority: list[str], verified_market_date: str)
     requests = [('TDCC',month) for month in months] + [('MOPS',shift_month(months[-1],-12)),('MOPS',months[-1])]
     # Round-robin companies within each source/period: one failed company cannot
     # consume every future batch while all others wait behind it.
-    jobs += [job(source,code,period) for source,period in requests for code in ordered]
+    groups = ([code for code in ordered if code in priority], [code for code in ordered if code not in priority])
+    jobs += [job(source,code,period) for group in groups for source,period in requests for code in group]
     return {'schemaVersion':QUEUE_VERSION,'verifiedMarketDate':verified_market_date,
             'roster':ordered,'priorityCodes':list(priority),'targetMonths':months,
             'availableDates':[],'directorPeriods':{},'jobs':jobs,'rows':[],'receipts':[],'cursor':0}
+
+
+def _job_group(job: dict,priority: set[str]) -> int:
+    return 0 if not job['code'] else 1 if job['code'] in priority else 2
+
+
+def prioritize_state(state: dict) -> dict:
+    """Migrate source-major ordering without changing any job or source evidence."""
+    priority=set(state['priorityCodes'])
+    rank={code:index for index,code in enumerate(state['roster'])}
+    global_rank={'TDCC_DATES':0,'TDCC_LATEST':1,'DIRECTOR_PERIODS':2}
+    def order(job):
+        group=_job_group(job,priority)
+        if group==0:
+            return (group,global_rank[job['source']],'',0)
+        return (group,0 if job['source']=='TDCC' else 1,job['period'],rank[job['code']])
+    jobs=sorted(state['jobs'],key=order)
+    changed=[job['key'] for job in jobs]!=[job['key'] for job in state['jobs']]
+    return {**state,'jobs':jobs,'cursor':0 if changed else state.get('cursor',0)}
+
+
+def _batch_indices(state: dict) -> list[int]:
+    """Priority retries get first opportunity; each group keeps its own rotation."""
+    priority=set(state['priorityCodes'])
+    cursor=state.get('cursor',0)%len(state['jobs'])
+    groups=[[index for index,job in enumerate(state['jobs']) if _job_group(job,priority)==group] for group in range(3)]
+    result=[]
+    for indices in groups:
+        offset=indices.index(cursor) if cursor in indices else 0
+        result.extend([*indices[offset:],*indices[:offset]])
+    return result
 
 
 def load_state(path: Path) -> dict | None:
@@ -114,12 +146,10 @@ def run_batch(state: dict, directory: Path, worker, *, max_requests: int=20,
     if type(max_requests) is not int or not 1<=max_requests<=20 or not 0<max_runtime_seconds<=180:
         raise ValueError('invalid ownership batch limits')
     budget=OwnershipBudget(max_requests=max_requests,max_history_requests=max_requests,max_runtime_seconds=max_runtime_seconds)
-    result=copy.deepcopy(state)
+    result=copy.deepcopy(prioritize_state(state))
     wall_now=time.time() if now is None else now
     jobs=result['jobs']
-    start=result.get('cursor',0)%len(jobs)
-    for offset in range(len(jobs)):
-        index=(start+offset)%len(jobs)
+    for index in _batch_indices(result):
         job=jobs[index]
         if job['status']!='pending' or job.get('nextAttemptAt',0)>wall_now:
             continue
