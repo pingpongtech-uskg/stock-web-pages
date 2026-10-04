@@ -2,9 +2,9 @@
   "schemaVersion": "1.1",
   "strategyVersion": "quality-growth-v1",
   "formulaVersion": "lohas-linear-3.5y-research-v1",
-  "runId": "enriched-20261004-053011-85ec10842a",
+  "runId": "enriched-20261004-084306-55b9107f29",
   "marketDate": "2026-10-02",
-  "generatedAt": "2026-10-03T21:30:10+00:00",
+  "generatedAt": "2026-10-04T00:43:05+00:00",
   "nextExpectedUpdateAt": "2026-10-05T11:30:00+00:00",
   "freshness": "degraded",
   "statusMessage": "沿用已取得來源快取重算 100 檔；行情日期仍為 2026-10-02，未再次呼叫外部來源。",
@@ -36,7 +36,8 @@
     "TDCC:1-5:2026-09-24",
     "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20261001&stockNo=00631L",
     "TDCC:1-5:2026-10-02",
-    "TPEx:insti/dailyTrade"
+    "TPEx:insti/dailyTrade",
+    "TDCC:history:2026-09-24"
   ],
   "coverage": {
     "universeCount": 100,
@@ -168,7 +169,7 @@
       ],
       "fiveLineStatus": "pass",
       "growthHealthEligible": false,
-      "growthHealthPassCount": 2,
+      "growthHealthPassCount": 3,
       "growthHealthStatus": "unknown",
       "growthHealthTotal": 5,
       "growthProxyReason": "未通過：三月合計營收年增 +13.9% < 15%",
@@ -182,9 +183,9 @@
         "current_price": 38.54999923706055,
         "current_pe": 18.01,
         "ttm_eps": null,
-        "earnings_growth": 0.06227999466921208,
-        "growth_method": "five_year_eps_cagr",
-        "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
+        "earnings_growth": null,
+        "growth_method": "no_stable_growth",
+        "growth_method_label": "完整年度 EPS 資料不足",
         "dividend_yield": 0.03372243905909674,
         "conservative_growth": null,
         "total_return_pct": null,
@@ -196,14 +197,9 @@
         "undervalued": false,
         "reasonable": false,
         "extreme_extrapolation": false,
-        "growth_valid_years": 4,
-        "growth_years": 3,
-        "annual_eps": {
-          "2022": 1.56,
-          "2023": 1.65,
-          "2024": 1.81,
-          "2025": 1.87
-        },
+        "growth_valid_years": 0,
+        "growth_years": null,
+        "annual_eps": {},
         "inputAudit": {
           "price": {
             "origin": "reported",
@@ -222,24 +218,25 @@
             "sourcePeriod": "2025Q3–2026Q2",
             "method": "sum_four_unique_consecutive_comparable_quarters",
             "source": "FinMind:TaiwanStockFinancialStatements",
-            "reason": "missing_or_unavailable_quarter_eps"
+            "reason": "incomparable_quarters"
           },
           "earningsGrowth": {
-            "origin": "derived",
-            "sourcePeriod": "2022–2025",
-            "method": "five_year_eps_cagr",
+            "origin": "unavailable",
+            "sourcePeriod": null,
+            "method": "no_stable_growth",
             "source": "FinMind:TaiwanStockFinancialStatements",
-            "reason": null
+            "reason": "完整年度 EPS 資料不足"
           },
           "dividendYield": {
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
-          "ttmEps"
+          "ttmEps",
+          "earningsGrowth"
         ],
         "inputsComplete": false,
         "inferredEpsCrossCheck": 2.1404774701310685
@@ -383,7 +380,7 @@
         {
           "key": "growth",
           "label": "成長股",
-          "passCount": 2,
+          "passCount": 3,
           "total": 5,
           "threshold": 4,
           "status": "unknown",
@@ -449,9 +446,9 @@
             },
             {
               "label": "近一季稅後淨利年增率大於 0",
-              "status": "unknown",
-              "value": null,
-              "explanation": "缺少截至評估日可取得的同季、同欄位且正基期數值，或比較口徑不一致；最新單期正值不構成通過。",
+              "status": "pass",
+              "value": 0.41748668951114043,
+              "explanation": "同口徑最近一季 YOY 大於零。",
               "period": "2026 Q2 vs 2025 Q2",
               "sourceRefs": [
                 "FinMind:TaiwanStockFinancialStatements"
@@ -1010,8 +1007,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -1092,7 +1089,7 @@
         "valuationDate": "2026-10-02"
       },
       "healthScore": {
-        "passCount": 10,
+        "passCount": 11,
         "total": 33,
         "status": "fail"
       },
@@ -1283,7 +1280,7 @@
           "key": "growthHealth",
           "label": "五項成長健康檢查",
           "status": "unknown",
-          "passCount": 2,
+          "passCount": 3,
           "total": 5,
           "reason": "五項成長健康檢查已逐項保留 pass／fail／unknown。",
           "evidenceLevel": "formal"
@@ -1322,7 +1319,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.012028578122724575,
+      "slope": 0.012028577911778434,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -1366,7 +1363,7 @@
         "proxy_current_eps": 1.87,
         "proxy_prior_eps": 1.81
       },
-      "zScore": 4.106009077361011
+      "zScore": 4.106009098469927
     },
     {
       "adjustedChangePct": 0.009163750222196277,
@@ -1414,7 +1411,7 @@
       ],
       "fiveLineStatus": "pass",
       "growthHealthEligible": false,
-      "growthHealthPassCount": 2,
+      "growthHealthPassCount": 3,
       "growthHealthStatus": "unknown",
       "growthHealthTotal": 5,
       "growthProxyReason": "通過：三月合計營收年增 +49.5% ≥ 15%",
@@ -1476,7 +1473,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
@@ -1625,7 +1622,7 @@
         {
           "key": "growth",
           "label": "成長股",
-          "passCount": 2,
+          "passCount": 3,
           "total": 5,
           "threshold": 4,
           "status": "unknown",
@@ -1691,9 +1688,9 @@
             },
             {
               "label": "近一季稅後淨利年增率大於 0",
-              "status": "unknown",
-              "value": null,
-              "explanation": "缺少截至評估日可取得的同季、同欄位且正基期數值，或比較口徑不一致；最新單期正值不構成通過。",
+              "status": "pass",
+              "value": 1.4576719562304623,
+              "explanation": "同口徑最近一季 YOY 大於零。",
               "period": "2026 Q2 vs 2025 Q2",
               "sourceRefs": [
                 "FinMind:TaiwanStockFinancialStatements"
@@ -2252,8 +2249,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -2334,7 +2331,7 @@
         "valuationDate": "2026-10-02"
       },
       "healthScore": {
-        "passCount": 11,
+        "passCount": 12,
         "total": 33,
         "status": "fail"
       },
@@ -2525,7 +2522,7 @@
           "key": "growthHealth",
           "label": "五項成長健康檢查",
           "status": "unknown",
-          "passCount": 2,
+          "passCount": 3,
           "total": 5,
           "reason": "五項成長健康檢查已逐項保留 pass／fail／unknown。",
           "evidenceLevel": "formal"
@@ -2564,7 +2561,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.026869232594813518,
+      "slope": 0.026869232183245714,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -2608,7 +2605,7 @@
         "proxy_current_eps": 1.97,
         "proxy_prior_eps": 1.75
       },
-      "zScore": 3.2029174686023953
+      "zScore": 3.2029174478064006
     },
     {
       "adjustedChangePct": 0.0018149236222815435,
@@ -2656,7 +2653,7 @@
       ],
       "fiveLineStatus": "pass",
       "growthHealthEligible": false,
-      "growthHealthPassCount": 1,
+      "growthHealthPassCount": 2,
       "growthHealthStatus": "unknown",
       "growthHealthTotal": 5,
       "growthProxyReason": "通過：三月合計營收年增 +21.1% ≥ 15%",
@@ -2702,23 +2699,23 @@
           },
           "ttmEps": {
             "origin": "unavailable",
-            "sourcePeriod": "2025Q2–2026Q2",
+            "sourcePeriod": "2025Q3–2026Q2",
             "method": "sum_four_unique_consecutive_comparable_quarters",
-            "source": "FinMind:TaiwanStockFinancialStatements, TWSE OpenAPI",
+            "source": "FinMind:TaiwanStockFinancialStatements",
             "reason": "incomparable_quarters"
           },
           "earningsGrowth": {
             "origin": "unavailable",
             "sourcePeriod": null,
             "method": "no_stable_growth",
-            "source": "FinMind:TaiwanStockFinancialStatements, TWSE OpenAPI",
+            "source": "FinMind:TaiwanStockFinancialStatements",
             "reason": "完整年度 EPS 資料不足"
           },
           "dividendYield": {
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
@@ -2867,7 +2864,7 @@
         {
           "key": "growth",
           "label": "成長股",
-          "passCount": 1,
+          "passCount": 2,
           "total": 5,
           "threshold": 4,
           "status": "unknown",
@@ -2906,7 +2903,7 @@
               "status": "unknown",
               "value": null,
               "explanation": "缺少截至評估日可取得的同季、同欄位且正基期數值，或比較口徑不一致；最新單期正值不構成通過。",
-              "period": "2025 Q4 vs 2024 Q4",
+              "period": "2026 Q2 vs 2025 Q2",
               "sourceRefs": [
                 "FinMind:TaiwanStockFinancialStatements"
               ]
@@ -2916,7 +2913,7 @@
               "status": "unknown",
               "value": null,
               "explanation": "缺少截至評估日可取得的同季、同欄位且正基期數值，或比較口徑不一致；最新單期正值不構成通過。",
-              "period": "2025 Q4 vs 2024 Q4",
+              "period": "2026 Q2 vs 2025 Q2",
               "sourceRefs": [
                 "FinMind:TaiwanStockFinancialStatements"
               ]
@@ -2926,17 +2923,17 @@
               "status": "unknown",
               "value": null,
               "explanation": "缺少截至評估日可取得的同季、同欄位且正基期數值，或比較口徑不一致；最新單期正值不構成通過。",
-              "period": "2025 Q4 vs 2024 Q4",
+              "period": "2026 Q2 vs 2025 Q2",
               "sourceRefs": [
                 "FinMind:TaiwanStockFinancialStatements"
               ]
             },
             {
               "label": "近一季稅後淨利年增率大於 0",
-              "status": "unknown",
-              "value": null,
-              "explanation": "缺少截至評估日可取得的同季、同欄位且正基期數值，或比較口徑不一致；最新單期正值不構成通過。",
-              "period": "2025 Q4 vs 2024 Q4",
+              "status": "pass",
+              "value": 0.21997463632315584,
+              "explanation": "同口徑最近一季 YOY 大於零。",
+              "period": "2026 Q2 vs 2025 Q2",
               "sourceRefs": [
                 "FinMind:TaiwanStockFinancialStatements"
               ]
@@ -3494,8 +3491,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -3571,12 +3568,12 @@
       ],
       "healthInputSummary": {
         "source": "FinMind public datasets",
-        "incomePeriods": 17,
+        "incomePeriods": 18,
         "officialRevenueRows": 18,
         "valuationDate": "2026-10-02"
       },
       "healthScore": {
-        "passCount": 7,
+        "passCount": 8,
         "total": 33,
         "status": "fail"
       },
@@ -3767,7 +3764,7 @@
           "key": "growthHealth",
           "label": "五項成長健康檢查",
           "status": "unknown",
-          "passCount": 1,
+          "passCount": 2,
           "total": 5,
           "reason": "五項成長健康檢查已逐項保留 pass／fail／unknown。",
           "evidenceLevel": "formal"
@@ -3806,7 +3803,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.010953381486767801,
+      "slope": 0.01095338164117072,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -3850,7 +3847,7 @@
         "proxy_current_eps": 1.51,
         "proxy_prior_eps": 1.33
       },
-      "zScore": 4.063713487468926
+      "zScore": 4.063713441749957
     },
     {
       "adjustedChangePct": 0.06157115965666752,
@@ -5050,7 +5047,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.02992382766755141,
+      "slope": -0.029923830089421077,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -5094,7 +5091,7 @@
         "proxy_current_eps": 1.04,
         "proxy_prior_eps": 0.6300000000000001
       },
-      "zScore": 3.905837805232337
+      "zScore": 3.9058377676220304
     },
     {
       "adjustedChangePct": 0.0,
@@ -5209,7 +5206,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -5982,8 +5979,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -6007,7 +6004,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "77.7%",
+              "value": "57.0%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -6032,7 +6029,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "77.7%",
+              "value": "57.0%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -6294,7 +6291,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.010772627452916423,
+      "slope": 0.010772627177832256,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -6338,7 +6335,7 @@
         "proxy_current_eps": 2.89,
         "proxy_prior_eps": 1.54
       },
-      "zScore": 2.1030693083703835
+      "zScore": 2.103069334299144
     },
     {
       "adjustedChangePct": 0.025219298245614034,
@@ -7538,7 +7535,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.19086736166212487,
+      "slope": 0.19086736247070224,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -7559,7 +7556,7 @@
       "sourceUniverseNetLots": 1732.0,
       "sourceUniverseNetShares": 3447723.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.781598937889392
+      "zScore": 3.7815989340904825
     },
     {
       "adjustedChangePct": 0.0,
@@ -7624,7 +7621,7 @@
         "earnings_growth": -0.22268091143172386,
         "growth_method": "five_year_eps_cagr",
         "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
-        "dividend_yield": 0.01609907120743034,
+        "dividend_yield": 0.01614911839009288,
         "conservative_growth": null,
         "total_return_pct": null,
         "total_return_pe": null,
@@ -7674,7 +7671,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -8447,8 +8444,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -8472,7 +8469,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "76.7%",
+              "value": "84.1%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -8497,7 +8494,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "76.7%",
+              "value": "84.1%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -8759,7 +8756,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.07847952441904522,
+      "slope": 0.0784795246836935,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -8780,7 +8777,7 @@
       "sourceUniverseNetLots": 1636.0,
       "sourceUniverseNetShares": 67309456.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.011508345754179
+      "zScore": 3.011508346740655
     },
     {
       "adjustedChangePct": 0.0,
@@ -8828,7 +8825,7 @@
       ],
       "fiveLineStatus": "pass",
       "growthHealthEligible": false,
-      "growthHealthPassCount": 2,
+      "growthHealthPassCount": 3,
       "growthHealthStatus": "unknown",
       "growthHealthTotal": 5,
       "growthProxyReason": "通過：三月合計營收年增 +19.3% ≥ 15%",
@@ -8842,9 +8839,9 @@
         "current_price": 45.349998474121094,
         "current_pe": 18.82,
         "ttm_eps": null,
-        "earnings_growth": 0.2444603344360099,
-        "growth_method": "five_year_eps_cagr",
-        "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
+        "earnings_growth": null,
+        "growth_method": "no_stable_growth",
+        "growth_method_label": "完整年度 EPS 資料不足",
         "dividend_yield": 0.03087100434631564,
         "conservative_growth": null,
         "total_return_pct": null,
@@ -8856,14 +8853,9 @@
         "undervalued": false,
         "reasonable": false,
         "extreme_extrapolation": false,
-        "growth_valid_years": 4,
-        "growth_years": 3,
-        "annual_eps": {
-          "2022": 1.1,
-          "2023": 1.4100000000000001,
-          "2024": 1.6300000000000001,
-          "2025": 2.12
-        },
+        "growth_valid_years": 0,
+        "growth_years": null,
+        "annual_eps": {},
         "inputAudit": {
           "price": {
             "origin": "reported",
@@ -8882,24 +8874,25 @@
             "sourcePeriod": "2025Q3–2026Q2",
             "method": "sum_four_unique_consecutive_comparable_quarters",
             "source": "FinMind:TaiwanStockFinancialStatements",
-            "reason": "missing_or_unavailable_quarter_eps"
+            "reason": "incomparable_quarters"
           },
           "earningsGrowth": {
-            "origin": "derived",
-            "sourcePeriod": "2022–2025",
-            "method": "five_year_eps_cagr",
+            "origin": "unavailable",
+            "sourcePeriod": null,
+            "method": "no_stable_growth",
             "source": "FinMind:TaiwanStockFinancialStatements",
-            "reason": null
+            "reason": "完整年度 EPS 資料不足"
           },
           "dividendYield": {
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
-          "ttmEps"
+          "ttmEps",
+          "earningsGrowth"
         ],
         "inputsComplete": false,
         "inferredEpsCrossCheck": 2.409670482153087
@@ -9043,7 +9036,7 @@
         {
           "key": "growth",
           "label": "成長股",
-          "passCount": 2,
+          "passCount": 3,
           "total": 5,
           "threshold": 4,
           "status": "unknown",
@@ -9109,9 +9102,9 @@
             },
             {
               "label": "近一季稅後淨利年增率大於 0",
-              "status": "unknown",
-              "value": null,
-              "explanation": "缺少截至評估日可取得的同季、同欄位且正基期數值，或比較口徑不一致；最新單期正值不構成通過。",
+              "status": "pass",
+              "value": 0.43085506296847864,
+              "explanation": "同口徑最近一季 YOY 大於零。",
               "period": "2026 Q2 vs 2025 Q2",
               "sourceRefs": [
                 "FinMind:TaiwanStockFinancialStatements"
@@ -9670,8 +9663,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -9752,7 +9745,7 @@
         "valuationDate": "2026-10-02"
       },
       "healthScore": {
-        "passCount": 11,
+        "passCount": 12,
         "total": 33,
         "status": "fail"
       },
@@ -9943,7 +9936,7 @@
           "key": "growthHealth",
           "label": "五項成長健康檢查",
           "status": "unknown",
-          "passCount": 2,
+          "passCount": 3,
           "total": 5,
           "reason": "五項成長健康檢查已逐項保留 pass／fail／unknown。",
           "evidenceLevel": "formal"
@@ -9982,7 +9975,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.020156850165983547,
+      "slope": 0.020156850104073826,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -10026,7 +10019,7 @@
         "proxy_current_eps": 2.12,
         "proxy_prior_eps": 1.6300000000000001
       },
-      "zScore": 4.366423621182352
+      "zScore": 4.3664236012284245
     },
     {
       "adjustedChangePct": 0.008403361344537815,
@@ -10141,7 +10134,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -10914,8 +10907,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -10939,7 +10932,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "215.9%",
+              "value": "438.6%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -10964,7 +10957,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "215.9%",
+              "value": "438.6%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -11226,7 +11219,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.17094137704663118,
+      "slope": 0.1709413767121627,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -11247,7 +11240,7 @@
       "sourceUniverseNetLots": 1207.0,
       "sourceUniverseNetShares": 5518649.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.7901163471715977
+      "zScore": 0.7901163309920347
     },
     {
       "adjustedChangePct": 0.021276541059871673,
@@ -11309,9 +11302,9 @@
         "current_price": 57.599998474121094,
         "current_pe": 5.98,
         "ttm_eps": null,
-        "earnings_growth": 0.8171205928321397,
-        "growth_method": "five_year_eps_cagr",
-        "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
+        "earnings_growth": null,
+        "growth_method": "no_stable_growth",
+        "growth_method_label": "完整年度 EPS 資料不足",
         "dividend_yield": 0.0366319454148596,
         "conservative_growth": null,
         "total_return_pct": null,
@@ -11323,14 +11316,9 @@
         "undervalued": false,
         "reasonable": false,
         "extreme_extrapolation": false,
-        "growth_valid_years": 4,
-        "growth_years": 3,
-        "annual_eps": {
-          "2022": 0.5,
-          "2023": 1.98,
-          "2024": 3.0,
-          "2025": 3.0
-        },
+        "growth_valid_years": 0,
+        "growth_years": null,
+        "annual_eps": {},
         "inputAudit": {
           "price": {
             "origin": "reported",
@@ -11349,24 +11337,25 @@
             "sourcePeriod": "2025Q3–2026Q2",
             "method": "sum_four_unique_consecutive_comparable_quarters",
             "source": "FinMind:TaiwanStockFinancialStatements",
-            "reason": "missing_or_unavailable_quarter_eps"
+            "reason": "incomparable_quarters"
           },
           "earningsGrowth": {
-            "origin": "derived",
-            "sourcePeriod": "2022–2025",
-            "method": "five_year_eps_cagr",
+            "origin": "unavailable",
+            "sourcePeriod": null,
+            "method": "no_stable_growth",
             "source": "FinMind:TaiwanStockFinancialStatements",
-            "reason": null
+            "reason": "完整年度 EPS 資料不足"
           },
           "dividendYield": {
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
-          "ttmEps"
+          "ttmEps",
+          "earningsGrowth"
         ],
         "inputsComplete": false,
         "inferredEpsCrossCheck": 9.632106768247674
@@ -12137,8 +12126,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -12449,7 +12438,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.033309728696663196,
+      "slope": 0.03330972880885832,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -12470,7 +12459,7 @@
       "sourceUniverseNetLots": 1129.0,
       "sourceUniverseNetShares": 1369158.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.251308253811982
+      "zScore": 3.25130825288577
     },
     {
       "adjustedChangePct": 0.009114543234724075,
@@ -13668,7 +13657,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.011874795018621733,
+      "slope": 0.011874794951586913,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -13689,7 +13678,7 @@
       "sourceUniverseNetLots": 1050.0,
       "sourceUniverseNetShares": 9756689.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.22790989790962965
+      "zScore": -0.22790988749265376
     },
     {
       "adjustedChangePct": -0.005988023952095809,
@@ -14891,7 +14880,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.20234912566409125,
+      "slope": 0.20234912548567835,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -14935,7 +14924,7 @@
         "proxy_current_eps": 19.439999999999998,
         "proxy_prior_eps": 15.49
       },
-      "zScore": 0.031015126024698213
+      "zScore": 0.03101512759058013
     },
     {
       "adjustedChangePct": -0.0019379549821352399,
@@ -15051,7 +15040,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -15824,8 +15813,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -15849,7 +15838,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "383.3%",
+              "value": "350.0%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -15874,7 +15863,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "383.3%",
+              "value": "350.0%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -16136,7 +16125,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.0021696594336237506,
+      "slope": -0.0021696591296087673,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -16157,7 +16146,6 @@
       "sourceUniverseNetLots": 939.0,
       "sourceUniverseNetShares": 1150104.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.4801040706607754,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 25.75,
@@ -16180,7 +16168,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 1.17,
         "proxy_prior_eps": 1.15
-      }
+      },
+      "zScore": 0.4801039792360483
     },
     {
       "adjustedChangePct": -0.016969715465198865,
@@ -16228,7 +16217,7 @@
       ],
       "fiveLineStatus": "pass",
       "growthHealthEligible": false,
-      "growthHealthPassCount": 2,
+      "growthHealthPassCount": 3,
       "growthHealthStatus": "unknown",
       "growthHealthTotal": 5,
       "growthProxyReason": "未通過：三月合計營收年增 -44.5% < 15%",
@@ -16290,7 +16279,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
@@ -16439,7 +16428,7 @@
         {
           "key": "growth",
           "label": "成長股",
-          "passCount": 2,
+          "passCount": 3,
           "total": 5,
           "threshold": 4,
           "status": "unknown",
@@ -16505,9 +16494,9 @@
             },
             {
               "label": "近一季稅後淨利年增率大於 0",
-              "status": "unknown",
-              "value": null,
-              "explanation": "缺少截至評估日可取得的同季、同欄位且正基期數值，或比較口徑不一致；最新單期正值不構成通過。",
+              "status": "pass",
+              "value": 3.1488178063035877,
+              "explanation": "同口徑最近一季 YOY 大於零。",
               "period": "2026 Q2 vs 2025 Q2",
               "sourceRefs": [
                 "FinMind:TaiwanStockFinancialStatements"
@@ -17066,8 +17055,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -17148,7 +17137,7 @@
         "valuationDate": "2026-10-02"
       },
       "healthScore": {
-        "passCount": 7,
+        "passCount": 8,
         "total": 33,
         "status": "fail"
       },
@@ -17339,7 +17328,7 @@
           "key": "growthHealth",
           "label": "五項成長健康檢查",
           "status": "unknown",
-          "passCount": 2,
+          "passCount": 3,
           "total": 5,
           "reason": "五項成長健康檢查已逐項保留 pass／fail／unknown。",
           "evidenceLevel": "formal"
@@ -17378,7 +17367,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.01872142463438976,
+      "slope": 0.01872142453630723,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -17399,7 +17388,6 @@
       "sourceUniverseNetLots": 921.0,
       "sourceUniverseNetShares": 25260859.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.112996107445274,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 40.54999923706055,
@@ -17422,7 +17410,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 1.91,
         "proxy_prior_eps": 1.39
-      }
+      },
+      "zScore": 3.1129961055629662
     },
     {
       "adjustedChangePct": -0.01995305164319249,
@@ -18622,7 +18611,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.4810597383814605,
+      "slope": 0.4810597392439628,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -18666,7 +18655,7 @@
         "proxy_current_eps": 6.58,
         "proxy_prior_eps": 5.87
       },
-      "zScore": 2.8704452260491946
+      "zScore": 2.8704452260092155
     },
     {
       "adjustedChangePct": 0.017819674224858726,
@@ -19866,7 +19855,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.02878238191632533,
+      "slope": 0.028782381561356457,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -19887,7 +19876,7 @@
       "sourceUniverseNetLots": 752.0,
       "sourceUniverseNetShares": 1483158.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.583118919950849
+      "zScore": 2.583118932329579
     },
     {
       "adjustedChangePct": 0.013568521031207599,
@@ -21088,7 +21077,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.09325256759016079,
+      "slope": 0.09325256824409382,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -21132,7 +21121,7 @@
         "proxy_current_eps": 18.189999999999998,
         "proxy_prior_eps": 15.06
       },
-      "zScore": 1.8086222779188137
+      "zScore": 1.808622250189599
     },
     {
       "adjustedChangePct": 0.07407407407407407,
@@ -21197,7 +21186,7 @@
         "earnings_growth": -0.39803653415401874,
         "growth_method": "five_year_eps_cagr",
         "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
-        "dividend_yield": 0.0015325670498084292,
+        "dividend_yield": 0.001517358704980843,
         "conservative_growth": null,
         "total_return_pct": null,
         "total_return_pe": null,
@@ -21247,7 +21236,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -22020,8 +22009,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -22045,7 +22034,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "fail",
-              "value": "23.7%",
+              "value": "17.8%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -22070,7 +22059,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "fail",
-              "value": "23.7%",
+              "value": "17.8%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -22332,7 +22321,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.7416550121697122,
+      "slope": 0.7416550113312755,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -22376,7 +22365,7 @@
         "proxy_current_eps": 4.38,
         "proxy_prior_eps": 3.35
       },
-      "zScore": 3.313260906439533
+      "zScore": 3.3132609058592433
     },
     {
       "adjustedChangePct": -0.011811023622047244,
@@ -23577,7 +23566,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.2006137029759898,
+      "slope": 0.20061370459463002,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -23621,7 +23610,7 @@
         "proxy_current_eps": 13.6,
         "proxy_prior_eps": 11.01
       },
-      "zScore": -0.027710352701119195
+      "zScore": -0.027710364724812135
     },
     {
       "adjustedChangePct": -0.007827744092482,
@@ -23686,7 +23675,7 @@
         "earnings_growth": null,
         "growth_method": "no_stable_growth",
         "growth_method_label": "完整年度 EPS 包含非正值",
-        "dividend_yield": 0.0,
+        "dividend_yield": 0.03155818492944804,
         "conservative_growth": null,
         "total_return_pct": null,
         "total_return_pe": null,
@@ -23736,7 +23725,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
@@ -24455,7 +24444,7 @@
         {
           "key": "dividend",
           "label": "定存股",
-          "passCount": 0,
+          "passCount": 2,
           "total": 5,
           "threshold": 5,
           "status": "fail",
@@ -24513,8 +24502,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -24537,8 +24526,8 @@
             },
             {
               "label": "股息發放率五年內有三年大於 50%",
-              "status": "unknown",
-              "value": "未知",
+              "status": "pass",
+              "value": "344.8%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -24562,8 +24551,8 @@
             },
             {
               "label": "股息發放率五年平均大於 50%",
-              "status": "unknown",
-              "value": "未知",
+              "status": "pass",
+              "value": "344.8%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -24595,7 +24584,7 @@
         "valuationDate": "2026-10-02"
       },
       "healthScore": {
-        "passCount": 18,
+        "passCount": 20,
         "total": 33,
         "status": "fail"
       },
@@ -24825,7 +24814,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.013753473658263658,
+      "slope": -0.013753473407022347,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -24846,7 +24835,7 @@
       "sourceUniverseNetLots": 410.0,
       "sourceUniverseNetShares": 4804000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.6276090298431918
+      "zScore": 1.6276089767817863
     },
     {
       "adjustedChangePct": -0.008836501629420653,
@@ -24894,7 +24883,7 @@
       ],
       "fiveLineStatus": "pass",
       "growthHealthEligible": false,
-      "growthHealthPassCount": 1,
+      "growthHealthPassCount": 2,
       "growthHealthStatus": "unknown",
       "growthHealthTotal": 5,
       "growthProxyReason": "未通過：三月合計營收年增 -32.0% < 15%",
@@ -24911,7 +24900,7 @@
         "earnings_growth": 0.3807323118255408,
         "growth_method": "five_year_eps_cagr",
         "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
-        "dividend_yield": 0.03714710084154599,
+        "dividend_yield": 0.037150657899334166,
         "conservative_growth": null,
         "total_return_pct": null,
         "total_return_pe": null,
@@ -24961,7 +24950,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
@@ -25109,7 +25098,7 @@
         {
           "key": "growth",
           "label": "成長股",
-          "passCount": 1,
+          "passCount": 2,
           "total": 5,
           "threshold": 4,
           "status": "unknown",
@@ -25175,9 +25164,9 @@
             },
             {
               "label": "近一季稅後淨利年增率大於 0",
-              "status": "unknown",
-              "value": null,
-              "explanation": "缺少截至評估日可取得的同季、同欄位且正基期數值，或比較口徑不一致；最新單期正值不構成通過。",
+              "status": "pass",
+              "value": 0.03993280296140944,
+              "explanation": "同口徑最近一季 YOY 大於零。",
               "period": "2026 Q2 vs 2025 Q2",
               "sourceRefs": [
                 "FinMind:TaiwanStockFinancialStatements"
@@ -25736,8 +25725,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -25818,7 +25807,7 @@
         "valuationDate": "2026-10-02"
       },
       "healthScore": {
-        "passCount": 8,
+        "passCount": 9,
         "total": 33,
         "status": "fail"
       },
@@ -26009,7 +25998,7 @@
           "key": "growthHealth",
           "label": "五項成長健康檢查",
           "status": "unknown",
-          "passCount": 1,
+          "passCount": 2,
           "total": 5,
           "reason": "五項成長健康檢查已逐項保留 pass／fail／unknown。",
           "evidenceLevel": "formal"
@@ -26048,7 +26037,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.052398536937440586,
+      "slope": 0.05239853692080258,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -26069,7 +26058,6 @@
       "sourceUniverseNetLots": 335.0,
       "sourceUniverseNetShares": 13852759.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.8959678934690143,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 67.30000305175781,
@@ -26092,7 +26080,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 4.08,
         "proxy_prior_eps": 3.64
-      }
+      },
+      "zScore": 1.8959679093701218
     },
     {
       "adjustedChangePct": 0.0024631106546001962,
@@ -27293,7 +27282,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.0003362669616315772,
+      "slope": 0.0003362668786272421,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -27337,7 +27326,7 @@
         "proxy_current_eps": 2.42,
         "proxy_prior_eps": 2.38
       },
-      "zScore": 0.06938935401177597
+      "zScore": 0.06938938675148192
     },
     {
       "adjustedChangePct": -0.006036201860267411,
@@ -28537,7 +28526,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.001948756333992704,
+      "slope": -0.0019487565750580908,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -28558,7 +28547,7 @@
       "sourceUniverseNetLots": 262.0,
       "sourceUniverseNetShares": 6476637.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.9243623098709375
+      "zScore": -0.9243622923940885
     },
     {
       "adjustedChangePct": 0.012195038743469786,
@@ -28620,9 +28609,9 @@
         "current_price": 37.349998474121094,
         "current_pe": 13.06,
         "ttm_eps": null,
-        "earnings_growth": 0.21089845255531214,
-        "growth_method": "five_year_eps_cagr",
-        "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
+        "earnings_growth": null,
+        "growth_method": "no_stable_growth",
+        "growth_method_label": "完整年度 EPS 資料不足",
         "dividend_yield": 0.026773762807323156,
         "conservative_growth": null,
         "total_return_pct": null,
@@ -28634,14 +28623,9 @@
         "undervalued": false,
         "reasonable": false,
         "extreme_extrapolation": false,
-        "growth_valid_years": 4,
-        "growth_years": 3,
-        "annual_eps": {
-          "2022": 0.98,
-          "2023": 1.1300000000000001,
-          "2024": 1.97,
-          "2025": 1.74
-        },
+        "growth_valid_years": 0,
+        "growth_years": null,
+        "annual_eps": {},
         "inputAudit": {
           "price": {
             "origin": "reported",
@@ -28660,24 +28644,25 @@
             "sourcePeriod": "2025Q3–2026Q2",
             "method": "sum_four_unique_consecutive_comparable_quarters",
             "source": "FinMind:TaiwanStockFinancialStatements",
-            "reason": "missing_or_unavailable_quarter_eps"
+            "reason": "incomparable_quarters"
           },
           "earningsGrowth": {
-            "origin": "derived",
-            "sourcePeriod": "2022–2025",
-            "method": "five_year_eps_cagr",
+            "origin": "unavailable",
+            "sourcePeriod": null,
+            "method": "no_stable_growth",
             "source": "FinMind:TaiwanStockFinancialStatements",
-            "reason": null
+            "reason": "完整年度 EPS 資料不足"
           },
           "dividendYield": {
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
-          "ttmEps"
+          "ttmEps",
+          "earningsGrowth"
         ],
         "inputsComplete": false,
         "inferredEpsCrossCheck": 2.859877371678491
@@ -29444,8 +29429,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -29756,7 +29741,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.01987283384186698,
+      "slope": 0.019872833583383678,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -29777,7 +29762,7 @@
       "sourceUniverseNetLots": 261.0,
       "sourceUniverseNetShares": 17086284.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.541984994539922
+      "zScore": 3.5419849973592465
     },
     {
       "adjustedChangePct": -0.0032732725570671856,
@@ -30977,7 +30962,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.009411108638317428,
+      "slope": -0.009411108630889748,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -30998,7 +30983,7 @@
       "sourceUniverseNetLots": 251.0,
       "sourceUniverseNetShares": 1504626.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.5428155271453962
+      "zScore": -0.5428155268313904
     },
     {
       "adjustedChangePct": -0.01412875219936458,
@@ -32198,7 +32183,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.007515093469792398,
+      "slope": -0.007515093514655591,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -32219,7 +32204,7 @@
       "sourceUniverseNetLots": 240.0,
       "sourceUniverseNetShares": 1567669.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.2717748934065537
+      "zScore": 0.27177490362505313
     },
     {
       "adjustedChangePct": 0.0035544480680050226,
@@ -33420,7 +33405,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.016536928906424855,
+      "slope": 0.016536928726823528,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -33441,7 +33426,7 @@
       "sourceUniverseNetLots": 240.0,
       "sourceUniverseNetShares": 29026071.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.5848659793489202
+      "zScore": 0.5848659869747419
     },
     {
       "adjustedChangePct": 0.013550135501355014,
@@ -34641,7 +34626,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.09739878824782779,
+      "slope": 0.09739878906115886,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -34662,7 +34647,7 @@
       "sourceUniverseNetLots": 239.0,
       "sourceUniverseNetShares": 3562858.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.4298656265282905
+      "zScore": 2.4298656216490118
     },
     {
       "adjustedChangePct": -0.0024096385542168677,
@@ -35864,7 +35849,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.05784304862909975,
+      "slope": 0.05784305095812341,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -35885,7 +35870,7 @@
       "sourceUniverseNetLots": 221.0,
       "sourceUniverseNetShares": 1276766.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.024423418342779214
+      "zScore": 0.024423359924599434
     },
     {
       "adjustedChangePct": 0.015,
@@ -37086,7 +37071,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.6210727015715821,
+      "slope": 0.6210727008846703,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -37130,7 +37115,7 @@
         "proxy_current_eps": 9.28,
         "proxy_prior_eps": 7.1
       },
-      "zScore": 4.779799574035982
+      "zScore": 4.779799578049187
     },
     {
       "adjustedChangePct": 0.023622047244094488,
@@ -38330,7 +38315,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.07929662779136394,
+      "slope": 0.07929662773238814,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -38374,7 +38359,7 @@
         "proxy_current_eps": 0.57,
         "proxy_prior_eps": 0.43
       },
-      "zScore": 3.87174725754585
+      "zScore": 3.871747257286717
     },
     {
       "adjustedChangePct": 0.039603960396039604,
@@ -39574,7 +39559,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.6041011492537628,
+      "slope": 0.6041011511414337,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -39618,7 +39603,7 @@
         "proxy_current_eps": 3.51,
         "proxy_prior_eps": 0.10999999999999995
       },
-      "zScore": 3.5621203564849484
+      "zScore": 3.5621203577052105
     },
     {
       "adjustedChangePct": -0.014534883076207225,
@@ -39733,7 +39718,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -40506,8 +40491,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -40531,7 +40516,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "398.1%",
+              "value": "495.1%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -40556,7 +40541,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "398.1%",
+              "value": "495.1%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -40818,7 +40803,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.11095875500366503,
+      "slope": -0.11095875406332062,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -40839,7 +40824,7 @@
       "sourceUniverseNetLots": 119.0,
       "sourceUniverseNetShares": 1436000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.5902368298797684
+      "zScore": -0.5902368562121333
     },
     {
       "adjustedChangePct": 0.0,
@@ -40904,18 +40889,18 @@
         "earnings_growth": 0.06851479653793202,
         "growth_method": "five_year_eps_cagr",
         "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
-        "dividend_yield": 0.03265081967213115,
+        "dividend_yield": 0.038887540983606556,
         "conservative_growth": 0.05481183723034562,
-        "total_return_pct": 8.746265690247675,
-        "total_return_pe": 0.3792829874348515,
+        "total_return_pct": 9.369937821395217,
+        "total_return_pe": 0.40632861324350467,
         "forward_eps": 5.622147092437743,
-        "fair_pe": 8.746265690247675,
-        "fair_price": 49.172792220113955,
-        "buy_zone_price": 40.97732685009496,
+        "fair_pe": 9.369937821395217,
+        "fair_price": 52.679168678879556,
+        "buy_zone_price": 43.89930723239963,
         "undervalued": false,
         "reasonable": false,
         "extreme_extrapolation": false,
-        "raw_fair_price": 49.172792220113955,
+        "raw_fair_price": 52.679168678879556,
         "growth_valid_years": 4,
         "growth_years": 3,
         "annual_eps": {
@@ -40955,7 +40940,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -41728,8 +41713,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "FinMind:TaiwanStockInfo",
@@ -41753,7 +41738,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "267.3%",
+              "value": "302.0%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -41778,7 +41763,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "267.3%",
+              "value": "302.0%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -42040,7 +42025,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.03547512572661521,
+      "slope": 0.03547512518038355,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -42084,7 +42069,7 @@
         "proxy_current_eps": 4.77,
         "proxy_prior_eps": 4.57
       },
-      "zScore": 1.7949472211188484
+      "zScore": 1.794947230214888
     },
     {
       "adjustedChangePct": 0.09851301115241635,
@@ -43286,7 +43271,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.2775820337155147,
+      "slope": 0.2775820327814096,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -43307,7 +43292,7 @@
       "sourceUniverseNetLots": 60.0,
       "sourceUniverseNetShares": 5609900.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.819718648313224
+      "zScore": 2.8197186476426173
     },
     {
       "adjustedChangePct": 0.03986710963455149,
@@ -44333,7 +44318,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.538990964243773,
+      "slope": 0.5389909636734758,
       "sourceRefs": [
         "https://stock.wearn.com/b50.asp",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -44347,7 +44332,7 @@
       "sourceUniverseNetLots": 565.0,
       "sourceUniverseNetShares": 4213998.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.3102673772436615
+      "zScore": 1.3102673781742582
     },
     {
       "adjustedChangePct": -0.011086474501108648,
@@ -45342,7 +45327,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.11058128783490458,
+      "slope": 0.11058128734014674,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -45354,7 +45339,7 @@
       ],
       "sourceUniverseNetShares": 8429000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.381578648767979
+      "zScore": 2.3815786485945445
     },
     {
       "adjustedChangePct": 0.026845637583892617,
@@ -47358,7 +47343,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.08911364935813064,
+      "slope": 0.08911365004318565,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -47393,7 +47378,7 @@
         "proxy_current_eps": 3.11,
         "proxy_prior_eps": 2.4
       },
-      "zScore": 2.4207240083023622
+      "zScore": 2.4207240141951227
     },
     {
       "adjustedChangePct": -0.004273504273504274,
@@ -47458,7 +47443,7 @@
         "earnings_growth": null,
         "growth_method": "no_stable_growth",
         "growth_method_label": "完整年度 EPS 資料不足",
-        "dividend_yield": 0.0012875536480686696,
+        "dividend_yield": 0.0012791007296137338,
         "conservative_growth": null,
         "total_return_pct": null,
         "total_return_pe": null,
@@ -47503,7 +47488,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
@@ -48097,8 +48082,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -48115,7 +48100,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "fail",
-              "value": "24.5%",
+              "value": "17.9%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -48133,7 +48118,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "fail",
-              "value": "24.5%",
+              "value": "17.9%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -48386,7 +48371,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.8276380158159249,
+      "slope": 0.8276380162556436,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -48421,7 +48406,7 @@
         "proxy_current_eps": 14.27,
         "proxy_prior_eps": 9.03
       },
-      "zScore": 1.7606670261826498
+      "zScore": 1.7606670252036405
     },
     {
       "adjustedChangePct": 0.0125,
@@ -49417,7 +49402,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.2770843346358096,
+      "slope": 0.277084335457014,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -49452,7 +49437,7 @@
         "proxy_current_eps": 4.38,
         "proxy_prior_eps": 2.8499999999999996
       },
-      "zScore": 1.1886811606280183
+      "zScore": 1.1886811543841327
     },
     {
       "adjustedChangePct": 0.05613581119339769,
@@ -50448,7 +50433,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.006027630627859947,
+      "slope": 0.006027630578057346,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -50460,7 +50445,6 @@
       ],
       "sourceUniverseNetShares": 10891446.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 5.119042576395187,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 40.45000076293945,
@@ -50483,7 +50467,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 3966.2713809360007,
         "proxy_prior_eps": 2968.5607126971877
-      }
+      },
+      "zScore": 5.119042580327568
     },
     {
       "adjustedChangePct": 0.004705882352941176,
@@ -51479,7 +51464,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.16400054163321304,
+      "slope": 0.1640005428234989,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -51514,7 +51499,7 @@
         "proxy_current_eps": 11.6,
         "proxy_prior_eps": 8.09
       },
-      "zScore": 0.5335927380484013
+      "zScore": 0.5335927375397143
     },
     {
       "adjustedChangePct": -0.010130202079589713,
@@ -52507,7 +52492,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.01679485790544924,
+      "slope": 0.01679485780086749,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -52519,7 +52504,6 @@
       ],
       "sourceUniverseNetShares": 1622700.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.0472353543264257,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 68.4000015258789,
@@ -52542,7 +52526,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 29.630000000000003,
         "proxy_prior_eps": 26.810000000000002
-      }
+      },
+      "zScore": 2.047235350115183
     },
     {
       "adjustedChangePct": -0.005128192086505075,
@@ -52607,7 +52592,7 @@
         "earnings_growth": -0.050430795386721905,
         "growth_method": "five_year_eps_cagr",
         "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
-        "dividend_yield": 0.016972508368573946,
+        "dividend_yield": 0.03780068678969699,
         "conservative_growth": null,
         "total_return_pct": null,
         "total_return_pe": null,
@@ -52657,7 +52642,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -53248,8 +53233,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -53266,7 +53251,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "fail",
-              "value": "18.2%",
+              "value": "40.4%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -53284,7 +53269,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "fail",
-              "value": "18.2%",
+              "value": "40.4%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -53536,7 +53521,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.013008045515340414,
+      "slope": -0.013008045999625214,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -53548,7 +53533,7 @@
       ],
       "sourceUniverseNetShares": 3000000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.36811866465903853
+      "zScore": 0.36811868823267646
     },
     {
       "adjustedChangePct": -0.023112480739599383,
@@ -54544,7 +54529,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.7090234962155212,
+      "slope": 0.7090234995716446,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -54556,7 +54541,7 @@
       ],
       "sourceUniverseNetShares": 2242321.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8876258804510249
+      "zScore": 0.8876258511326639
     },
     {
       "adjustedChangePct": 0.06386292834890965,
@@ -55550,7 +55535,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.2853072061452786,
+      "slope": 0.2853072075847632,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -55585,7 +55570,7 @@
         "proxy_current_eps": 4.16,
         "proxy_prior_eps": 2.26
       },
-      "zScore": 5.169212077255547
+      "zScore": 5.1692120833128925
     },
     {
       "adjustedChangePct": -0.009230745755709134,
@@ -55650,7 +55635,7 @@
         "earnings_growth": -0.021247377932583023,
         "growth_method": "five_year_eps_cagr",
         "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
-        "dividend_yield": 0.0709316753379946,
+        "dividend_yield": 0.07095099630026974,
         "conservative_growth": null,
         "total_return_pct": null,
         "total_return_pe": null,
@@ -55700,7 +55685,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -56291,8 +56276,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -56309,7 +56294,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "362.5%",
+              "value": "333.4%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -56327,7 +56312,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "362.5%",
+              "value": "333.4%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -56579,7 +56564,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.016416980953533583,
+      "slope": 0.016416980803642983,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -56614,7 +56599,7 @@
         "proxy_current_eps": 5.71,
         "proxy_prior_eps": 5.61
       },
-      "zScore": -1.2176446848119864
+      "zScore": -1.2176447141763025
     },
     {
       "adjustedChangePct": 0.03265308198474702,
@@ -56729,7 +56714,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -57320,8 +57305,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -57338,7 +57323,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "119.7%",
+              "value": "136.8%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -57356,7 +57341,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "119.7%",
+              "value": "136.8%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -57608,7 +57593,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.0316085266420817,
+      "slope": 0.03160852660590889,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -57620,7 +57605,7 @@
       ],
       "sourceUniverseNetShares": 1418000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.3763529301096944
+      "zScore": 2.3763528936409757
     },
     {
       "adjustedChangePct": 0.0,
@@ -58615,7 +58600,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.06634704567479002,
+      "slope": 0.06634704569647885,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -58650,7 +58635,7 @@
         "proxy_current_eps": 8.43,
         "proxy_prior_eps": 7.26
       },
-      "zScore": -0.6459826858306174
+      "zScore": -0.645982682384458
     },
     {
       "adjustedChangePct": -0.028255528255528257,
@@ -59647,7 +59632,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.6700553612220411,
+      "slope": 0.6700553614261537,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -59659,7 +59644,7 @@
       ],
       "sourceUniverseNetShares": 1094000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.7137465659529146
+      "zScore": -0.7137465661184368
     },
     {
       "adjustedChangePct": 0.006006006006006006,
@@ -59775,7 +59760,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -60366,8 +60351,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -60384,7 +60369,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "234.4%",
+              "value": "179.7%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -60402,7 +60387,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "234.4%",
+              "value": "179.7%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -60654,7 +60639,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.06511519366129562,
+      "slope": 0.06511519297022418,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -60689,7 +60674,7 @@
         "proxy_current_eps": 8.07,
         "proxy_prior_eps": 7.33
       },
-      "zScore": -0.07887089761345666
+      "zScore": -0.07887088953446303
     },
     {
       "adjustedChangePct": 0.009523809523809525,
@@ -60754,18 +60739,18 @@
         "earnings_growth": 0.09120247955356775,
         "growth_method": "five_year_eps_cagr",
         "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
-        "dividend_yield": 0.0325377358490566,
+        "dividend_yield": 0.035936621320754716,
         "conservative_growth": 0.07296198364285421,
-        "total_return_pct": 10.54997194919108,
-        "total_return_pe": 0.40907219655645916,
+        "total_return_pct": 10.889860496360892,
+        "total_return_pe": 0.42225127942461776,
         "forward_eps": 4.420603372608559,
-        "fair_pe": 10.54997194919108,
-        "fair_price": 46.63724157951978,
-        "buy_zone_price": 38.86436798293315,
+        "fair_pe": 10.889860496360892,
+        "fair_price": 48.13975403744968,
+        "buy_zone_price": 40.11646169787473,
         "undervalued": false,
         "reasonable": false,
         "extreme_extrapolation": false,
-        "raw_fair_price": 46.63724157951978,
+        "raw_fair_price": 48.13975403744968,
         "growth_valid_years": 4,
         "growth_years": 3,
         "annual_eps": {
@@ -60805,7 +60790,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -61396,8 +61381,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -61414,7 +61399,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "310.7%",
+              "value": "320.7%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -61432,7 +61417,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "310.7%",
+              "value": "320.7%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -61684,7 +61669,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.04163921935712557,
+      "slope": 0.04163922116843986,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -61719,7 +61704,7 @@
         "proxy_current_eps": 3.82,
         "proxy_prior_eps": 3.56
       },
-      "zScore": 1.979075364937503
+      "zScore": 1.9790754129735941
     },
     {
       "adjustedChangePct": -0.0016891891891891893,
@@ -61829,7 +61814,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
@@ -62379,7 +62364,7 @@
         {
           "key": "dividend",
           "label": "定存股",
-          "passCount": 0,
+          "passCount": 2,
           "total": 5,
           "threshold": 5,
           "status": "fail",
@@ -62423,8 +62408,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -62440,8 +62425,8 @@
             },
             {
               "label": "股息發放率五年內有三年大於 50%",
-              "status": "fail",
-              "value": "49.0%",
+              "status": "pass",
+              "value": "196.1%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -62458,8 +62443,8 @@
             },
             {
               "label": "股息發放率五年平均大於 50%",
-              "status": "fail",
-              "value": "49.0%",
+              "status": "pass",
+              "value": "196.1%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -62484,7 +62469,7 @@
         "valuationDate": "2026-10-02"
       },
       "healthScore": {
-        "passCount": 16,
+        "passCount": 18,
         "total": 33,
         "status": "fail"
       },
@@ -62711,7 +62696,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.29364407060221903,
+      "slope": 0.29364407064373976,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -62746,7 +62731,7 @@
         "proxy_current_eps": 9.01,
         "proxy_prior_eps": 6.37
       },
-      "zScore": 0.8994578855706954
+      "zScore": 0.8994578854791152
     },
     {
       "adjustedChangePct": -0.03347280334728033,
@@ -63742,7 +63727,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 2.0598608497555446,
+      "slope": 2.0598608490050516,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -63777,7 +63762,7 @@
         "proxy_current_eps": 31.0,
         "proxy_prior_eps": 17.9
       },
-      "zScore": 2.180503586016814
+      "zScore": 2.1805035767259415
     },
     {
       "adjustedChangePct": 0.007614213197969543,
@@ -64773,7 +64758,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.45357208731736753,
+      "slope": 0.45357208690468553,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -64785,7 +64770,7 @@
       ],
       "sourceUniverseNetShares": 961300.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.4217610668223961
+      "zScore": 0.4217610697641777
     },
     {
       "adjustedChangePct": -0.010498687664041995,
@@ -64901,7 +64886,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -65492,8 +65477,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
@@ -65510,7 +65495,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "119.8%",
+              "value": "72.3%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -65528,7 +65513,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "119.8%",
+              "value": "72.3%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -65781,7 +65766,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 1.9456278758620074,
+      "slope": 1.945627874711014,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -65816,7 +65801,7 @@
         "proxy_current_eps": 23.14,
         "proxy_prior_eps": 13.56
       },
-      "zScore": 1.0427293642282924
+      "zScore": 1.0427293644946058
     },
     {
       "adjustedChangePct": 0.09940357852882704,
@@ -66813,7 +66798,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.4645616549864768,
+      "slope": 0.46456165493414875,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -66848,7 +66833,7 @@
         "proxy_current_eps": 2.74,
         "proxy_prior_eps": 1.45
       },
-      "zScore": 2.5334946031145202
+      "zScore": 2.533494603305513
     },
     {
       "adjustedChangePct": 0.0,
@@ -66913,7 +66898,7 @@
         "earnings_growth": -0.01403891522634626,
         "growth_method": "five_year_eps_cagr",
         "growth_method_label": "EPS CAGR（2022–2025，3 年跨度）",
-        "dividend_yield": 0.031932773109243695,
+        "dividend_yield": 0.030615432100840338,
         "conservative_growth": null,
         "total_return_pct": null,
         "total_return_pe": null,
@@ -66963,7 +66948,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -67554,8 +67539,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
@@ -67572,7 +67557,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "74.2%",
+              "value": "62.5%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -67590,7 +67575,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "74.2%",
+              "value": "62.5%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -67843,7 +67828,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.04682441132163223,
+      "slope": 0.046824411056166915,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -67878,7 +67863,7 @@
         "proxy_current_eps": 5.77,
         "proxy_prior_eps": 4.07
       },
-      "zScore": 1.9495980643690987
+      "zScore": 1.9495980750150326
     },
     {
       "adjustedChangePct": -0.03514376996805112,
@@ -68874,7 +68859,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 1.0278835135034974,
+      "slope": 1.0278835126727857,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -68909,7 +68894,7 @@
         "proxy_current_eps": 9.08,
         "proxy_prior_eps": 6.55
       },
-      "zScore": 2.6025237474930054
+      "zScore": 2.602523748956279
     },
     {
       "adjustedChangePct": -0.042134831460674156,
@@ -69906,7 +69891,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.08409136616907016,
+      "slope": 0.08409136621419332,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -69941,7 +69926,7 @@
         "proxy_current_eps": 4.35,
         "proxy_prior_eps": 2.51
       },
-      "zScore": 6.074470735721973
+      "zScore": 6.074470736780148
     },
     {
       "adjustedChangePct": 0.05436893203883495,
@@ -70056,7 +70041,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
@@ -70649,8 +70634,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
@@ -70667,7 +70652,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "fail",
-              "value": "47.8%",
+              "value": "23.9%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -70685,7 +70670,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "fail",
-              "value": "47.8%",
+              "value": "23.9%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -70938,7 +70923,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.5262026796976594,
+      "slope": 0.5262026797075382,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -70973,7 +70958,7 @@
         "proxy_current_eps": 5.01,
         "proxy_prior_eps": 3.82
       },
-      "zScore": 1.846198853227319
+      "zScore": 1.8461988470100799
     },
     {
       "adjustedChangePct": 0.01639344262295082,
@@ -71968,7 +71953,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.0572573451686431,
+      "slope": -0.05725734370152755,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -71980,7 +71965,7 @@
       ],
       "sourceUniverseNetShares": 1324570.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.7117821983286763
+      "zScore": 1.711782179842485
     },
     {
       "adjustedChangePct": 0.0066815144766146995,
@@ -72975,7 +72960,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.21132441155071677,
+      "slope": 0.21132441148802714,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -73010,7 +72995,7 @@
         "proxy_current_eps": 5.51,
         "proxy_prior_eps": 4.7
       },
-      "zScore": 0.9054885780215078
+      "zScore": 0.9054885782822892
     },
     {
       "adjustedChangePct": -0.01532567049808429,
@@ -74006,7 +73991,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 1.3011743091654495,
+      "slope": 1.3011743114092034,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -74041,7 +74026,7 @@
         "proxy_current_eps": 48.08,
         "proxy_prior_eps": 32.89
       },
-      "zScore": 1.4472077090867594
+      "zScore": 1.4472077188118702
     },
     {
       "adjustedChangePct": 0.0035798975111969097,
@@ -75035,7 +75020,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.044652450037262856,
+      "slope": 0.04465244979950279,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -75070,7 +75055,7 @@
         "proxy_current_eps": 5.02,
         "proxy_prior_eps": 3.48
       },
-      "zScore": 0.48017904463948174
+      "zScore": 0.48017905250815396
     },
     {
       "adjustedChangePct": -0.013114754098360656,
@@ -76065,7 +76050,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 1.0377213623262218,
+      "slope": 1.0377213623143375,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -76077,7 +76062,7 @@
       ],
       "sourceUniverseNetShares": 584944.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.8245692490279204
+      "zScore": 2.8245692437247563
     },
     {
       "adjustedChangePct": 0.05491990846681922,
@@ -77071,7 +77056,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.08173957057464723,
+      "slope": 0.08173957028823585,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -77083,7 +77068,7 @@
       ],
       "sourceUniverseNetShares": 4801000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.351849841549197
+      "zScore": 3.351849835267953
     },
     {
       "adjustedChangePct": 0.01090909090909091,
@@ -78077,7 +78062,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.11283493007126653,
+      "slope": -0.11283493043700554,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -78089,7 +78074,7 @@
       ],
       "sourceUniverseNetShares": 730000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.0474774633904322
+      "zScore": 1.0474774485874392
     },
     {
       "adjustedChangePct": -0.010498687664041995,
@@ -79083,7 +79068,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.34050073024360356,
+      "slope": 0.3405007326293747,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -79095,7 +79080,7 @@
       ],
       "sourceUniverseNetShares": 1109761.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.2028862266362497
+      "zScore": 2.2028862265642304
     },
     {
       "adjustedChangePct": 0.0091324200913242,
@@ -80090,7 +80075,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 1.1799597603134298,
+      "slope": 1.1799597615131487,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -80125,7 +80110,7 @@
         "proxy_current_eps": 19.43,
         "proxy_prior_eps": 11.54
       },
-      "zScore": 0.9130644508029695
+      "zScore": 0.9130644501038779
     },
     {
       "adjustedChangePct": 0.005188087338460432,
@@ -81119,7 +81104,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.00814353120351983,
+      "slope": -0.008143531309884221,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -81154,7 +81139,7 @@
         "proxy_current_eps": 0.75,
         "proxy_prior_eps": 0.7100000000000001
       },
-      "zScore": 1.7279216818521237
+      "zScore": 1.7279216797892811
     },
     {
       "adjustedChangePct": -0.005870841487279843,
@@ -82146,7 +82131,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 2.5487367589199805,
+      "slope": 2.54873675973346,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -82181,7 +82166,7 @@
         "proxy_current_eps": 46.62,
         "proxy_prior_eps": 25.29
       },
-      "zScore": 1.9506397825631194
+      "zScore": 1.950639780118595
     },
     {
       "adjustedChangePct": 0.01348747591522158,
@@ -83177,7 +83162,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.3686824379471142,
+      "slope": 0.36868243774552695,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -83212,7 +83197,7 @@
         "proxy_current_eps": null,
         "proxy_prior_eps": null
       },
-      "zScore": 2.579992647631456
+      "zScore": 2.5799926475019053
     },
     {
       "adjustedChangePct": 0.028169014084507043,
@@ -84206,7 +84191,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.7573576124405939,
+      "slope": 0.757357614654637,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -84241,7 +84226,7 @@
         "proxy_current_eps": 3.0100000000000002,
         "proxy_prior_eps": 0.31000000000000005
       },
-      "zScore": 3.33989595043891
+      "zScore": 3.3398959525526926
     },
     {
       "adjustedChangePct": 0.0967741935483871,
@@ -85237,7 +85222,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.3277655977086797,
+      "slope": 0.3277655961096485,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -85249,7 +85234,7 @@
       ],
       "sourceUniverseNetShares": 1042021.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.9785111665787722
+      "zScore": 2.9785111614527784
     },
     {
       "adjustedChangePct": -0.0031282586027111575,
@@ -86245,7 +86230,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 1.1650971853816705,
+      "slope": 1.165097181476493,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -86257,7 +86242,7 @@
       ],
       "sourceUniverseNetShares": 1219481.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.12098110868636458
+      "zScore": 0.12098111320506535
     },
     {
       "adjustedChangePct": 0.007874015748031496,
@@ -87253,7 +87238,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.052414449204741274,
+      "slope": -0.05241444973180952,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -87265,7 +87250,7 @@
       ],
       "sourceUniverseNetShares": 1047350.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -1.2297912274129765
+      "zScore": -1.2297912468060253
     },
     {
       "adjustedChangePct": 0.009523768003295068,
@@ -88259,7 +88244,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.05301009722793545,
+      "slope": 0.05301009772945247,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -88271,7 +88256,7 @@
       ],
       "sourceUniverseNetShares": 744000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.2008611892059327
+      "zScore": 1.2008611862905267
     },
     {
       "adjustedChangePct": -0.011086474876199959,
@@ -89265,7 +89250,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.011086711545158345,
+      "slope": 0.011086710582976549,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -89277,7 +89262,7 @@
       ],
       "sourceUniverseNetShares": 643461.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.6723766753679934
+      "zScore": 0.6723766992856067
     },
     {
       "adjustedChangePct": 0.059084197641221,
@@ -90273,7 +90258,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.021882256702689538,
+      "slope": -0.02188225696132139,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -90285,7 +90270,7 @@
       ],
       "sourceUniverseNetShares": 863000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.703009830233455
+      "zScore": 2.7030098247095236
     },
     {
       "adjustedChangePct": -0.012278328627672865,
@@ -91279,7 +91264,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.007181856576179207,
+      "slope": 0.007181856676341486,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -91291,7 +91276,7 @@
       ],
       "sourceUniverseNetShares": 815151.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.6128145647942327
+      "zScore": 0.61281458891526
     },
     {
       "adjustedChangePct": 0.02906976615241445,
@@ -92289,7 +92274,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.011487118806752522,
+      "slope": 0.011487118675282569,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -92301,7 +92286,7 @@
       ],
       "sourceUniverseNetShares": 902000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.3803634136531007
+      "zScore": 2.38036341391204
     },
     {
       "adjustedChangePct": -0.02441860465116279,
@@ -94267,7 +94252,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.17944195119156156,
+      "slope": 0.17944195086221817,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -94278,7 +94263,6 @@
       ],
       "sourceUniverseNetShares": 1585000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.8285180139217054,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 257.5,
@@ -94301,7 +94285,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 6.15,
         "proxy_prior_eps": 5.890000000000001
-      }
+      },
+      "zScore": 2.82851801540877
     },
     {
       "adjustedChangePct": 0.1,
@@ -95266,7 +95251,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.3819230394080771,
+      "slope": 0.38192303928581744,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -95277,7 +95262,7 @@
       ],
       "sourceUniverseNetShares": 881017.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.388797916044126
+      "zScore": 2.388797915985149
     },
     {
       "adjustedChangePct": -0.01090909090909091,
@@ -96243,7 +96228,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 4.7798293719794085,
+      "slope": 4.7798293678109935,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -96254,7 +96239,6 @@
       ],
       "sourceUniverseNetShares": 676410.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 4.364170995596289,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 6800.0,
@@ -96277,7 +96261,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 36.76,
         "proxy_prior_eps": 24.15
-      }
+      },
+      "zScore": 4.364170995515637
     },
     {
       "adjustedChangePct": 0.0067339680287276235,
@@ -96392,7 +96377,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -96957,8 +96942,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -96974,7 +96959,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "655.6%",
+              "value": "538.9%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -96991,7 +96976,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "655.6%",
+              "value": "538.9%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -97242,7 +97227,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.0029646327454520764,
+      "slope": 0.0029646328216600838,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -97253,7 +97238,6 @@
       ],
       "sourceUniverseNetShares": 660028.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -1.0517564664671453,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 14.949999809265137,
@@ -97276,7 +97260,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 1.3599999999999999,
         "proxy_prior_eps": 0.97
-      }
+      },
+      "zScore": -1.0517564984757726
     },
     {
       "adjustedChangePct": -0.006024096385542169,
@@ -98243,7 +98228,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 3.271564127211193,
+      "slope": 3.271564122711801,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -98254,7 +98239,7 @@
       ],
       "sourceUniverseNetShares": 649117.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.093418191178882
+      "zScore": 3.093418190403517
     },
     {
       "adjustedChangePct": -0.006920415224913495,
@@ -99211,7 +99196,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.09970759155451643,
+      "slope": -0.0997075900716542,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -99222,7 +99207,7 @@
       ],
       "sourceUniverseNetShares": 632000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.801141408003999
+      "zScore": 2.801141423349633
     },
     {
       "adjustedChangePct": 0.0032733349907392135,
@@ -99337,7 +99322,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -99902,8 +99887,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -99919,7 +99904,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "337.7%",
+              "value": "363.6%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -99936,7 +99921,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "337.7%",
+              "value": "363.6%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -100187,7 +100172,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.012717539215956187,
+      "slope": 0.01271753908897998,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -100198,7 +100183,7 @@
       ],
       "sourceUniverseNetShares": 596350.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -1.1152877134836083
+      "zScore": -1.1152877140556374
     },
     {
       "adjustedChangePct": 0.015306148597900866,
@@ -100313,7 +100298,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [],
@@ -100878,8 +100863,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -100895,7 +100880,7 @@
             {
               "label": "股息發放率五年內有三年大於 50%",
               "status": "pass",
-              "value": "122.0%",
+              "value": "457.3%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作發放率代理。",
               "sourceRefs": [
@@ -100912,7 +100897,7 @@
             {
               "label": "股息發放率五年平均大於 50%",
               "status": "pass",
-              "value": "122.0%",
+              "value": "457.3%",
               "period": "最新年度代理",
               "explanation": "現金股利／EPS 作五年平均代理。",
               "sourceRefs": [
@@ -101163,7 +101148,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.022810887670240334,
+      "slope": 0.022810887834169253,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -101174,7 +101159,7 @@
       ],
       "sourceUniverseNetShares": 562428.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.1252888964049391
+      "zScore": -0.1252889023783447
     },
     {
       "adjustedChangePct": 0.026627218934911243,
@@ -102139,7 +102124,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.14535468392983164,
+      "slope": 0.14535468437504684,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -102150,7 +102135,6 @@
       ],
       "sourceUniverseNetShares": 559000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8633228122023806,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 173.5,
@@ -102173,7 +102157,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 5.47,
         "proxy_prior_eps": 4.52
-      }
+      },
+      "zScore": 0.8633228105984139
     },
     {
       "adjustedChangePct": -0.00398406374501992,
@@ -103139,7 +103124,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 2.2546163008763775,
+      "slope": 2.2546163015900293,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -103150,7 +103135,6 @@
       ],
       "sourceUniverseNetShares": 557783.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.7259272459088304,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 2500.0,
@@ -103173,7 +103157,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 66.26,
         "proxy_prior_eps": 45.26
-      }
+      },
+      "zScore": 1.7259272449888277
     },
     {
       "adjustedChangePct": -0.0020449391242753708,
@@ -103288,7 +103273,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
@@ -103855,8 +103840,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -104140,7 +104125,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.003502751009744313,
+      "slope": 0.003502751005064874,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -104151,7 +104136,7 @@
       ],
       "sourceUniverseNetShares": 548204.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -1.4298001033746957
+      "zScore": -1.4298000551850387
     },
     {
       "adjustedChangePct": 0.006153846153846154,
@@ -105117,7 +105102,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.7681067825854746,
+      "slope": 0.7681067828735944,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -105128,7 +105113,6 @@
       ],
       "sourceUniverseNetShares": 526000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.898525940013659,
       "valuation": {
         "method": "zulu-peg",
         "current_price": 981.0,
@@ -105151,7 +105135,8 @@
         "formula_version": "zulu-peg-eps-growth-v2",
         "proxy_current_eps": 8.13,
         "proxy_prior_eps": 1.48
-      }
+      },
+      "zScore": 2.898525940483907
     },
     {
       "adjustedChangePct": 0.01601423487544484,
@@ -105266,7 +105251,7 @@
             "origin": "derived",
             "sourcePeriod": "2025",
             "method": "sum_confirmed_annual_cash / same_day_close",
-            "source": "TWSE OpenAPI"
+            "source": "FinMind:TaiwanStockDividend"
           }
         },
         "missingReasons": [
@@ -105833,8 +105818,8 @@
             {
               "label": "連續五年都有發股息",
               "status": "unknown",
-              "value": "已確認 1 個完整年度",
-              "period": "2025–2025",
+              "value": "已確認 2 個完整年度",
+              "period": "2024–2025",
               "explanation": "尚無五個連續、已完成且已確認的年度股利；缺年度不視為零股利。",
               "sourceRefs": [
                 "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -106118,7 +106103,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.14904234299468982,
+      "slope": 0.14904234296133953,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -106129,7 +106114,7 @@
       ],
       "sourceUniverseNetShares": 498000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.480090940489726
+      "zScore": 2.4800909416309156
     },
     {
       "adjustedChangePct": -0.024390243902439025,
@@ -107094,7 +107079,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.1660263891669291,
+      "slope": 0.16602638974658535,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -107105,7 +107090,7 @@
       ],
       "sourceUniverseNetShares": 495000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.698192544050725
+      "zScore": 2.698192539810404
     },
     {
       "adjustedChangePct": 0.022455088794498614,
@@ -108072,7 +108057,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.04696158061946057,
+      "slope": -0.04696158040420637,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -108083,7 +108068,7 @@
       ],
       "sourceUniverseNetShares": 489000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.710533351548951
+      "zScore": 2.710533355759868
     },
     {
       "adjustedChangePct": -0.0071090047393364926,
@@ -109050,7 +109035,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 2.091266441678755,
+      "slope": 2.0912664380736556,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -109061,7 +109046,7 @@
       ],
       "sourceUniverseNetShares": 450551.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8772361926008214
+      "zScore": 0.8772361938398525
     }
   ],
   "rankings": {
@@ -109171,8 +109156,8 @@
         "growthValuationStatus": "available",
         "growthValuationReason": "可用的總報酬本益比（本站整理）",
         "priceBasis": "adjusted",
-        "zScore": -0.6459826858306174,
-        "slope": 0.06634704567479002,
+        "zScore": -0.645982682384458,
+        "slope": 0.06634704569647885,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -109312,8 +109297,8 @@
         "growthValuationStatus": "available",
         "growthValuationReason": "可用的總報酬本益比（本站整理）",
         "priceBasis": "adjusted",
-        "zScore": 1.4472077090867594,
-        "slope": 1.3011743091654495,
+        "zScore": 1.4472077188118702,
+        "slope": 1.3011743114092034,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -109461,8 +109446,8 @@
         "growthValuationStatus": "available",
         "growthValuationReason": "可用的總報酬本益比（本站整理）",
         "priceBasis": "adjusted",
-        "zScore": 1.8086222779188137,
-        "slope": 0.09325256759016079,
+        "zScore": 1.808622250189599,
+        "slope": 0.09325256824409382,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -109506,7 +109491,7 @@
         "code": "2547",
         "name": "日勝生",
         "sector": "",
-        "value": -1.4298001033746957,
+        "value": -1.4298000551850387,
         "valueLabel": "",
         "status": "unknown",
         "growthHealth": {
@@ -109526,8 +109511,8 @@
         "valuePrice066": null,
         "currentPrice": 9.760000228881836,
         "priceBasis": "adjusted",
-        "zScore": -1.4298001033746957,
-        "slope": 0.003502751009744313,
+        "zScore": -1.4298000551850387,
+        "slope": 0.003502751005064874,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -109568,7 +109553,7 @@
         "code": "4915",
         "name": "致伸",
         "sector": "",
-        "value": -1.2176446848119864,
+        "value": -1.2176447141763025,
         "valueLabel": "",
         "status": "fail",
         "growthHealth": {
@@ -109597,8 +109582,8 @@
         "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -1.2176446848119864,
-        "slope": 0.016416980953533583,
+        "zScore": -1.2176447141763025,
+        "slope": 0.016416980803642983,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -109639,7 +109624,7 @@
         "code": "2504",
         "name": "國產",
         "sector": "",
-        "value": -1.1152877134836083,
+        "value": -1.1152877140556374,
         "valueLabel": "",
         "status": "fail",
         "growthHealth": {
@@ -109659,8 +109644,8 @@
         "valuePrice066": null,
         "currentPrice": 30.649999618530273,
         "priceBasis": "adjusted",
-        "zScore": -1.1152877134836083,
-        "slope": 0.012717539215956187,
+        "zScore": -1.1152877140556374,
+        "slope": 0.01271753908897998,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -109701,7 +109686,7 @@
         "code": "9907",
         "name": "統一實",
         "sector": "",
-        "value": -1.0517564664671453,
+        "value": -1.0517564984757726,
         "valueLabel": "",
         "status": "fail",
         "growthHealth": {
@@ -109730,8 +109715,8 @@
         "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -1.0517564664671453,
-        "slope": 0.0029646327454520764,
+        "zScore": -1.0517564984757726,
+        "slope": 0.0029646328216600838,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -109772,7 +109757,7 @@
         "code": "3293",
         "name": "鈊象",
         "sector": "",
-        "value": -0.7137465659529146,
+        "value": -0.7137465661184368,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -109792,8 +109777,8 @@
         "valuePrice066": null,
         "currentPrice": 791.0,
         "priceBasis": "adjusted",
-        "zScore": -0.7137465659529146,
-        "slope": 0.6700553612220411,
+        "zScore": -0.7137465661184368,
+        "slope": 0.6700553614261537,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -109834,7 +109819,7 @@
         "code": "3005",
         "name": "神基",
         "sector": "",
-        "value": -0.6459826858306174,
+        "value": -0.645982682384458,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -109863,8 +109848,8 @@
         "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -0.6459826858306174,
-        "slope": 0.06634704567479002,
+        "zScore": -0.645982682384458,
+        "slope": 0.06634704569647885,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -109905,7 +109890,7 @@
         "code": "2542",
         "name": "興富發",
         "sector": "",
-        "value": -0.22790989790962965,
+        "value": -0.22790988749265376,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -109925,8 +109910,8 @@
         "valuePrice066": null,
         "currentPrice": 38.75,
         "priceBasis": "adjusted",
-        "zScore": -0.22790989790962965,
-        "slope": 0.011874795018621733,
+        "zScore": -0.22790988749265376,
+        "slope": 0.011874794951586913,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -109967,7 +109952,7 @@
         "code": "2609",
         "name": "陽明",
         "sector": "",
-        "value": -0.1252888964049391,
+        "value": -0.1252889023783447,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -109987,8 +109972,8 @@
         "valuePrice066": null,
         "currentPrice": 59.70000076293945,
         "priceBasis": "adjusted",
-        "zScore": -0.1252888964049391,
-        "slope": 0.022810887670240334,
+        "zScore": -0.1252889023783447,
+        "slope": 0.022810887834169253,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -110029,7 +110014,7 @@
         "code": "1513",
         "name": "中興電",
         "sector": "",
-        "value": -0.07887089761345666,
+        "value": -0.07887088953446303,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -110058,8 +110043,8 @@
         "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -0.07887089761345666,
-        "slope": 0.06511519366129562,
+        "zScore": -0.07887088953446303,
+        "slope": 0.06511519297022418,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -110100,7 +110085,7 @@
         "code": "2317",
         "name": "鴻海",
         "sector": "",
-        "value": -0.027710352701119195,
+        "value": -0.027710364724812135,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -110129,8 +110114,8 @@
         "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -0.027710352701119195,
-        "slope": 0.2006137029759898,
+        "zScore": -0.027710364724812135,
+        "slope": 0.20061370459463002,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -110173,7 +110158,7 @@
         "code": "2317",
         "name": "鴻海",
         "sector": "",
-        "value": -0.027710352701119195,
+        "value": -0.027710364724812135,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -110247,8 +110232,8 @@
         "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -0.027710352701119195,
-        "slope": 0.2006137029759898,
+        "zScore": -0.027710364724812135,
+        "slope": 0.20061370459463002,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -110289,7 +110274,7 @@
         "code": "9907",
         "name": "統一實",
         "sector": "",
-        "value": -1.0517564664671453,
+        "value": -1.0517564984757726,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -110349,8 +110334,8 @@
         "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -1.0517564664671453,
-        "slope": 0.0029646327454520764,
+        "zScore": -1.0517564984757726,
+        "slope": 0.0029646328216600838,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -110393,7 +110378,7 @@
         "code": "2317",
         "name": "鴻海",
         "sector": "",
-        "value": -0.027710352701119195,
+        "value": -0.027710364724812135,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -110453,8 +110438,8 @@
         "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -0.027710352701119195,
-        "slope": 0.2006137029759898,
+        "zScore": -0.027710364724812135,
+        "slope": 0.20061370459463002,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -110497,7 +110482,7 @@
         "code": "2317",
         "name": "鴻海",
         "sector": "",
-        "value": -0.027710352701119195,
+        "value": -0.027710364724812135,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -110557,8 +110542,8 @@
         "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -0.027710352701119195,
-        "slope": 0.2006137029759898,
+        "zScore": -0.027710364724812135,
+        "slope": 0.20061370459463002,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -110599,7 +110584,7 @@
         "code": "9907",
         "name": "統一實",
         "sector": "",
-        "value": -1.0517564664671453,
+        "value": -1.0517564984757726,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -110659,8 +110644,8 @@
         "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -1.0517564664671453,
-        "slope": 0.0029646327454520764,
+        "zScore": -1.0517564984757726,
+        "slope": 0.0029646328216600838,
         "regressionStart": "2023-04-06",
         "regressionEnd": "2026-10-02",
         "regressionObservations": 851,
@@ -110740,7 +110725,7 @@
       },
       {
         "reason": "earningsGrowth",
-        "count": 11
+        "count": 15
       },
       {
         "reason": "pe",
