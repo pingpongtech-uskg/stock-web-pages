@@ -93,7 +93,17 @@ function restoreDispatchInputs(state){
   const source=state.restoreOriginalSource;
   return {restore_commit:state.restoreCommitSha,restore_descriptor_sha256:state.restoreDescriptorSha256,restore_cache_market_date:state.restoreCacheMarketDate,restore_source_git_commit:source.sourceGitCommit,restore_actions_run_id:source.actionsRunId,restore_request_id:source.requestId};
 }
+function restoreTreeQuery(state){
+  restoreCheck(restoreSha(state.restoreTreeSha)&&(state.restoreTreeLookupSha===undefined||state.restoreTreeLookupSha===state.restoreTreeSha),'tree_query');
+  return state.restoreObjectIntent===state.restoreTreeSha?'?recursive=0':state.restoreTreeLookupSha===state.restoreTreeSha?'?recursive=1':'';
+}
 function nextRestore(state,api){
+  if(['restoreTreeCreate','restoreCommitCreate'].includes(state.stage)||['restoreTreeGet','restoreCommitGet'].includes(state.stage)&&state.restoreTransient?.files&&(!state.restoreTreeEntries||!state.restoreCommitBody)){
+    restoreCheck(state.restoreTransient?.files&&restoreSha(state.restoreTreeSha)&&restoreSha(state.restoreCommitSha),'derived_objects');
+    const prepared=prepareTree({...state,restoreGitFiles:state.restoreGitFiles||Object.keys(state.restoreTransient.files).sort()});
+    restoreCheck(prepared.restoreTreeSha===state.restoreTreeSha&&prepared.restoreCommitSha===state.restoreCommitSha,'derived_objects');
+    state=prepared;
+  }
   switch(state.stage){
     case 'restoreState':return beginRestore(state,api);
     case 'restoreIndexRef':return beginRestore({...state,restoreCacheCandidateDate:undefined},api);
@@ -104,7 +114,7 @@ function nextRestore(state,api){
       return api.request({...state,restoreObjectSha:sha},'restoreBlobGet','github','GET',`${RESTORE_REPO}/git/blobs/${sha}`);
     }
     case 'restoreBlobCreate':return api.request(state,'restoreBlobCreate','github','POST',`${RESTORE_REPO}/git/blobs`,{encoding:'base64',content:state.restoreTransient.files[state.restoreGitFiles[state.restoreBlobCursor]]});
-    case 'restoreTreeGet':return api.request(state,'restoreTreeGet','github','GET',`${RESTORE_REPO}/git/trees/${state.restoreTreeSha}`);
+    case 'restoreTreeGet':return api.request(state,'restoreTreeGet','github','GET',`${RESTORE_REPO}/git/trees/${state.restoreTreeSha}${restoreTreeQuery(state)}`);
     case 'restoreTreeCreate':return api.request(state,'restoreTreeCreate','github','POST',`${RESTORE_REPO}/git/trees`,{tree:state.restoreTreeEntries});
     case 'restoreCommitGet':return api.request(state,'restoreCommitGet','github','GET',`${RESTORE_REPO}/git/commits/${state.restoreCommitSha}`);
     case 'restoreCommitCreate':return api.request(state,'restoreCommitCreate','github','POST',`${RESTORE_REPO}/git/commits`,state.restoreCommitBody);
@@ -117,7 +127,7 @@ function ambiguousRestore(state,api){
   const stage={restoreBlobCreate:'restoreBlobGet',restoreTreeCreate:'restoreTreeGet',restoreCommitCreate:'restoreCommitGet',restoreRefCreate:'restoreRefGet'}[state.stage];
   restoreCheck(stage,'ambiguous_stage');return nextRestore({...state,stage,restoreAmbiguousObject:true},api);
 }
-function restoreVerifiedRead(state){const {restoreReconcileKey,restoreReconcileAttempt,...verified}=state;return verified;}
+function restoreVerifiedRead(state){const {restoreReconcileKey,restoreReconcileAttempt,restoreTreeLookupSha,...verified}=state;return verified;}
 function reconcileRestoreRead(state,now,api){
   const ref=state.stage==='restoreRefGet',sha=state.stage==='restoreBlobGet'?state.restoreObjectSha:state.stage==='restoreTreeGet'?state.restoreTreeSha:state.restoreCommitSha;
   const key=state.stage+':'+sha+(ref?':'+state.restoreManifestHash:''),attempt=state.restoreReconcileKey===key?state.restoreReconcileAttempt:0;
@@ -127,11 +137,12 @@ function reconcileRestoreRead(state,now,api){
   const delay=2**attempt;
   if(!Number.isFinite(now)||now+delay*1000>=state.deadline)return pending();
   const path=ref?'/git/ref/heads/n8n-cache-restore/'+state.restoreManifestHash:'/git/'+({restoreBlobGet:'blobs',restoreTreeGet:'trees',restoreCommitGet:'commits'})[state.stage]+'/'+sha;
-  return api.request({...state,restoreReconcileKey:key,restoreReconcileAttempt:attempt+1},state.stage,'github','GET',RESTORE_REPO+path,undefined,delay);
+  return api.request({...state,restoreReconcileKey:key,restoreReconcileAttempt:attempt+1},state.stage,'github','GET',RESTORE_REPO+path+(state.stage==='restoreTreeGet'?restoreTreeQuery(state):''),undefined,delay);
 }
 function advanceRestore(state,response,now,api){
   const body=response.body,status=response.statusCode;
   if(status===404&&['restoreBlobGet','restoreTreeGet','restoreCommitGet','restoreRefGet'].includes(state.stage)){
+    if(state.stage==='restoreTreeGet'&&!state.restoreAmbiguousObject&&state.restoreObjectIntent!==state.restoreTreeSha&&state.restoreTreeLookupSha!==state.restoreTreeSha)return nextRestore({...state,restoreTreeLookupSha:state.restoreTreeSha},api);
     if(state.restoreAmbiguousObject||state.restoreObjectIntent===state.restoreObjectSha&&state.stage==='restoreBlobGet'||state.restoreObjectIntent===state.restoreTreeSha&&state.stage==='restoreTreeGet'||state.restoreObjectIntent===state.restoreCommitSha&&state.stage==='restoreCommitGet'||state.restoreRefIntent&&state.stage==='restoreRefGet')return reconcileRestoreRead(state,now,api);
     const stage=state.stage.replace('Get','Create'),sha=state.stage==='restoreTreeGet'?state.restoreTreeSha:state.stage==='restoreCommitGet'?state.restoreCommitSha:state.restoreObjectSha;
     return api.checkpoint({...state,restoreObjectIntent:sha,...(state.stage==='restoreRefGet'?{restoreRefIntent:true}:{})},stage);
