@@ -113193,5 +113193,28 @@
     }
   },
   "acquisitionMode": "cached_recompute",
-  "nextExpectedUpdateBasis": "exchange_calendar"
+  "nextExpectedUpdateBasis": "exchange_calendar",
+  "inputHash": "0db3241a60ce6900ca4806bbed0922dfc125063ea1f104ec00df94c50257a700",
+  "codeCommit": "5f3fc493c7a3e06ce64497ac6212b454df03cb08",
+  "formulaVersions": {
+    "regression": "lohas-linear-3.5y-research-v1",
+    "valuation": "zulu-peg-eps-growth-v2",
+    "growthValuation": "growth-total-return-pe-v1",
+    "growthFallback": "growth-proxy-chain-v1",
+    "ranking": "three-strategy-tabs-v1"
+  },
+  "rankingsHash": "3937a44295b6636b781218f8615bb006d6b6df1515e9fe2b54767f814da388b2",
+  "baselineRunId": "enriched-20261004-084306-55b9107f29",
+  "enrichment": {
+    "adjustedPriceSource": "yfinance Adj Close when available; Yahoo chart fallback is tagged",
+    "fundamentalSource": "yfinance:Ticker.financials/cashflow/balance_sheet",
+    "adjustedStocks": 100,
+    "trackedStocks": 100,
+    "errorsByCode": {}
+  },
+  "ownershipCorrection": {
+    "mode": "cache_only",
+    "baselineRunId": "enriched-20261004-084306-55b9107f29",
+    "snapshotSha256": "9fcaadb5a86977c2733df3a7e0ee957ad9c8a1cc434c30ecf8a20b76565dd6bc"
+  }
 }
