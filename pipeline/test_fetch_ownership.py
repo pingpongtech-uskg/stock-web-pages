@@ -49,7 +49,7 @@ def test_snapshot_marks_source_failure_stale_and_never_fakes_zeroes():
     old = {"schemaVersion": OWNERSHIP_SNAPSHOT_VERSION, "rows": [{"code": "2330", "period": "2026-08", "largeHolderPct": 4.1}]}
     snapshot = build_snapshot(old, [], requested_codes=["2330"], retrieved_at="2026-09-01T00:00:00+08:00")
     assert snapshot["status"] == "stale"
-    assert snapshot["rows"] == old["rows"]
+    assert snapshot["rows"][0]["largeHolderPct"] == old["rows"][0]["largeHolderPct"]
     assert snapshot["rows"][0]["shareholderCount"] if "shareholderCount" in snapshot["rows"][0] else True
     assert snapshot["rows"][0].get("largeHolderPct") == 4.1
     assert snapshot["rows"][0].get("shareholderCount") != 0
@@ -101,7 +101,7 @@ def test_history_get_and_post_share_hard_request_cap(monkeypatch):
     class Opener:
         def open(self, request, timeout):
             calls.append((request.get_method(), timeout))
-            return io.BytesIO(b'<html></html>')
+            return io.BytesIO(b'<select name="scaDate"><option value="20260828">date</option><option value="20260924">date</option><option value="20261002">date</option></select><input name="SYNCHRONIZER_TOKEN" value="public-test"><span>\xe8\xb3\x87\xe6\x96\x99\xe6\x97\xa5\xe6\x9c\x9f\xef\xbc\x9a115\xe5\xb9\xb408\xe6\x9c\x8828\xe6\x97\xa5</span>')
     monkeypatch.setattr(urllib.request, 'build_opener', lambda *args: Opener())
     budget = ownership.OwnershipBudget(max_runtime_seconds=180, max_requests=3, max_history_requests=3)
     with pytest.raises(ownership.OwnershipLimit, match='request_limit'):
@@ -130,10 +130,11 @@ def test_tdcc_history_never_requests_after_exact_asof(monkeypatch):
         def open(self, request, timeout):
             if request.data:
                 dates.append(parse_qs(request.data.decode())['firDate'][0])
-            return io.BytesIO(b'<html></html>')
+                return io.BytesIO('<span>資料日期：115年10月02日</span>'.encode())
+            return io.BytesIO(b'<select name="scaDate"><option value="20260828">date</option><option value="20260924">date</option><option value="20261002">date</option></select><input name="SYNCHRONIZER_TOKEN" value="public-test"><span>\xe8\xb3\x87\xe6\x96\x99\xe6\x97\xa5\xe6\x9c\x9f\xef\xbc\x9a115\xe5\xb9\xb408\xe6\x9c\x8828\xe6\x97\xa5</span>')
     monkeypatch.setattr(urllib.request, 'build_opener', lambda *args: Opener())
     assert ownership.fetch_tdcc_historical('2330', ['2026-10'], as_of='2026-10-02') == []
-    assert dates == ['20261002', '20261001']
+    assert dates == ['20261002']
 
 
 def test_bulk_source_errors_are_sanitized_and_stale_cache_retained(tmp_path, monkeypatch):
@@ -171,7 +172,7 @@ def test_partial_director_bulk_survives_later_endpoint_failure(monkeypatch):
     monkeypatch.setattr(ownership, '_request', respond)
     errors = []
     rows = ownership.fetch_twse_director_rows(['2330'], on_error=lambda source, exc: errors.append((source, type(exc).__name__)))
-    assert rows[0]['directorSupervisorPct'] == 7
+    assert rows[0]['directorSupervisorPct'] is None
     assert errors == [('TWSE:t187ap11_P', 'TimeoutError')]
 
 
@@ -192,12 +193,13 @@ def test_history_success_is_checkpointed_before_later_request_cap(tmp_path, monk
     import io
     html = b'<table><tr><th>\xe5\xba\x8f</th><th>\xe6\x8c\x81\xe8\x82\xa1/\xe5\x96\xae\xe4\xbd\x8d\xe6\x95\xb8\xe5\x88\x86\xe7\xb4\x9a</th><th>\xe4\xba\xba\xe6\x95\xb8</th><th>\xe8\x82\xa1\xe6\x95\xb8/\xe5\x96\xae\xe4\xbd\x8d\xe6\x95\xb8</th><th>\xe5\x8d\xa0\xe9\x9b\x86\xe4\xbf\x9d%</th></tr><tr><td>15</td><td>large</td><td>1</td><td>100</td><td>4</td></tr><tr><td>17</td><td>\xe5\x90\x88\xe8\xa8\x88</td><td>10</td><td>1000</td><td>100</td></tr></table>'
     class Opener:
-        def open(self, request, timeout): return io.BytesIO(html if request.data else b'<html></html>')
+        def open(self, request, timeout):
+            return io.BytesIO(('<span>資料日期：115年07月31日</span>'.encode()+html) if request.data else b'<select name="scaDate"><option value="20260731">date</option></select><input name="SYNCHRONIZER_TOKEN" value="public-test">')
     monkeypatch.setattr(urllib.request, 'build_opener', lambda *args: Opener())
     monkeypatch.setattr(ownership, 'fetch_tdcc', lambda **kwargs: [])
     monkeypatch.setattr(ownership, 'fetch_twse_director_rows', lambda *args, **kwargs: [])
     result = ownership.acquire_snapshot(tmp_path / 'snapshot.json', ['2330'], as_of='2026-10-02', max_requests=3, max_history_requests=3)
-    assert result['rows'][0]['period'] == '2026-08'
+    assert result['rows'][0]['period'] == '2026-07'
     assert result['rows'][0]['largeHolderPct'] == 4 and result['status'] == 'stale'
     assert result['acquisition']['requests'] == 3
     assert result['acquisition']['errors'][-1]['category'] == 'request_limit'
@@ -216,8 +218,8 @@ def test_previous_verified_months_allow_history_budget_to_progress_on_retry(tmp_
     monkeypatch.setattr(ownership, 'fetch_tdcc_historical', historical)
     first = ownership.acquire_snapshot(output, ['2330'], as_of='2026-10-02')
     second = ownership.acquire_snapshot(output, ['2330'], as_of='2026-10-02')
-    assert requested == [('2330', ['2026-08', '2026-09', '2026-10']), ('2330', ['2026-09', '2026-10'])]
-    assert [row['period'] for row in second['rows']] == ['2026-08', '2026-09']
+    assert requested == [('2330', ['2026-07', '2026-08', '2026-09']), ('2330', ['2026-08', '2026-09'])]
+    assert [row['period'] for row in second['rows']] == ['2026-07', '2026-08']
     assert first['status'] == second['status'] == 'stale'
 
 
@@ -248,9 +250,9 @@ def test_cli_invalid_limits_or_codes_fail_before_http_and_write(tmp_path, monkey
 def test_all_three_target_months_required_for_current_status_not_arbitrary_old_history():
     old = [{'code': '2330', 'period': month, 'asOf': month + '-28', 'largeHolderPct': 4, 'shareholderCount': 10}
            for month in ['2026-07', '2026-08', '2026-09']]
-    assert build_snapshot(None, old, requested_codes=['2330'], as_of='2026-10-02')['status'] == 'stale'
+    assert build_snapshot(None, old, requested_codes=['2330'], as_of='2026-10-02')['status'] == 'current'
     valid = [{**row, 'period': month, 'asOf': month + '-01'} for row, month in zip(old, ['2026-08', '2026-09', '2026-10'])]
-    assert build_snapshot(None, valid, requested_codes=['2330'], as_of='2026-10-02')['status'] == 'current'
+    assert build_snapshot(None, valid, requested_codes=['2330'], as_of='2026-10-02')['status'] == 'stale'
 
 
 def test_streaming_body_deadline_is_checked_between_chunks_without_accepting_partial_data(monkeypatch):

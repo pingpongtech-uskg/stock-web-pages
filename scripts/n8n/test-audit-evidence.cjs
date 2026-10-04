@@ -5,7 +5,7 @@ function fixture(){const body={schemaVersion:'screening-export-v1',...expected,g
 test('modern audit evidence projects all actual numeric fields while preserving null, zero and metric text',()=>{
  assert.equal(typeof evidence.modernAuditEvidence,'function');const result=evidence.modernAuditEvidence(fixture(),expected);
  assert.equal(result.marketDate,expected.marketDate);assert.equal(result.revision,'b'.repeat(12));assert.equal(result.actionsRunId,'123');assert.equal(result.stocks.length,1);
- const stock=result.stocks[0];assert.equal(Object.keys(stock.metrics).length,16);assert.equal(stock.metrics.currentPrice,0);assert.equal(stock.metrics.ttmEps,null);assert.equal(stock.metrics.currentPe,null);assert.equal(Object.hasOwn(stock.metrics,'growthMethod'),false);assert.ok(stock.metricsJson.includes('eps_growth'));
+ const stock=result.stocks[0];assert.equal(Object.keys(stock.metrics).length,20);assert.equal(stock.metrics.currentPrice,0);assert.equal(stock.metrics['大股東持股比重最新'],null);assert.equal(stock.metrics.ttmEps,null);assert.equal(stock.metrics.currentPe,null);assert.equal(Object.hasOwn(stock.metrics,'growthMethod'),false);assert.ok(stock.metricsJson.includes('eps_growth'));
  assert.throws(()=>evidence.modernAuditEvidence(fixture(),{...expected,sourceGitCommit:'c'.repeat(40)}),/audit_source_commit/);
  assert.throws(()=>evidence.modernAuditEvidence(fixture(),{...expected,sourceGitCommit:'invalid'}),/audit_source_commit/);
  assert.throws(()=>evidence.modernAuditEvidence(fixture(),{...expected,actionsRunId:'124'}),/lineage/);

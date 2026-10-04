@@ -213,6 +213,9 @@ export interface ChipReferenceIndicator<TRaw = unknown> {
   period: string
   sourceRefs: string[]
   rawValues?: TRaw
+  sourceDates?: string[]
+  retrievedAt?: string | null
+  historicalBackfill?: boolean
 }
 
 export interface ChipReference {

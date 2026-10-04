@@ -1,6 +1,7 @@
 """Pure, bounded full-market source cache producer; no fetching or quota state."""
 from __future__ import annotations
 
+import base64
 import gzip
 import hashlib
 import json
@@ -169,10 +170,119 @@ def _calendar(body: Any, expected: dict[str, Any]) -> None:
     _check(sessions == expected['sessionDates'] and expected['volumeDates'] == sessions[-7:], 'calendar')
 
 
+def validate_ownership_bundle(bundle: Any, market_date: str) -> dict:
+    """Validate exact producer bytes independently of display evidence."""
+    _check(type(bundle) is dict and set(bundle) == {'schemaVersion', 'generationCommit', 'manifestSha256', 'filesBase64'}, 'ownership_bundle')
+    _check(bundle['schemaVersion'] == 'ownership-bundle-v1' and isinstance(bundle['generationCommit'], str)
+           and re.fullmatch('[a-f0-9]{40}', bundle['generationCommit']) is not None and _hash(bundle['manifestSha256']), 'ownership_bundle')
+    encoded = bundle['filesBase64']
+    _check(type(encoded) is dict and 3 <= len(encoded) <= 10000, 'ownership_files')
+    files, total = {}, 0
+    for name, value in encoded.items():
+        _check(isinstance(name, str) and re.fullmatch(r'(?:manifest|snapshot|ownership_snapshot|queue)\.json|receipts/[a-f0-9]{64}\.(?:raw|json)', name) is not None, 'ownership_path')
+        _check(isinstance(value, str) and len(value) <= MAX_RAW * 2, 'ownership_size')
+        try:
+            raw = base64.b64decode(value, validate=True)
+        except (ValueError, TypeError) as exc:
+            raise MarketCacheError('cache_ownership_encoding') from exc
+        total += len(raw)
+        _check(0 < len(raw) <= MAX_RAW and total <= MAX_TOTAL_RAW, 'ownership_size')
+        _check(base64.b64encode(raw).decode('ascii') == value, 'ownership_encoding')
+        files[name] = raw
+    _check('manifest.json' in files and sha(files['manifest.json']) == bundle['manifestSha256'], 'ownership_manifest')
+    try:
+        manifest = json.loads(files['manifest.json'])
+        snapshot = json.loads(files.get('snapshot.json', files.get('ownership_snapshot.json', b'')))
+        queue = json.loads(files['queue.json'])
+    except (ValueError, KeyError, UnicodeError) as exc:
+        raise MarketCacheError('cache_ownership_json') from exc
+    canonical(manifest); canonical(snapshot); canonical(queue)
+    _check(manifest.get('schemaVersion') == 'ownership-generation-v1' and _date(manifest.get('verifiedMarketDate'))
+           and manifest['verifiedMarketDate'] <= market_date and re.fullmatch('[a-f0-9]{40}', str(manifest.get('sourceGitCommit'))) is not None, 'ownership_manifest')
+    listed = manifest.get('files')
+    _check(isinstance(listed, list) and len(listed) == len(files) - 1, 'ownership_files')
+    seen = set()
+    for item in listed:
+        _check(type(item) is dict and set(item) == {'path', 'sha256', 'size'} and item['path'] in files
+               and item['path'] != 'manifest.json' and item['path'] not in seen, 'ownership_files')
+        seen.add(item['path'])
+        _check(type(item['size']) is int and item['size'] == len(files[item['path']]) and item['sha256'] == sha(files[item['path']]), 'ownership_hash')
+    _check(snapshot.get('schemaVersion') == 'ownership-snapshot-v1' and queue.get('schemaVersion') == 'ownership-queue-v1'
+           and snapshot.get('generationId') == manifest.get('generationId')
+           and snapshot.get('verifiedMarketDate') == queue.get('verifiedMarketDate') == manifest['verifiedMarketDate']
+           and isinstance(snapshot.get('rows'), list) and isinstance(queue.get('jobs'), list), 'ownership_semantics')
+    binding_keys = ('verifiedMarketDate', 'sourceGitCommit', 'requestId', 'actionsRunId', 'actionsRunAttempt', 'previousGeneration', 'rosterHash', 'targetMonths', 'formulaVersion', 'priorityRosterMarketDate', 'priorityRosterPublicationHash')
+    _check(all(key in manifest for key in binding_keys), 'ownership_binding')
+    binding = {key: manifest[key] for key in binding_keys}
+    from pipeline.ownership_checks import FORMULA_VERSION
+    _check(binding['formulaVersion'] == FORMULA_VERSION, 'ownership_formula')
+    _check(manifest['generationId'] == sha(canonical({'binding': binding, 'queueHash': sha(files['queue.json'])})), 'ownership_generation_hash')
+    _check(isinstance(queue.get('roster'), list) and binding['rosterHash'] == sha(canonical(queue['roster']))
+           and binding['targetMonths'] == queue.get('targetMonths'), 'ownership_roster')
+    _check(binding['priorityRosterMarketDate'] == queue.get('priorityRosterMarketDate') and binding['priorityRosterPublicationHash'] == queue.get('priorityRosterPublicationHash'), 'ownership_priority_roster')
+    _check(binding['priorityRosterMarketDate'] is None or _date(binding['priorityRosterMarketDate']) and binding['priorityRosterMarketDate'] <= manifest['verifiedMarketDate'], 'ownership_priority_date')
+    _check(binding['priorityRosterPublicationHash'] is None or _hash(binding['priorityRosterPublicationHash']), 'ownership_priority_hash')
+    from scripts.fetch_ownership import completed_months
+    _check(binding['targetMonths'] == completed_months(manifest['verifiedMarketDate']), 'ownership_months')
+    for receipt in queue.get('receipts', []):
+        _check(type(receipt) is dict, 'ownership_receipt')
+        name = 'receipts/' + str(receipt.get('rawFile'))
+        _check(name in files and receipt.get('rawSha256') == sha(files[name]) and receipt.get('rawBytes') == len(files[name]), 'ownership_receipt_hash')
+        url = urlsplit(str(receipt.get('sourceURL')))
+        _check(_source_url(receipt.get('sourceURL')) and url.hostname in {'mops.twse.com.tw', 'www.tdcc.com.tw', 'opendata.tdcc.com.tw', 'openapi.twse.com.tw', 'www.tpex.org.tw'}, 'ownership_origin')
+        parameters = receipt.get('parameters')
+        _check(type(parameters) is dict and not any(re.search('token|cookie|secret|csrf|password|authorization|credential|apikey', key, re.I) for key in parameters), 'ownership_private_parameter')
+        _check(receipt.get('rawSanitization') in {'none', 'transient-session-controls-removed', 'roster-filtered-csv-v1'} and _hash(receipt.get('originalResponseSha256')), 'ownership_sanitization')
+        if receipt.get('rawSanitization') == 'roster-filtered-csv-v1':
+            selected = receipt.get('selectedCodes')
+            _check(receipt.get('source') == 'TDCC_LATEST' and receipt.get('sourceURL') == 'https://opendata.tdcc.com.tw/getOD.ashx?id=1-5'
+                   and isinstance(selected, list) and 1 <= len(selected) <= 100 and len(set(selected)) == len(selected)
+                   and all(code in queue['roster'] for code in selected)
+                   and all(row.get('code') in selected for row in receipt.get('rows', [])), 'ownership_filtered_roster')
+        _check(not re.search(rb'SYNCHRONIZER_TOKEN|SYNCHRONIZER_URI', files[name], re.I), 'ownership_transient_control')
+        source_date = receipt.get('sourceDate')
+        _check(source_date is None or isinstance(source_date, str) and source_date <= manifest['verifiedMarketDate'], 'ownership_period')
+        metadata = 'receipts/' + str(receipt.get('receiptFile'))
+        _check(metadata in files and json.loads(files[metadata]) == receipt, 'ownership_receipt_metadata')
+    queue_rows = queue.get('rows')
+    _check(isinstance(queue_rows, list), 'ownership_rows')
+    receipt_map = {'receipts/' + str(item.get('receiptFile')): item for item in queue.get('receipts', [])}
+    queue_identities = {canonical(row) for row in queue_rows}
+    _check(all(canonical(row) in queue_identities for row in snapshot['rows']), 'ownership_snapshot_binding')
+    fields = ('code', 'period', 'asOf', 'sourceDate', 'largeHolderPct', 'shareholderCount', 'directorSupervisorPct', 'directorSupervisorShares', 'officialDirectorSupervisorShares', 'directorDenominator', 'directorIdentityConsistent')
+    metrics = fields[4:]
+    for row in queue_rows:
+        _check(type(row) is dict and row.get('code') in queue['roster'], 'ownership_row')
+        for key in ('period', 'asOf', 'sourceDate', 'publishedAt', 'availableAt'):
+            value = row.get(key)
+            _check(value is None or isinstance(value, str) and value[:10] <= manifest['verifiedMarketDate'], 'ownership_row_period')
+        top_receipt = receipt_map.get(row.get('rawReceiptPath'))
+        _check(top_receipt is not None and row.get('rawSha256') == top_receipt['rawSha256']
+               and row.get('sourceURL') == top_receipt['sourceURL'], 'ownership_row_receipt')
+        observations = row.get('sourceObservations') or [row]
+        _check(isinstance(observations, list) and observations, 'ownership_observations')
+        for observation in observations:
+            _check(type(observation) is dict and observation.get('code') == row['code'] and observation.get('period') == row.get('period'), 'ownership_observation')
+            for key in ('period', 'asOf', 'sourceDate', 'publishedAt', 'availableAt'):
+                value = observation.get(key)
+                _check(value is None or isinstance(value, str) and re.fullmatch(r'\d{4}-\d{2}(?:-\d{2})?(?:T[^ ]+)?', value)
+                       and value[:10] <= manifest['verifiedMarketDate'], 'ownership_row_period')
+            receipt = receipt_map.get(observation.get('rawReceiptPath'))
+            _check(receipt is not None and observation.get('rawSha256') == receipt['rawSha256']
+                   and observation.get('sourceURL') == receipt['sourceURL'], 'ownership_row_receipt')
+            _check(any(all(observation.get(field) == original.get(field) for field in fields) for original in receipt.get('rows', [])), 'ownership_row_values')
+        for field in metrics:
+            observed = next((item[field] for item in observations if item.get(field) is not None), None)
+            _check(row.get(field) == observed, 'ownership_merged_values')
+    return {**bundle, 'decodedFiles': files, 'manifest': manifest}
+
+
 def _rows(group: dict[str, Any], expected: dict[str, Any]) -> None:
     body = group['body']
     _check(type(body) is dict and isinstance(body.get('rows'), list), 'coverage')
     rows = body['rows']
+    if group['kind'] == 'published_stock_inputs' and 'ownershipBundle' in body:
+        validate_ownership_bundle(body['ownershipBundle'], expected['marketDate'])
     institutional = group['kind'] == 'institutional_normalized'
     _check(len(rows) == (sum(len(codes) for codes in group['codesByDate'].values()) if institutional else len(group['dates']) * len(group['codes'])), 'coverage')
     keys = []

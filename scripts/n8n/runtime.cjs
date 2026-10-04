@@ -41,6 +41,21 @@ function validateGrowthCoverage(funnel) {
   const state=!terminal.universe||terminal.missing===terminal.universe?'not_evaluable':terminal.missing?'partial':'evaluated';
   if(funnel.growthEvaluationState!==state||!Array.isArray(funnel.growthMissingReasons)||funnel.growthMissingReasons.some(item=>typeof item?.reason!=='string'||!item.reason||!Number.isInteger(item.count)||item.count<1||item.count>terminal.universe)||new Set(funnel.growthMissingReasons.map(item=>item.reason)).size!==funnel.growthMissingReasons.length)throw Error('growth_coverage_evaluation');
 }
+function validateChipReference(chip) {
+  const statuses=['pass','fail','unknown'];
+  const refs=value=>Array.isArray(value)&&value.every(ref=>typeof ref==='string'&&ref.length>0);
+  const number=value=>typeof value==='number'&&Number.isFinite(value);
+  const sourceDate=value=>typeof value==='string'&&Number(value.slice(0,4))>0&&(/^\d{4}-(0[1-9]|1[0-2])$/.test(value)||(/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value));
+  if(!chip||chip.schemaVersion!=='chip-reference-v1'||chip.formulaVersion!=='chip-reference-v1'||chip.displayOnly!==true||!statuses.includes(chip.status)||!['current','stale','unavailable','unknown'].includes(chip.dataFreshness)||!refs(chip.sourceRefs))throw Error('chip_reference_schema');
+  for(const key of ['largeHolderTrend','directorSupervisor12m','shareholderCountTrend']) {
+    const value=chip[key];
+    if(!value||!statuses.includes(value.status)||typeof value.value!=='string'||!value.value||typeof value.period!=='string'||!value.period||!refs(value.sourceRefs))throw Error('chip_reference_indicator');
+    if(value.sourceDates!==undefined&&(!Array.isArray(value.sourceDates)||!value.sourceDates.every(sourceDate)))throw Error('chip_reference_source_dates');
+    if(value.retrievedAt!==undefined&&value.retrievedAt!==null&&(typeof value.retrievedAt!=='string'||!Number.isFinite(Date.parse(value.retrievedAt))))throw Error('chip_reference_retrieved_at');
+    if(value.historicalBackfill!==undefined&&typeof value.historicalBackfill!=='boolean')throw Error('chip_reference_backfill');
+    if(value.rawValues!==undefined&&(key==='directorSupervisor12m'?(!value.rawValues||!number(value.rawValues.latest)||!number(value.rawValues.prior12m)):(!Array.isArray(value.rawValues)||value.rawValues.length!==3||!value.rawValues.every(number))))throw Error('chip_reference_raw_values');
+  }
+}
 function validateExport(raw, expected) {
   if (typeof raw !== 'string' || Buffer.byteLength(raw)>3000000) throw Error('export_size');
   const suffix = /,"payloadHash":"([a-f0-9]{64})"}$/;
@@ -67,6 +82,7 @@ function validateExport(raw, expected) {
   }
   if([...union].sort().join(',')!==[...codes].sort().join(',')) throw Error('selected_union_mismatch');
   for(const stock of value.selectedStocks) {
+    if(stock.chipReference!==undefined)validateChipReference(stock.chipReference);
     if(typeof stock.name!=='string'||typeof stock.sector!=='string'||!stock.metrics||!stock.provenance||stock.provenance.marketDate!==value.marketDate) throw Error('stock_schema');
     if(stock.strategies.some(entry=>!STRATEGIES.includes(entry.strategy)||typeof entry.status!=='string'||typeof entry.reason!=='string')) throw Error('stock_strategy_schema');
     if(METRICS.some(name=>stock.metrics[name]!==undefined&&stock.metrics[name]!==null&&(typeof stock.metrics[name]!=='number'||!Number.isFinite(stock.metrics[name])))) throw Error('stock_metric_schema');
@@ -80,12 +96,21 @@ function richText(content) {
   if(parts.length>100) throw Error('notion_text_too_large');
   return parts;
 }
+const CHIP_NUMBERS=['大股東持股比重最新','董監持股比重最新','董監持股比重去年同月','股東人數最新'];
+const CHIP_TEXT=['籌碼狀態','籌碼新鮮度','籌碼觀察期間','籌碼觀察日期','籌碼來源','籌碼參考'];
+function chipProperties(chip) {
+  const number=value=>typeof value==='number'&&Number.isFinite(value)?value:null;
+  const large=chip?.largeHolderTrend, director=chip?.directorSupervisor12m, shareholders=chip?.shareholderCountTrend;
+  const latest=indicator=>Array.isArray(indicator?.rawValues)?number(indicator.rawValues.at(-1)):null;
+  const checks={largeHolderTrend:large,directorSupervisor12m:director,shareholderCountTrend:shareholders};
+  return {'大股東持股比重最新':{number:latest(large)},'董監持股比重最新':{number:number(director?.rawValues?.latest)},'董監持股比重去年同月':{number:number(director?.rawValues?.prior12m)},'股東人數最新':{number:latest(shareholders)},'籌碼狀態':{rich_text:richText(JSON.stringify({overall:chip?.status||'unknown',...Object.fromEntries(Object.entries(checks).map(([key,value])=>[key,value?.status||'unknown']))}))},'籌碼新鮮度':{rich_text:richText(chip?.dataFreshness||'unavailable')},'籌碼觀察期間':{rich_text:richText(JSON.stringify(Object.fromEntries(Object.entries(checks).map(([key,value])=>[key,value?.period||'—']))))},'籌碼觀察日期':{rich_text:richText(JSON.stringify(Object.fromEntries(Object.entries(checks).map(([key,value])=>[key,value?.sourceDates||[]]))))},'籌碼來源':{rich_text:richText(JSON.stringify(chip?.sourceRefs||[]))},'籌碼參考':{rich_text:richText(JSON.stringify(chip||{status:'unknown',displayOnly:true,dataFreshness:'unavailable'}))}};
+}
 function stockSchema() {
-  return {'名稱':{title:{}},'股票代號':{rich_text:{}},'產業':{rich_text:{}},'策略':{multi_select:{options:STRATEGIES.map(name=>({name}))}},'投信排名':{number:{}},'成長排名':{number:{}},'低位階排名':{number:{}},'指標':{rich_text:{}},'來源':{rich_text:{}},'策略狀態':{rich_text:{}},'Revision':{rich_text:{}},'Payload Hash':{rich_text:{}},'Row Key':{rich_text:{}},...Object.fromEntries(METRICS.map(name=>[name,{number:{}}]))};
+  return {'名稱':{title:{}},'股票代號':{rich_text:{}},'產業':{rich_text:{}},'策略':{multi_select:{options:STRATEGIES.map(name=>({name}))}},'投信排名':{number:{}},'成長排名':{number:{}},'低位階排名':{number:{}},'指標':{rich_text:{}},'來源':{rich_text:{}},'策略狀態':{rich_text:{}},'Revision':{rich_text:{}},'Payload Hash':{rich_text:{}},'Row Key':{rich_text:{}},...Object.fromEntries([...METRICS,...CHIP_NUMBERS].map(name=>[name,{number:{}}])),...Object.fromEntries(CHIP_TEXT.map(name=>[name,{rich_text:{}}]))};
 }
 function stockProperties(stock, payload) {
   const rank = name => stock.strategies.find(entry=>entry.strategy===name)?.rank??null;
-  return {'名稱':{title:richText(stock.name||stock.code)},'股票代號':{rich_text:richText(stock.code)},'產業':{rich_text:richText(stock.sector)},'策略':{multi_select:stock.strategies.map(entry=>({name:entry.strategy}))},'投信排名':{number:rank('trust')},'成長排名':{number:rank('growth')},'低位階排名':{number:rank('lowPosition')},'指標':{rich_text:richText(JSON.stringify(stock.metrics))},'來源':{rich_text:richText(JSON.stringify(stock.provenance))},'策略狀態':{rich_text:richText(JSON.stringify(stock.strategies))},'Revision':{rich_text:richText(payload.revision)},'Payload Hash':{rich_text:richText(payload.payloadHash)},'Row Key':{rich_text:richText(`${payload.payloadHash}:${stock.code}`)},...Object.fromEntries(METRICS.map(name=>[name,{number:stock.metrics[name]??null}]))};
+  return {'名稱':{title:richText(stock.name||stock.code)},'股票代號':{rich_text:richText(stock.code)},'產業':{rich_text:richText(stock.sector)},'策略':{multi_select:stock.strategies.map(entry=>({name:entry.strategy}))},'投信排名':{number:rank('trust')},'成長排名':{number:rank('growth')},'低位階排名':{number:rank('lowPosition')},'指標':{rich_text:richText(JSON.stringify(stock.metrics))},'來源':{rich_text:richText(JSON.stringify(stock.provenance))},'策略狀態':{rich_text:richText(JSON.stringify(stock.strategies))},'Revision':{rich_text:richText(payload.revision)},'Payload Hash':{rich_text:richText(payload.payloadHash)},'Row Key':{rich_text:richText(`${payload.payloadHash}:${stock.code}`)},...Object.fromEntries(METRICS.map(name=>[name,{number:stock.metrics[name]??null}])),...chipProperties(stock.chipReference)};
 }
 function retrySeconds(value,now=Date.now()) {
   if(value!==undefined&&String(value).trim()!==''&&Number.isFinite(Number(value))) return Math.max(0.5,Number(value));

@@ -102,3 +102,36 @@ def test_blob_digest_mismatch_and_invalid_base64_fail_closed():
     for content in ['eA==','!invalid']:
         with pytest.raises(MarketCacheError):
             _blob(item,lambda path,limit:{'sha':'a'*40,'size':1,'encoding':'base64','content':content})
+
+
+def test_explicit_ownership_restore_preserves_exact_producer_bytes(tmp_path, monkeypatch):
+    import base64
+    from pipeline.ownership_queue import new_state, save_state
+    from scripts.update_ownership_checkpoint import build_manifest
+    import scripts.restore_market_cache as tool
+    import pipeline.market_cache_restore as restore
+    state_dir = tmp_path / 'producer'; state_dir.mkdir()
+    save_state(state_dir, new_state(['2547'], ['2547'], '2026-10-02'))
+    (state_dir / 'snapshot.json').write_text(json.dumps({'schemaVersion': 'ownership-snapshot-v1', 'verifiedMarketDate': '2026-10-02', 'rows': []}))
+    manifest = build_manifest(state_dir, state_dir / 'snapshot.json', 'a'*40, request_id='test', actions_run_id='1', actions_run_attempt='1')
+    names = ['manifest.json', *(item['path'] for item in manifest['files'])]
+    raw = {name: (state_dir / name).read_bytes() for name in names}
+    bundle = {'schemaVersion': 'ownership-bundle-v1', 'generationCommit': 'b'*40, 'manifestSha256': sha(raw['manifest.json']), 'filesBase64': {name: base64.b64encode(value).decode() for name, value in raw.items()}}
+    monkeypatch.setattr(tool, '_descriptor', lambda *args: {})
+    monkeypatch.setattr(restore, '_load', lambda *args: ([{'kind': 'published_stock_inputs', 'body': {'rows': [], 'ownershipBundle': bundle}}], {}, {}))
+    trust = {'descriptor_sha256': 'c'*64, 'market_date': '2026-10-02', 'source': {}}
+    output = tmp_path / 'restored'
+    proof = tool.restore_ownership_bundle(tmp_path, trust=trust, target_market_date='2026-10-05', output=output)
+    assert proof['ownershipBackupComplete'] and proof['ownershipStateRestored']
+    assert all((output / name).read_bytes() == value for name, value in raw.items())
+    with pytest.raises(MarketCacheError): tool.restore_ownership_bundle(tmp_path, trust=trust, target_market_date='2026-10-05', output=output)
+
+
+def test_legacy_cache_never_claims_ownership_backup(tmp_path, monkeypatch):
+    import scripts.restore_market_cache as tool
+    import pipeline.market_cache_restore as restore
+    monkeypatch.setattr(tool, '_descriptor', lambda *args: {})
+    monkeypatch.setattr(restore, '_load', lambda *args: ([{'kind': 'published_stock_inputs', 'body': {'rows': []}}], {}, {}))
+    proof = tool.restore_ownership_bundle(tmp_path, trust={'descriptor_sha256': '', 'market_date': '', 'source': {}}, target_market_date='2026-10-05', output=tmp_path / 'out')
+    assert proof == {'ownershipBackupComplete': False, 'ownershipStateRestored': False}
+    assert not (tmp_path / 'out').exists()

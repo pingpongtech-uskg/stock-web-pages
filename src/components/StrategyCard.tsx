@@ -134,14 +134,24 @@ function freshnessLabel(freshness: ChipReference['dataFreshness']): string {
   return '資料不可用'
 }
 
+function chipObservationLabel(indicator: ChipReference['largeHolderTrend'] | ChipReference['directorSupervisor12m']): string {
+  const parts: string[] = []
+  if (indicator.sourceDates?.length) parts.push(`官方觀察日期：${indicator.sourceDates.join('／')}`)
+  if (indicator.historicalBackfill) parts.push(`歷史資料補取得：${indicator.retrievedAt || '取得時間待補'}；發布時間未確認`)
+  return parts.length ? ` · ${parts.join(' · ')}` : ''
+}
+
 export function ChipReferenceSummary({ chip }: { chip: ChipReference }) {
   return (
     <aside className="chip-reference" aria-label="籌碼參考（不影響策略篩選）">
       <strong>籌碼參考（不影響策略篩選）</strong>
-      <span>大股東：{chipStatusLabel(chip.largeHolderTrend.status, '連續三月上升')}（{chip.largeHolderTrend.value}）</span>
-      <span>董監：較12月前{chipStatusLabel(chip.directorSupervisor12m.status, '上升')}（{chip.directorSupervisor12m.value}）</span>
-      <span>股東人數：{chipStatusLabel(chip.shareholderCountTrend.status, '連續三月下降')}（{chip.shareholderCountTrend.value}）</span>
-      <small>資料期別：{chip.largeHolderTrend.period} · 資料新鮮度：{freshnessLabel(chip.dataFreshness)}{chip.availableAt ? ` · 可用於 ${chip.availableAt}` : ''}{chip.sourceRefs.length ? ` · 來源：${chip.sourceRefs.join('／')}` : ''}</small>
+      <span>大股東：{chipStatusLabel(chip.largeHolderTrend.status, '近三個月觀察值逐期增加')}（{chip.largeHolderTrend.value}）</span>
+      <small>大股東期別：{chip.largeHolderTrend.period}{chipObservationLabel(chip.largeHolderTrend)}</small>
+      <span>董監：{chipStatusLabel(chip.directorSupervisor12m.status, '較去年同月持平或增加')}（{chip.directorSupervisor12m.value}）</span>
+      <small>董監期別：{chip.directorSupervisor12m.period}{chipObservationLabel(chip.directorSupervisor12m)}</small>
+      <span>股東人數：{chipStatusLabel(chip.shareholderCountTrend.status, '近三個月觀察值逐期減少')}（{chip.shareholderCountTrend.value}）</span>
+      <small>股東人數期別：{chip.shareholderCountTrend.period}{chipObservationLabel(chip.shareholderCountTrend)}</small>
+      <small>資料新鮮度：{freshnessLabel(chip.dataFreshness)}{chip.availableAt ? ` · 可用於 ${chip.availableAt}` : ''}{chip.sourceRefs.length ? ` · 來源：${chip.sourceRefs.join('／')}` : ''}</small>
     </aside>
   )
 }

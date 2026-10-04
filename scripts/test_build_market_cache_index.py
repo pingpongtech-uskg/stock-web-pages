@@ -368,3 +368,22 @@ def test_cash_dividend_ex_dividend_date_cannot_bypass_earlier_approval(availabil
         {'year': 2025, 'period': 'annual', 'cashPerShare': 1, 'confirmed': True,
          'approvedAt': '2026-09-01', 'exDividendDate': availability}]}}
     assert stock_metrics(detail, '2026-10-02')['cashDividend2025'] is None
+
+
+def test_pinned_ownership_state_backed_up_beside_stock_rows(tmp_path):
+    from scripts.build_market_cache_index import write_institutional_cache, assemble_index
+    from scripts.update_ownership_checkpoint import build_manifest
+    from pipeline.ownership_queue import new_state, save_state
+    from pipeline.market_cache import validate_ownership_bundle
+    snapshots, kwargs = setup_inputs(tmp_path)
+    write_institutional_cache(snapshots, kwargs['source_cache_dir'])
+    directory = tmp_path / 'ownership'; directory.mkdir()
+    save_state(directory, new_state(['2547'], ['2547'], '2026-10-02'))
+    (directory / 'snapshot.json').write_text(json.dumps({'schemaVersion': 'ownership-snapshot-v1', 'verifiedMarketDate': '2026-10-02', 'rows': []}))
+    build_manifest(directory, directory / 'snapshot.json', 'a'*40, request_id='test', actions_run_id='1', actions_run_attempt='1')
+    payload, _ = assemble_index(**kwargs, ownership_state_dir=directory, ownership_generation='b'*40)
+    stock = next(group for group in payload['groups'] if group['kind'] == 'published_stock_inputs')
+    assert len(stock['body']['rows']) == 100
+    bundle = validate_ownership_bundle(stock['body']['ownershipBundle'], '2026-10-02')
+    assert bundle['decodedFiles']['queue.json'] == (directory / 'queue.json').read_bytes()
+    with pytest.raises(Exception): assemble_index(**kwargs, ownership_state_dir=directory, ownership_generation=None)

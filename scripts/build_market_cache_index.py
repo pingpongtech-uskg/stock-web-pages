@@ -259,9 +259,21 @@ def _published(data_dir, config, market_date, source, publication_sha256, config
 
 def assemble_index(*, data_dir: Path, config: Path, source_cache_dir: Path, market_date: str, request_id: str,
                    source_git_commit: str, actions_run_id: str, publication_sha256: str, config_sha256: str,
-                   export_payload_hash: str) -> tuple[dict, dict]:
+                   export_payload_hash: str, ownership_state_dir: Path | None = None, ownership_generation: str | None = None) -> tuple[dict, dict]:
     source = {'requestId': request_id, 'sourceGitCommit': source_git_commit, 'actionsRunId': actions_run_id}
     stock, release = _published(data_dir, config, market_date, source, publication_sha256, config_sha256, export_payload_hash)
+    if ownership_state_dir is not None:
+        import base64
+        from scripts.update_ownership_checkpoint import validate_generation
+        from pipeline.market_cache import validate_ownership_bundle
+        _require(not validate_generation(ownership_state_dir), 'ownership_generation')
+        manifest_raw = _read(_safe_file(ownership_state_dir, 'manifest.json'), 4 * 1024 * 1024)
+        manifest = _json(manifest_raw)
+        names = ['manifest.json', *(item['path'] for item in manifest['files'])]
+        bundle = {'schemaVersion': 'ownership-bundle-v1', 'generationCommit': ownership_generation,
+                  'manifestSha256': sha(manifest_raw), 'filesBase64': {name: base64.b64encode(_read(_safe_file(ownership_state_dir, name), MAX_TOTAL_RAW)).decode('ascii') for name in names}}
+        validate_ownership_bundle(bundle, market_date)
+        stock = {**stock, 'body': {**stock['body'], 'ownershipBundle': bundle}}
     groups = []
     fragment_paths = [source_cache_dir / f'{name}-receipt-index.json' for name in ['institutional-TWSE', 'institutional-TPEx', 'calendar', 'volume']]
     total = len(canonical(stock['body']))
@@ -320,6 +332,8 @@ def main(argv=None):
         parser.add_argument('--' + name, type=Path, required=True)
     for name in ['market-date', 'request-id', 'source-git-commit', 'actions-run-id', 'publication-sha256', 'config-sha256', 'export-payload-hash']:
         parser.add_argument('--' + name, required=True)
+    parser.add_argument('--ownership-state-dir', type=Path)
+    parser.add_argument('--ownership-generation')
     args = vars(parser.parse_args(argv)); output = args.pop('output')
     try:
         payload, expected = assemble_index(**args)

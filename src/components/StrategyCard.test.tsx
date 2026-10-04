@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { ChipReference, RankingRow } from '../domain/types'
 import { strategyPresentations } from '../domain/strategyPresentation'
-import { StrategyCard } from './StrategyCard'
+import { ChipReferenceSummary, StrategyCard } from './StrategyCard'
 
 const knownRow: RankingRow = {
   rank: 1,
@@ -55,10 +55,12 @@ describe('StrategyCard', () => {
     const markups = strategyPresentations.filter((presentation) => presentation.key !== 'growth').map((presentation) => renderToStaticMarkup(<StrategyCard presentation={presentation} rows={[row]} />))
     for (const markup of markups) {
       expect(markup).toContain('籌碼參考（不影響策略篩選）')
-      expect(markup).toContain('大股東：連續三月上升')
-      expect(markup).toContain('董監：較12月前未通過')
+      expect(markup).toContain('大股東：近三個月觀察值逐期增加')
+      expect(markup).toContain('董監：未通過')
       expect(markup).toContain('股東人數：未知／待補資料')
-      expect(markup).toContain('資料期別：2026-06..2026-08')
+      expect(markup).toContain('大股東期別：2026-06..2026-08')
+      expect(markup).toContain('董監期別：2026-08 vs 2025-08')
+      expect(markup).toContain('股東人數期別：2026-06..2026-08')
       expect(markup).toContain('資料新鮮度：目前')
     }
   })
@@ -291,4 +293,34 @@ describe('StrategyCard', () => {
     expect(markup).not.toContain('PEG 0.75 價值帶')
     expect(markup).not.toContain('未知')
   })
+})
+
+
+it('labels equal director comparison as stable or increasing and preserves partial evidence', () => {
+  const markup = renderToStaticMarkup(<ChipReferenceSummary chip={{
+    schemaVersion: 'chip-reference-v1', status: 'unknown', displayOnly: true, formulaVersion: 'chip-reference-v1', dataFreshness: 'current',
+    largeHolderTrend: { status: 'unknown', value: '40 → 41 → ?', period: '2026-07..2026-09', sourceRefs: ['TDCC'] },
+    directorSupervisor12m: { status: 'pass', value: '0% vs 0%', period: '2026-09 vs 2025-09', sourceRefs: ['TWSE'] },
+    shareholderCountTrend: { status: 'pass', value: '300 → 200 → 100', period: '2026-07..2026-09', sourceRefs: ['TDCC'] },
+    sourceRefs: ['TDCC', 'TWSE'], availableAt: null,
+  }} />)
+  expect(markup).toContain('董監：較去年同月持平或增加（0% vs 0%）')
+  expect(markup).toContain('股東人數：近三個月觀察值逐期減少')
+  expect(markup).toContain('未知／待補資料（40 → 41 → ?）')
+  expect(markup).toContain('董監期別：2026-09 vs 2025-09')
+  expect(markup).not.toContain('可用於')
+})
+
+it('shows historical retrieval provenance and official shares without fabricated percentages', () => {
+  const empty = { status: 'unknown' as const, value: '—', period: '—', sourceRefs: [] }
+  const markup = renderToStaticMarkup(<ChipReferenceSummary chip={{
+    schemaVersion: 'chip-reference-v1', status: 'unknown', displayOnly: true, formulaVersion: 'chip-reference-v1', dataFreshness: 'current',
+    largeHolderTrend: empty, shareholderCountTrend: empty,
+    directorSupervisor12m: { ...empty, value: '官方合計 123456股；比例待補', period: '2026-09 vs 2025-09', sourceDates: ['2026-09'], historicalBackfill: true, retrievedAt: '2026-10-04T11:00:00Z' },
+    sourceRefs: ['MOPS'], availableAt: null,
+  }} />)
+  expect(markup).toContain('官方合計 123456股；比例待補')
+  expect(markup).toContain('官方觀察日期：2026-09')
+  expect(markup).toContain('歷史資料補取得：2026-10-04T11:00:00Z；發布時間未確認')
+  expect(markup).not.toContain('可用於')
 })

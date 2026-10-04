@@ -1,0 +1,556 @@
+{
+  "name": "Stockscreener bounded official ownership updates",
+  "active": false,
+  "nodes": [
+    {
+      "name": "Weekdays 17:00 17:15 17:30 Taipei",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 17 * * 1-5"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "15 17 * * 1-5"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "30 17 * * 1-5"
+            }
+          ]
+        }
+      },
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Manual explicit verified market date",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        210,
+        0
+      ]
+    },
+    {
+      "name": "Verified manual date inputs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "verified_market_date",
+              "name": "verified_market_date",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "manual_batch_id",
+              "name": "manual_batch_id",
+              "value": "bootstrap01",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "position": [
+        420,
+        0
+      ],
+      "notes": "Manual runs require an explicitly reviewed completed trading date. Set verified_market_date; 2026-10-02 is permitted for bootstrap. manual_batch_id is explicit 1..64 safe characters. Reusing it resumes without redispatch; increment bootstrap01, bootstrap02 for each new bounded acquisition batch."
+    },
+    {
+      "name": "Validate scheduled slot and start calendar read",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function sha256(text) {\n  const bytes = Buffer.from(text, 'utf8');\n  const primes = []; const initial = []; const constants = [];\n  for (let n = 2; primes.length < 64; n++) {\n    if (primes.every(p => n % p)) {\n      primes.push(n); constants.push((Math.cbrt(n) % 1 * 0x100000000) | 0);\n      if (initial.length < 8) initial.push((Math.sqrt(n) % 1 * 0x100000000) | 0);\n    }\n  }\n  const length = bytes.length; const padded = Buffer.alloc(Math.ceil((length + 9) / 64) * 64);\n  bytes.copy(padded); padded[length] = 128; padded.writeUInt32BE(length * 8 >>> 0, padded.length - 4);\n  const rotate = (x, n) => x >>> n | x << (32 - n);\n  let hash = initial;\n  for (let offset = 0; offset < padded.length; offset += 64) {\n    const words = Array.from({length:64}, (_,i) => i < 16 ? padded.readUInt32BE(offset + 4*i) : 0);\n    for (let i=16;i<64;i++) {\n      const a=words[i-15], b=words[i-2];\n      words[i]=(words[i-16]+(rotate(a,7)^rotate(a,18)^a>>>3)+words[i-7]+(rotate(b,17)^rotate(b,19)^b>>>10))|0;\n    }\n    let [a,b,c,d,e,f,g,h]=hash;\n    for(let i=0;i<64;i++) {\n      const t1=(h+(rotate(e,6)^rotate(e,11)^rotate(e,25))+(e&f^~e&g)+constants[i]+words[i])|0;\n      const t2=((rotate(a,2)^rotate(a,13)^rotate(a,22))+(a&b^a&c^b&c))|0;\n      [a,b,c,d,e,f,g,h]=[(t1+t2)|0,a,b,c,(d+t1)|0,e,f,g];\n    }\n    hash=hash.map((value,i)=>(value+[a,b,c,d,e,f,g,h][i])|0);\n  }\n  return hash.map(value=>(value>>>0).toString(16).padStart(8,'0')).join('');\n}\nfunction calendarOpen(rows,day) {\n  if(!Array.isArray(rows)||!rows.length) throw Error('calendar_empty');\n  const dates=rows.map(row=>{\n    if(!/^\\d{7}$/.test(row.Date)||typeof row.Name!=='string') throw Error('calendar_schema');\n    return {...row,iso:`${Number(row.Date.slice(0,3))+1911}-${row.Date.slice(3,5)}-${row.Date.slice(5,7)}`};\n  });\n  if(dates.some(row=>row.iso.slice(0,4)!==day.slice(0,4))) throw Error('calendar_year');\n  if([0,6].includes(new Date(`${day}T00:00:00Z`).getUTCDay())) return false;\n  const events=dates.filter(row=>row.iso===day);\n  return !events.some(row=>!['開始交易日','最後交易日','國曆新年開始交易日','農曆春節前最後交易日','農曆春節後開始交易日'].includes(row.Name));\n}\nfunction latestCompletedSession(rows,now) {\n  const local=new Date(now+8*3600000);\n  const today=local.toISOString().slice(0,10);\n  calendarOpen(rows,today); // Validate the official payload even when today is closed.\n  const beforeClose=local.getUTCHours()*60+local.getUTCMinutes()<13*60+30;\n  for(let offset=beforeClose?1:0;offset<32;offset++) {\n    const day=new Date(Date.parse(today+'T00:00:00Z')-offset*86400000).toISOString().slice(0,10);\n    if(day.slice(0,4)!==today.slice(0,4)) throw Error('calendar_year_boundary');\n    if(calendarOpen(rows,day)) return day;\n  }\n  throw Error('completed_session_unavailable');\n}\n// Pure dispatcher transitions. Source acquisition and serialized state custody belong to ownership.yml.\nconst OWNERSHIP_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nfunction ownershipResult(state,op=null,delaySeconds=0){return {state,op,route:op?(op.method==='POST'?'dispatch':op.method==='PUT'?'write':'read'):'done',delaySeconds};}\nfunction ownershipRequest(state,stage,url,body=null,delaySeconds=0){return ownershipResult({...state,stage},{method:body?'POST':'GET',url,body},delaySeconds);}\nfunction ownershipDone(state,errorCategory='',status='failed'){return ownershipResult({...state,stage:'done',status,errorCategory});}\nfunction ownershipStart(input,now=Date.now()) {\n  if(!/^\\d{1,24}$/.test(String(input.owner||'')))throw Error('ownership_owner');\n  if(!['manual','scheduled'].includes(input.run_kind))throw Error('ownership_run_kind');\n  const local=new Date(now+8*3600000),today=local.toISOString().slice(0,10),manual=input.run_kind==='manual';\n  const explicit=input.verified_market_date;\n  if(manual&&(!/^\\d{4}-\\d{2}-\\d{2}$/.test(explicit||'')||!Number.isFinite(Date.parse(explicit+'T00:00:00Z'))||new Date(explicit+'T00:00:00Z').toISOString().slice(0,10)!==explicit||explicit>today))throw Error('ownership_verified_market_date');\n  const minutes=local.getUTCHours()*60+local.getUTCMinutes();\n  if(!manual&&([0,6].includes(local.getUTCDay())||minutes<1020||minutes>=1065))throw Error('ownership_schedule_slot');\n  if(manual&&!/^[a-zA-Z0-9_.-]{1,64}$/.test(input.manual_batch_id||''))throw Error('ownership_manual_batch_id');\n  const slot=manual?'manual:'+input.manual_batch_id:minutes<1035?'1700':minutes<1050?'1715':'1730';\n  return ownershipRequest({runKind:input.run_kind,explicit,slot,startedAt:now,deadline:now+15*60000,status:'pending',owner:String(input.owner)},'calendar','https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule');\n}\nfunction ownershipFind(state,delay=0){return ownershipRequest(state,'findRun',`${OWNERSHIP_REPO}/actions/workflows/ownership.yml/runs?event=workflow_dispatch&per_page=100&page=${state.page||1}`,null,delay);}\nfunction ownershipIntentUrl(state){return `${OWNERSHIP_REPO}/contents/operations/ownership-dispatch/${state.marketDate.slice(0,4)}/${sha256(state.requestId)}.json`;}\nfunction ownershipIntentRead(state,stage='intentRead'){return ownershipRequest(state,stage,ownershipIntentUrl(state)+'?ref=n8n-state');}\nfunction ownershipIntentBody(body,state,now){\n  if(body?.encoding!=='base64'||typeof body.content!=='string'||body.content.length>8000)throw Error('ownership_intent_schema');\n  const intent=JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));\n  if(intent.schemaVersion!=='ownership-dispatch-intent-v1'||intent.marketDate!==state.marketDate||intent.requestId!==state.requestId||intent.workflow!=='ownership.yml'||intent.ref!=='main'||!/^[a-f0-9]{40}$/.test(intent.sourceCommit||'')||!/^\\d{1,24}$/.test(intent.owner||'')||!Number.isSafeInteger(intent.createdAt)||intent.createdAt>now||intent.dispatchIntent!==true)throw Error('ownership_intent_lineage');\n  return intent;\n}\nfunction ownershipDispatch(state){return ownershipRequest(state,'dispatch',`${OWNERSHIP_REPO}/actions/workflows/ownership.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate}});}\nfunction ownershipValidateRun(run,state){\n  if(run.display_title!==`Ownership update | ${state.requestId} | ${state.marketDate}`||run.event!=='workflow_dispatch'||run.head_branch!=='main'||!['.github/workflows/ownership.yml','.github/workflows/ownership.yml@main','.github/workflows/ownership.yml@refs/heads/main'].includes(run.path)||run.head_sha!==state.sourceCommit||!/^[a-f0-9]{40}$/.test(run.head_sha||'')||!/^\\d{1,24}$/.test(String(run.id)))throw Error('ownership_run_lineage');\n  if(state.actionsRunId&&(String(run.id)!==state.actionsRunId||run.head_sha!==state.runHeadSha))throw Error('ownership_run_lineage');\n}\nfunction ownershipPoll(state){return ownershipRequest(state,'pollRun',`${OWNERSHIP_REPO}/actions/runs/${state.actionsRunId}`,null,15);}\nfunction ownershipAdvance(state,response,now=Date.now()) {\n  if(now>=state.deadline)return ownershipDone(state,'ownership_deadline');\n  if(state.stage==='done')return ownershipResult(state);\n  if(state.stage==='dispatch')return ownershipFind({...state,dispatchIntent:true,dispatchAt:state.dispatchAt||now,page:1,matches:[]},15);\n  if(state.stage==='intentWrite')return ownershipIntentRead(state,'intentVerify');\n  if(state.stage==='intentRead'&&Number(response?.statusCode)===404)return ownershipFind(state);\n  if(Number(response?.statusCode??200)<200||Number(response?.statusCode??200)>=300)return ownershipDone(state,'github_read_failed');\n  let body=response.body??response.data;if(typeof body==='string')body=JSON.parse(body);\n  if(state.stage==='calendar') {\n    if(state.runKind==='scheduled'&&!calendarOpen(body,new Date(now+8*3600000).toISOString().slice(0,10)))return ownershipDone(state,'','skipped_non_trading');\n    const marketDate=state.runKind==='manual'?state.explicit:latestCompletedSession(body,now);\n    if(!calendarOpen(body,marketDate))throw Error('ownership_verified_market_date_closed');\n    return ownershipRequest({...state,marketDate,requestId:`ownership:${marketDate.replaceAll('-','')}:${state.slot}`,page:1,matches:[]},'mainRef',OWNERSHIP_REPO+'/git/ref/heads/main');\n  }\n  if(state.stage==='mainRef') {\n    if(!/^[a-f0-9]{40}$/.test(body?.object?.sha||''))throw Error('ownership_main_ref');\n    return ownershipIntentRead({...state,sourceCommit:body.object.sha});\n  }\n  if(state.stage==='intentRead'||state.stage==='intentVerify') {\n    const intent=ownershipIntentBody(body,state,now);\n    if(state.stage==='intentVerify') {\n      if(intent.owner!==state.owner||JSON.stringify(intent)!==JSON.stringify(state.intent))return ownershipDone(state,'ownership_intent_claim_lost');\n      return ownershipDispatch({...state,dispatchIntent:true,dispatchAt:intent.createdAt});\n    }\n    return ownershipFind({...state,sourceCommit:intent.sourceCommit,dispatchIntent:true,dispatchAt:intent.createdAt,page:1,matches:[]});\n  }\n  if(state.stage==='findRun') {\n    if(!Array.isArray(body?.workflow_runs)||body.workflow_runs.length>100)throw Error('ownership_runs_schema');\n    const matches=[...(state.matches||[]),...body.workflow_runs.filter(run=>run.display_title===`Ownership update | ${state.requestId} | ${state.marketDate}`)];\n    if(matches.length>1)throw Error('ownership_ambiguous_runs');\n    if(body.workflow_runs.length===100){if(state.page>=10)throw Error('ownership_scan_limit');return ownershipFind({...state,page:state.page+1,matches});}\n    if(matches.length){ownershipValidateRun(matches[0],state);return ownershipPoll({...state,actionsRunId:String(matches[0].id),runHeadSha:matches[0].head_sha,matches:[]});}\n    if(state.dispatchIntent){if(now-state.dispatchAt>=5*60000)return ownershipDone(state,'dispatch_run_not_found');return ownershipFind({...state,page:1,matches:[]},15);}\n    const intent={schemaVersion:'ownership-dispatch-intent-v1',marketDate:state.marketDate,requestId:state.requestId,workflow:'ownership.yml',ref:'main',sourceCommit:state.sourceCommit,owner:state.owner,createdAt:now,dispatchIntent:true};\n    return ownershipResult({...state,stage:'intentWrite',intent},{method:'PUT',url:ownershipIntentUrl(state),body:{message:'[CF-Pages-Skip] chore: ownership dispatch intent',branch:'n8n-state',content:Buffer.from(JSON.stringify(intent)).toString('base64')}});\n  }\n  if(state.stage==='pollRun') {\n    ownershipValidateRun(body,state);\n    if(body.status==='completed')return ownershipDone(state,body.conclusion==='success'?'':String(body.conclusion||'unknown'),body.conclusion==='success'?'acquisition_job_succeeded':'acquisition_job_failed');\n    if(!['queued','in_progress','waiting','pending','requested'].includes(body.status))throw Error('ownership_run_status');\n    return ownershipPoll(state);\n  }\n  throw Error('ownership_stage');\n}\n\nreturn [{json:ownershipStart({run_kind:\"scheduled\",owner:String($execution.id)})}];"
+      },
+      "position": [
+        630,
+        0
+      ]
+    },
+    {
+      "name": "Validate explicit date and start calendar read",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function sha256(text) {\n  const bytes = Buffer.from(text, 'utf8');\n  const primes = []; const initial = []; const constants = [];\n  for (let n = 2; primes.length < 64; n++) {\n    if (primes.every(p => n % p)) {\n      primes.push(n); constants.push((Math.cbrt(n) % 1 * 0x100000000) | 0);\n      if (initial.length < 8) initial.push((Math.sqrt(n) % 1 * 0x100000000) | 0);\n    }\n  }\n  const length = bytes.length; const padded = Buffer.alloc(Math.ceil((length + 9) / 64) * 64);\n  bytes.copy(padded); padded[length] = 128; padded.writeUInt32BE(length * 8 >>> 0, padded.length - 4);\n  const rotate = (x, n) => x >>> n | x << (32 - n);\n  let hash = initial;\n  for (let offset = 0; offset < padded.length; offset += 64) {\n    const words = Array.from({length:64}, (_,i) => i < 16 ? padded.readUInt32BE(offset + 4*i) : 0);\n    for (let i=16;i<64;i++) {\n      const a=words[i-15], b=words[i-2];\n      words[i]=(words[i-16]+(rotate(a,7)^rotate(a,18)^a>>>3)+words[i-7]+(rotate(b,17)^rotate(b,19)^b>>>10))|0;\n    }\n    let [a,b,c,d,e,f,g,h]=hash;\n    for(let i=0;i<64;i++) {\n      const t1=(h+(rotate(e,6)^rotate(e,11)^rotate(e,25))+(e&f^~e&g)+constants[i]+words[i])|0;\n      const t2=((rotate(a,2)^rotate(a,13)^rotate(a,22))+(a&b^a&c^b&c))|0;\n      [a,b,c,d,e,f,g,h]=[(t1+t2)|0,a,b,c,(d+t1)|0,e,f,g];\n    }\n    hash=hash.map((value,i)=>(value+[a,b,c,d,e,f,g,h][i])|0);\n  }\n  return hash.map(value=>(value>>>0).toString(16).padStart(8,'0')).join('');\n}\nfunction calendarOpen(rows,day) {\n  if(!Array.isArray(rows)||!rows.length) throw Error('calendar_empty');\n  const dates=rows.map(row=>{\n    if(!/^\\d{7}$/.test(row.Date)||typeof row.Name!=='string') throw Error('calendar_schema');\n    return {...row,iso:`${Number(row.Date.slice(0,3))+1911}-${row.Date.slice(3,5)}-${row.Date.slice(5,7)}`};\n  });\n  if(dates.some(row=>row.iso.slice(0,4)!==day.slice(0,4))) throw Error('calendar_year');\n  if([0,6].includes(new Date(`${day}T00:00:00Z`).getUTCDay())) return false;\n  const events=dates.filter(row=>row.iso===day);\n  return !events.some(row=>!['開始交易日','最後交易日','國曆新年開始交易日','農曆春節前最後交易日','農曆春節後開始交易日'].includes(row.Name));\n}\nfunction latestCompletedSession(rows,now) {\n  const local=new Date(now+8*3600000);\n  const today=local.toISOString().slice(0,10);\n  calendarOpen(rows,today); // Validate the official payload even when today is closed.\n  const beforeClose=local.getUTCHours()*60+local.getUTCMinutes()<13*60+30;\n  for(let offset=beforeClose?1:0;offset<32;offset++) {\n    const day=new Date(Date.parse(today+'T00:00:00Z')-offset*86400000).toISOString().slice(0,10);\n    if(day.slice(0,4)!==today.slice(0,4)) throw Error('calendar_year_boundary');\n    if(calendarOpen(rows,day)) return day;\n  }\n  throw Error('completed_session_unavailable');\n}\n// Pure dispatcher transitions. Source acquisition and serialized state custody belong to ownership.yml.\nconst OWNERSHIP_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nfunction ownershipResult(state,op=null,delaySeconds=0){return {state,op,route:op?(op.method==='POST'?'dispatch':op.method==='PUT'?'write':'read'):'done',delaySeconds};}\nfunction ownershipRequest(state,stage,url,body=null,delaySeconds=0){return ownershipResult({...state,stage},{method:body?'POST':'GET',url,body},delaySeconds);}\nfunction ownershipDone(state,errorCategory='',status='failed'){return ownershipResult({...state,stage:'done',status,errorCategory});}\nfunction ownershipStart(input,now=Date.now()) {\n  if(!/^\\d{1,24}$/.test(String(input.owner||'')))throw Error('ownership_owner');\n  if(!['manual','scheduled'].includes(input.run_kind))throw Error('ownership_run_kind');\n  const local=new Date(now+8*3600000),today=local.toISOString().slice(0,10),manual=input.run_kind==='manual';\n  const explicit=input.verified_market_date;\n  if(manual&&(!/^\\d{4}-\\d{2}-\\d{2}$/.test(explicit||'')||!Number.isFinite(Date.parse(explicit+'T00:00:00Z'))||new Date(explicit+'T00:00:00Z').toISOString().slice(0,10)!==explicit||explicit>today))throw Error('ownership_verified_market_date');\n  const minutes=local.getUTCHours()*60+local.getUTCMinutes();\n  if(!manual&&([0,6].includes(local.getUTCDay())||minutes<1020||minutes>=1065))throw Error('ownership_schedule_slot');\n  if(manual&&!/^[a-zA-Z0-9_.-]{1,64}$/.test(input.manual_batch_id||''))throw Error('ownership_manual_batch_id');\n  const slot=manual?'manual:'+input.manual_batch_id:minutes<1035?'1700':minutes<1050?'1715':'1730';\n  return ownershipRequest({runKind:input.run_kind,explicit,slot,startedAt:now,deadline:now+15*60000,status:'pending',owner:String(input.owner)},'calendar','https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule');\n}\nfunction ownershipFind(state,delay=0){return ownershipRequest(state,'findRun',`${OWNERSHIP_REPO}/actions/workflows/ownership.yml/runs?event=workflow_dispatch&per_page=100&page=${state.page||1}`,null,delay);}\nfunction ownershipIntentUrl(state){return `${OWNERSHIP_REPO}/contents/operations/ownership-dispatch/${state.marketDate.slice(0,4)}/${sha256(state.requestId)}.json`;}\nfunction ownershipIntentRead(state,stage='intentRead'){return ownershipRequest(state,stage,ownershipIntentUrl(state)+'?ref=n8n-state');}\nfunction ownershipIntentBody(body,state,now){\n  if(body?.encoding!=='base64'||typeof body.content!=='string'||body.content.length>8000)throw Error('ownership_intent_schema');\n  const intent=JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));\n  if(intent.schemaVersion!=='ownership-dispatch-intent-v1'||intent.marketDate!==state.marketDate||intent.requestId!==state.requestId||intent.workflow!=='ownership.yml'||intent.ref!=='main'||!/^[a-f0-9]{40}$/.test(intent.sourceCommit||'')||!/^\\d{1,24}$/.test(intent.owner||'')||!Number.isSafeInteger(intent.createdAt)||intent.createdAt>now||intent.dispatchIntent!==true)throw Error('ownership_intent_lineage');\n  return intent;\n}\nfunction ownershipDispatch(state){return ownershipRequest(state,'dispatch',`${OWNERSHIP_REPO}/actions/workflows/ownership.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate}});}\nfunction ownershipValidateRun(run,state){\n  if(run.display_title!==`Ownership update | ${state.requestId} | ${state.marketDate}`||run.event!=='workflow_dispatch'||run.head_branch!=='main'||!['.github/workflows/ownership.yml','.github/workflows/ownership.yml@main','.github/workflows/ownership.yml@refs/heads/main'].includes(run.path)||run.head_sha!==state.sourceCommit||!/^[a-f0-9]{40}$/.test(run.head_sha||'')||!/^\\d{1,24}$/.test(String(run.id)))throw Error('ownership_run_lineage');\n  if(state.actionsRunId&&(String(run.id)!==state.actionsRunId||run.head_sha!==state.runHeadSha))throw Error('ownership_run_lineage');\n}\nfunction ownershipPoll(state){return ownershipRequest(state,'pollRun',`${OWNERSHIP_REPO}/actions/runs/${state.actionsRunId}`,null,15);}\nfunction ownershipAdvance(state,response,now=Date.now()) {\n  if(now>=state.deadline)return ownershipDone(state,'ownership_deadline');\n  if(state.stage==='done')return ownershipResult(state);\n  if(state.stage==='dispatch')return ownershipFind({...state,dispatchIntent:true,dispatchAt:state.dispatchAt||now,page:1,matches:[]},15);\n  if(state.stage==='intentWrite')return ownershipIntentRead(state,'intentVerify');\n  if(state.stage==='intentRead'&&Number(response?.statusCode)===404)return ownershipFind(state);\n  if(Number(response?.statusCode??200)<200||Number(response?.statusCode??200)>=300)return ownershipDone(state,'github_read_failed');\n  let body=response.body??response.data;if(typeof body==='string')body=JSON.parse(body);\n  if(state.stage==='calendar') {\n    if(state.runKind==='scheduled'&&!calendarOpen(body,new Date(now+8*3600000).toISOString().slice(0,10)))return ownershipDone(state,'','skipped_non_trading');\n    const marketDate=state.runKind==='manual'?state.explicit:latestCompletedSession(body,now);\n    if(!calendarOpen(body,marketDate))throw Error('ownership_verified_market_date_closed');\n    return ownershipRequest({...state,marketDate,requestId:`ownership:${marketDate.replaceAll('-','')}:${state.slot}`,page:1,matches:[]},'mainRef',OWNERSHIP_REPO+'/git/ref/heads/main');\n  }\n  if(state.stage==='mainRef') {\n    if(!/^[a-f0-9]{40}$/.test(body?.object?.sha||''))throw Error('ownership_main_ref');\n    return ownershipIntentRead({...state,sourceCommit:body.object.sha});\n  }\n  if(state.stage==='intentRead'||state.stage==='intentVerify') {\n    const intent=ownershipIntentBody(body,state,now);\n    if(state.stage==='intentVerify') {\n      if(intent.owner!==state.owner||JSON.stringify(intent)!==JSON.stringify(state.intent))return ownershipDone(state,'ownership_intent_claim_lost');\n      return ownershipDispatch({...state,dispatchIntent:true,dispatchAt:intent.createdAt});\n    }\n    return ownershipFind({...state,sourceCommit:intent.sourceCommit,dispatchIntent:true,dispatchAt:intent.createdAt,page:1,matches:[]});\n  }\n  if(state.stage==='findRun') {\n    if(!Array.isArray(body?.workflow_runs)||body.workflow_runs.length>100)throw Error('ownership_runs_schema');\n    const matches=[...(state.matches||[]),...body.workflow_runs.filter(run=>run.display_title===`Ownership update | ${state.requestId} | ${state.marketDate}`)];\n    if(matches.length>1)throw Error('ownership_ambiguous_runs');\n    if(body.workflow_runs.length===100){if(state.page>=10)throw Error('ownership_scan_limit');return ownershipFind({...state,page:state.page+1,matches});}\n    if(matches.length){ownershipValidateRun(matches[0],state);return ownershipPoll({...state,actionsRunId:String(matches[0].id),runHeadSha:matches[0].head_sha,matches:[]});}\n    if(state.dispatchIntent){if(now-state.dispatchAt>=5*60000)return ownershipDone(state,'dispatch_run_not_found');return ownershipFind({...state,page:1,matches:[]},15);}\n    const intent={schemaVersion:'ownership-dispatch-intent-v1',marketDate:state.marketDate,requestId:state.requestId,workflow:'ownership.yml',ref:'main',sourceCommit:state.sourceCommit,owner:state.owner,createdAt:now,dispatchIntent:true};\n    return ownershipResult({...state,stage:'intentWrite',intent},{method:'PUT',url:ownershipIntentUrl(state),body:{message:'[CF-Pages-Skip] chore: ownership dispatch intent',branch:'n8n-state',content:Buffer.from(JSON.stringify(intent)).toString('base64')}});\n  }\n  if(state.stage==='pollRun') {\n    ownershipValidateRun(body,state);\n    if(body.status==='completed')return ownershipDone(state,body.conclusion==='success'?'':String(body.conclusion||'unknown'),body.conclusion==='success'?'acquisition_job_succeeded':'acquisition_job_failed');\n    if(!['queued','in_progress','waiting','pending','requested'].includes(body.status))throw Error('ownership_run_status');\n    return ownershipPoll(state);\n  }\n  throw Error('ownership_stage');\n}\n\nreturn [{json:ownershipStart({...$input.first().json,run_kind:\"manual\",owner:String($execution.id)})}];"
+      },
+      "position": [
+        840,
+        0
+      ]
+    },
+    {
+      "name": "Bounded status polling wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": "={{ Math.max(0.5, $json.delaySeconds) }}",
+        "unit": "seconds"
+      },
+      "position": [
+        1050,
+        0
+      ]
+    },
+    {
+      "name": "Gate deadline and fixed request origins",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function sha256(text) {\n  const bytes = Buffer.from(text, 'utf8');\n  const primes = []; const initial = []; const constants = [];\n  for (let n = 2; primes.length < 64; n++) {\n    if (primes.every(p => n % p)) {\n      primes.push(n); constants.push((Math.cbrt(n) % 1 * 0x100000000) | 0);\n      if (initial.length < 8) initial.push((Math.sqrt(n) % 1 * 0x100000000) | 0);\n    }\n  }\n  const length = bytes.length; const padded = Buffer.alloc(Math.ceil((length + 9) / 64) * 64);\n  bytes.copy(padded); padded[length] = 128; padded.writeUInt32BE(length * 8 >>> 0, padded.length - 4);\n  const rotate = (x, n) => x >>> n | x << (32 - n);\n  let hash = initial;\n  for (let offset = 0; offset < padded.length; offset += 64) {\n    const words = Array.from({length:64}, (_,i) => i < 16 ? padded.readUInt32BE(offset + 4*i) : 0);\n    for (let i=16;i<64;i++) {\n      const a=words[i-15], b=words[i-2];\n      words[i]=(words[i-16]+(rotate(a,7)^rotate(a,18)^a>>>3)+words[i-7]+(rotate(b,17)^rotate(b,19)^b>>>10))|0;\n    }\n    let [a,b,c,d,e,f,g,h]=hash;\n    for(let i=0;i<64;i++) {\n      const t1=(h+(rotate(e,6)^rotate(e,11)^rotate(e,25))+(e&f^~e&g)+constants[i]+words[i])|0;\n      const t2=((rotate(a,2)^rotate(a,13)^rotate(a,22))+(a&b^a&c^b&c))|0;\n      [a,b,c,d,e,f,g,h]=[(t1+t2)|0,a,b,c,(d+t1)|0,e,f,g];\n    }\n    hash=hash.map((value,i)=>(value+[a,b,c,d,e,f,g,h][i])|0);\n  }\n  return hash.map(value=>(value>>>0).toString(16).padStart(8,'0')).join('');\n}\nfunction calendarOpen(rows,day) {\n  if(!Array.isArray(rows)||!rows.length) throw Error('calendar_empty');\n  const dates=rows.map(row=>{\n    if(!/^\\d{7}$/.test(row.Date)||typeof row.Name!=='string') throw Error('calendar_schema');\n    return {...row,iso:`${Number(row.Date.slice(0,3))+1911}-${row.Date.slice(3,5)}-${row.Date.slice(5,7)}`};\n  });\n  if(dates.some(row=>row.iso.slice(0,4)!==day.slice(0,4))) throw Error('calendar_year');\n  if([0,6].includes(new Date(`${day}T00:00:00Z`).getUTCDay())) return false;\n  const events=dates.filter(row=>row.iso===day);\n  return !events.some(row=>!['開始交易日','最後交易日','國曆新年開始交易日','農曆春節前最後交易日','農曆春節後開始交易日'].includes(row.Name));\n}\nfunction latestCompletedSession(rows,now) {\n  const local=new Date(now+8*3600000);\n  const today=local.toISOString().slice(0,10);\n  calendarOpen(rows,today); // Validate the official payload even when today is closed.\n  const beforeClose=local.getUTCHours()*60+local.getUTCMinutes()<13*60+30;\n  for(let offset=beforeClose?1:0;offset<32;offset++) {\n    const day=new Date(Date.parse(today+'T00:00:00Z')-offset*86400000).toISOString().slice(0,10);\n    if(day.slice(0,4)!==today.slice(0,4)) throw Error('calendar_year_boundary');\n    if(calendarOpen(rows,day)) return day;\n  }\n  throw Error('completed_session_unavailable');\n}\n// Pure dispatcher transitions. Source acquisition and serialized state custody belong to ownership.yml.\nconst OWNERSHIP_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nfunction ownershipResult(state,op=null,delaySeconds=0){return {state,op,route:op?(op.method==='POST'?'dispatch':op.method==='PUT'?'write':'read'):'done',delaySeconds};}\nfunction ownershipRequest(state,stage,url,body=null,delaySeconds=0){return ownershipResult({...state,stage},{method:body?'POST':'GET',url,body},delaySeconds);}\nfunction ownershipDone(state,errorCategory='',status='failed'){return ownershipResult({...state,stage:'done',status,errorCategory});}\nfunction ownershipStart(input,now=Date.now()) {\n  if(!/^\\d{1,24}$/.test(String(input.owner||'')))throw Error('ownership_owner');\n  if(!['manual','scheduled'].includes(input.run_kind))throw Error('ownership_run_kind');\n  const local=new Date(now+8*3600000),today=local.toISOString().slice(0,10),manual=input.run_kind==='manual';\n  const explicit=input.verified_market_date;\n  if(manual&&(!/^\\d{4}-\\d{2}-\\d{2}$/.test(explicit||'')||!Number.isFinite(Date.parse(explicit+'T00:00:00Z'))||new Date(explicit+'T00:00:00Z').toISOString().slice(0,10)!==explicit||explicit>today))throw Error('ownership_verified_market_date');\n  const minutes=local.getUTCHours()*60+local.getUTCMinutes();\n  if(!manual&&([0,6].includes(local.getUTCDay())||minutes<1020||minutes>=1065))throw Error('ownership_schedule_slot');\n  if(manual&&!/^[a-zA-Z0-9_.-]{1,64}$/.test(input.manual_batch_id||''))throw Error('ownership_manual_batch_id');\n  const slot=manual?'manual:'+input.manual_batch_id:minutes<1035?'1700':minutes<1050?'1715':'1730';\n  return ownershipRequest({runKind:input.run_kind,explicit,slot,startedAt:now,deadline:now+15*60000,status:'pending',owner:String(input.owner)},'calendar','https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule');\n}\nfunction ownershipFind(state,delay=0){return ownershipRequest(state,'findRun',`${OWNERSHIP_REPO}/actions/workflows/ownership.yml/runs?event=workflow_dispatch&per_page=100&page=${state.page||1}`,null,delay);}\nfunction ownershipIntentUrl(state){return `${OWNERSHIP_REPO}/contents/operations/ownership-dispatch/${state.marketDate.slice(0,4)}/${sha256(state.requestId)}.json`;}\nfunction ownershipIntentRead(state,stage='intentRead'){return ownershipRequest(state,stage,ownershipIntentUrl(state)+'?ref=n8n-state');}\nfunction ownershipIntentBody(body,state,now){\n  if(body?.encoding!=='base64'||typeof body.content!=='string'||body.content.length>8000)throw Error('ownership_intent_schema');\n  const intent=JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));\n  if(intent.schemaVersion!=='ownership-dispatch-intent-v1'||intent.marketDate!==state.marketDate||intent.requestId!==state.requestId||intent.workflow!=='ownership.yml'||intent.ref!=='main'||!/^[a-f0-9]{40}$/.test(intent.sourceCommit||'')||!/^\\d{1,24}$/.test(intent.owner||'')||!Number.isSafeInteger(intent.createdAt)||intent.createdAt>now||intent.dispatchIntent!==true)throw Error('ownership_intent_lineage');\n  return intent;\n}\nfunction ownershipDispatch(state){return ownershipRequest(state,'dispatch',`${OWNERSHIP_REPO}/actions/workflows/ownership.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate}});}\nfunction ownershipValidateRun(run,state){\n  if(run.display_title!==`Ownership update | ${state.requestId} | ${state.marketDate}`||run.event!=='workflow_dispatch'||run.head_branch!=='main'||!['.github/workflows/ownership.yml','.github/workflows/ownership.yml@main','.github/workflows/ownership.yml@refs/heads/main'].includes(run.path)||run.head_sha!==state.sourceCommit||!/^[a-f0-9]{40}$/.test(run.head_sha||'')||!/^\\d{1,24}$/.test(String(run.id)))throw Error('ownership_run_lineage');\n  if(state.actionsRunId&&(String(run.id)!==state.actionsRunId||run.head_sha!==state.runHeadSha))throw Error('ownership_run_lineage');\n}\nfunction ownershipPoll(state){return ownershipRequest(state,'pollRun',`${OWNERSHIP_REPO}/actions/runs/${state.actionsRunId}`,null,15);}\nfunction ownershipAdvance(state,response,now=Date.now()) {\n  if(now>=state.deadline)return ownershipDone(state,'ownership_deadline');\n  if(state.stage==='done')return ownershipResult(state);\n  if(state.stage==='dispatch')return ownershipFind({...state,dispatchIntent:true,dispatchAt:state.dispatchAt||now,page:1,matches:[]},15);\n  if(state.stage==='intentWrite')return ownershipIntentRead(state,'intentVerify');\n  if(state.stage==='intentRead'&&Number(response?.statusCode)===404)return ownershipFind(state);\n  if(Number(response?.statusCode??200)<200||Number(response?.statusCode??200)>=300)return ownershipDone(state,'github_read_failed');\n  let body=response.body??response.data;if(typeof body==='string')body=JSON.parse(body);\n  if(state.stage==='calendar') {\n    if(state.runKind==='scheduled'&&!calendarOpen(body,new Date(now+8*3600000).toISOString().slice(0,10)))return ownershipDone(state,'','skipped_non_trading');\n    const marketDate=state.runKind==='manual'?state.explicit:latestCompletedSession(body,now);\n    if(!calendarOpen(body,marketDate))throw Error('ownership_verified_market_date_closed');\n    return ownershipRequest({...state,marketDate,requestId:`ownership:${marketDate.replaceAll('-','')}:${state.slot}`,page:1,matches:[]},'mainRef',OWNERSHIP_REPO+'/git/ref/heads/main');\n  }\n  if(state.stage==='mainRef') {\n    if(!/^[a-f0-9]{40}$/.test(body?.object?.sha||''))throw Error('ownership_main_ref');\n    return ownershipIntentRead({...state,sourceCommit:body.object.sha});\n  }\n  if(state.stage==='intentRead'||state.stage==='intentVerify') {\n    const intent=ownershipIntentBody(body,state,now);\n    if(state.stage==='intentVerify') {\n      if(intent.owner!==state.owner||JSON.stringify(intent)!==JSON.stringify(state.intent))return ownershipDone(state,'ownership_intent_claim_lost');\n      return ownershipDispatch({...state,dispatchIntent:true,dispatchAt:intent.createdAt});\n    }\n    return ownershipFind({...state,sourceCommit:intent.sourceCommit,dispatchIntent:true,dispatchAt:intent.createdAt,page:1,matches:[]});\n  }\n  if(state.stage==='findRun') {\n    if(!Array.isArray(body?.workflow_runs)||body.workflow_runs.length>100)throw Error('ownership_runs_schema');\n    const matches=[...(state.matches||[]),...body.workflow_runs.filter(run=>run.display_title===`Ownership update | ${state.requestId} | ${state.marketDate}`)];\n    if(matches.length>1)throw Error('ownership_ambiguous_runs');\n    if(body.workflow_runs.length===100){if(state.page>=10)throw Error('ownership_scan_limit');return ownershipFind({...state,page:state.page+1,matches});}\n    if(matches.length){ownershipValidateRun(matches[0],state);return ownershipPoll({...state,actionsRunId:String(matches[0].id),runHeadSha:matches[0].head_sha,matches:[]});}\n    if(state.dispatchIntent){if(now-state.dispatchAt>=5*60000)return ownershipDone(state,'dispatch_run_not_found');return ownershipFind({...state,page:1,matches:[]},15);}\n    const intent={schemaVersion:'ownership-dispatch-intent-v1',marketDate:state.marketDate,requestId:state.requestId,workflow:'ownership.yml',ref:'main',sourceCommit:state.sourceCommit,owner:state.owner,createdAt:now,dispatchIntent:true};\n    return ownershipResult({...state,stage:'intentWrite',intent},{method:'PUT',url:ownershipIntentUrl(state),body:{message:'[CF-Pages-Skip] chore: ownership dispatch intent',branch:'n8n-state',content:Buffer.from(JSON.stringify(intent)).toString('base64')}});\n  }\n  if(state.stage==='pollRun') {\n    ownershipValidateRun(body,state);\n    if(body.status==='completed')return ownershipDone(state,body.conclusion==='success'?'':String(body.conclusion||'unknown'),body.conclusion==='success'?'acquisition_job_succeeded':'acquisition_job_failed');\n    if(!['queued','in_progress','waiting','pending','requested'].includes(body.status))throw Error('ownership_run_status');\n    return ownershipPoll(state);\n  }\n  throw Error('ownership_stage');\n}\n\nconst item=$input.first();if(Date.now()>=item.json.state.deadline)return [{json:ownershipDone(item.json.state,\"ownership_deadline\")}];const op=item.json.op;if(op&&!(op.url.startsWith(OWNERSHIP_REPO+\"/\")||op.url===\"https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule\"))throw Error(\"ownership_origin\");return [item];"
+      },
+      "position": [
+        1260,
+        0
+      ]
+    },
+    {
+      "name": "Read dispatch or sanitized outcome",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 5,
+        "output": "={{ !$json.op ? 4 : $json.route === \"dispatch\" ? 2 : $json.route === \"write\" ? 3 : $json.state.stage === \"calendar\" ? 0 : 1 }}"
+      },
+      "position": [
+        1470,
+        0
+      ]
+    },
+    {
+      "name": "Read exact ownership run and status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": false,
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Claim immutable ownership dispatch intent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.op.body }}",
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        1890,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Read authoritative exchange calendar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "method": "={{ $json.op.method }}",
+        "url": "={{ $json.op.url }}",
+        "authentication": "none",
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {
+          "lowercaseHeaders": false,
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "position": [
+        2100,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Dispatch one bounded ownership acquisition",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "parameters": {
+        "resource": "workflow",
+        "operation": "dispatch",
+        "authentication": "accessToken",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "pingpongtech-uskg"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "stock-web-pages"
+        },
+        "workflowId": {
+          "__rl": true,
+          "mode": "filename",
+          "value": "ownership.yml"
+        },
+        "ref": {
+          "__rl": true,
+          "mode": "name",
+          "value": "main"
+        },
+        "inputs": "={{ JSON.stringify($json.op.body.inputs) }}"
+      },
+      "position": [
+        2310,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "VGYqVCElPfvn333j",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Restore ownership request state",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{state:$(\"Read dispatch or sanitized outcome\").item.json.state,response:$input.first().json}}];"
+      },
+      "position": [
+        2520,
+        0
+      ]
+    },
+    {
+      "name": "Correlate run without redispatch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function sha256(text) {\n  const bytes = Buffer.from(text, 'utf8');\n  const primes = []; const initial = []; const constants = [];\n  for (let n = 2; primes.length < 64; n++) {\n    if (primes.every(p => n % p)) {\n      primes.push(n); constants.push((Math.cbrt(n) % 1 * 0x100000000) | 0);\n      if (initial.length < 8) initial.push((Math.sqrt(n) % 1 * 0x100000000) | 0);\n    }\n  }\n  const length = bytes.length; const padded = Buffer.alloc(Math.ceil((length + 9) / 64) * 64);\n  bytes.copy(padded); padded[length] = 128; padded.writeUInt32BE(length * 8 >>> 0, padded.length - 4);\n  const rotate = (x, n) => x >>> n | x << (32 - n);\n  let hash = initial;\n  for (let offset = 0; offset < padded.length; offset += 64) {\n    const words = Array.from({length:64}, (_,i) => i < 16 ? padded.readUInt32BE(offset + 4*i) : 0);\n    for (let i=16;i<64;i++) {\n      const a=words[i-15], b=words[i-2];\n      words[i]=(words[i-16]+(rotate(a,7)^rotate(a,18)^a>>>3)+words[i-7]+(rotate(b,17)^rotate(b,19)^b>>>10))|0;\n    }\n    let [a,b,c,d,e,f,g,h]=hash;\n    for(let i=0;i<64;i++) {\n      const t1=(h+(rotate(e,6)^rotate(e,11)^rotate(e,25))+(e&f^~e&g)+constants[i]+words[i])|0;\n      const t2=((rotate(a,2)^rotate(a,13)^rotate(a,22))+(a&b^a&c^b&c))|0;\n      [a,b,c,d,e,f,g,h]=[(t1+t2)|0,a,b,c,(d+t1)|0,e,f,g];\n    }\n    hash=hash.map((value,i)=>(value+[a,b,c,d,e,f,g,h][i])|0);\n  }\n  return hash.map(value=>(value>>>0).toString(16).padStart(8,'0')).join('');\n}\nfunction calendarOpen(rows,day) {\n  if(!Array.isArray(rows)||!rows.length) throw Error('calendar_empty');\n  const dates=rows.map(row=>{\n    if(!/^\\d{7}$/.test(row.Date)||typeof row.Name!=='string') throw Error('calendar_schema');\n    return {...row,iso:`${Number(row.Date.slice(0,3))+1911}-${row.Date.slice(3,5)}-${row.Date.slice(5,7)}`};\n  });\n  if(dates.some(row=>row.iso.slice(0,4)!==day.slice(0,4))) throw Error('calendar_year');\n  if([0,6].includes(new Date(`${day}T00:00:00Z`).getUTCDay())) return false;\n  const events=dates.filter(row=>row.iso===day);\n  return !events.some(row=>!['開始交易日','最後交易日','國曆新年開始交易日','農曆春節前最後交易日','農曆春節後開始交易日'].includes(row.Name));\n}\nfunction latestCompletedSession(rows,now) {\n  const local=new Date(now+8*3600000);\n  const today=local.toISOString().slice(0,10);\n  calendarOpen(rows,today); // Validate the official payload even when today is closed.\n  const beforeClose=local.getUTCHours()*60+local.getUTCMinutes()<13*60+30;\n  for(let offset=beforeClose?1:0;offset<32;offset++) {\n    const day=new Date(Date.parse(today+'T00:00:00Z')-offset*86400000).toISOString().slice(0,10);\n    if(day.slice(0,4)!==today.slice(0,4)) throw Error('calendar_year_boundary');\n    if(calendarOpen(rows,day)) return day;\n  }\n  throw Error('completed_session_unavailable');\n}\n// Pure dispatcher transitions. Source acquisition and serialized state custody belong to ownership.yml.\nconst OWNERSHIP_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';\nfunction ownershipResult(state,op=null,delaySeconds=0){return {state,op,route:op?(op.method==='POST'?'dispatch':op.method==='PUT'?'write':'read'):'done',delaySeconds};}\nfunction ownershipRequest(state,stage,url,body=null,delaySeconds=0){return ownershipResult({...state,stage},{method:body?'POST':'GET',url,body},delaySeconds);}\nfunction ownershipDone(state,errorCategory='',status='failed'){return ownershipResult({...state,stage:'done',status,errorCategory});}\nfunction ownershipStart(input,now=Date.now()) {\n  if(!/^\\d{1,24}$/.test(String(input.owner||'')))throw Error('ownership_owner');\n  if(!['manual','scheduled'].includes(input.run_kind))throw Error('ownership_run_kind');\n  const local=new Date(now+8*3600000),today=local.toISOString().slice(0,10),manual=input.run_kind==='manual';\n  const explicit=input.verified_market_date;\n  if(manual&&(!/^\\d{4}-\\d{2}-\\d{2}$/.test(explicit||'')||!Number.isFinite(Date.parse(explicit+'T00:00:00Z'))||new Date(explicit+'T00:00:00Z').toISOString().slice(0,10)!==explicit||explicit>today))throw Error('ownership_verified_market_date');\n  const minutes=local.getUTCHours()*60+local.getUTCMinutes();\n  if(!manual&&([0,6].includes(local.getUTCDay())||minutes<1020||minutes>=1065))throw Error('ownership_schedule_slot');\n  if(manual&&!/^[a-zA-Z0-9_.-]{1,64}$/.test(input.manual_batch_id||''))throw Error('ownership_manual_batch_id');\n  const slot=manual?'manual:'+input.manual_batch_id:minutes<1035?'1700':minutes<1050?'1715':'1730';\n  return ownershipRequest({runKind:input.run_kind,explicit,slot,startedAt:now,deadline:now+15*60000,status:'pending',owner:String(input.owner)},'calendar','https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule');\n}\nfunction ownershipFind(state,delay=0){return ownershipRequest(state,'findRun',`${OWNERSHIP_REPO}/actions/workflows/ownership.yml/runs?event=workflow_dispatch&per_page=100&page=${state.page||1}`,null,delay);}\nfunction ownershipIntentUrl(state){return `${OWNERSHIP_REPO}/contents/operations/ownership-dispatch/${state.marketDate.slice(0,4)}/${sha256(state.requestId)}.json`;}\nfunction ownershipIntentRead(state,stage='intentRead'){return ownershipRequest(state,stage,ownershipIntentUrl(state)+'?ref=n8n-state');}\nfunction ownershipIntentBody(body,state,now){\n  if(body?.encoding!=='base64'||typeof body.content!=='string'||body.content.length>8000)throw Error('ownership_intent_schema');\n  const intent=JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));\n  if(intent.schemaVersion!=='ownership-dispatch-intent-v1'||intent.marketDate!==state.marketDate||intent.requestId!==state.requestId||intent.workflow!=='ownership.yml'||intent.ref!=='main'||!/^[a-f0-9]{40}$/.test(intent.sourceCommit||'')||!/^\\d{1,24}$/.test(intent.owner||'')||!Number.isSafeInteger(intent.createdAt)||intent.createdAt>now||intent.dispatchIntent!==true)throw Error('ownership_intent_lineage');\n  return intent;\n}\nfunction ownershipDispatch(state){return ownershipRequest(state,'dispatch',`${OWNERSHIP_REPO}/actions/workflows/ownership.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate}});}\nfunction ownershipValidateRun(run,state){\n  if(run.display_title!==`Ownership update | ${state.requestId} | ${state.marketDate}`||run.event!=='workflow_dispatch'||run.head_branch!=='main'||!['.github/workflows/ownership.yml','.github/workflows/ownership.yml@main','.github/workflows/ownership.yml@refs/heads/main'].includes(run.path)||run.head_sha!==state.sourceCommit||!/^[a-f0-9]{40}$/.test(run.head_sha||'')||!/^\\d{1,24}$/.test(String(run.id)))throw Error('ownership_run_lineage');\n  if(state.actionsRunId&&(String(run.id)!==state.actionsRunId||run.head_sha!==state.runHeadSha))throw Error('ownership_run_lineage');\n}\nfunction ownershipPoll(state){return ownershipRequest(state,'pollRun',`${OWNERSHIP_REPO}/actions/runs/${state.actionsRunId}`,null,15);}\nfunction ownershipAdvance(state,response,now=Date.now()) {\n  if(now>=state.deadline)return ownershipDone(state,'ownership_deadline');\n  if(state.stage==='done')return ownershipResult(state);\n  if(state.stage==='dispatch')return ownershipFind({...state,dispatchIntent:true,dispatchAt:state.dispatchAt||now,page:1,matches:[]},15);\n  if(state.stage==='intentWrite')return ownershipIntentRead(state,'intentVerify');\n  if(state.stage==='intentRead'&&Number(response?.statusCode)===404)return ownershipFind(state);\n  if(Number(response?.statusCode??200)<200||Number(response?.statusCode??200)>=300)return ownershipDone(state,'github_read_failed');\n  let body=response.body??response.data;if(typeof body==='string')body=JSON.parse(body);\n  if(state.stage==='calendar') {\n    if(state.runKind==='scheduled'&&!calendarOpen(body,new Date(now+8*3600000).toISOString().slice(0,10)))return ownershipDone(state,'','skipped_non_trading');\n    const marketDate=state.runKind==='manual'?state.explicit:latestCompletedSession(body,now);\n    if(!calendarOpen(body,marketDate))throw Error('ownership_verified_market_date_closed');\n    return ownershipRequest({...state,marketDate,requestId:`ownership:${marketDate.replaceAll('-','')}:${state.slot}`,page:1,matches:[]},'mainRef',OWNERSHIP_REPO+'/git/ref/heads/main');\n  }\n  if(state.stage==='mainRef') {\n    if(!/^[a-f0-9]{40}$/.test(body?.object?.sha||''))throw Error('ownership_main_ref');\n    return ownershipIntentRead({...state,sourceCommit:body.object.sha});\n  }\n  if(state.stage==='intentRead'||state.stage==='intentVerify') {\n    const intent=ownershipIntentBody(body,state,now);\n    if(state.stage==='intentVerify') {\n      if(intent.owner!==state.owner||JSON.stringify(intent)!==JSON.stringify(state.intent))return ownershipDone(state,'ownership_intent_claim_lost');\n      return ownershipDispatch({...state,dispatchIntent:true,dispatchAt:intent.createdAt});\n    }\n    return ownershipFind({...state,sourceCommit:intent.sourceCommit,dispatchIntent:true,dispatchAt:intent.createdAt,page:1,matches:[]});\n  }\n  if(state.stage==='findRun') {\n    if(!Array.isArray(body?.workflow_runs)||body.workflow_runs.length>100)throw Error('ownership_runs_schema');\n    const matches=[...(state.matches||[]),...body.workflow_runs.filter(run=>run.display_title===`Ownership update | ${state.requestId} | ${state.marketDate}`)];\n    if(matches.length>1)throw Error('ownership_ambiguous_runs');\n    if(body.workflow_runs.length===100){if(state.page>=10)throw Error('ownership_scan_limit');return ownershipFind({...state,page:state.page+1,matches});}\n    if(matches.length){ownershipValidateRun(matches[0],state);return ownershipPoll({...state,actionsRunId:String(matches[0].id),runHeadSha:matches[0].head_sha,matches:[]});}\n    if(state.dispatchIntent){if(now-state.dispatchAt>=5*60000)return ownershipDone(state,'dispatch_run_not_found');return ownershipFind({...state,page:1,matches:[]},15);}\n    const intent={schemaVersion:'ownership-dispatch-intent-v1',marketDate:state.marketDate,requestId:state.requestId,workflow:'ownership.yml',ref:'main',sourceCommit:state.sourceCommit,owner:state.owner,createdAt:now,dispatchIntent:true};\n    return ownershipResult({...state,stage:'intentWrite',intent},{method:'PUT',url:ownershipIntentUrl(state),body:{message:'[CF-Pages-Skip] chore: ownership dispatch intent',branch:'n8n-state',content:Buffer.from(JSON.stringify(intent)).toString('base64')}});\n  }\n  if(state.stage==='pollRun') {\n    ownershipValidateRun(body,state);\n    if(body.status==='completed')return ownershipDone(state,body.conclusion==='success'?'':String(body.conclusion||'unknown'),body.conclusion==='success'?'acquisition_job_succeeded':'acquisition_job_failed');\n    if(!['queued','in_progress','waiting','pending','requested'].includes(body.status))throw Error('ownership_run_status');\n    return ownershipPoll(state);\n  }\n  throw Error('ownership_stage');\n}\n\nconst item=$input.first().json;return [{json:ownershipAdvance(item.state,item.response)}];"
+      },
+      "position": [
+        2730,
+        0
+      ]
+    },
+    {
+      "name": "Report acquisition status without coverage claim",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const state=$input.first().json.state;return [{json:{marketDate:state.marketDate,requestId:state.requestId,actionsRunId:state.actionsRunId||\"\",status:state.status,errorCategory:state.errorCategory||\"\",coverage:\"read verified ownership manifest; job success alone is not coverage\"}}];"
+      },
+      "position": [
+        2940,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Weekdays 17:00 17:15 17:30 Taipei": {
+      "main": [
+        [
+          {
+            "node": "Validate scheduled slot and start calendar read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual explicit verified market date": {
+      "main": [
+        [
+          {
+            "node": "Verified manual date inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verified manual date inputs": {
+      "main": [
+        [
+          {
+            "node": "Validate explicit date and start calendar read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate scheduled slot and start calendar read": {
+      "main": [
+        [
+          {
+            "node": "Bounded status polling wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate explicit date and start calendar read": {
+      "main": [
+        [
+          {
+            "node": "Bounded status polling wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bounded status polling wait": {
+      "main": [
+        [
+          {
+            "node": "Gate deadline and fixed request origins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate deadline and fixed request origins": {
+      "main": [
+        [
+          {
+            "node": "Read dispatch or sanitized outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read dispatch or sanitized outcome": {
+      "main": [
+        [
+          {
+            "node": "Read authoritative exchange calendar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read exact ownership run and status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dispatch one bounded ownership acquisition",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Claim immutable ownership dispatch intent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Report acquisition status without coverage claim",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read authoritative exchange calendar": {
+      "main": [
+        [
+          {
+            "node": "Restore ownership request state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read exact ownership run and status": {
+      "main": [
+        [
+          {
+            "node": "Restore ownership request state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch one bounded ownership acquisition": {
+      "main": [
+        [
+          {
+            "node": "Restore ownership request state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim immutable ownership dispatch intent": {
+      "main": [
+        [
+          {
+            "node": "Restore ownership request state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore ownership request state": {
+      "main": [
+        [
+          {
+            "node": "Correlate run without redispatch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Correlate run without redispatch": {
+      "main": [
+        [
+          {
+            "node": "Bounded status polling wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Asia/Taipei",
+    "executionOrder": "v1",
+    "executionTimeout": 930,
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  }
+}

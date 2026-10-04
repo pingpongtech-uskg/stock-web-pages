@@ -21,7 +21,9 @@ def sections():
 def test_manual_choice_and_exact_job_guards():
     text, snapshot, probe = sections()
     assert re.search(r'source_mode:\n.*?type: choice\n.*?default: publish\n.*?options:\n.*?- publish\n.*?- institutional_probe', text, re.S)
-    assert "inputs.source_mode == 'publish' || inputs.source_mode == ''" in snapshot
+    snapshot_guard = next(line.strip() for line in snapshot.splitlines() if line.strip().startswith('if:'))
+    assert "github.ref == 'refs/heads/main'" in snapshot_guard
+    assert set(re.findall(r"inputs.source_mode == '([^']*)'", snapshot_guard)) == {'publish', 'ownership_recompute', ''}
     assert "github.ref == 'refs/heads/main' && inputs.source_mode == 'institutional_probe'" in probe
     assert 'group: daily-snapshot' in text
     assert 'cancel-in-progress: false' in text
@@ -32,7 +34,10 @@ def test_probe_validates_inputs_and_identifies_exact_source():
     _, snapshot, probe = sections()
     for job in (snapshot, probe):
         assert 'SOURCE_MODE: ${{ inputs.source_mode }}' in job
-        assert "in {'publish', 'institutional_probe'}" in job
+        allowed = re.search(r"in (\{[^\n]+\}), 'invalid source_mode'", job)
+        assert allowed is not None
+        import ast
+        assert ast.literal_eval(allowed.group(1)) == {'publish', 'institutional_probe', 'ownership_recompute'}
         assert "date.fromisoformat(os.environ['MARKET_DATE'])" in job
         assert "re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}'" in job
     assert 'ref: ${{ github.sha }}' in probe
@@ -92,6 +97,7 @@ def test_finmind_secret_scoped_to_probe_step_and_never_printed():
     ({}, True),
     ({'SOURCE_MODE': 'unknown'}, False),
     ({'SOURCE_MODE': 'publish'}, False),
+    ({'SOURCE_MODE': 'ownership_recompute'}, False),
     ({'REQUEST_ID': 'unsafe request'}, False),
     ({'MARKET_DATE': '2026-10-99'}, False),
 ])
@@ -124,3 +130,14 @@ def test_captured_official_evidence_is_opt_in_and_probe_only():
     assert flag in command
     assert '--market-date "$MARKET_DATE"' in command
     assert '--max-data-requests 3' in command
+
+
+@pytest.mark.parametrize('mode,valid', [('', True), ('publish', True), ('ownership_recompute', True), ('institutional_probe', True), ('unknown', False), ('OWNERSHIP_RECOMPUTE', False)])
+def test_source_mode_enum_accepts_supported_modes_and_rejects_unknown(mode, valid):
+    _, snapshot, _ = sections()
+    validator = snapshot.split("python - <<'PY'\n", 1)[1].split('\n          PY', 1)[0]
+    script = '\n'.join(line.removeprefix('          ') for line in validator.splitlines())
+    cache_names = ['CACHE_RESTORE_COMMIT', 'CACHE_DESCRIPTOR_SHA256', 'CACHE_MARKET_DATE', 'CACHE_SOURCE_GIT_COMMIT', 'CACHE_ACTIONS_RUN_ID', 'CACHE_REQUEST_ID']
+    env = {**os.environ, **dict.fromkeys(cache_names, ''), 'SOURCE_MODE': mode, 'REQUEST_ID': 'test-20261002', 'MARKET_DATE': '2026-10-02', 'OWNERSHIP_REQUESTED_GENERATION': ''}
+    result = subprocess.run([sys.executable, '-c', script], env=env, capture_output=True, text=True)
+    assert (result.returncode == 0) is valid

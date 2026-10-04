@@ -108,6 +108,13 @@ function validateChipReference(value: unknown): void {
     requireString(indicator.value)
     requireString(indicator.period)
     expect(requireArray(indicator.sourceRefs).every((ref) => typeof ref === 'string'))
+    if (indicator.sourceDates !== undefined) {
+      expect(requireArray(indicator.sourceDates).every((sourceDate) => typeof sourceDate === 'string' && /^\d{4}-\d{2}(?:-\d{2})?$/.test(sourceDate) && Number.isFinite(Date.parse(sourceDate))))
+    }
+    if (indicator.retrievedAt !== undefined && indicator.retrievedAt !== null) {
+      expect(Number.isFinite(Date.parse(requireString(indicator.retrievedAt))))
+    }
+    if (indicator.historicalBackfill !== undefined) expect(typeof indicator.historicalBackfill === 'boolean')
     if (indicator.rawValues !== undefined && indicator.rawValues !== null) {
       if (key === 'directorSupervisor12m') {
         const raw = requireRecord(indicator.rawValues)

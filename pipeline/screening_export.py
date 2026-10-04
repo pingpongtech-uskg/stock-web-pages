@@ -1,13 +1,14 @@
 """Compact screening interchange shared by the website archive and n8n."""
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import re
 from datetime import date, datetime
 from typing import Any
 
-from pipeline.release_contract import common_share_universe, growth_coverage_error
+from pipeline.release_contract import common_share_universe, growth_coverage_error, chip_reference_error
 from pipeline.history_archive import STRATEGIES, canonical_json_bytes
 
 SCHEMA_VERSION = 'screening-export-v1'
@@ -106,7 +107,7 @@ def _stock_projection(stock: dict[str, Any], row: dict[str, Any], day: str, sour
     periods = {key: [{field: row[field] for field in ('year', 'quarter', 'periodEnd', 'availableAt', 'source', 'sourceRefs', 'basis', 'inputOrigin', 'derivationMethod', 'periodType') if field in row}
                for row in value[-8:] if isinstance(row, dict)]
                for key, value in inputs.items() if isinstance(value, list) and key in {'incomeQuarterly', 'balanceQuarterly', 'cashflowAnnual', 'cashFlowAnnual', 'dividends', 'monthlyRevenue', 'monthlyRevenueOfficial', 'monthlyRevenueYoy', 'cashflowQuarterly', 'incomeYtd'}}
-    return {'code': row['code'], 'name': str(stock.get('name') or row.get('name') or ''),
+    projected = {'code': row['code'], 'name': str(stock.get('name') or row.get('name') or ''),
             'sector': str(stock.get('sector') or row.get('sector') or ''), 'metrics': metrics, 'strategies': [],
             'provenance': {'marketDate': day, 'sourceRefs': stock.get('sourceRefs') or source_refs,
                 'dataStatus': stock.get('dataStatus', 'unknown'), 'market': stock.get('market', 'unknown'),
@@ -115,6 +116,14 @@ def _stock_projection(stock: dict[str, Any], row: dict[str, Any], day: str, sour
                 'valuationEvidenceLevel': stock.get('valuationEvidenceLevel', 'unknown'),
                 'missingReasons': growth.get('missingReasons', []), 'inputsComplete': growth.get('inputsComplete', False),
                 'regressionEvidence': {key: (stock.get('regression') or {}).get(key) for key in ('status', 'priceBasis', 'signalEligible', 'historyStart', 'historyEnd')}}}
+
+
+    if 'chipReference' in stock:
+        error = chip_reference_error(stock['chipReference'], row['code'])
+        if error:
+            raise ValueError(error)
+        projected['chipReference'] = copy.deepcopy(stock['chipReference'])
+    return projected
 
 
 def build_export(release: dict[str, Any], *, request_id: str, source_git_commit: str,
@@ -215,6 +224,11 @@ def validate_export(value: Any) -> list[str]:
            not isinstance(stock.get('strategies'), list) or not isinstance(stock.get('metrics'), dict) or
            not isinstance(stock.get('provenance'), dict) for stock in stocks):
         return [*errors, 'selected_stock_shape']
+    for stock in stocks:
+        if 'chipReference' in stock:
+            error = chip_reference_error(stock['chipReference'], stock['code'])
+            if error:
+                errors.append(error)
     codes = [stock.get('code') for stock in stocks]
     if len(codes) != len(stocks) or len(codes) != len(set(codes)):
         errors.append('selected_stock_duplicates')

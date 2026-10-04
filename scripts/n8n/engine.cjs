@@ -124,6 +124,8 @@ function summary(state) {
 function start(input,now=Date.now()) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(input.marketDate)||new Date(`${input.marketDate}T00:00:00Z`).toISOString().slice(0,10)!==input.marketDate) throw Error('invalid_market_date');
   if(!/^[a-zA-Z0-9_.:-]{1,160}$/.test(input.requestId)||!['screen','resume','diagnose','revision','legacy_archive'].includes(input.mode)) throw Error('invalid_operator_input');
+  if(!['publish','ownership_recompute'].includes(input.sourceMode||'publish')||(input.sourceMode==='ownership_recompute'&&(input.runKind!=='manual'||input.mode!=='revision'||input.automaticRequestId||input.resolveLatest)))throw Error('invalid_source_mode');
+  if(input.ownershipGeneration!==undefined&&(input.sourceMode!=='ownership_recompute'||!/^[a-f0-9]{40}$/.test(input.ownershipGeneration)))throw Error('invalid_ownership_generation');
   if(input.mode==='legacy_archive'&&(input.runKind!=='manual'||!['2026-09-08','2026-09-11','2026-09-18','2026-09-23','2026-09-24','2026-10-01'].includes(input.marketDate)))throw Error('legacy_operator_scope');
   if(input.actionsRunId!==undefined&&!/^\d{1,24}$/.test(String(input.actionsRunId))) throw Error('invalid_actions_run_id');
   if(input.preflightRetryOwner!==undefined&&(input.runKind!=='manual'||input.mode!=='screen'||!/^\d{1,24}$/.test(input.preflightRetryOwner)))throw Error('invalid_preflight_retry_owner');
@@ -141,7 +143,7 @@ function next(state,now) {
     case 'findRun':return findRuns(state);
     case 'failedRunJobs':return request(state,'failedRunJobs','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/jobs?per_page=100`);
     case 'failedRunArtifacts':return request(state,'failedRunArtifacts','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);
-    case 'dispatch':return request({...state,dispatchIntent:true,dispatchStartedAt:state.dispatchStartedAt||now},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate,source_mode:'publish',...(state.restoreStatus==='verified'?restoreOperation.restoreDispatchInputs(state):{})}});
+    case 'dispatch':return request({...state,dispatchIntent:true,dispatchStartedAt:state.dispatchStartedAt||now},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate,source_mode:state.sourceMode||'publish',...(state.ownershipGeneration?{ownership_generation:state.ownershipGeneration}:{}),...(state.restoreStatus==='verified'?restoreOperation.restoreDispatchInputs(state):{})}});
     case 'pollRun':return request(state,'pollRun','github','GET',`${REPO}/actions/runs/${state.actionsRunId}`,null,15);
     case 'artifactList':return request(state,'artifactList','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);
     case 'publicationExport':return request(state,'publicationExport','github','GET',`${REPO}/contents/public/data/screening-export.json?ref=${state.publication.publishedGitCommit}`);
@@ -257,7 +259,7 @@ function advanceSuccess(state,body,status,response,now) {
       const operationDeadline=manualOverride?state.operationDeadline:(resume.operationDeadline||state.operationDeadline);
       const audit=manualOverride?{scheduledCutoff:resume.scheduledCutoff||resume.overdueAt,manualDeadlineOverride:true,manualResumedAt:now}:{};
       const correction=correctPreflight?{dispatchIntent:false,preflightRetryOwner:undefined,confirmedPreflightCorrectionFrom:state.preflightRetryOwner,errorCategory:'',errorMessage:''}:resumeTerminal?{transitionTerminal:undefined,errorCategory:'',errorMessage:'',recordFailure:false}:{};
-      const saved={...state,...resume,...audit,...correction,...(lastVerifiedCache?{lastVerifiedCache,cacheActiveManifestHash:lastVerifiedCache.cacheManifestHash}:{}),owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl};
+      const saved={...state,...resume,...audit,...correction,...(lastVerifiedCache?{lastVerifiedCache,cacheActiveManifestHash:lastVerifiedCache.cacheManifestHash}:{}),owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl,sourceMode:state.sourceMode||resume.sourceMode||'publish',ownershipGeneration:state.ownershipGeneration||resume.ownershipGeneration};
       const stage=!state.isOpen?'holiday':state.mode==='legacy_archive'?'legacyRef':saved.actionsRunId?'pollRun':'findRun';
       return checkpoint(saved,stage);
     }
@@ -377,10 +379,28 @@ function advanceSuccess(state,body,status,response,now) {
       if(databases.length) return request({...state,databaseId:databases[0].id},'databaseMetadata','notion','GET',`https://api.notion.com/v1/databases/${databases[0].id}`);
       return request(state,'createDatabase','notion','POST','https://api.notion.com/v1/databases',{parent:{type:'page_id',page_id:state.pageId},title:richText(state.marketDate.replaceAll('-','')),is_inline:true,initial_data_source:{properties:stockSchema()}});
     }
-    case 'createDatabase':
-    case 'databaseMetadata': {
+    case 'createDatabase': {
       if(body.data_sources?.length!==1||!body.data_sources[0].id) throw Error('notion_child_source');
       return checkpoint({...state,databaseId:body.id,dataSourceId:body.data_sources[0].id,notionDatabaseId:body.id,notionDataSourceId:body.data_sources[0].id},'queryRows');
+    }
+    case 'databaseMetadata': {
+      if(!state.childSchemaStage) {
+        if(body.data_sources?.length!==1||!body.data_sources[0].id)throw Error('notion_child_source');
+        const updated={...state,databaseId:body.id,dataSourceId:body.data_sources[0].id,notionDatabaseId:body.id,notionDataSourceId:body.data_sources[0].id,childSchemaStage:'read'};
+        return request(updated,'databaseMetadata','notion','GET',`https://api.notion.com/v1/data_sources/${updated.dataSourceId}`);
+      }
+      if(state.childSchemaStage==='patch')return request({...state,childSchemaStage:'verify'},'databaseMetadata','notion','GET',`https://api.notion.com/v1/data_sources/${state.dataSourceId}`);
+      if(!body.properties||typeof body.properties!=='object')throw Error('notion_child_schema');
+      const expected=stockSchema(),missing={};
+      for(const [name,value]of Object.entries(expected)) {
+        if(body.properties[name]&&body.properties[name].type!==Object.keys(value)[0])throw Error('notion_child_schema:'+name);
+        if(!body.properties[name]&&(name.startsWith('籌碼')||['大股東持股比重最新','董監持股比重最新','董監持股比重去年同月','股東人數最新'].includes(name)))missing[name]=value;
+      }
+      if(Object.keys(missing).length) {
+        if(state.childSchemaStage==='verify')throw Error('notion_child_schema_readback');
+        return request({...state,childSchemaStage:'patch'},'databaseMetadata','notion','PATCH',`https://api.notion.com/v1/data_sources/${state.dataSourceId}`,{properties:missing});
+      }
+      return checkpoint({...state,childSchemaStage:undefined},'queryRows');
     }
     case 'queryRows':
     case 'verifyRows':return handleRows(state,body);

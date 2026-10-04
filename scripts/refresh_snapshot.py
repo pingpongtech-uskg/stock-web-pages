@@ -75,6 +75,7 @@ from pipeline.release_contract import (  # noqa: E402
     FORMULA_VERSIONS,
     compute_funnel,
     is_common_stock_code,
+    chip_reference_error,
 )
 from pipeline.ownership_checks import evaluate_chip_reference  # noqa: E402
 from scripts.fetch_ownership import OWNERSHIP_SNAPSHOT_VERSION  # noqa: E402
@@ -223,26 +224,26 @@ def attach_chip_references(
     return details, rankings
 
 
-def _unavailable_chip_reference() -> dict[str, Any]:
-    return evaluate_chip_reference([], data_freshness="unavailable")
+def _unavailable_chip_reference(evaluation_date: date | str | None = None) -> dict[str, Any]:
+    return evaluate_chip_reference([], data_freshness="unavailable", evaluation_date=evaluation_date)
 
 
-def load_ownership_chips(path: Path | None, codes: list[str], *, offline: bool) -> tuple[dict[str, dict[str, Any]], str, list[str]]:
+def load_ownership_chips(path: Path | None, codes: list[str], *, offline: bool, evaluation_date: date | str | None = None) -> tuple[dict[str, dict[str, Any]], str, list[str]]:
     """Load only a validated cache; offline releases explicitly stay stale."""
     if path is None or not path.exists():
-        return {code: _unavailable_chip_reference() for code in codes}, "unavailable", []
+        return {code: _unavailable_chip_reference(evaluation_date) for code in codes}, "unavailable", []
     try:
         payload = load_json(path)
     except (OSError, ValueError, json.JSONDecodeError):
-        return {code: _unavailable_chip_reference() for code in codes}, "unavailable", []
+        return {code: _unavailable_chip_reference(evaluation_date) for code in codes}, "unavailable", []
     if payload.get("schemaVersion") != OWNERSHIP_SNAPSHOT_VERSION or not isinstance(payload.get("rows"), list):
-        return {code: _unavailable_chip_reference() for code in codes}, "unavailable", []
+        return {code: _unavailable_chip_reference(evaluation_date) for code in codes}, "unavailable", []
     by_code: dict[str, list[dict[str, Any]]] = {}
     for row in payload["rows"]:
         if isinstance(row, dict) and row.get("code"):
             by_code.setdefault(str(row["code"]), []).append(row)
     freshness = "stale" if offline else str(payload.get("status") or "stale")
-    chips = {code: evaluate_chip_reference(by_code.get(code, []), data_freshness=freshness) for code in codes}
+    chips = {code: evaluate_chip_reference(by_code.get(code, []), data_freshness=freshness, evaluation_date=evaluation_date) for code in codes}
     return chips, freshness, [str(ref) for ref in payload.get("sourceRefs", []) if ref]
 
 
@@ -1344,10 +1345,14 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         used_sources = merge_refs(used_sources, next_detail.get("sourceRefs"))
 
     chip_by_code, chip_freshness, chip_source_refs = load_ownership_chips(
-        ownership_snapshot, [str(detail.get("code")) for detail in enriched], offline=offline
+        ownership_snapshot, [str(detail.get("code")) for detail in enriched], offline=offline, evaluation_date=end
     )
     for detail in enriched:
-        detail["chipReference"] = chip_by_code.get(str(detail.get("code")), _unavailable_chip_reference())
+        code = str(detail.get("code"))
+        previous_chip = detail.get("chipReference")
+        if chip_freshness == "unavailable" and isinstance(previous_chip, dict) and chip_reference_error(previous_chip, code) is None:
+            chip_by_code[code] = {**copy.deepcopy(previous_chip), "dataFreshness": "stale"}
+        detail["chipReference"] = chip_by_code.get(code, _unavailable_chip_reference(end))
     used_sources = merge_refs(used_sources, chip_source_refs)
 
     for detail in enriched:
@@ -1949,12 +1954,108 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     }
 
 
+
+def _chip_projection(value: Any) -> Any:
+    """Exact immutable projection of all fields outside chip evidence."""
+    if isinstance(value, dict):
+        return {key: _chip_projection(child) for key, child in value.items()
+                if key not in {"chipReference", "ownershipMonthly"}}
+    if isinstance(value, list):
+        return [_chip_projection(child) for child in value]
+    return value
+
+
+def recompute_ownership_release(data_dir: Path, *, as_of: str,
+                                ownership_snapshot: Path | None) -> dict[str, Any]:
+    """Correct chip evidence only; never enrich/recompute market or strategy inputs."""
+    cutoff = date.fromisoformat(as_of).isoformat()
+    baseline = load_json(data_dir / "latest.json")
+    if baseline.get("marketDate") != cutoff:
+        raise ValueError("ownership correction baseline market date mismatch")
+    old_run = baseline.get("runId")
+    if not isinstance(old_run, str) or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,160}", old_run):
+        raise ValueError("invalid ownership correction baseline run")
+    summaries = baseline.get("stocks")
+    if not isinstance(summaries, list) or not summaries:
+        raise ValueError("ownership correction requires complete baseline stocks")
+    codes = [row.get("code") for row in summaries if isinstance(row, dict)]
+    if len(codes) != len(summaries) or len(set(codes)) != len(codes) or any(
+            not isinstance(code, str) or not re.fullmatch(r"[1-9]\d{3}", code) for code in codes):
+        raise ValueError("invalid ownership correction stock codes")
+    old_dir = data_dir / "releases" / old_run
+    old_manifest = load_json(old_dir / "manifest.json")
+    if old_manifest.get("runId") != old_run or old_manifest.get("marketDate") != cutoff:
+        raise ValueError("ownership correction manifest identity mismatch")
+    details = []
+    for code in codes:
+        try:
+            detail = load_json(old_dir / "stocks" / f"{code}.json")
+        except (OSError, ValueError) as exc:
+            raise ValueError("ownership correction requires complete stock details") from exc
+        if detail.get("code") != code or detail.get("asOf") != cutoff:
+            raise ValueError("ownership correction detail identity mismatch")
+        details.append(detail)
+    try:
+        cache = load_json(ownership_snapshot) if ownership_snapshot else {}
+    except (OSError, ValueError):
+        cache = {}
+    rows = cache.get("rows") if cache.get("schemaVersion") == OWNERSHIP_SNAPSHOT_VERSION else None
+    if not isinstance(rows, list) or not rows:
+        return {"run_id": old_run, "market_date": cutoff, "stocks": len(codes), "ownership_updated": False}
+    eligible = [copy.deepcopy(row) for row in rows if isinstance(row, dict)
+                and row.get("code") in codes and str(row.get("period") or "") <= cutoff[:7]
+                and str(row.get("asOf") or row.get("period") or "") <= cutoff]
+    if not eligible:
+        return {"run_id": old_run, "market_date": cutoff, "stocks": len(codes), "ownership_updated": False}
+    by_code = {code: [row for row in eligible if row.get("code") == code] for code in codes}
+    chips = {code: evaluate_chip_reference(values, data_freshness=str(cache.get("status") or "stale"),
+                                          evaluation_date=cutoff)
+             for code, values in by_code.items() if values}
+    release, enriched = copy.deepcopy(baseline), copy.deepcopy(details)
+    for detail in enriched:
+        code = detail["code"]
+        if code in chips:
+            detail["chipReference"] = copy.deepcopy(chips[code])
+            detail["ownershipMonthly"] = copy.deepcopy(by_code[code])
+    for row in [*release["stocks"], *(row for values in release["rankings"].values() for row in values)]:
+        if row.get("code") in chips:
+            row["chipReference"] = copy.deepcopy(chips[row["code"]])
+    if _chip_projection(release) != _chip_projection(baseline) or _chip_projection(enriched) != _chip_projection(details):
+        raise ValueError("ownership correction changed non-chip fields")
+    canonical = json.dumps({"baselineRunId": old_run, "codes": baseline.get("inputCodes", []),
+                            "details": enriched, "marketDate": cutoff}, ensure_ascii=False, sort_keys=True).encode()
+    digest = hashlib.sha256(canonical).hexdigest()
+    run_id = f"ownership-{datetime.now(TAIPEI).strftime('%Y%m%d-%H%M%S')}-{digest[:10]}"
+    release = {**release, "runId": run_id, "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat()}
+    # Details normally omit runId. Rebind it only if the baseline explicitly carried it.
+    for detail in enriched:
+        if "runId" in detail:
+            detail["runId"] = run_id
+    canonical = json.dumps({"baselineRunId": old_run, "codes": baseline.get("inputCodes", []),
+                            "details": enriched, "marketDate": cutoff}, ensure_ascii=False, sort_keys=True).encode()
+    manifest = {**old_manifest, **release, "baselineRunId": old_run,
+                "inputHash": hashlib.sha256(canonical).hexdigest(), "codeCommit": _git_head(),
+                "rankingsHash": hashlib.sha256(json.dumps(release["rankings"], ensure_ascii=False, sort_keys=True).encode()).hexdigest(),
+                "ownershipCorrection": {"mode": "cache_only", "baselineRunId": old_run,
+                                        "snapshotSha256": hashlib.sha256(ownership_snapshot.read_bytes()).hexdigest()}}
+    release_dir = data_dir / "releases" / run_id
+    if release_dir.exists():
+        raise ValueError("ownership correction release already exists")
+    for detail in enriched:
+        atomic_json(release_dir / "stocks" / f"{detail['code']}.json", detail)
+    atomic_json(release_dir / "manifest.json", manifest)
+    atomic_json(data_dir / "latest.json", release)
+    return {"run_id": run_id, "baseline_run_id": old_run, "market_date": cutoff,
+            "stocks": len(codes), "ownership_updated": True}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--codes", default="", help="comma-separated tracked codes; default uses all baseline stocks")
     parser.add_argument("--as-of", default=None, help="query end date YYYY-MM-DD; default uses today in Asia/Taipei")
     parser.add_argument("--output", default=str(ROOT / "public" / "data"))
     parser.add_argument("--offline", action="store_true", help="skip network sources and recalculate from the checked-in snapshot")
+    parser.add_argument("--ownership-recompute", action="store_true", help="correct chip evidence only from verified cache; preserve every strategy input/output")
     parser.add_argument("--recompute-existing", action="store_true", help="recalculate fresh cached inputs without another network refresh")
     parser.add_argument("--ownership-snapshot", default=None, help="validated ownership cache path; ownership is reference-only")
     parser.add_argument("--source-cache-dir", type=Path, default=None, help="retain verified official raw volume receipts")
@@ -1962,6 +2063,13 @@ def main() -> int:
     args = parser.parse_args()
     codes = list(dict.fromkeys(code.strip() for code in args.codes.split(",") if code.strip()))
     try:
+        if args.ownership_recompute:
+            if not args.as_of or codes or args.recompute_existing:
+                raise ValueError("ownership recompute requires exact as-of and no strategy recompute/codes")
+            result = recompute_ownership_release(Path(args.output), as_of=args.as_of,
+                ownership_snapshot=Path(args.ownership_snapshot) if args.ownership_snapshot else None)
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+            return 0
         result = build_release(
             Path(args.output), codes, as_of=args.as_of, offline=args.offline,
             ownership_snapshot=Path(args.ownership_snapshot) if args.ownership_snapshot else None,

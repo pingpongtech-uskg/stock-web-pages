@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from pipeline.ownership_inputs import normalize_director_rows, normalize_tdcc_rows, merge_ownership_rows
+from pipeline.ownership_inputs import DIRECTOR_SCOPE, normalize_director_rows, normalize_tdcc_rows, merge_ownership_rows
 from pipeline.source_receipts import safe_directory
 
 OWNERSHIP_SNAPSHOT_VERSION = "ownership-snapshot-v1"
@@ -34,7 +34,6 @@ TWSE_OPENAPI_BASE = "https://openapi.twse.com.tw/v1"
 DIRECTOR_ENDPOINTS = ("t187ap11_L", "t187ap11_P")
 ISSUED_SHARES_ENDPOINTS = ("t187ap03_L", "t187ap03_P")
 TDCC_HISTORY_URL = "https://www.tdcc.com.tw/portal/zh/smWeb/qryStock"
-DIRECTOR_SCOPE = ("董事長本人", "董事本人", "獨立董事本人", "監察人本人")
 
 
 class _NoRedirect(HTTPRedirectHandler):
@@ -175,41 +174,42 @@ def parse_tdcc_history_html(document: str, *, code: str, as_of: str) -> list[dic
 
 def fetch_tdcc_historical(code: str, months: list[str], *, timeout: float = 20.0, as_of=None,
                           budget=None, on_rows=None) -> list[dict[str, Any]]:
-    """Query one latest available TDCC week per requested month with token/cookie."""
+    """Select the last official available date; GET/token and POST per month."""
     from http.cookiejar import CookieJar
     from urllib.request import build_opener, HTTPCookieProcessor
     opener = build_opener(HTTPCookieProcessor(CookieJar()), _NoRedirect())
     cutoff = _cutoff(as_of)
     budget = budget or OwnershipBudget()
-    rows: list[dict[str, Any]] = []
+    result = []
     for month in sorted(set(months)):
         if cutoff and month > cutoff[:7]:
             continue
-        year, mon = (int(part) for part in month.split("-"))
-        month_rows: list[dict[str, Any]] = []
-        last_day = min(monthrange(year, mon)[1], int(cutoff[8:])) if cutoff and len(cutoff) == 10 and month == cutoff[:7] else monthrange(year, mon)[1]
-        for day in range(last_day, max(0, last_day - 8), -1):
-            date_value = f"{year:04d}{mon:02d}{day:02d}"
-            # The TDCC synchronizer token rotates after a POST.  Fetch a new
-            # page/token for every date probe instead of reusing a consumed
-            # token and misreading later valid dates as empty results.
-            with opener.open(Request(TDCC_HISTORY_URL, headers={"User-Agent": "stock-release-ownership/1.0"}), timeout=budget.consume(timeout, historical=True)) as response:
-                page = _read_body(response, budget).decode("utf-8", "replace")
-            token_match = re.search(r'name=[\"\']SYNCHRONIZER_TOKEN[\"\'][^>]*value=[\"\']([^\"\']+)', page, re.I)
-            uri_match = re.search(r'name=[\"\']SYNCHRONIZER_URI[\"\'][^>]*value=[\"\']([^\"\']+)', page, re.I)
-            token = token_match.group(1) if token_match else ""
-            uri = uri_match.group(1) if uri_match else "/portal/zh/smWeb/qryStock"
-            form = {"SYNCHRONIZER_TOKEN": token, "SYNCHRONIZER_URI": uri, "method": "submit", "firDate": date_value, "scaDate": date_value, "sqlMethod": "StockNo", "stockNo": code, "stockName": ""}
-            body = urlencode(form).encode()
-            with opener.open(Request(TDCC_HISTORY_URL, data=body, headers={"User-Agent": "stock-release-ownership/1.0", "Content-Type": "application/x-www-form-urlencoded"}), timeout=budget.consume(timeout, historical=True)) as response:
-                document = _read_body(response, budget).decode("utf-8", "replace")
-            month_rows = parse_tdcc_history_html(document, code=code, as_of=f"{year:04d}-{mon:02d}-{day:02d}")
-            if month_rows:
-                break
-        rows.extend(month_rows)
-        if month_rows and on_rows:
-            on_rows(normalize_tdcc_rows(month_rows, source="TDCC", dataset="history"))
-    return normalize_tdcc_rows(rows, source="TDCC", dataset="history")
+        with opener.open(Request(TDCC_HISTORY_URL),timeout=budget.consume(timeout,historical=True)) as response:
+            page = _read_body(response,budget).decode("utf-8","replace")
+        available = [value for value in parse_tdcc_available_dates(page) if value[:7]==month
+                     and (not cutoff or value<=cutoff if len(cutoff or "")==10 else True)]
+        if not available:
+            continue
+        selected = max(available)
+        token_match = re.search(r'name=["\']SYNCHRONIZER_TOKEN["\'][^>]*value=["\']([^"\']+)',page,re.I)
+        uri_match = re.search(r'name=["\']SYNCHRONIZER_URI["\'][^>]*value=["\']([^"\']+)',page,re.I)
+        if not token_match:
+            raise ValueError("TDCC session token absent")
+        form = {"SYNCHRONIZER_TOKEN":token_match[1],"SYNCHRONIZER_URI":uri_match[1] if uri_match else "/portal/zh/smWeb/qryStock",
+                "method":"submit","firDate":selected.replace("-",""),"scaDate":selected.replace("-",""),
+                "sqlMethod":"StockNo","stockNo":code,"stockName":""}
+        request = Request(TDCC_HISTORY_URL,data=urlencode(form).encode(),headers={"Content-Type":"application/x-www-form-urlencoded"})
+        with opener.open(request,timeout=budget.consume(timeout,historical=True)) as response:
+            document = _read_body(response,budget).decode("utf-8","replace")
+        from scripts.update_ownership_checkpoint import tdcc_reported_date
+        if tdcc_reported_date(document)!=selected:
+            raise ValueError("TDCC official report date mismatch")
+        rows = normalize_tdcc_rows(parse_tdcc_history_html(document,code=code,as_of=selected),
+                                   retrieved_at=datetime.now(timezone.utc).isoformat(),source="TDCC",dataset="history")
+        result.extend(rows)
+        if rows and on_rows:
+            on_rows(rows)
+    return merge_ownership_rows(result)
 
 
 def _number(value: Any) -> float | None:
@@ -240,16 +240,23 @@ def parse_mops_payload(payload: dict[str, Any], *, code: str, period: str, retri
         if isinstance(raw, dict):
             title = raw.get("title") or raw.get("職稱")
             holding = raw.get("current holding") or raw.get("目前持股")
+            name = raw.get("name") or raw.get("姓名")
         elif isinstance(raw, list):
             title = raw[0] if len(raw) > 0 else None
             holding = raw[3] if len(raw) > 3 else None
+            name = raw[1] if len(raw) > 1 else None
         else:
             continue
         if str(title or "").strip() not in DIRECTOR_SCOPE:
             continue
         rows.append({"資料年月": period, "公司代號": code, "職稱": title,
-                     "目前持股": holding, "已發行普通股數": denominator})
-    return normalize_director_rows(rows, retrieved_at=retrieved_at, source="MOPS", dataset="stapap1")
+                     "目前持股": holding, "姓名": name, "已發行普通股數": denominator})
+    result = normalize_director_rows(rows, retrieved_at=retrieved_at, source="MOPS", dataset="stapap1")
+    aggregate = total.get("allDirectorSupervisor") if isinstance(total, dict) else None
+    official = _number(aggregate[0] if isinstance(aggregate, list) and aggregate else aggregate)
+    return [{**row, "officialDirectorSupervisorShares": official,
+             "directorTotalMatches": official == row.get("directorSupervisorShares") if official is not None else None}
+            for row in result]
 
 
 def parse_twse_issued_shares(rows: list[dict[str, Any]]) -> dict[str, float]:
@@ -276,7 +283,7 @@ def parse_twse_director_rows(
     dataset: str,
     retrieved_at: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Attach same-snapshot official issued shares before normalization."""
+    """Normalize holdings without joining an undated current denominator."""
     normalized: list[dict[str, Any]] = []
     for row in rows:
         if not isinstance(row, dict):
@@ -287,7 +294,8 @@ def parse_twse_director_rows(
             "公司代號": code,
             "職稱": row.get("職稱") or row.get("title"),
             "目前持股": row.get("目前持股") or row.get("holding"),
-            "已發行普通股數": issued_shares_by_code.get(code),
+            "已發行普通股數": None,
+            "姓名": row.get("姓名") or row.get("name"),
         })
     return normalize_director_rows(
         normalized,
@@ -358,6 +366,40 @@ def shift_month(period: str, offset: int) -> str:
     return f"{absolute // 12:04d}-{absolute % 12 + 1:02d}"
 
 
+def completed_months(verified_market_date: str) -> list[str]:
+    """The three finished calendar months preceding the verified market date."""
+    parsed = date.fromisoformat(verified_market_date)
+    return [shift_month(parsed.strftime("%Y-%m"), offset) for offset in (-3, -2, -1)]
+
+
+class _DatesParser(__import__("html.parser", fromlist=["HTMLParser"]).HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.in_dates = False
+        self.dates = []
+
+    def handle_starttag(self, tag, attrs):
+        values = dict(attrs)
+        if tag == "select":
+            self.in_dates = values.get("name") == "scaDate"
+        if tag == "option" and self.in_dates and re.fullmatch(r"\d{8}", values.get("value", "")):
+            raw = values["value"]
+            try:
+                self.dates.append(date(int(raw[:4]), int(raw[4:6]), int(raw[6:])).isoformat())
+            except ValueError:
+                pass
+
+    def handle_endtag(self, tag):
+        if tag == "select":
+            self.in_dates = False
+
+
+def parse_tdcc_available_dates(document: str) -> list[str]:
+    parser = _DatesParser()
+    parser.feed(document)
+    return sorted(set(parser.dates))
+
+
 def fetch_ownership_rows(codes: list[str], *, as_of: str | None = None, budget=None,
                          previous_rows=(), on_checkpoint=None, on_error=None) -> list[dict[str, Any]]:
     """Fetch three TDCC months plus MOPS comparison months.
@@ -391,7 +433,7 @@ def fetch_ownership_rows(codes: list[str], *, as_of: str | None = None, budget=N
     periods = {str(row.get("period")) for row in current if row.get("period")}
     anchor = str(as_of or max(periods, default=datetime.now(timezone.utc).strftime("%Y-%m")))[:7]
     current = [row for row in current if str(row.get("period") or "") <= anchor]
-    target_months = [shift_month(anchor, offset) for offset in (-2, -1, 0)]
+    target_months = completed_months(as_of if as_of and len(as_of)==10 else anchor+"-01")
     current_by_code: dict[str, set[str]] = {}
     for row in merge_ownership_rows(current, _before_cutoff(previous_rows, as_of)):
         if row.get("largeHolderPct") is None or row.get("shareholderCount") is None:
@@ -429,7 +471,7 @@ def build_snapshot(previous: dict[str, Any] | None, fresh_rows: list[dict[str, A
         code = str(row.get("code") or "")
         if row.get("largeHolderPct") is not None and row.get("shareholderCount") is not None:
             periods_by_code.setdefault(code, set()).add(str(row.get("period") or ""))
-    target_months = {shift_month(as_of[:7], offset) for offset in (-2, -1, 0)} if as_of else None
+    target_months = set(completed_months(as_of if len(as_of)==10 else as_of+"-01")) if as_of else None
     complete = bool(requested_codes) and all(
         code in fresh_codes and (target_months <= periods_by_code.get(code, set()) if target_months else len(periods_by_code.get(code, set())) >= 3)
         for code in requested_codes

@@ -207,6 +207,19 @@ describe('validateRelease', () => {
     expect(validateRelease(release)).toBe(release)
   })
 
+  it.each([{ sourceDates: [42] }, { sourceDates: ['invalid'] }, { retrievedAt: 'invalid' }, { historicalBackfill: 'true' }])('rejects malformed optional chip provenance: %j', (metadata) => {
+    const release = validRelease() as unknown as Record<string, unknown>
+    const indicator = { status: 'unknown', value: '—', period: '—', sourceRefs: [] }
+    ;(release.rankings as Record<string, unknown>).trust = [{
+      rank: 1, code: '2330', name: '台積電', sector: '', value: 1, valueLabel: '%', status: 'pass', reason: 'official',
+      chipReference: {
+        schemaVersion: 'chip-reference-v1', status: 'unknown', displayOnly: true, formulaVersion: 'chip-reference-v1', dataFreshness: 'current',
+        largeHolderTrend: { ...indicator, ...metadata }, directorSupervisor12m: indicator, shareholderCountTrend: indicator, sourceRefs: [], availableAt: null,
+      },
+    }]
+    expect(() => validateRelease(release)).toThrow('發布快照格式錯誤')
+  })
+
   it('accepts an older unknown chip indicator with null raw values', () => {
     const release = validRelease() as unknown as Record<string, unknown>
     ;(release.rankings as Record<string, unknown>).trust = [{

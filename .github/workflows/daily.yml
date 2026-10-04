@@ -20,6 +20,11 @@ on:
         options:
           - publish
           - institutional_probe
+          - ownership_recompute
+      ownership_generation:
+        description: Optional exact chip-state generation commit (40 hex)
+        required: false
+        type: string
       restore_commit:
         description: Data-only Git commit containing verified Notion cache
         required: false
@@ -52,13 +57,14 @@ concurrency:
   cancel-in-progress: false
 jobs:
   snapshot:
-    if: github.ref == 'refs/heads/main' && (inputs.source_mode == 'publish' || inputs.source_mode == '')
+    if: github.ref == 'refs/heads/main' && (inputs.source_mode == 'publish' || inputs.source_mode == 'ownership_recompute' || inputs.source_mode == '')
     runs-on: ubuntu-latest
     timeout-minutes: 80
     env:
       REQUEST_ID: ${{ inputs.request_id }}
       MARKET_DATE: ${{ inputs.market_date }}
       SOURCE_MODE: ${{ inputs.source_mode }}
+      OWNERSHIP_REQUESTED_GENERATION: ${{ inputs.ownership_generation }}
       CACHE_RESTORE_COMMIT: ${{ inputs.restore_commit }}
       CACHE_DESCRIPTOR_SHA256: ${{ inputs.restore_descriptor_sha256 }}
       CACHE_MARKET_DATE: ${{ inputs.restore_cache_market_date }}
@@ -76,9 +82,11 @@ jobs:
           python - <<'PY'
           import os, re
           from datetime import date
-          assert (os.environ.get('SOURCE_MODE') or 'publish') in {'publish', 'institutional_probe'}, 'invalid source_mode'
+          assert (os.environ.get('SOURCE_MODE') or 'publish') in {'publish', 'institutional_probe', 'ownership_recompute'}, 'invalid source_mode'
           assert re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}', os.environ['REQUEST_ID']), 'invalid request_id'
           assert date.fromisoformat(os.environ['MARKET_DATE']).isoformat() == os.environ['MARKET_DATE'], 'invalid market_date'
+          ownership_generation = os.environ.get('OWNERSHIP_REQUESTED_GENERATION', '')
+          assert not ownership_generation or re.fullmatch(r'[a-f0-9]{40}', ownership_generation), 'invalid ownership generation'
           names = ['CACHE_RESTORE_COMMIT', 'CACHE_DESCRIPTOR_SHA256', 'CACHE_MARKET_DATE', 'CACHE_SOURCE_GIT_COMMIT', 'CACHE_ACTIONS_RUN_ID', 'CACHE_REQUEST_ID']
           restore = {key: os.environ.get(key, '') for key in names}
           if any(restore.values()):
@@ -112,6 +120,7 @@ jobs:
       - run: npm ci
       - run: python -m pip install -r requirements.txt
       - name: Recover same-day budget from failure artifacts
+        if: inputs.source_mode != 'ownership_recompute'
         timeout-minutes: 3
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -132,6 +141,7 @@ jobs:
           set -euo pipefail
           python scripts/restore_market_cache.py --restore-commit="$CACHE_RESTORE_COMMIT" --descriptor-sha256="$CACHE_DESCRIPTOR_SHA256" --cache-market-date="$CACHE_MARKET_DATE" --market-date="$MARKET_DATE" --source-git-commit="$CACHE_SOURCE_GIT_COMMIT" --actions-run-id="$CACHE_ACTIONS_RUN_ID" --request-id="$CACHE_REQUEST_ID" --source-cache-dir .cache/market-source --stock-cache-dir .cache/restored-stock-details
       - name: Fetch authoritative exchange calendar
+        if: inputs.source_mode != 'ownership_recompute'
         shell: bash
         run: |
           set -euo pipefail
@@ -141,6 +151,7 @@ jobs:
           fi
           python scripts/build_trading_calendar.py --market-date "$MARKET_DATE" --source-cache-dir .cache/market-source "${calendar_restore_args[@]}"
       - name: Fetch official institutional universe
+        if: inputs.source_mode != 'ownership_recompute'
         timeout-minutes: 10
         shell: bash
         run: |
@@ -153,28 +164,68 @@ jobs:
           done
           exit 1
       - name: Verify independent requested date against fetched official date
+        if: inputs.source_mode != 'ownership_recompute'
         run: python scripts/verify_daily_freshness.py --universe-only --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json
       - run: python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json
-      - name: Restore ownership reference checkpoint
-        uses: actions/cache/restore@v4
-        with:
-          path: .cache/ownership_snapshot.json
-          key: ownership-reference-v1-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            ownership-reference-v1-
-      - name: Fetch ownership reference cache
-        timeout-minutes: 8
-        run: python scripts/fetch_ownership.py --codes "$(python -c "import json; print(','.join(json.load(open('config/tracked_symbols.json'))['symbols']))")" --output .cache/ownership_snapshot.json --as-of "$MARKET_DATE" --max-runtime-seconds 180 --max-requests 40 --max-history-requests 20
-      - name: Persist ownership reference checkpoint
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: .cache/ownership_snapshot.json
-          key: ownership-reference-v1-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Pin and verify existing ownership generation without provider network
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/chip-state .artifacts/ownership
+          generation="$OWNERSHIP_REQUESTED_GENERATION"
+          if [ -z "$generation" ]; then generation="$(git ls-remote origin refs/heads/chip-state | cut -f1)" || generation=""; fi
+          if [ -n "$generation" ]; then
+            if git fetch --no-tags origin "$generation"; then
+              git ls-tree -rl "$generation" > .artifacts/ownership/tree.txt
+              if python - <<'PY'
+          import re
+          from pathlib import Path
+          rows = Path('.artifacts/ownership/tree.txt').read_text().splitlines()
+          assert rows
+          for line in rows:
+              metadata, name = line.split('\t')
+              assert metadata.startswith('100644 blob ')
+              assert 0 < int(metadata.split()[-1]) <= 32 * 1024 * 1024
+              assert re.fullmatch(r'(?:manifest|snapshot|queue)\.json|receipts/[a-f0-9]{64}\.(?:raw|json)', name)
+          PY
+              then
+                git archive "$generation" | tar -x -C .cache/chip-state
+                if python - <<'PY'
+          import json, os
+          from pathlib import Path
+          manifest = json.loads(Path('.cache/chip-state/manifest.json').read_bytes())
+          assert manifest['verifiedMarketDate'] <= os.environ['MARKET_DATE'], 'future ownership generation'
+          PY
+                then
+                  if python scripts/update_ownership_checkpoint.py --state-dir .cache/chip-state --verify-only --materialize-output .cache/ownership_snapshot.json; then
+                  echo "OWNERSHIP_GENERATION=$generation" >> "$GITHUB_ENV"
+                  echo "$generation" > .artifacts/ownership/generation.txt
+                else
+                  rm -f .cache/ownership_snapshot.json
+                  fi
+                fi
+              fi
+            fi
+          fi
+          if [ "$SOURCE_MODE" = ownership_recompute ]; then test -s .cache/ownership_snapshot.json; fi
+      - name: Correct ownership only from frozen release inputs
+        if: inputs.source_mode == 'ownership_recompute'
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          python scripts/refresh_snapshot.py --ownership-recompute --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json | tee .artifacts/ownership/recompute.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          assert json.loads(Path('.artifacts/ownership/recompute.json').read_text())['ownership_updated'] is True
+          PY
       - name: Refresh official public-source snapshot first
+        if: inputs.source_mode != 'ownership_recompute'
         timeout-minutes: 25
         run: python scripts/refresh_snapshot.py --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json --source-cache-dir .cache/market-source --stock-cache-dir .cache/restored-stock-details
       - name: Supplement remaining financial gaps within durable free budget
+        if: inputs.source_mode != 'ownership_recompute'
         timeout-minutes: 26
         shell: bash
         env:
@@ -197,8 +248,9 @@ jobs:
           path: .cache/finmind
           key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}-checkpoint
       - name: Recompute from existing enriched inputs without network
+        if: inputs.source_mode != 'ownership_recompute'
         timeout-minutes: 5
-        run: python scripts/refresh_snapshot.py --recompute-existing --as-of "$MARKET_DATE" --output public/data
+        run: python scripts/refresh_snapshot.py --recompute-existing --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json
       - run: python scripts/verify_snapshot.py --require-growth-coverage
       - run: python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json
       - name: Build lightweight publication fingerprint
@@ -210,7 +262,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/build_market_cache_index.py --data-dir public/data --config config/tracked_symbols.json --source-cache-dir .cache/market-source --output .artifacts/market-cache-index --market-date "$MARKET_DATE" --request-id "$REQUEST_ID" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID" --publication-sha256 "$(python -c "import json; print(json.load(open('public/data/publication.json'))['contentHash'])")" --config-sha256 "$(python -c "import hashlib; print(hashlib.sha256(open('config/tracked_symbols.json','rb').read()).hexdigest())")" --export-payload-hash "$(python -c "import json; print(json.load(open('public/data/screening-export.json'))['payloadHash'])")"
+          ownership_args=()
+          if [ -n "${OWNERSHIP_GENERATION:-}" ]; then ownership_args=(--ownership-state-dir .cache/chip-state --ownership-generation "$OWNERSHIP_GENERATION"); fi
+          python scripts/build_market_cache_index.py "${ownership_args[@]}" --data-dir public/data --config config/tracked_symbols.json --source-cache-dir .cache/market-source --output .artifacts/market-cache-index --market-date "$MARKET_DATE" --request-id "$REQUEST_ID" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID" --publication-sha256 "$(python -c "import json; print(json.load(open('public/data/publication.json'))['contentHash'])")" --config-sha256 "$(python -c "import hashlib; print(hashlib.sha256(open('config/tracked_symbols.json','rb').read()).hexdigest())")" --export-payload-hash "$(python -c "import json; print(json.load(open('public/data/screening-export.json'))['payloadHash'])")"
           python scripts/export_market_cache.py --input .artifacts/market-cache-index/input.json --expected .artifacts/market-cache-index/expected.json --output .artifacts/market-cache
           cp .artifacts/market-cache-index/expected.json .artifacts/market-cache/expected.json
       - name: Preserve validated complete market cache
@@ -270,6 +324,15 @@ jobs:
         with:
           path: .cache/market-source
           key: market-source-v1-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Preserve pinned ownership generation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ownership-generation
+          path: |
+            .cache/chip-state
+            .artifacts/ownership
+          if-no-files-found: warn
       - name: Preserve raw source receipts after failure
         if: always()
         uses: actions/upload-artifact@v4
@@ -309,7 +372,7 @@ jobs:
           python - <<'PY'
           import os, re
           from datetime import date
-          assert (os.environ.get('SOURCE_MODE') or 'publish') in {'publish', 'institutional_probe'}, 'invalid source_mode'
+          assert (os.environ.get('SOURCE_MODE') or 'publish') in {'publish', 'institutional_probe', 'ownership_recompute'}, 'invalid source_mode'
           assert os.environ['SOURCE_MODE'] == 'institutional_probe', 'invalid probe mode'
           assert re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}', os.environ['REQUEST_ID']), 'invalid request_id'
           assert date.fromisoformat(os.environ['MARKET_DATE']).isoformat() == os.environ['MARKET_DATE'], 'invalid market_date'

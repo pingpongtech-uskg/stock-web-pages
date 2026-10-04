@@ -198,7 +198,93 @@ function validateCalendar(body, expected) {
     }), 'calendar');
   }
 }
+function validateOwnershipBundle(bundle, marketDate) {
+  check(plainJsonObject(bundle) && equal(Object.keys(bundle).sort(), ['filesBase64', 'generationCommit', 'manifestSha256', 'schemaVersion']), 'ownership_bundle');
+  check(bundle.schemaVersion === 'ownership-bundle-v1' && /^[a-f0-9]{40}$/.test(bundle.generationCommit) && HASH.test(bundle.manifestSha256), 'ownership_bundle');
+  check(plainJsonObject(bundle.filesBase64) && Object.keys(bundle.filesBase64).length >= 3 && Object.keys(bundle.filesBase64).length <= 10000, 'ownership_files');
+  const files = {}; let total = 0;
+  for (const [name, encoded] of Object.entries(bundle.filesBase64)) {
+    check(/^(?:(?:manifest|snapshot|ownership_snapshot|queue)\.json|receipts\/[a-f0-9]{64}\.(?:raw|json))$/.test(name), 'ownership_path');
+    check(typeof encoded === 'string' && encoded.length <= MAX_RAW * 2, 'ownership_size');
+    const raw = Buffer.from(encoded, 'base64'); total += raw.length;
+    check(raw.length > 0 && raw.length <= MAX_RAW && total <= MAX_TOTAL_RAW && raw.toString('base64') === encoded, 'ownership_encoding');
+    files[name] = raw;
+  }
+  check(files['manifest.json'] && sha(files['manifest.json']) === bundle.manifestSha256, 'ownership_manifest');
+  let manifest, snapshot, queue;
+  try { manifest = JSON.parse(files['manifest.json']); snapshot = JSON.parse(files['snapshot.json'] || files['ownership_snapshot.json']); queue = JSON.parse(files['queue.json']); }
+  catch { throw new Error('cache_ownership_json'); }
+  canonical(manifest); canonical(snapshot); canonical(queue);
+  check(manifest.schemaVersion === 'ownership-generation-v1' && validDate(manifest.verifiedMarketDate) && manifest.verifiedMarketDate <= marketDate && /^[a-f0-9]{40}$/.test(manifest.sourceGitCommit), 'ownership_manifest');
+  check(Array.isArray(manifest.files) && manifest.files.length === Object.keys(files).length - 1, 'ownership_files');
+  const seen = new Set();
+  for (const item of manifest.files) {
+    check(plainJsonObject(item) && equal(Object.keys(item).sort(), ['path', 'sha256', 'size']) && item.path !== 'manifest.json' && files[item.path] && !seen.has(item.path), 'ownership_files');
+    seen.add(item.path);
+    check(Number.isSafeInteger(item.size) && item.size === files[item.path].length && item.sha256 === sha(files[item.path]), 'ownership_hash');
+  }
+  check(snapshot.schemaVersion === 'ownership-snapshot-v1' && queue.schemaVersion === 'ownership-queue-v1' && snapshot.generationId === manifest.generationId && snapshot.verifiedMarketDate === manifest.verifiedMarketDate && queue.verifiedMarketDate === manifest.verifiedMarketDate && Array.isArray(snapshot.rows) && Array.isArray(queue.jobs), 'ownership_semantics');
+  const bindingKeys = ['verifiedMarketDate', 'sourceGitCommit', 'requestId', 'actionsRunId', 'actionsRunAttempt', 'previousGeneration', 'rosterHash', 'targetMonths', 'formulaVersion', 'priorityRosterMarketDate', 'priorityRosterPublicationHash'];
+  check(bindingKeys.every(key => Object.hasOwn(manifest, key)), 'ownership_binding');
+  const binding = Object.fromEntries(bindingKeys.map(key => [key, manifest[key]]));
+  check(binding.formulaVersion === 'chip-reference-v1', 'ownership_formula');
+  check(manifest.generationId === sha(canonical({ binding, queueHash: sha(files['queue.json']) })), 'ownership_generation_hash');
+  check(Array.isArray(queue.roster) && binding.rosterHash === sha(canonical(queue.roster)) && equal(binding.targetMonths, queue.targetMonths), 'ownership_roster');
+  check((binding.priorityRosterMarketDate ?? null) === (queue.priorityRosterMarketDate ?? null) && (binding.priorityRosterPublicationHash ?? null) === (queue.priorityRosterPublicationHash ?? null), 'ownership_priority_roster');
+  check(binding.priorityRosterMarketDate === null || validDate(binding.priorityRosterMarketDate) && binding.priorityRosterMarketDate <= manifest.verifiedMarketDate, 'ownership_priority_date');
+  check(binding.priorityRosterPublicationHash === null || HASH.test(binding.priorityRosterPublicationHash), 'ownership_priority_hash');
+  const anchor = new Date(`${manifest.verifiedMarketDate.slice(0, 7)}-01T00:00:00Z`);
+  const target = [-3, -2, -1].map(offset => new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + offset, 1)).toISOString().slice(0, 7));
+  check(equal(target, binding.targetMonths), 'ownership_months');
+  for (const receipt of queue.receipts || []) {
+    const name = `receipts/${receipt.rawFile}`;
+    check(files[name] && receipt.rawSha256 === sha(files[name]) && receipt.rawBytes === files[name].length, 'ownership_receipt_hash');
+    let url; try { url = new URL(receipt.sourceURL); } catch { throw new Error('cache_ownership_origin'); }
+    check(safeSourceUrl(receipt.sourceURL) && url.protocol === 'https:' && !url.username && !url.password && !url.port && !url.hash && ['mops.twse.com.tw', 'www.tdcc.com.tw', 'opendata.tdcc.com.tw', 'openapi.twse.com.tw', 'www.tpex.org.tw'].includes(url.hostname), 'ownership_origin');
+    check(plainJsonObject(receipt.parameters) && !Object.keys(receipt.parameters).some(key => /token|cookie|secret|csrf|password|authorization|credential|apikey/i.test(key)), 'ownership_private_parameter');
+    check(['none', 'transient-session-controls-removed', 'roster-filtered-csv-v1'].includes(receipt.rawSanitization) && HASH.test(receipt.originalResponseSha256) && !/SYNCHRONIZER_TOKEN|SYNCHRONIZER_URI/i.test(files[name].toString('utf8')), 'ownership_sanitization');
+    if (receipt.rawSanitization === 'roster-filtered-csv-v1') {
+      const selected = receipt.selectedCodes;
+      check(receipt.source === 'TDCC_LATEST' && receipt.sourceURL === 'https://opendata.tdcc.com.tw/getOD.ashx?id=1-5' && Array.isArray(selected) && selected.length > 0 && selected.length <= 100 && unique(selected) && selected.every(code => queue.roster.includes(code)) && Array.isArray(receipt.rows) && receipt.rows.every(row => selected.includes(row.code)), 'ownership_filtered_roster');
+    }
+    check(receipt.sourceDate === null || typeof receipt.sourceDate === 'string' && receipt.sourceDate <= manifest.verifiedMarketDate, 'ownership_period');
+    const metadata = files[`receipts/${receipt.receiptFile}`];
+    check(metadata && equal(JSON.parse(metadata), receipt), 'ownership_receipt_metadata');
+  }
+  check(Array.isArray(queue.rows), 'ownership_rows');
+  const rowIdentities = new Set(queue.rows.map(row => canonical(row)));
+  check(snapshot.rows.every(row => rowIdentities.has(canonical(row))), 'ownership_snapshot_binding');
+  const receipts = new Map((queue.receipts || []).map(item => [`receipts/${item.receiptFile}`, item]));
+  const fields = ['code', 'period', 'asOf', 'sourceDate', 'largeHolderPct', 'shareholderCount', 'directorSupervisorPct', 'directorSupervisorShares', 'officialDirectorSupervisorShares', 'directorDenominator', 'directorIdentityConsistent'];
+  for (const row of queue.rows) {
+    check(plainJsonObject(row) && queue.roster.includes(row.code), 'ownership_row');
+    for (const key of ['period', 'asOf', 'sourceDate', 'publishedAt', 'availableAt']) {
+      const value = row[key];
+      check(value == null || typeof value === 'string' && value.slice(0, 10) <= manifest.verifiedMarketDate, 'ownership_row_period');
+    }
+    const topReceipt = receipts.get(row.rawReceiptPath);
+    check(topReceipt && row.rawSha256 === topReceipt.rawSha256 && row.sourceURL === topReceipt.sourceURL, 'ownership_row_receipt');
+    const observations = row.sourceObservations || [row];
+    check(Array.isArray(observations) && observations.length > 0, 'ownership_observations');
+    for (const observation of observations) {
+      check(plainJsonObject(observation) && observation.code === row.code && observation.period === row.period, 'ownership_observation');
+      for (const key of ['period', 'asOf', 'sourceDate', 'publishedAt', 'availableAt']) {
+        const value = observation[key];
+        check(value == null || typeof value === 'string' && /^\d{4}-\d{2}(?:-\d{2})?(?:T[^ ]+)?$/.test(value) && value.slice(0, 10) <= manifest.verifiedMarketDate, 'ownership_row_period');
+      }
+      const receipt = receipts.get(observation.rawReceiptPath);
+      check(receipt && observation.rawSha256 === receipt.rawSha256 && observation.sourceURL === receipt.sourceURL, 'ownership_row_receipt');
+      check(Array.isArray(receipt.rows) && receipt.rows.some(original => fields.every(field => (observation[field] ?? null) === (original[field] ?? null))), 'ownership_row_values');
+    }
+    for (const field of fields.slice(4)) {
+      const observed = observations.find(item => item[field] != null)?.[field] ?? null;
+      check((row[field] ?? null) === observed, 'ownership_merged_values');
+    }
+  }
+  return { generationCommit: bundle.generationCommit, manifest };
+}
 function validateRows(group, body, expected) {
+  if (group.kind === 'published_stock_inputs' && Object.hasOwn(body, 'ownershipBundle')) validateOwnershipBundle(body.ownershipBundle, expected.marketDate);
   rowCoverage(group, body.rows);
   if (group.kind === 'institutional_normalized') {
     for (const row of body.rows) {
@@ -332,4 +418,4 @@ function signedExpiryValid(url, expiry, now) {
   return Number.isFinite(signedAt) && new Date(signedAt).toISOString().replace('.000', '') === iso && seconds <= 3600 && signedAt <= now + 60000 && signedAt + seconds * 1000 > now && Date.parse(expiry) <= signedAt + seconds * 1000 + 60000;
 }
 
-module.exports = { buildMarketCache, decodeCacheGroup, verifyMarketCache, verifyCompressedMarketCache, planCacheAttachments, promoteCacheRevision, validateCacheDownload };
+module.exports = { validateOwnershipBundle, buildMarketCache, decodeCacheGroup, verifyMarketCache, verifyCompressedMarketCache, planCacheAttachments, promoteCacheRevision, validateCacheDownload };

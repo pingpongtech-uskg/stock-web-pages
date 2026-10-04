@@ -4,23 +4,25 @@ const {start,advance}=require('./engine.cjs');const {stockProperties,stockSchema
 // Unit integration fixtures stay local. They are never sent to the real service.
 const {fixture:cacheFixture}=require('./cache-fixture.cjs');const marketCache=require('./market-cache.cjs');
 const now=Date.parse('2026-10-02T10:00:00Z');
-function fixture(zero=false) {
-  const strategies=zero?{trust:[],growth:[],lowPosition:[]}:{trust:[{code:'0050',rank:1}],growth:[],lowPosition:[]};
-  const selectedStocks=zero?[]:[{code:'0050',name:'Local fixture',sector:'test',metrics:{currentPrice:100,growthMethod:'eps_growth'},strategies:[{strategy:'trust',rank:1,status:'ok',reason:''}],provenance:{marketDate:'2026-10-02',financialCutoff:'2026-Q2'}}];
+function fixture(zero=false,chipReference) {
+  const code=chipReference?'2547':'0050';
+  const strategies=zero?{trust:[],growth:[],lowPosition:[]}:{trust:[{code,rank:1}],growth:[],lowPosition:[]};
+  const selectedStocks=zero?[]:[{code,...(chipReference?{chipReference}:{}),name:'Local fixture',sector:'test',metrics:{currentPrice:100,growthMethod:'eps_growth'},strategies:[{strategy:'trust',rank:1,status:'ok',reason:''}],provenance:{marketDate:'2026-10-02',financialCutoff:'2026-Q2'}}];
   const body={schemaVersion:'screening-export-v1',marketDate:'2026-10-02',generatedAt:'2026-10-02T10:00:00Z',requestId:'local-test',actionsRunId:'123',runId:'local-run',sourceGitCommit:'a'.repeat(40),revision:'b'.repeat(12),formulaVersions:{ranking:'v1'},legacy:false,freshness:'current',coverage:{},funnel:growthFixture(),strategies,selectedStocks};
   const preimage=JSON.stringify(body);const payloadHash=crypto.createHash('sha256').update(preimage).digest('hex');
   const raw=preimage.slice(0,-1)+',"payloadHash":"'+payloadHash+'"}';
   return {raw,payload:{...body,payloadHash},publication:{requestId:body.requestId,marketDate:body.marketDate,runId:body.runId,actionsRunId:body.actionsRunId,sourceGitCommit:body.sourceGitCommit,publishedGitCommit:'c'.repeat(40),payloadHash}};
 }
 function world(options={}) {
-  const f=fixture(options.zero);const cf=cacheFixture(),source={requestId:f.payload.requestId,actionsRunId:f.payload.actionsRunId,sourceGitCommit:f.payload.sourceGitCommit};
+  const f=fixture(options.zero,options.chipReference);const cf=cacheFixture(),source={requestId:f.payload.requestId,actionsRunId:f.payload.actionsRunId,sourceGitCommit:f.payload.sourceGitCommit};
   const latest=Buffer.from(JSON.stringify({marketDate:f.payload.marketDate,runId:f.payload.runId,stocks:[{code:'1240'},{code:'2330'}]})),latestHash=crypto.createHash('sha256').update(latest).digest('hex');
   const groups=cf.input.groups.map(g=>g.kind==='published_stock_inputs'?{...g,sourceSha256:latestHash}:g),expected={...cf.expected,source,groups:groups.map(({body,...g})=>g)},bundle=marketCache.buildMarketCache({...cf.input,source,groups});
   const checked=marketCache.verifyMarketCache(bundle.manifest,bundle.files,{...expected,manifestHash:bundle.manifest.manifestHash});
   const proof={schemaVersion:'market-cache-producer-proof-v1',semanticValidation:'bounded-python-v1',marketDate:f.payload.marketDate,previousTradingDate:cf.input.previousTradingDate,source,...checked};
   const cacheFiles={'manifest.json':Buffer.from(JSON.stringify(bundle.manifest)),'proof.json':Buffer.from(JSON.stringify(proof)),'expected.json':Buffer.from(JSON.stringify(expected)),...bundle.files};let cacheBlocks=[],uploadCounter=0;
-  let rows=[],dailyPage=null,child=null,persisted=options.existing||null,schema={'名稱':{type:'title'}},summaries=[];
+  let rows=[],dailyPage=null,child=options.existingChild?{id:'child-database',data_sources:[{id:'child-source'}]}:null,persisted=options.existing||null,schema={'名稱':{type:'title'}},summaries=[];
   let writes=0,ambiguous=!!options.ambiguous,liveAttempts=0,runPolls=0;
+  let childSchema=Object.fromEntries(Object.entries(stockSchema()).filter(([name])=>!options.existingChild||(!name.startsWith('籌碼')&&!['大股東持股比重最新','董監持股比重最新','董監持股比重去年同月','股東人數最新'].includes(name))).map(([name,value])=>[name,{...value,type:Object.keys(value)[0]}]));
   const requests=[];
   function respond(output){
     requests.push(output.op);const {state,op}=output;const stage=state.stage;
@@ -49,7 +51,7 @@ function world(options={}) {
       case 'createDaily':dailyPage={id:'33333333-3333-4333-8333-333333333333',properties:op.body.properties};return ok(dailyPage,201);
       case 'findDatabase':return ok({results:child?[{id:child.id,type:'child_database',child_database:{title:'20261002'}}]:[],has_more:false});
       case 'createDatabase':child={id:'child-database',data_sources:[{id:'child-source'}]};return ok(child,201);
-      case 'databaseMetadata':return ok(child);
+      case 'databaseMetadata':if(!state.childSchemaStage)return ok(child);if(op.method==='PATCH'){childSchema={...childSchema,...Object.fromEntries(Object.entries(op.body.properties).map(([name,value])=>[name,{...value,type:Object.keys(value)[0]}]))};return ok({properties:childSchema});}return ok({properties:childSchema});
       case 'queryRows':
       case 'verifyRows':return ok({results:rows,has_more:false});
       case 'createStock':{
@@ -132,3 +134,5 @@ test('legacy archive reads authenticated pinned index/month/revision and archive
   assert.equal(env.snapshot.rows.length,union.size);assert.equal(env.snapshot.dailyPage.properties['Quality'].rich_text[0].text.content,'legacy_archive');
   assert.equal(env.snapshot.dailyPage.properties['Actions URL'].url,null);
 });
+test('same-date existing child archive migrates chip schema once then completes normal verified archive',()=>{const env=world({existingChild:true});const result=run(env);assert.equal(result.state.notionStatus,'complete');assert.equal(result.state.deployStatus,'verified');assert.equal(env.requests.filter(op=>op.url==='https://api.notion.com/v1/data_sources/child-source'&&op.method==='PATCH').length,1);assert.equal(env.requests.filter(op=>op.url==='https://api.notion.com/v1/databases'&&op.method==='POST').length,0);assert.equal(env.snapshot.rows.length,1);});
+test('actual MOPS 2547 monthly producer evidence archives exact month sourceDate without inventing day',()=>{const path=require('node:path'),script=['import json,sys','from pathlib import Path',"sys.path.insert(0,'scripts')",'from update_ownership_checkpoint import validated_mops_rows','from pipeline.ownership_checks import evaluate_chip_reference',"payload=json.loads(Path('pipeline/fixtures/ownership/mops-2547-202608.json').read_text())","rows=validated_mops_rows(payload,code='2547',period='2026-08',retrieved_at='2026-10-04T00:00:00+00:00')","print(json.dumps(evaluate_chip_reference(rows,evaluation_date='2026-10-02'),ensure_ascii=False))"].join('\n');const chip=JSON.parse(require('node:child_process').execFileSync('python3',['-c',script],{cwd:path.resolve(__dirname,'../..'),encoding:'utf8'}));assert.deepEqual(chip.directorSupervisor12m.sourceDates,['2026-08']);const env=world({chipReference:chip,existingChild:true});const result=run(env);assert.equal(result.state.notionStatus,'complete');assert.equal(result.state.deployStatus,'verified');const props=env.snapshot.rows[0].properties;assert.equal(props['股票代號'].rich_text[0].text.content,'2547');assert.deepEqual(JSON.parse(props['籌碼觀察日期'].rich_text[0].text.content).directorSupervisor12m,['2026-08']);assert.equal(props['董監持股比重最新'].number,null);assert.equal(props['投信排名'].number,1);});

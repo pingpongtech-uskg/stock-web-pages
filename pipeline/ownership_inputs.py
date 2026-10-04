@@ -9,11 +9,11 @@ import re
 from typing import Any, Iterable
 
 SCHEMA_VERSION = "ownership-v1"
-DIRECTOR_SCOPE = ("董事長本人", "董事本人", "獨立董事本人", "監察人本人")
+DIRECTOR_SCOPE = ("董事長本人", "副董事長本人", "董事本人", "獨立董事本人", "監察人本人")
 
 
 def _text(value: Any) -> str:
-    return str(value or "").replace("\u3000", " ").strip()
+    return str("" if value is None else value).replace("\u3000", " ").strip()
 
 
 def _number(value: Any) -> float | None:
@@ -58,7 +58,7 @@ def _month(value: Any) -> str | None:
 
 def _base(code: str, period: str, *, retrieved_at: str | None, source: str, dataset: str, snapshot_id: str | None) -> dict[str, Any]:
     return {
-        "code": code, "market": "TWSE", "period": period, "asOf": None,
+        "code": code, "market": None, "period": period, "asOf": None, "sourceDate": None,
         "publishedAt": None, "retrievedAt": retrieved_at,
         "largeHolderPct": None, "directorSupervisorPct": None, "shareholderCount": None,
         "source": source, "dataset": dataset, "snapshotId": snapshot_id,
@@ -69,6 +69,7 @@ def _base(code: str, period: str, *, retrieved_at: str | None, source: str, data
 def normalize_tdcc_rows(
     rows: Iterable[dict[str, Any]], *, retrieved_at: str | None = None,
     snapshot_id: str | None = None, source: str = "TDCC", dataset: str = "1-5",
+    market_by_code: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Collapse TDCC weekly 1-5 rows to each code's latest published week/month.
 
@@ -92,6 +93,9 @@ def normalize_tdcc_rows(
         selected = [row for row in candidates if row["_asOf"] == latest]
         item = _base(code, period, retrieved_at=retrieved_at, source=source, dataset=dataset, snapshot_id=snapshot_id)
         item["asOf"] = latest
+        item["sourceDate"] = latest
+        item["market"] = (market_by_code or {}).get(code)
+        item["observedFields"] = ["largeHolderPct", "shareholderCount"]
         item["publishedAt"] = next((row.get("發布日期") or row.get("publishedAt") for row in selected if row.get("發布日期") or row.get("publishedAt")), None)
         pct_values = [_number(row.get("占集保庫存數比例%")) for row in selected if _text(row.get("持股分級")) == "15"]
         pct = sum(value for value in pct_values if value is not None)
@@ -106,6 +110,7 @@ def normalize_tdcc_rows(
 def normalize_director_rows(
     rows: Iterable[dict[str, Any]], *, retrieved_at: str | None = None,
     snapshot_id: str | None = None, source: str = "TWSE OpenAPI", dataset: str = "t187ap11_L/P",
+    market_by_code: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Normalize monthly director holdings, excluding representatives/managers."""
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
@@ -117,36 +122,60 @@ def normalize_director_rows(
             continue
         code = re.sub(r"\s+", "", _text(row.get("公司代號") or row.get("code")))
         period = _month(row.get("資料年月") or row.get("period"))
-        holding = _number(row.get("目前持股") or row.get("holding"))
+        holding = _number(row.get("目前持股") if row.get("目前持股") is not None else row.get("holding"))
         denominator = _number(row.get("已發行普通股數") or row.get("issuedCommonShares") or row.get("denominator"))
         if code and period and holding is not None:
-            grouped[(code, period)].append({"title": title, "holding": holding, "denominator": denominator, "row": row})
+            grouped[(code, period)].append({"title": title, "holding": holding, "denominator": denominator, "identity": _text(row.get("姓名") or row.get("name") or row.get("法人名稱")), "row": row})
     result = []
     for (code, period), entries in sorted(grouped.items()):
         denominators = {entry["denominator"] for entry in entries}
         denominator = next(iter(denominators)) if len(denominators) == 1 and next(iter(denominators)) is not None and next(iter(denominators)) > 0 else None
         item = _base(code, period, retrieved_at=retrieved_at, source=source, dataset=dataset, snapshot_id=snapshot_id)
+        item["market"] = (market_by_code or {}).get(code)
+        item["observedFields"] = ["directorSupervisorPct"]
+        identities: dict[str, list[float]] = defaultdict(list)
+        for index, entry in enumerate(entries):
+            identities[entry["identity"] or f"anonymous:{index}"].append(entry["holding"])
+        consistent = all(entry["identity"] for entry in entries) and all(len(set(values)) == 1 for values in identities.values())
+        holdings = sum(values[0] for values in identities.values()) if consistent else None
+        item["directorSupervisorShares"] = holdings
+        item["directorIdentityConsistent"] = consistent
         item["directorDenominator"] = denominator
         item["directorScope"] = sorted({entry["title"] for entry in entries}, key=DIRECTOR_SCOPE.index)
-        item["directorSupervisorPct"] = round(sum(entry["holding"] for entry in entries) / denominator * 100, 10) if denominator else None
+        item["directorSupervisorPct"] = round(holdings / denominator * 100, 10) if denominator and holdings is not None else None
         item["asOf"] = period
+        item["sourceDate"] = period
         item["sourceRefs"] = [f"{source}:{dataset}:{period}"]
         result.append(item)
     return result
 
 
 def merge_ownership_rows(*collections: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Merge normalized source rows by code/month without inventing missing values."""
+    """Keep source observations and conservative availability when joining metrics."""
     merged: dict[tuple[str, str], dict[str, Any]] = {}
+    union_fields = {"sourceRefs", "directorScope", "observedFields"}
+    time_fields = {"publishedAt", "availableAt", "retrievedAt", "sourceDate", "asOf"}
     for collection in collections:
         for row in collection:
             if not isinstance(row, dict) or not row.get("code") or not row.get("period"):
                 continue
             key = (str(row["code"]), str(row["period"]))
-            current = merged.setdefault(key, dict(row))
+            observation = {field: value for field, value in row.items() if field != "sourceObservations"}
+            observations = row.get("sourceObservations") or [observation]
+            current = dict(merged.get(key, row))
+            previous = current.get("sourceObservations", []) if key in merged else []
+            unique = {repr(sorted(item.items())): item for item in [*previous, *observations]}
+            current["sourceObservations"] = list(unique.values())
             for field, value in row.items():
-                if value is not None and (current.get(field) is None or field in {"sourceRefs", "directorScope"}):
-                    current[field] = list(dict.fromkeys([*(current.get(field) or []), *(value or [])])) if field in {"sourceRefs", "directorScope"} else value
+                if field == "sourceObservations" or value is None:
+                    continue
+                if field in union_fields:
+                    current[field] = list(dict.fromkeys([*(current.get(field) or []), *value]))
+                elif field in time_fields:
+                    current[field] = max(str(current.get(field) or ""), str(value))
+                elif current.get(field) is None:
+                    current[field] = value
+            merged[key] = current
     return [merged[key] for key in sorted(merged)]
 
 

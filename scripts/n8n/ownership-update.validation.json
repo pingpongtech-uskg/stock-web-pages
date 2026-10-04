@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "ownership-update-local-proof-v1",
+  "remoteOperations": "read-only SDK validation only; no workflow create/update/execute/activate",
+  "workflows": {
+    "stockscreener": {
+      "sdkSha256": "89a89bd1b1e1599554c9f69711b5bef00ec1b760ce69445e6ec2a93793249d36",
+      "sdkBytes": 270075,
+      "nodeCount": 97,
+      "readOnlyRemoteSdkValidation": {
+        "valid": true,
+        "nodeCount": 97,
+        "warnings": []
+      }
+    },
+    "ownership-update": {
+      "sdkSha256": "8d340e8797c33cba3735aef6425299cc037a9d4d5eb7ad3bc2c038f3eb8bfe70",
+      "sdkBytes": 50295,
+      "nodeCount": 15,
+      "readOnlyRemoteSdkValidation": {
+        "valid": true,
+        "nodeCount": 15,
+        "warnings": []
+      }
+    }
+  },
+  "tests": {
+    "command": "node --experimental-test-coverage --test-coverage-include=**/ownership-update.cjs --test-coverage-include=**/runtime.cjs --test-coverage-include=**/engine.cjs --test scripts/n8n/test-*.cjs",
+    "passed": 231,
+    "failed": 0,
+    "coverage": {
+      "engine": {
+        "lines": 98.95,
+        "branches": 92.75,
+        "functions": 95.71
+      },
+      "runtime": {
+        "lines": 100,
+        "branches": 90.63,
+        "functions": 100
+      },
+      "dispatcher": {
+        "lines": 100,
+        "branches": 88.46,
+        "functions": 100
+      }
+    },
+    "actualProducerFixture": "pipeline/fixtures/ownership/mops-2547-202608.json -> validated_mops_rows -> evaluate_chip_reference -> n8n exact artifact/archive flow; YYYY-MM sourceDate remains unchanged"
+  },
+  "activation": false
+}

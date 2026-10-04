@@ -1,0 +1,110 @@
+name: Ownership update
+run-name: Ownership update | ${{ inputs.request_id }} | ${{ inputs.market_date }}
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        required: true
+        type: string
+      market_date:
+        description: Independently verified official market date
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: ownership-state-writer
+  cancel-in-progress: false
+jobs:
+  ownership:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      REQUEST_ID: ${{ inputs.request_id }}
+      MARKET_DATE: ${{ inputs.market_date }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Validate trusted main and dispatch identity
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import os, re
+          from datetime import date
+          assert re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}', os.environ['REQUEST_ID'])
+          assert date.fromisoformat(os.environ['MARKET_DATE']).isoformat() == os.environ['MARKET_DATE']
+          PY
+          mkdir -p .cache/chip-state .artifacts/ownership
+      - name: Pin existing data-only generation
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          PREVIOUS="$(git ls-remote origin refs/heads/chip-state | cut -f1)"
+          echo "PREVIOUS_GENERATION=$PREVIOUS" >> "$GITHUB_ENV"
+          if [ -n "$PREVIOUS" ]; then
+            git fetch --no-tags origin "$PREVIOUS"
+            git ls-tree -rl "$PREVIOUS" > .artifacts/ownership/tree.txt
+            python - <<'PY'
+          import re
+          from pathlib import Path
+          for line in Path('.artifacts/ownership/tree.txt').read_text().splitlines():
+              metadata, name = line.split('\t')
+              assert metadata.startswith('100644 blob ')
+              assert 0 < int(metadata.split()[-1]) <= 32 * 1024 * 1024
+              assert re.fullmatch(r'(?:manifest|snapshot|queue)\.json|receipts/[a-f0-9]{64}\.(?:raw|json)', name)
+          PY
+            git archive "$PREVIOUS" | tar -x -C .cache/chip-state
+            python scripts/update_ownership_checkpoint.py --state-dir .cache/chip-state --verify-only
+            python - <<'PY'
+          import json, os
+          from pathlib import Path
+          manifest = json.loads(Path('.cache/chip-state/manifest.json').read_bytes())
+          if manifest.get('requestId') == os.environ['REQUEST_ID']:
+              with open(os.environ['GITHUB_ENV'], 'a') as stream: stream.write('OWNERSHIP_ALREADY_PUBLISHED=true\n')
+          PY
+          fi
+      - name: Acquire bounded official ownership evidence
+        if: env.OWNERSHIP_ALREADY_PUBLISHED != 'true'
+        timeout-minutes: 4
+        run: |
+          python scripts/update_ownership_checkpoint.py --verified-market-date "$MARKET_DATE" --state-dir .cache/chip-state --snapshot-output .cache/chip-state/snapshot.json --roster-publication public/data/screening-export.json --source-git-commit "$GITHUB_SHA" --request-id "$REQUEST_ID" --actions-run-id "$GITHUB_RUN_ID" --actions-run-attempt "$GITHUB_RUN_ATTEMPT" --previous-generation "$PREVIOUS_GENERATION" --max-requests 20 --max-runtime-seconds 180
+      - name: Verify and atomically publish one descendant generation
+        if: env.OWNERSHIP_ALREADY_PUBLISHED != 'true'
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          python scripts/update_ownership_checkpoint.py --state-dir .cache/chip-state --verify-only
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          export GIT_INDEX_FILE="$RUNNER_TEMP/ownership-index"
+          git read-tree --empty
+          # Build a root data-only tree without checking out or executing data-branch content.
+          cd .cache/chip-state
+          while IFS= read -r -d '' file; do
+            blob="$(git hash-object -w "$file")"
+            git update-index --add --cacheinfo "100644,$blob,${file#./}"
+          done < <(find . -type f -print0)
+          TREE="$(git write-tree)"
+          parent=()
+          if [ -n "$PREVIOUS_GENERATION" ]; then parent=(-p "$PREVIOUS_GENERATION"); fi
+          NEXT="$(git commit-tree "$TREE" "${parent[@]}" -m "data: ownership generation $REQUEST_ID")"
+          git push origin "$NEXT":refs/heads/chip-state
+          readback="$(git ls-remote origin refs/heads/chip-state | cut -f1)"
+          test "$readback" = "$NEXT"
+          echo "$NEXT" > "$GITHUB_WORKSPACE/.artifacts/ownership/generation.txt"
+      - name: Preserve generation and pending queue even on publication conflict
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ownership-checkpoint-${{ github.run_attempt }}
+          path: |
+            .cache/chip-state
+            .artifacts/ownership
+          if-no-files-found: error

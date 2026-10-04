@@ -137,3 +137,31 @@ def test_missing_metric_origin_and_extra_unselected_stock_are_rejected():
     assert stock['provenance']['inputOrigins']['currentPeg']['origin']=='unavailable'
     changed={**value,'selectedStocks':[*value['selectedStocks'],{**stock,'code':'extra','strategies':[]}]}
     assert 'selected_stock_union' in validate_export(changed)
+
+
+def test_export_optional_chip_is_exact_immutable_and_hash_bound():
+    from pipeline.ownership_checks import evaluate_chip_reference
+    source = release()
+    chip = evaluate_chip_reference([], data_freshness='unavailable', evaluation_date='2026-10-02')
+    before = copy.deepcopy(chip)
+    plain = build_export(source, request_id='chip', source_git_commit='a'*40, actions_run_id='1')
+    value = build_export(source, request_id='chip', source_git_commit='a'*40, actions_run_id='1', details={'2330': {'chipReference': chip}})
+    selected = value['selectedStocks'][0]
+    assert selected['chipReference'] == before
+    assert validate_export(value) == []
+    assert value['payloadHash'] != plain['payloadHash'] and value['revision'] != plain['revision']
+    assert {key: item for key, item in selected.items() if key != 'chipReference'} == plain['selectedStocks'][0]
+    selected['chipReference']['sourceRefs'].append('mutated')
+    assert chip == before
+
+
+@pytest.mark.parametrize('bad', [None, {}, {'displayOnly': False}])
+def test_export_rejects_present_invalid_chip(bad):
+    with pytest.raises(ValueError, match='chip_reference'):
+        build_export(release(), request_id='chip', source_git_commit='a'*40, actions_run_id='1', details={'2330': {'chipReference': bad}})
+
+
+def test_validator_rejects_invalid_optional_chip_independent_of_hash():
+    value = build_export(release(), request_id='chip', source_git_commit='a'*40, actions_run_id='1')
+    value['selectedStocks'][0]['chipReference'] = {'displayOnly': False}
+    assert any(error.startswith('chip_reference') for error in validate_export(value))

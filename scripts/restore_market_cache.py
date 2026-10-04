@@ -91,6 +91,36 @@ def fetch_restore_commit(commit, directory, *, trust, get=github_get):
     return directory
 
 
+def restore_ownership_bundle(directory, *, trust, target_market_date, output):
+    """Explicitly recover producer state; legacy display-only backups stay honest."""
+    import shutil
+    from pipeline.market_cache_restore import _load
+    from pipeline.market_cache import validate_ownership_bundle
+    descriptor = _descriptor(directory, trust['descriptor_sha256'], trust['market_date'], trust['source'])
+    groups, _, _ = _load(directory, descriptor)
+    body = next(group['body'] for group in groups if group['kind'] == 'published_stock_inputs')
+    if 'ownershipBundle' not in body:
+        return {'ownershipBackupComplete': False, 'ownershipStateRestored': False}
+    checked = validate_ownership_bundle(body['ownershipBundle'], target_market_date)
+    output = safe_directory(output)
+    _require(not output.exists(), 'ownership_output_exists')
+    output.parent.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix='.ownership-restore-', dir=output.parent))
+    try:
+        for name, raw in checked['decodedFiles'].items():
+            path = staging / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            _store(path, raw)
+        from scripts.update_ownership_checkpoint import validate_generation
+        _require(not validate_generation(staging), 'ownership_generation')
+        _require(not output.exists(), 'ownership_output_exists')
+        staging.rename(output)
+    finally:
+        if staging.exists(): shutil.rmtree(staging)
+    return {'ownershipBackupComplete': True, 'ownershipStateRestored': True,
+            'ownershipGeneration': checked['generationCommit']}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     origin = parser.add_mutually_exclusive_group(required=True)
@@ -100,6 +130,7 @@ def main(argv=None):
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--source-cache-dir', type=Path, default=ROOT / '.cache/market-source')
     parser.add_argument('--stock-cache-dir', type=Path, default=ROOT / '.cache/restored-stock-details')
+    parser.add_argument('--ownership-state-dir', type=Path, help='Explicit destination for verified producer state')
     args = parser.parse_args(argv)
     trust = {'descriptor_sha256': args.descriptor_sha256, 'market_date': args.cache_market_date,
              'source': {'sourceGitCommit': args.source_git_commit, 'actionsRunId': args.actions_run_id, 'requestId': args.request_id}}
@@ -109,6 +140,9 @@ def main(argv=None):
             directory = args.directory if args.directory is not None else fetch_restore_commit(args.restore_commit, Path(temporary) / 'data', trust=trust)
             proof = restore_market_cache(directory, target_market_date=args.market_date,
                                          source_cache_dir=args.source_cache_dir, stock_cache_dir=args.stock_cache_dir, **trust)
+            ownership_proof = (restore_ownership_bundle(directory, trust=trust, target_market_date=args.market_date, output=args.ownership_state_dir)
+                               if args.ownership_state_dir is not None else {'ownershipBackupComplete': False, 'ownershipStateRestored': False})
+            proof = {**proof, **ownership_proof}
         print(json.dumps(proof, separators=(',', ':')))
         return 0
     except (OSError, ValueError, TypeError, KeyError, IndexError, AttributeError):
