@@ -39,6 +39,24 @@ function validatePrior(p,state){
   let total=0;for(const e of p.cacheFileMeta){restoreCheck(restoreName(e.name)&&/^[a-f0-9]{64}$/.test(e.sha256||'')&&Number.isSafeInteger(e.bytes)&&e.bytes>0&&e.bytes<=(e.name.endsWith('.gz')?4194304:1048576),'file_metadata');total+=e.bytes;}
   restoreCheck(total<=67*1024*1024&&['manifest.json','proof.json','expected.json'].every(name=>p.cacheFileMeta.some(e=>e.name===name)),'file_metadata');
 }
+const custodyKeys=['marketDate','requestId','actionsRunId','runHeadSha','pageId','screeningStatus','publicationStatus','cacheStatus','cacheManifestHash','cacheActiveManifestHash','cacheProofHash','cacheArtifactId','cacheRunWorkflowId','cacheArtifactSha256','cacheLatestHash','cacheFileMeta','cachePartsExpected','cachePartsVerified','cacheMetricsComplete','cacheRawSemanticsVerifiedByProducer','cacheIndependentRawSemanticsVerified','cachePreviousTradingDate'];
+// Only a completed producer/readback can establish custody. A later operation's
+// request/run is deliberately outside this descriptor, even on the same date.
+function captureVerifiedCache(p,date){
+  validatePrior(p,{previousSessionDate:date});
+  restoreCheck(p.screeningStatus==='complete'&&p.publicationStatus==='verified'&&p.cachePartsExpected===p.cacheFileMeta.length&&p.cachePartsVerified===p.cachePartsExpected&&p.cacheRawSemanticsVerifiedByProducer===true&&typeof p.cacheIndependentRawSemanticsVerified==='boolean'&&typeof p.cacheMetricsComplete==='boolean','complete_custody');
+  restoreCheck(/^\d{4}-\d{2}-\d{2}$/.test(p.cachePreviousTradingDate||'')&&p.cachePreviousTradingDate<date&&new Date(p.cachePreviousTradingDate+'T00:00:00Z').toISOString().slice(0,10)===p.cachePreviousTradingDate,'complete_custody');
+  return {schemaVersion:'market-cache-custody-v1',...Object.fromEntries(custodyKeys.map(key=>[key,key==='cacheFileMeta'?p[key].map(({name,sha256,bytes})=>({name,sha256,bytes})):p[key]]))};
+}
+function cacheCustodyForDay(day,date){
+  if(!Object.prototype.hasOwnProperty.call(day,'lastVerifiedCache'))return undefined;
+  const p=day.lastVerifiedCache;
+  restoreCheck(day.marketDate===date&&p?.schemaVersion==='market-cache-custody-v1'&&Object.keys(p).length===custodyKeys.length+1&&Object.keys(p).every(k=>k==='schemaVersion'||custodyKeys.includes(k)),'custody_descriptor');
+  const verified=captureVerifiedCache(p,date);
+  restoreCheck(day.cacheActiveManifestHash===p.cacheManifestHash,'custody_anchor');
+  if(day.cacheStatus==='verified')restoreCheck(JSON.stringify(captureVerifiedCache(day,date))===JSON.stringify(verified),'custody_lineage');
+  return verified;
+}
 function restoreGetPart(state,api){
   const e=state.restoreFileMeta[state.restoreCursor||0],id=state.restoreBlockIds?.[e.name];restoreCheck(restoreUuid(id),'block_id');
   return api.request(state,'restoreFile','notion','GET',`${RESTORE_NOTION}/blocks/${id}`);
@@ -133,7 +151,7 @@ function advanceRestore(state,response,now,api){
     }
     case 'restoreState':{
       if(status===404)return restoreMissingCandidate(state,api);
-      restoreCheck(typeof body?.content==='string'&&body.content.length<=3000000,'prior_size');const p=JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));
+      restoreCheck(typeof body?.content==='string'&&body.content.length<=3000000,'prior_size');const day=JSON.parse(Buffer.from(body.content,'base64').toString('utf8')),p=cacheCustodyForDay(day,state.restoreCacheCandidateDate||state.previousSessionDate)||day;
       if(!Object.prototype.hasOwnProperty.call(p,'cacheActiveManifestHash')&&!Object.prototype.hasOwnProperty.call(p,'cacheManifestHash')&&p.cacheStatus!=='verified')return restoreMissingCandidate(state,api);
       validatePrior(p,state);
       return api.request({...state,restorePrior:p,restoreFileMeta:p.cacheFileMeta,restorePageId:p.pageId,restoreManifestHash:p.cacheManifestHash},'restorePage','notion','GET',`${RESTORE_NOTION}/pages/${p.pageId}`);
@@ -187,4 +205,4 @@ function advanceRestore(state,response,now,api){
     default:throw Error('restore_unknown_stage');
   }
 }
-module.exports={beginRestore,advanceRestore,nextRestore,ambiguousRestore,prepareRestoreDescriptor,restoreDurable,restoreDispatchInputs,gitObject};
+module.exports={beginRestore,advanceRestore,nextRestore,ambiguousRestore,prepareRestoreDescriptor,restoreDurable,restoreDispatchInputs,gitObject,captureVerifiedCache,cacheCustodyForDay};

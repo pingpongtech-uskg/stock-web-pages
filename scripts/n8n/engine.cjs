@@ -98,7 +98,7 @@ function contents(state) {return `${REPO}/contents/operations/days/${state.marke
 function archiveContents(state,stage,path){return request(state,stage,'github','GET',`${REPO}/contents/public${path}?ref=${state.archiveCommit}`);}
 function contentBytes(body){if(body.encoding!=='base64'||typeof body.content!=='string'||body.size>3000000)throw Error('archive_contents_schema');return Buffer.from(body.content,'base64').toString('utf8');}
 function checkpoint(state,nextStage,now=Date.now()) {
-  const prepared=nextStage==='dispatch'?{...state,dispatchStartedAt:now}:state;
+  const prepared=nextStage==='dispatch'?{...state,dispatchStartedAt:now}:state.stage==='cacheVerifyPage'&&nextStage==='summaryRead'?{...state,lastVerifiedCache:restoreOperation.captureVerifiedCache(state,state.marketDate)}:state;
   const saved={...durable(prepared),stage:nextStage};
   const body={message:`[CF-Pages-Skip] chore: checkpoint Stockscreener ${prepared.marketDate}`,branch:'n8n-state',content:Buffer.from(JSON.stringify(saved)).toString('base64'),...(prepared.lockSha?{sha:prepared.lockSha}:{})};
   return request({...prepared,nextStage},'checkpoint','github','PUT',contents(prepared),body);
@@ -251,12 +251,13 @@ function advanceSuccess(state,body,status,response,now) {
       const resumeTerminal=existing?.transitionTerminal===true&&existing.released===true&&sameRequest&&state.marketDate===existing.marketDate&&state.mode==='resume'&&state.runKind==='manual'&&/^\d{1,24}$/.test(String(existing.actionsRunId||''))&&/^[a-f0-9]{40}$/.test(existing.runHeadSha||'');
       if(existing?.transitionTerminal===true&&existing.released&&sameRequest&&!resumeTerminal) return done({...existing,owner:state.owner});
       if(existing?.released&&sameRequest&&existing.screeningStatus==='complete'&&existing.notionStatus==='complete'&&existing.deployStatus==='verified'&&(existing.archiveMethod==='legacy_archive'||existing.cacheStatus==='verified')) return done({...existing,owner:state.owner,screeningStatus:'already_complete'});
+      const lastVerifiedCache=existing?.marketDate===state.marketDate?(restoreOperation.cacheCustodyForDay(existing,state.marketDate)||(!sameRequest&&existing.cacheStatus==='verified'?restoreOperation.captureVerifiedCache(existing,state.marketDate):undefined)):undefined;
       const resume=sameRequest?existing:{};
       const manualOverride=state.runKind==='manual'&&['screen','resume','legacy_archive'].includes(state.mode)&&!!resume.requestId;
       const operationDeadline=manualOverride?state.operationDeadline:(resume.operationDeadline||state.operationDeadline);
       const audit=manualOverride?{scheduledCutoff:resume.scheduledCutoff||resume.overdueAt,manualDeadlineOverride:true,manualResumedAt:now}:{};
       const correction=correctPreflight?{dispatchIntent:false,preflightRetryOwner:undefined,confirmedPreflightCorrectionFrom:state.preflightRetryOwner,errorCategory:'',errorMessage:''}:resumeTerminal?{transitionTerminal:undefined,errorCategory:'',errorMessage:'',recordFailure:false}:{};
-      const saved={...state,...resume,...audit,...correction,owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl};
+      const saved={...state,...resume,...audit,...correction,...(lastVerifiedCache?{lastVerifiedCache,cacheActiveManifestHash:lastVerifiedCache.cacheManifestHash}:{}),owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl};
       const stage=!state.isOpen?'holiday':state.mode==='legacy_archive'?'legacyRef':saved.actionsRunId?'pollRun':'findRun';
       return checkpoint(saved,stage);
     }

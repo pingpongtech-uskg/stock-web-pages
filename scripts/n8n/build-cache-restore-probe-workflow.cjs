@@ -33,8 +33,8 @@ function probeAdvance(state,response={},now=Date.now()){
     if(state.stage==='restoreState'){
       if(status===404)return probeDone(state,'failed','restore_probe_cache_missing');
       if(typeof body?.content!=='string'||body.content.length>3000000)return probeDone(state,'failed','restore_probe_prior_binding');
-      const p=JSON.parse(Buffer.from(body.content,'base64'));
-      if(p.marketDate!==state.priorDate||p.cacheManifestHash!==state.expectedManifestHash||p.cacheActiveManifestHash!==state.expectedManifestHash||p.requestId!==state.expectedRequestId||p.actionsRunId!==state.expectedActionsRunId||p.runHeadSha!==state.expectedSourceGitCommit||p.released!==true||p.screeningStatus!=='complete'||p.notionStatus!=='complete'||p.deployStatus!=='verified')return probeDone(state,'failed','restore_probe_prior_binding');
+      const day=JSON.parse(Buffer.from(body.content,'base64')),custody=restoreOperation.cacheCustodyForDay(day,state.priorDate),p=custody||day;
+      if(day.released!==true||p.marketDate!==state.priorDate||p.cacheManifestHash!==state.expectedManifestHash||p.cacheActiveManifestHash!==state.expectedManifestHash||p.requestId!==state.expectedRequestId||p.actionsRunId!==state.expectedActionsRunId||p.runHeadSha!==state.expectedSourceGitCommit||!custody&&(p.screeningStatus!=='complete'||p.notionStatus!=='complete'||p.deployStatus!=='verified'))return probeDone(state,'failed','restore_probe_prior_binding');
     }
     return restoreOperation.advanceRestore({...state,retry:0},{...response,body,statusCode:status},now,probeApi());
   }catch(error){return probeDone(state,'failed',/^restore_[a-z_]+$/.test(error.message||'')?error.message:'restore_probe_validation');}
