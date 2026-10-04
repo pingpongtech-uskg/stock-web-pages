@@ -3,8 +3,8 @@
   "remoteOperations": "read-only SDK validation only; no workflow create/update/execute/activate",
   "workflows": {
     "stockscreener": {
-      "sdkSha256": "89a89bd1b1e1599554c9f69711b5bef00ec1b760ce69445e6ec2a93793249d36",
-      "sdkBytes": 270075,
+      "sdkSha256": "32249762f4ef8b7ea1b8819490656642d565d121ce3016d45558286e7d3b3258",
+      "sdkBytes": 270016,
       "nodeCount": 97,
       "readOnlyRemoteSdkValidation": {
         "valid": true,
@@ -25,7 +25,7 @@
   },
   "tests": {
     "command": "node --experimental-test-coverage --test-coverage-include=**/ownership-update.cjs --test-coverage-include=**/runtime.cjs --test-coverage-include=**/engine.cjs --test scripts/n8n/test-*.cjs",
-    "passed": 231,
+    "passed": 233,
     "failed": 0,
     "coverage": {
       "engine": {
@@ -44,7 +44,8 @@
         "functions": 100
       }
     },
-    "actualProducerFixture": "pipeline/fixtures/ownership/mops-2547-202608.json -> validated_mops_rows -> evaluate_chip_reference -> n8n exact artifact/archive flow; YYYY-MM sourceDate remains unchanged"
+    "actualProducerFixture": "pipeline/fixtures/ownership/mops-2547-202608.json -> validated_mops_rows -> evaluate_chip_reference -> n8n exact artifact/archive flow; YYYY-MM sourceDate remains unchanged",
+    "notionTransportRegression": "Live A/B1050(GETnoBody)=real database;1051(GETrawempty)=serializedNodeZlib stream. Static bodyless GET + existing PATCH writer route preserves97nodes; full-response data string regression passes."
   },
   "activation": false
 }

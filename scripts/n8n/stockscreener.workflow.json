@@ -245,7 +245,7 @@
       "parameters": {
         "mode": "expression",
         "numberOutputs": 70,
-        "output": "={{ {\"calendar\":0,\"branch\":1,\"mainRef\":2,\"createBranch\":3,\"state\":4,\"checkpoint\":5,\"findRun\":6,\"dispatch\":7,\"pollRun\":8,\"failedRunJobs\":9,\"failedRunArtifacts\":10,\"artifactList\":11,\"artifactRedirect\":12,\"artifactZip\":13,\"publicationExport\":14,\"publicationMain\":15,\"legacyRef\":16,\"legacyIndex\":17,\"legacyMonth\":18,\"legacyExport\":19,\"rootSchema\":20,\"rootSchemaUpdate\":21,\"findDaily\":22,\"createDaily\":23,\"writeFailure\":24,\"findDatabase\":25,\"createDatabase\":26,\"databaseMetadata\":27,\"queryRows\":28,\"createStock\":29,\"verifyRows\":30,\"archiveDuplicate\":31,\"summaryRead\":32,\"appendSummary\":33,\"finishNotion\":34,\"liveProbe\":35,\"liveVerify\":36,\"diagnoseDatabase\":37,\"diagnoseSource\":38,\"cacheRun\":39,\"cacheFingerprint\":40,\"cacheLatest\":41,\"cacheArtifacts\":42,\"cacheRedirect\":43,\"cacheZip\":44,\"cacheChildren\":45,\"cacheCreateUpload\":46,\"cacheSendUpload\":47,\"cacheUploadStatus\":48,\"cacheAppend\":49,\"cacheGetFile\":50,\"cacheDownload\":51,\"cachePromote\":52,\"cacheVerifyPage\":53,\"restoreIndexRef\":54,\"restoreIndex\":55,\"restoreState\":56,\"restorePage\":57,\"restoreChildren\":58,\"restoreFile\":59,\"restoreDownload\":60,\"restoreBlobGet\":61,\"restoreBlobCreate\":62,\"restoreTreeGet\":63,\"restoreTreeCreate\":64,\"restoreCommitGet\":65,\"restoreCommitCreate\":66,\"restoreRefGet\":67,\"restoreRefCreate\":68}[$json.state.stage] ?? 69 }}"
+        "output": "={{ $json.state.stage === \"databaseMetadata\" && $json.op?.method === \"PATCH\" ? 21 : ({\"calendar\":0,\"branch\":1,\"mainRef\":2,\"createBranch\":3,\"state\":4,\"checkpoint\":5,\"findRun\":6,\"dispatch\":7,\"pollRun\":8,\"failedRunJobs\":9,\"failedRunArtifacts\":10,\"artifactList\":11,\"artifactRedirect\":12,\"artifactZip\":13,\"publicationExport\":14,\"publicationMain\":15,\"legacyRef\":16,\"legacyIndex\":17,\"legacyMonth\":18,\"legacyExport\":19,\"rootSchema\":20,\"rootSchemaUpdate\":21,\"findDaily\":22,\"createDaily\":23,\"writeFailure\":24,\"findDatabase\":25,\"createDatabase\":26,\"databaseMetadata\":27,\"queryRows\":28,\"createStock\":29,\"verifyRows\":30,\"archiveDuplicate\":31,\"summaryRead\":32,\"appendSummary\":33,\"finishNotion\":34,\"liveProbe\":35,\"liveVerify\":36,\"diagnoseDatabase\":37,\"diagnoseSource\":38,\"cacheRun\":39,\"cacheFingerprint\":40,\"cacheLatest\":41,\"cacheArtifacts\":42,\"cacheRedirect\":43,\"cacheZip\":44,\"cacheChildren\":45,\"cacheCreateUpload\":46,\"cacheSendUpload\":47,\"cacheUploadStatus\":48,\"cacheAppend\":49,\"cacheGetFile\":50,\"cacheDownload\":51,\"cachePromote\":52,\"cacheVerifyPage\":53,\"restoreIndexRef\":54,\"restoreIndex\":55,\"restoreState\":56,\"restorePage\":57,\"restoreChildren\":58,\"restoreFile\":59,\"restoreDownload\":60,\"restoreBlobGet\":61,\"restoreBlobCreate\":62,\"restoreTreeGet\":63,\"restoreTreeCreate\":64,\"restoreCommitGet\":65,\"restoreCommitCreate\":66,\"restoreRefGet\":67,\"restoreRefCreate\":68}[$json.state.stage] ?? 69) }}"
       },
       "position": [
         0,
@@ -1836,7 +1836,7 @@
             }
           ]
         },
-        "sendBody": true,
+        "sendBody": false,
         "options": {
           "lowercaseHeaders": false,
           "timeout": 20000,
@@ -1852,10 +1852,7 @@
               "responseFormat": "text"
             }
           }
-        },
-        "contentType": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ $json.op.method === \"PATCH\" ? JSON.stringify($json.op.body) : \"\" }}"
+        }
       },
       "position": [
         1860,
