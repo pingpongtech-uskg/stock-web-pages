@@ -37,6 +37,64 @@ from pipeline.official_institutional import (  # noqa: E402
 SOURCE_URL = "https://stock.wearn.com/b50.asp"
 USER_AGENT = "taiwan-stock-screener/0.1 (public ranking universe)"
 CODE_RE = re.compile(r"^[0-9A-Z]{4,6}$")
+SOURCE_EVIDENCE_LEVELS = {"fresh_response", "verified_cache_replay", "verified_cached_after_refresh_failure"}
+
+
+def _project_source_evidence(snapshots: list[dict[str, Any]]) -> dict[str, Any] | None:
+    sessions = []
+    fields = {"market", "requestDate", "reportedDate", "unit", "evidenceLevel", "rawSha256", "retrievedAt"}
+    for snapshot in snapshots:
+        raw_markets = snapshot.get("sourceEvidence")
+        if raw_markets is None:
+            continue
+        if not isinstance(raw_markets, dict) or set(raw_markets) != {"TWSE", "TPEx"}:
+            raise ValueError("institutional source evidence must cover both markets")
+        day = str(snapshot.get("date") or "")
+        markets = {}
+        for name, raw in raw_markets.items():
+            allowed = fields | ({"refreshFailure"} if isinstance(raw, dict) and "refreshFailure" in raw else set())
+            if not isinstance(raw, dict) or set(raw) != allowed:
+                raise ValueError("institutional source evidence schema is invalid")
+            if (raw.get("market") != name or raw.get("requestDate") != day or raw.get("reportedDate") != day
+                    or raw.get("unit") != "shares" or raw.get("evidenceLevel") not in SOURCE_EVIDENCE_LEVELS
+                    or not re.fullmatch(r"[a-f0-9]{64}", str(raw.get("rawSha256") or ""))):
+                raise ValueError("institutional source evidence lineage is invalid")
+            try:
+                retrieved = datetime.fromisoformat(str(raw.get("retrievedAt") or "").replace("Z", "+00:00"))
+            except ValueError as exc:
+                raise ValueError("institutional source evidence timestamp is invalid") from exc
+            if retrieved.tzinfo is None or retrieved.utcoffset() != timezone.utc.utcoffset(retrieved):
+                raise ValueError("institutional source evidence timestamp is invalid")
+            projected = {key: raw[key] for key in fields}
+            if "refreshFailure" in raw:
+                failure = raw["refreshFailure"]
+                if not isinstance(failure, dict):
+                    raise ValueError("institutional refresh failure evidence is invalid")
+                if failure == {"category": "transport_error"}:
+                    projected["refreshFailure"] = {"category": "transport_error"}
+                elif (set(failure) == {"category", "status"} and failure.get("category") == "http_5xx"
+                      and type(failure.get("status")) is int and 500 <= failure["status"] <= 599):
+                    projected["refreshFailure"] = {"category": "http_5xx", "status": failure["status"]}
+                else:
+                    raise ValueError("institutional refresh failure evidence is invalid")
+            if raw["evidenceLevel"] == "verified_cached_after_refresh_failure" and "refreshFailure" not in projected:
+                raise ValueError("institutional fallback evidence lacks bounded failure details")
+            markets[name] = projected
+        sessions.append({"marketDate": day, "markets": markets})
+    if not sessions:
+        return None
+    target = sessions[0]
+    levels = {item["evidenceLevel"] for item in target["markets"].values()}
+    if "verified_cached_after_refresh_failure" in levels:
+        level = "verified_cached_after_refresh_failure"
+    elif levels == {"fresh_response"}:
+        level = "fresh_response"
+    elif levels == {"verified_cache_replay"}:
+        level = "verified_cache_replay"
+    else:
+        level = "mixed_source_evidence"
+    return {"schemaVersion": "official-institutional-source-evidence-v1", "marketDate": target["marketDate"],
+            "evidenceLevel": level, "markets": target["markets"], "sessions": sessions}
 
 
 def clean_text(value: str) -> str:
@@ -248,6 +306,7 @@ def update_official_tracked_config(
 
     market_dates = [str(snapshot["date"]) for snapshot in snapshots[:10]]
     previous_market_dates = [str(snapshot["date"]) for snapshot in snapshots[1:11]]
+    source_evidence = _project_source_evidence(snapshots)
     payload = {
         "stale": False,
         "symbols": [row["code"] for row in rows],
@@ -267,6 +326,7 @@ def update_official_tracked_config(
             "top10": current_top10,
             "previousTop10": previous[:10],
             "dailyRows": daily_rows,
+            **({"sourceEvidence": source_evidence} if source_evidence is not None else {}),
         },
         "updated_at": market_dates[0] if market_dates else datetime.now(timezone.utc).date().isoformat(),
     }

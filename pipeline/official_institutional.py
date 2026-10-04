@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import csv
+import http.client
 import io
 import base64
 import hashlib
@@ -39,6 +40,14 @@ MAX_RECEIPT_BYTES = 4_000_000
 
 class OfficialInstitutionalError(RuntimeError):
     """Raised when a complete cross-market daily report is unavailable."""
+
+
+class OfficialInstitutionalRefreshError(OfficialInstitutionalError):
+    """A bounded network failure that may use an already verified same-day receipt."""
+
+    def __init__(self, category: str, *, status: int | None = None):
+        self.evidence = {"category": category, **({"status": status} if status is not None else {})}
+        super().__init__("official report refresh unavailable (" + category + ")")
 
 
 def _clean_text(value: Any) -> str:
@@ -569,7 +578,15 @@ def _get_bytes(
         headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
     request = urllib.request.Request(url, data=encoded, headers=headers)
     try:
-        with urllib.request.urlopen(request, timeout=20) as response:
+        response = urllib.request.urlopen(request, timeout=20)
+    except urllib.error.HTTPError as exc:
+        if 500 <= exc.code <= 599:
+            raise OfficialInstitutionalRefreshError("http_5xx", status=exc.code) from exc
+        raise OfficialInstitutionalError(f"official report HTTP status {exc.code}") from exc
+    except (OSError, urllib.error.URLError, http.client.HTTPException) as exc:
+        raise OfficialInstitutionalRefreshError("transport_error") from exc
+    try:
+        with response:
             if source_cache_dir is None:
                 raw = response.read(MAX_TPEX_REPORT_BYTES + 1)
                 if len(raw) > MAX_TPEX_REPORT_BYTES:
@@ -579,17 +596,20 @@ def _get_bytes(
                 from pipeline.source_receipts import capture_raw, read_raw
 
                 raw = read_raw(response, max_bytes=MAX_TPEX_REPORT_BYTES)
-                receipt = capture_raw(
-                    source_cache_dir,
-                    prefix=f"inst-{market.lower()}-{day.isoformat()}",
-                    raw=raw,
-                    source_url=url,
-                    unit="shares",
-                    request_period={"requestDate": day.isoformat()},
-                    retrieved_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-                )
-    except (OSError, ValueError, urllib.error.URLError) as exc:
-        raise OfficialInstitutionalError(f"official report request failed: {url}: {exc}") from exc
+    except (OSError, urllib.error.URLError, http.client.HTTPException) as exc:
+        raise OfficialInstitutionalRefreshError("transport_error") from exc
+    except ValueError as exc:
+        raise OfficialInstitutionalError("official report response exceeds or violates the byte limit") from exc
+    if source_cache_dir is not None:
+        receipt = capture_raw(
+            source_cache_dir,
+            prefix=f"inst-{market.lower()}-{day.isoformat()}",
+            raw=raw,
+            source_url=url,
+            unit="shares",
+            request_period={"requestDate": day.isoformat()},
+            retrieved_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        )
     return raw, receipt
 
 
@@ -636,16 +656,83 @@ def _verify_cached_projection(rows: list[dict[str, Any]], metadata: dict[str, An
         raise OfficialInstitutionalError("cached source receipt projection does not match parsed bytes")
 
 
+def _source_evidence(
+    receipt: dict[str, Any] | None,
+    *,
+    market: str,
+    day: date,
+    level: str,
+    refresh_failure: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    if receipt is None:
+        return None
+    evidence = {
+        "market": market,
+        "requestDate": day.isoformat(),
+        "reportedDate": day.isoformat(),
+        "unit": "shares",
+        "evidenceLevel": level,
+        "rawSha256": receipt.get("rawSha256"),
+        "retrievedAt": receipt.get("retrievedAt"),
+    }
+    if refresh_failure is not None:
+        evidence["refreshFailure"] = dict(refresh_failure)
+    return evidence
+
+
+def _cached_day_projection(
+    source_cache_dir: Path,
+    *,
+    market: str,
+    day: date,
+    source_url: str,
+    encoding: str,
+    tolerate_invalid: bool = False,
+) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any] | None, bytes] | None:
+    try:
+        cached = _cached_raw(source_cache_dir, market=market, day=day, source_url=source_url, encoding=encoding)
+        if cached is None:
+            return None
+        raw, metadata = cached
+        recovery_receipt = metadata.get("_recoveryReceipt")
+        if market == "TWSE":
+            rows, _ = _parse_twse_response(raw, expected_date=day)
+        else:
+            rows = parse_tpex_daily_response(raw, expected_date=day)
+        if recovery_receipt is None:
+            _verify_cached_projection(rows, metadata)
+        else:
+            metadata = recovery_receipt
+        return rows, metadata, recovery_receipt, raw
+    except (OfficialInstitutionalError, OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
+        if tolerate_invalid:
+            # A fresh request may replace a bad cache; bad bytes never become fallback evidence.
+            return None
+        if isinstance(exc, OfficialInstitutionalError):
+            raise
+        raise OfficialInstitutionalError("cached source receipt is invalid") from exc
+
+
 def fetch_twse_day(
     day: date,
     *,
     source_cache_dir: Path | None = None,
     refresh: bool = True,
-) -> list[dict[str, Any]]:
-    cached = None
-    if source_cache_dir is not None and not refresh:
-        cached = _cached_raw(source_cache_dir, market="TWSE", day=day, source_url=TWSE_ENDPOINT, encoding="utf-8")
-    if cached is None:
+    include_evidence: bool = False,
+) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    candidate = None
+    if source_cache_dir is not None:
+        candidate = _cached_day_projection(source_cache_dir, market="TWSE", day=day,
+                                           source_url=TWSE_ENDPOINT, encoding="utf-8", tolerate_invalid=refresh)
+    if candidate is not None and not refresh:
+        rows, metadata, recovery_receipt, raw = candidate
+        if recovery_receipt is not None:
+            _, no_data = _parse_twse_response(raw, expected_date=day)
+            _write_validated_receipt(source_cache_dir, recovery_receipt, market="TWSE", day=day,
+                                     codes=_codes_from_rows(rows), status="no_data" if no_data else "complete", encoding="utf-8")
+        evidence = _source_evidence(metadata, market="TWSE", day=day, level="verified_cache_replay")
+        return (rows, evidence) if include_evidence else rows
+    try:
         raw, receipt = _get_bytes(
             TWSE_ENDPOINT,
             data={"date": day.strftime("%Y%m%d"), "response": "json"},
@@ -653,25 +740,19 @@ def fetch_twse_day(
             market="TWSE",
             day=day,
         )
-        metadata = None
-    else:
-        raw, metadata = cached
-        receipt = metadata.pop("_recoveryReceipt", None)
-        if receipt is not None:
-            metadata = None
+    except OfficialInstitutionalRefreshError as exc:
+        if candidate is None or candidate[2] is not None:
+            raise
+        rows, metadata, _, _ = candidate
+        evidence = _source_evidence(metadata, market="TWSE", day=day,
+                                    level="verified_cached_after_refresh_failure", refresh_failure=exc.evidence)
+        return (rows, evidence) if include_evidence else rows
     rows, no_data = _parse_twse_response(raw, expected_date=day)
-    if no_data:
-        _write_validated_receipt(source_cache_dir, receipt, market="TWSE", day=day, codes=[],
-                                 status="no_data", encoding="utf-8")
-        if metadata is not None:
-            _verify_cached_projection(rows, metadata)
-        return rows
     codes = _codes_from_rows(rows)
     _write_validated_receipt(source_cache_dir, receipt, market="TWSE", day=day, codes=codes,
-                             status="complete" if rows else "no_data", encoding="utf-8")
-    if metadata is not None:
-        _verify_cached_projection(rows, metadata)
-    return rows
+                             status="no_data" if no_data else "complete", encoding="utf-8")
+    evidence = _source_evidence(receipt, market="TWSE", day=day, level="fresh_response")
+    return (rows, evidence) if include_evidence else rows
 
 
 def fetch_tpex_day(
@@ -679,30 +760,40 @@ def fetch_tpex_day(
     *,
     source_cache_dir: Path | None = None,
     refresh: bool = True,
-) -> list[dict[str, Any]]:
+    include_evidence: bool = False,
+) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any] | None]:
     query = urllib.parse.urlencode({
         "type": "Daily", "sect": "AL", "date": day.strftime("%Y/%m/%d"), "response": "csv",
     })
     url = f"{TPEX_ENDPOINT}?{query}"
-    cached = None
-    if source_cache_dir is not None and not refresh:
-        cached = _cached_raw(source_cache_dir, market="TPEx", day=day, source_url=url, encoding="auto")
-    if cached is None:
+    candidate = None
+    if source_cache_dir is not None:
+        candidate = _cached_day_projection(source_cache_dir, market="TPEx", day=day, source_url=url,
+                                          encoding="auto", tolerate_invalid=refresh)
+    if candidate is not None and not refresh:
+        rows, metadata, recovery_receipt, raw = candidate
+        if recovery_receipt is not None:
+            _write_validated_receipt(source_cache_dir, recovery_receipt, market="TPEx", day=day,
+                                     codes=_codes_from_rows(rows), status="complete" if rows else "no_data",
+                                     encoding="MS950" if not raw.lstrip().startswith(b"{") else "utf-8")
+        evidence = _source_evidence(metadata, market="TPEx", day=day, level="verified_cache_replay")
+        return (rows, evidence) if include_evidence else rows
+    try:
         raw, receipt = _get_bytes(url, source_cache_dir=source_cache_dir, market="TPEx", day=day)
-        metadata = None
-    else:
-        raw, metadata = cached
-        receipt = metadata.pop("_recoveryReceipt", None)
-        if receipt is not None:
-            metadata = None
+    except OfficialInstitutionalRefreshError as exc:
+        if candidate is None or candidate[2] is not None:
+            raise
+        rows, metadata, _, _ = candidate
+        evidence = _source_evidence(metadata, market="TPEx", day=day,
+                                    level="verified_cached_after_refresh_failure", refresh_failure=exc.evidence)
+        return (rows, evidence) if include_evidence else rows
     rows = parse_tpex_daily_response(raw, expected_date=day)
     status = "complete" if rows else "no_data"
     codes = _codes_from_rows(rows)
     _write_validated_receipt(source_cache_dir, receipt, market="TPEx", day=day, codes=codes,
                              status=status, encoding="MS950" if not raw.lstrip().startswith(b"{") else "utf-8")
-    if metadata is not None:
-        _verify_cached_projection(rows, metadata)
-    return rows
+    evidence = _source_evidence(receipt, market="TPEx", day=day, level="fresh_response")
+    return (rows, evidence) if include_evidence else rows
 
 
 def fetch_complete_day(
@@ -710,18 +801,31 @@ def fetch_complete_day(
     *,
     source_cache_dir: Path | None = None,
     refresh: bool = True,
-) -> list[dict[str, Any]]:
+    include_evidence: bool = False,
+) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any]]:
     """Fetch both markets; empty means a weekend/holiday, not zero flow."""
 
+    twse_evidence = tpex_evidence = None
     if source_cache_dir is None:
-        twse = fetch_twse_day(day)
-        tpex = fetch_tpex_day(day)
+        if include_evidence:
+            twse, twse_evidence = fetch_twse_day(day, include_evidence=True)
+            tpex, tpex_evidence = fetch_tpex_day(day, include_evidence=True)
+        else:
+            twse = fetch_twse_day(day)
+            tpex = fetch_tpex_day(day)
     else:
-        twse = fetch_twse_day(day, source_cache_dir=source_cache_dir, refresh=refresh)
-        tpex = fetch_tpex_day(day, source_cache_dir=source_cache_dir, refresh=refresh)
+        if include_evidence:
+            twse, twse_evidence = fetch_twse_day(day, source_cache_dir=source_cache_dir, refresh=refresh, include_evidence=True)
+            tpex, tpex_evidence = fetch_tpex_day(day, source_cache_dir=source_cache_dir, refresh=refresh, include_evidence=True)
+        else:
+            twse = fetch_twse_day(day, source_cache_dir=source_cache_dir, refresh=refresh)
+            tpex = fetch_tpex_day(day, source_cache_dir=source_cache_dir, refresh=refresh)
+    evidence = {market: value for market, value in (("TWSE", twse_evidence), ("TPEx", tpex_evidence)) if value is not None}
     if not twse or not tpex:
-        return []
-    return [*twse, *tpex]
+        rows = []
+    else:
+        rows = [*twse, *tpex]
+    return (rows, evidence) if include_evidence else rows
 
 
 def fetch_recent_complete_days(
@@ -756,11 +860,18 @@ def fetch_recent_complete_days(
         if source_cache_dir is None:
             rows = fetch_complete_day(day)
         else:
-            rows = fetch_complete_day(day, source_cache_dir=source_cache_dir, refresh=(day == end))
+            fetched = fetch_complete_day(day, source_cache_dir=source_cache_dir, refresh=(day == end), include_evidence=True)
+            if isinstance(fetched, tuple) and len(fetched) == 2:
+                rows, evidence = fetched
+            else:
+                rows, evidence = fetched, {}
         if calendar is not None and not rows:
             raise OfficialInstitutionalError(f"official sources returned no complete data for open session {day.isoformat()}")
         if rows:
-            result.append({"date": day.isoformat(), "rows": rows})
+            snapshot = {"date": day.isoformat(), "rows": rows}
+            if source_cache_dir is not None and evidence:
+                snapshot["sourceEvidence"] = evidence
+            result.append(snapshot)
             if len(result) >= sessions:
                 break
     if len(result) < sessions:

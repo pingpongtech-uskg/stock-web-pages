@@ -179,3 +179,30 @@ def test_full_source_capture_occurs_before_top100_subset_update(tmp_path, monkey
     monkeypatch.setattr('sys.argv', ['fetch.py', '--source', 'official', '--as-of', '2026-10-02', '--print-codes', '--source-cache-dir', str(kwargs['source_cache_dir'])])
     assert fetch.main() == 0
     assert calls[0]['source_cache_dir'] == kwargs['source_cache_dir']
+
+
+def test_official_universe_serializes_bounded_target_source_fallback_evidence(tmp_path):
+    from scripts.fetch_research_universe import update_official_tracked_config
+
+    dates = ["2026-10-02", "2026-10-01", "2026-09-30", "2026-09-29", "2026-09-25",
+             "2026-09-24", "2026-09-23", "2026-09-22", "2026-09-21", "2026-09-18", "2026-09-17"]
+    snapshots = []
+    for day in dates:
+        snapshots.append({"date": day, "rows": [{"code":"2330", "name":"Test", "market":"TWSE",
+            "buyShares":10, "sellShares":1, "netShares":9}]})
+    snapshots[0]["sourceEvidence"] = {
+        "TWSE": {"market":"TWSE", "requestDate":dates[0], "reportedDate":dates[0], "unit":"shares",
+                 "evidenceLevel":"fresh_response", "rawSha256":"a"*64, "retrievedAt":"2026-10-02T10:00:00Z"},
+        "TPEx": {"market":"TPEx", "requestDate":dates[0], "reportedDate":dates[0], "unit":"shares",
+                 "evidenceLevel":"verified_cached_after_refresh_failure", "rawSha256":"b"*64,
+                 "retrievedAt":"2026-10-02T09:55:00Z", "refreshFailure":{"category":"http_5xx", "status":520}},
+    }
+    path = tmp_path / "universe.json"
+    result = update_official_tracked_config(snapshots, path)
+    evidence = result["universe"]["sourceEvidence"]
+    assert evidence["marketDate"] == dates[0]
+    assert evidence["evidenceLevel"] == "verified_cached_after_refresh_failure"
+    assert evidence["markets"]["TPEx"]["refreshFailure"] == {"category":"http_5xx", "status":520}
+    assert evidence["markets"]["TPEx"]["rawSha256"] == "b"*64
+    assert "url" not in json.dumps(evidence).lower()
+    assert "errorMessage" not in json.dumps(evidence)

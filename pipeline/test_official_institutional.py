@@ -162,7 +162,7 @@ def test_recent_snapshot_fetch_forwards_source_cache_directory(monkeypatch, tmp_
     result = official.fetch_recent_complete_days(
         as_of=date(2026, 10, 2), sessions=1, lookback_days=1, source_cache_dir=tmp_path)
     assert result == [{"date": "2026-10-02", "rows": [{"code": "2330"}]}]
-    assert calls == [{"source_cache_dir": tmp_path, "refresh": True}]
+    assert calls == [{"source_cache_dir": tmp_path, "refresh": True, "include_evidence": True}]
 
 
 def test_tpex_replays_verified_prior_day_without_http_and_refreshes_target(monkeypatch, tmp_path):
@@ -348,8 +348,182 @@ def test_tpex_http_error_is_wrapped_with_source_context(monkeypatch):
     from urllib.error import URLError
     from pipeline.official_institutional import fetch_tpex_day
     monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: (_ for _ in ()).throw(URLError("offline")))
-    with pytest.raises(OfficialInstitutionalError, match="official report request failed:.*offline"):
+    with pytest.raises(OfficialInstitutionalError, match=r"refresh unavailable \(transport_error\)"):
         fetch_tpex_day(date(2026, 10, 2))
+
+
+@pytest.mark.parametrize("market", ["TWSE", "TPEx"])
+def test_same_day_verified_receipt_is_used_only_after_http_5xx_and_never_rewritten(monkeypatch, tmp_path, market):
+    import hashlib
+    import urllib.error
+    import pipeline.official_institutional as official
+
+    day = date(2026, 10, 2)
+    twse_raw = json.dumps({"date":"20261002","fields":["證券代號","證券名稱","買進股數","賣出股數","買賣超股數"],
+        "data":[["2330","台積電","10","3","7"]]}, ensure_ascii=False).encode()
+    tpex_raw = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+    raw = twse_raw if market == "TWSE" else tpex_raw
+    fetch = official.fetch_twse_day if market == "TWSE" else official.fetch_tpex_day
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return raw[:size] if size >= 0 else raw
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    fetch(day, source_cache_dir=tmp_path)
+    pointer = tmp_path / f"institutional-{market}-{day.isoformat()}-validated.json"
+    before = pointer.read_bytes()
+    metadata = json.loads(before)
+    raw_path = tmp_path / metadata["rawFile"]
+    original_raw = raw_path.read_bytes()
+    original_sha = hashlib.sha256(original_raw).hexdigest()
+
+    def upstream_520(*args, **kwargs):
+        raise urllib.error.HTTPError("https://official.invalid", 520, "origin unavailable", {}, None)
+
+    monkeypatch.setattr("urllib.request.urlopen", upstream_520)
+    rows, evidence = fetch(day, source_cache_dir=tmp_path, refresh=True, include_evidence=True)
+    assert rows
+    assert evidence == {
+        "market": market, "requestDate": day.isoformat(), "reportedDate": day.isoformat(), "unit": "shares",
+        "evidenceLevel": "verified_cached_after_refresh_failure", "rawSha256": original_sha,
+        "retrievedAt": metadata["retrievedAt"], "refreshFailure": {"category": "http_5xx", "status": 520},
+    }
+    assert pointer.read_bytes() == before
+    assert raw_path.read_bytes() == original_raw
+
+
+@pytest.mark.parametrize("status", [403, 429])
+def test_same_day_refresh_does_not_fallback_for_4xx_or_semantically_invalid_2xx(monkeypatch, tmp_path, status):
+    import urllib.error
+    import pipeline.official_institutional as official
+
+    day = date(2026, 10, 2)
+    raw = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return raw[:size] if size >= 0 else raw
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    official.fetch_tpex_day(day, source_cache_dir=tmp_path)
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: (_ for _ in ()).throw(
+        urllib.error.HTTPError("https://official.invalid", status, "denied", {}, None)))
+    with pytest.raises(OfficialInstitutionalError):
+        official.fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=True)
+
+    monkeypatch.setattr(official, "_get_bytes", lambda *args, **kwargs: (b"not-a-report", None))
+    with pytest.raises(OfficialInstitutionalError):
+        official.fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=True)
+
+
+@pytest.mark.parametrize("cache_state", ["missing", "corrupt"])
+def test_http_5xx_requires_an_eligible_exact_date_cache(monkeypatch, tmp_path, cache_state):
+    import urllib.error
+    import pipeline.official_institutional as official
+
+    day = date(2026, 10, 2)
+    raw = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return raw[:size] if size >= 0 else raw
+
+    if cache_state == "corrupt":
+        monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+        official.fetch_tpex_day(day, source_cache_dir=tmp_path)
+        metadata = json.loads((tmp_path / f"institutional-TPEx-{day.isoformat()}-validated.json").read_text())
+        (tmp_path / metadata["rawFile"]).write_bytes(b"tampered")
+
+    def upstream_520(*args, **kwargs):
+        raise urllib.error.HTTPError("https://official.invalid", 520, "origin unavailable", {}, None)
+
+    monkeypatch.setattr("urllib.request.urlopen", upstream_520)
+    with pytest.raises(official.OfficialInstitutionalRefreshError):
+        official.fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=True, include_evidence=True)
+
+
+def test_successful_same_day_refresh_supersedes_cached_receipt_and_reports_fresh_evidence(monkeypatch, tmp_path):
+    import hashlib
+    import pipeline.official_institutional as official
+
+    day = date(2026, 10, 2)
+    old_raw = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+    new_raw = _tpex_csv("3081", "聯亞", "99,000", "59", "98,941")
+
+    class Response:
+        def __init__(self, payload): self.payload = payload
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return self.payload[:size] if size >= 0 else self.payload
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response(old_raw))
+    official.fetch_tpex_day(day, source_cache_dir=tmp_path)
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response(new_raw))
+    rows, evidence = official.fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=True, include_evidence=True)
+    metadata = json.loads((tmp_path / f"institutional-TPEx-{day.isoformat()}-validated.json").read_text())
+    assert rows[0]["netShares"] == 98941
+    assert evidence["evidenceLevel"] == "fresh_response"
+    assert evidence["rawSha256"] == hashlib.sha256(new_raw).hexdigest() == metadata["rawSha256"]
+
+
+def test_raw_only_orphan_receipt_is_not_same_day_refresh_fallback(monkeypatch, tmp_path):
+    import urllib.error
+    import pipeline.official_institutional as official
+
+    day = date(2026, 10, 2)
+    raw = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return raw[:size] if size >= 0 else raw
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: Response())
+    official.fetch_tpex_day(day, source_cache_dir=tmp_path)
+    (tmp_path / f"institutional-TPEx-{day.isoformat()}-validated.json").unlink()
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: (_ for _ in ()).throw(
+        urllib.error.HTTPError("https://official.invalid", 520, "origin unavailable", {}, None)))
+    with pytest.raises(official.OfficialInstitutionalRefreshError):
+        official.fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=True, include_evidence=True)
+
+
+@pytest.mark.parametrize("failure", ["incomplete_read", "enter_error", "exit_error"])
+def test_http_stream_transport_failures_can_use_exact_verified_same_day_receipt(monkeypatch, tmp_path, failure):
+    import http.client
+    import pipeline.official_institutional as official
+
+    day = date(2026, 10, 2)
+    raw = _tpex_csv("3081", "聯亞", "98,000", "59", "97,941")
+
+    class GoodResponse:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, size=-1): return raw[:size] if size >= 0 else raw
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: GoodResponse())
+    official.fetch_tpex_day(day, source_cache_dir=tmp_path)
+
+    class BrokenResponse:
+        def __enter__(self):
+            if failure == "enter_error": raise OSError("connection dropped")
+            return self
+        def __exit__(self, *args):
+            if failure == "exit_error": raise OSError("connection dropped")
+            return False
+        def read(self, size=-1):
+            if failure == "incomplete_read": raise http.client.IncompleteRead(b"partial", 10)
+            return raw[:size] if size >= 0 else raw
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: BrokenResponse())
+    rows, evidence = official.fetch_tpex_day(day, source_cache_dir=tmp_path, refresh=True, include_evidence=True)
+    assert rows[0]["netShares"] == 97941
+    assert evidence["evidenceLevel"] == "verified_cached_after_refresh_failure"
+    assert evidence["refreshFailure"] == {"category":"transport_error"}
 
 
 def test_tpex_csv_contract_rejects_a_different_report_date(monkeypatch):
