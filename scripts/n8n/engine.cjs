@@ -165,7 +165,7 @@ function cacheApi(now){return {request,checkpoint:(state,nextStage)=>checkpoint(
 function advance(original,response,now=Date.now()) {
   const state={...original}; let status=Number(response?.statusCode??200); let body=response?.body??response?.data;
   if(typeof body==='string'&&!['liveProbe','liveVerify'].includes(state.stage)) {try{body=JSON.parse(body);}catch{/* Redirects may have no JSON body. */}}
-  response=restoreOperation.normalizeRestoreTreeResponse(state,{...response,body,statusCode:status});status=response.statusCode;
+  if(state.stage==='restoreTreeGet'){response=restoreOperation.normalizeRestoreTreeResponse(state,{...response,body,statusCode:status});status=response.statusCode;}
   if(state.lockSha&&now>state.deadline) return fail(state,'writer_deadline');
   if(/^cache_[a-z_]+$/.test(response?.cacheError||''))return fail({...state,cacheStatus:'failed'},response.cacheError);
   if(['cacheDownload','restoreDownload'].includes(state.stage)&&(status===403||status===429||status>=500||response?.error)){
