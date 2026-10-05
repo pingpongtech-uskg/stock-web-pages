@@ -11,6 +11,9 @@ const cacheCheck=(ok,reason)=>{if(!ok)throw Error('cache_'+reason);};
 const cacheText=value=>[{type:'text',text:{content:String(value)}}];
 const cacheUuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
 const cacheEntry=state=>state.cacheEntries[state.cacheCursor||0];
+const CACHE_SEGMENT_UPLOADS=4;
+const CACHE_ABANDONED_LIMIT=259;
+const cacheMime=entry=>entry.name.endsWith('.gz')?'application/gzip':'application/json';
 const cacheSource=state=>({requestId:state.requestId,actionsRunId:state.actionsRunId,sourceGitCommit:state.runHeadSha});
 const CACHE_FIELDS={'Cache Status':{rich_text:{}},'Cache Manifest Hash':{rich_text:{}},'Cache Artifact ID':{rich_text:{}},'Cache Proof Hash':{rich_text:{}},'Cache Active Revision':{rich_text:{}},'Cache Metrics Complete':{checkbox:{}},'Cache Previous Trading Date':{date:{}},'Cache Verification Level':{rich_text:{}},'Cache Parts Expected':{number:{}},'Cache Parts Verified':{number:{}}};
 
@@ -56,6 +59,7 @@ function selectCachePart(state,api){
   const entry=cacheEntry(state),matches=(state.cacheChildren||[]).filter(block=>block.type==='file'&&block.file?.caption?.map(part=>part.plain_text||part.text?.content||'').join('')===entry.marker);
   cacheCheck(matches.length<=1,'duplicate_attachment');
   if(matches.length)return api.request({...state,cacheBlockId:matches[0].id},'cacheGetFile','notion','GET',`${CACHE_NOTION}/blocks/${matches[0].id}`);
+  if(state.cacheExpiredUploadEvidence)return replaceExpiredUpload(state,api);
   if(state.cacheUploadIntent){
     if(state.cacheUploadIntent!==entry.name||(state.cacheUploadManifestHash&&state.cacheUploadManifestHash!==state.cacheManifestHash))return api.fail({...state,cacheStatus:'pending_reconciliation'},'cache_pending_upload_other_part');
     if(state.cacheAppendAmbiguous||state.cacheAppendAttempted)return api.fail({...state,cacheStatus:'pending_reconciliation'},'cache_attachment_ambiguous');
@@ -64,6 +68,22 @@ function selectCachePart(state,api){
   }
   if(state.cacheAppendAmbiguous||state.cacheAppendAttempted)return api.fail({...state,cacheStatus:'pending_reconciliation'},'cache_attachment_ambiguous');
   return api.checkpoint({...state,cacheUploadId:undefined,cacheUploadIntent:entry.name,cacheUploadManifestHash:state.cacheManifestHash,cacheUploadSent:false,cacheSendAmbiguous:false},'cacheCreateUpload');
+}
+function expiredUploadEvidence(state,response,now){
+  const entry=cacheEntry(state),body=response.body,expiry=Date.parse(body?.expiry_time);
+  cacheCheck(state.stage==='cacheUploadStatus'&&response.statusCode===200&&body?.object==='file_upload'&&body.id===state.cacheUploadId&&cacheUuid(body.id)&&body.status==='expired','expired_upload_identity');
+  const validExpiry=body.expiry_time===null||(typeof body.expiry_time==='string'&&/^\d{4}-\d{2}-\d{2}T/.test(body.expiry_time)&&Number.isFinite(expiry)&&expiry<=now);
+  cacheCheck(body.filename===entry.filename&&body.content_type===cacheMime(entry)&&validExpiry,'expired_upload_metadata');
+  cacheCheck(state.cacheUploadIntent===entry.name&&state.cacheUploadManifestHash===state.cacheManifestHash&&!state.cacheAppendAttempted&&!state.cacheAppendAmbiguous,'expired_upload_intent');
+  return {id:body.id,part:entry.name,manifestHash:state.cacheManifestHash,expiryTime:body.expiry_time,owner:state.owner};
+}
+function replaceExpiredUpload(state,api){
+  const evidence=state.cacheExpiredUploadEvidence,entry=cacheEntry(state),history=state.cacheAbandonedUploads||[];
+  cacheCheck(state.cacheChildrenComplete===true&&evidence.owner===state.owner&&evidence.id===state.cacheUploadId&&evidence.part===entry.name&&evidence.manifestHash===state.cacheManifestHash&&state.cacheUploadIntent===entry.name&&state.cacheUploadManifestHash===state.cacheManifestHash&&!state.cacheAppendAttempted&&!state.cacheAppendAmbiguous,'expired_upload_intent');
+  cacheCheck(Array.isArray(history)&&history.length<=CACHE_ABANDONED_LIMIT,'abandoned_upload_history');
+  if(history.length===CACHE_ABANDONED_LIMIT||history.some(item=>item.part===entry.name&&item.manifestHash===state.cacheManifestHash))return api.fail({...state,cacheStatus:'pending_reconciliation'},'cache_expired_replacement_limit');
+  // Commit provider-certified abandonment before creating a distinct object.
+  return api.checkpoint({...state,cacheAbandonedUploads:[...history,{...evidence,reason:'provider_expired'}],cacheExpiredUploadEvidence:undefined,cacheUploadId:undefined,cacheSendAttempted:false,cacheSendAmbiguous:false,cacheUploadSent:false,cacheAppendAttempted:false,cacheAppendAmbiguous:false},'cacheCreateUpload');
 }
 function promoteCache(state,api){
   cacheCheck(state.cacheEntries?.length>0&&state.cacheEntries.every(entry=>state.cacheVerifiedFiles?.includes(entry.name))&&new Set(state.cacheVerifiedFiles).size===state.cacheEntries.length,'readback_incomplete');
@@ -79,7 +99,7 @@ function nextCache(state,api){
     case 'cacheRun':return beginCache(state,api);
     case 'cacheGetFile':cacheCheck(cacheUuid(state.cacheBlockId),'file_block');return api.request(state,'cacheGetFile','notion','GET',`${CACHE_NOTION}/blocks/${state.cacheBlockId}`);
     case 'cacheCreateUpload':return api.request(state,'cacheCreateUpload','notion','POST',`${CACHE_NOTION}/file_uploads`,{mode:'single_part',filename:cacheEntry(state).filename,content_type:cacheEntry(state).name.endsWith('.gz')?'application/gzip':'application/json'});
-    case 'cacheSendUpload':if(!state.cacheSendAttempted)return api.checkpoint({...state,cacheSendAttempted:true},'cacheSendUpload');return api.request(state,'cacheSendUpload','cacheUpload','POST',`${CACHE_NOTION}/file_uploads/${state.cacheUploadId}/send`);
+    case 'cacheSendUpload':cacheCheck(!(state.cacheAbandonedUploads||[]).some(item=>item.id===state.cacheUploadId),'abandoned_upload_reused');if(!state.cacheSendAttempted)return api.checkpoint({...state,cacheSendAttempted:true},'cacheSendUpload');return api.request(state,'cacheSendUpload','cacheUpload','POST',`${CACHE_NOTION}/file_uploads/${state.cacheUploadId}/send`);
     case 'cacheAppend':if(!state.cacheAppendAttempted)return api.checkpoint({...state,cacheAppendAttempted:true},'cacheAppend');return api.request(state,'cacheAppend','notion','PATCH',`${CACHE_NOTION}/blocks/${state.pageId}/children`,{children:[{object:'block',type:'file',file:{type:'file_upload',file_upload:{id:state.cacheUploadId},caption:cacheText(cacheEntry(state).marker)}}]});
     case 'cacheContinue':return selectCachePart(state,api);
     default:throw Error('cache_unknown_next');
@@ -165,16 +185,18 @@ function advanceCache(state,response,now,api){
     }
     case 'cacheArtifactBytes':return readCacheArtifact(state,body,api);
     case 'cacheChildren':{
-      cacheCheck(Array.isArray(body?.results)&&(state.cacheChildrenPages||0)<10,'children_limit');
+      cacheCheck(Array.isArray(body?.results)&&typeof body.has_more==='boolean'&&(state.cacheChildrenPages||0)<10,'children_limit');
       const updated={...state,cacheChildren:[...(state.cacheChildren||[]),...body.results.filter(block=>block.type==='file').map(block=>({id:block.id,type:block.type,file:{caption:block.file?.caption}}))],cacheChildrenPages:(state.cacheChildrenPages||0)+1};
       if(body.has_more){cacheCheck(typeof body.next_cursor==='string','children_cursor');return cacheChildrenRequest({...updated,cacheChildrenCursor:body.next_cursor},api);}
-      return selectCachePart({...updated,cacheChildrenCursor:undefined},api);
+      return selectCachePart({...updated,cacheChildrenCursor:undefined,cacheChildrenComplete:true},api);
     }
     case 'cacheCreateUpload':
       cacheCheck(cacheUuid(body?.id)&&body.status==='pending','upload_created');
+      cacheCheck(!(state.cacheAbandonedUploads||[]).some(item=>item.id===body.id),'abandoned_upload_reused');
       return api.checkpoint({...state,cacheUploadId:body.id},'cacheSendUpload');
     case 'cacheSendUpload':
     case 'cacheUploadStatus':
+      if(body?.status==='expired')return cacheChildrenRequest({...state,cacheExpiredUploadEvidence:expiredUploadEvidence(state,response,now),cacheChildren:[],cacheChildrenCursor:undefined,cacheChildrenPages:0,cacheChildrenComplete:false},api);
       cacheCheck(body?.id===state.cacheUploadId,'upload_identity');
       if(body.status==='pending'&&state.stage==='cacheUploadStatus'&&!state.cacheSendAmbiguous&&!state.cacheSendAttempted&&!state.cacheUploadSent)return api.checkpoint(state,'cacheSendUpload');
       if(body.status!=='uploaded')return api.fail({...state,cacheStatus:'pending_reconciliation'},'cache_upload_send_ambiguous');
@@ -189,8 +211,14 @@ function advanceCache(state,response,now,api){
     case 'cacheDownload':{
       const entry=cacheEntry(state);cacheCheck(typeof body?.bytes==='string','readback_binary');const bytes=Buffer.from(body.bytes,'base64');
       cacheCheck(bytes.length===entry.bytes&&cacheHash(bytes)===entry.sha256,'readback_hash');
-      const clear=entry.name===state.cacheUploadIntent?{cacheUploadId:undefined,cacheUploadIntent:undefined,cacheUploadManifestHash:undefined,cacheAppendAmbiguous:false,cacheAppendAttempted:false,cacheSendAmbiguous:false,cacheSendAttempted:false,cacheUploadSent:false}:{};
-      return api.checkpoint({...state,...clear,cacheVerifiedFiles:[...new Set([...(state.cacheVerifiedFiles||[]),entry.name])],cacheBlockIds:{...(state.cacheBlockIds||{}),[entry.name]:state.cacheBlockId},cacheCursor:(state.cacheCursor||0)+1,cacheBlockId:undefined},'cacheContinue');
+      const clear=entry.name===state.cacheUploadIntent?{cacheUploadId:undefined,cacheUploadIntent:undefined,cacheUploadManifestHash:undefined,cacheExpiredUploadEvidence:undefined,cacheAppendAmbiguous:false,cacheAppendAttempted:false,cacheSendAmbiguous:false,cacheSendAttempted:false,cacheUploadSent:false}:{};
+      const count=state.cacheSegmentNewUploads||0;
+      cacheCheck(Number.isSafeInteger(count)&&count>=0&&count<=CACHE_SEGMENT_UPLOADS,'segment_count');
+      const newUpload=entry.name===state.cacheUploadIntent&&state.cacheUploadSent===true;
+      const cacheSegmentNewUploads=count+(newUpload?1:0),cacheCursor=(state.cacheCursor||0)+1;
+      cacheCheck(cacheSegmentNewUploads<=CACHE_SEGMENT_UPLOADS,'segment_count');
+      const updated={...state,...clear,cacheSegmentNewUploads,cacheVerifiedFiles:[...new Set([...(state.cacheVerifiedFiles||[]),entry.name])],cacheBlockIds:{...(state.cacheBlockIds||{}),[entry.name]:state.cacheBlockId},cacheCursor,cacheBlockId:undefined};
+      return cacheSegmentNewUploads===CACHE_SEGMENT_UPLOADS&&newUpload&&cacheCursor<state.cacheEntries.length?api.checkpoint({...updated,cacheStatus:'pending_recovery',released:true},'done'):api.checkpoint(updated,'cacheContinue');
     }
     case 'cachePromote':return api.request(state,'cacheVerifyPage','notion','GET',`${CACHE_NOTION}/pages/${state.pageId}`);
     case 'cacheVerifyPage':{

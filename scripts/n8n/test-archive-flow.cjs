@@ -21,6 +21,7 @@ function world(options={}) {
   const proof={schemaVersion:'market-cache-producer-proof-v1',semanticValidation:'bounded-python-v1',marketDate:f.payload.marketDate,previousTradingDate:cf.input.previousTradingDate,source,...checked};
   const cacheFiles={'manifest.json':Buffer.from(JSON.stringify(bundle.manifest)),'proof.json':Buffer.from(JSON.stringify(proof)),'expected.json':Buffer.from(JSON.stringify(expected)),...bundle.files};let cacheBlocks=[],uploadCounter=0;
   let rows=[],dailyPage=null,child=options.existingChild?{id:'child-database',data_sources:[{id:'child-source'}]}:null,persisted=options.existing||null,schema={'名稱':{type:'title'}},summaries=[];
+  let branchAvailable=!options.createBranch;
   let writes=0,ambiguous=!!options.ambiguous,liveAttempts=0,runPolls=0;
   let childSchema=Object.fromEntries(Object.entries(stockSchema()).filter(([name])=>!options.existingChild||(!name.startsWith('籌碼')&&!['大股東持股比重最新','董監持股比重最新','董監持股比重去年同月','股東人數最新'].includes(name))).map(([name,value])=>[name,{...value,type:Object.keys(value)[0]}]));
   const requests=[];
@@ -30,9 +31,9 @@ function world(options={}) {
     switch(stage){
       case 'restoreState':return {statusCode:404,body:{}};
       case 'calendar':return ok([{Name:'國曆新年開始交易日',Date:'1150102'},{Name:'國慶日',Date:'1151009'}]);
-      case 'branch':return options.createBranch&&!state.branchCreated?ok({},404):ok({object:{sha:'a'.repeat(40)}});
+      case 'branch':return !branchAvailable?ok({},404):ok({object:{sha:'a'.repeat(40)}});
       case 'mainRef':return ok({object:{sha:'a'.repeat(40)}});
-      case 'createBranch':return ok({},201);
+      case 'createBranch':branchAvailable=true;return ok({},201);
       case 'state':return persisted?ok({sha:'state-sha',content:Buffer.from(JSON.stringify(persisted)).toString('base64')}):ok({},404);
       case 'checkpoint':persisted=JSON.parse(Buffer.from(op.body.content,'base64').toString('utf8'));writes++;return ok({content:{sha:'state-'+writes}},201);
       case 'findRun':return ok({workflow_runs:options.dispatch&&!state.dispatchIntent?[]:[{id:123,head_sha:'a'.repeat(40),display_title:'Daily screening | local-test | 2026-10-02'}]});
@@ -82,7 +83,18 @@ function world(options={}) {
   }
   return {respond,requests,fixture:f,get snapshot(){return {rows,dailyPage,child,persisted,writes,liveAttempts};},seedDuplicate(){const props=stockProperties(f.payload.selectedStocks[0],f.payload);rows=[{id:'old',created_time:'2026-10-02T10:00:00Z',properties:props},{id:'new',created_time:'2026-10-02T10:01:00Z',properties:props}];}};
 }
-function run(environment,initial){let out=initial||start({marketDate:'2026-10-02',requestId:'local-test',mode:'screen',siteUrl:'https://stockscreener.andyshih.uk',owner:'local'},now);let steps=0;while(out.route!=='done'&&steps<200){const response=environment.respond(out);out=advance(out.state.stage==='cacheZip'?{...out.state,stage:'cacheArtifactBytes',cacheZipVerifiedHash:out.state.cacheArtifactSha256}:out.state,response,now+steps*1000);steps++;}assert.ok(steps<200);return out;}
+function run(environment,initial){
+ let out=initial||start({marketDate:'2026-10-02',requestId:'local-test',mode:'screen',siteUrl:'https://stockscreener.andyshih.uk',owner:'local'},now);let steps=0,segments=0;
+ while(steps<1000){
+  if(out.route==='done'){
+   if(out.state.cacheStatus!=='pending_recovery')break;
+   assert.equal(out.state.released,true);assert.equal(out.state.cacheSegmentNewUploads,4);assert.ok(++segments<=4);
+   out=start({marketDate:'2026-10-02',requestId:'local-test',mode:'resume',runKind:'manual',siteUrl:'https://stockscreener.andyshih.uk',owner:'local-segment-'+segments},now+steps*1000);
+  }
+  const response=environment.respond(out);out=advance(out.state.stage==='cacheZip'?{...out.state,stage:'cacheArtifactBytes',cacheZipVerifiedHash:out.state.cacheArtifactSha256}:out.state,response,now+steps*1000);steps++;
+ }
+ assert.ok(steps<1000);return out;
+}
 test('full exact-run artifact flow creates daily record and inline database, verifies archive then deployment',()=>{
   const env=world({dispatch:true,pendingOnce:true,deployDelayed:true});const result=run(env);
   assert.equal(result.state.errorCategory,undefined);assert.equal(result.state.notionStatus,'complete');assert.equal(result.state.deployStatus,'verified');

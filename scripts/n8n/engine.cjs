@@ -259,7 +259,7 @@ function advanceSuccess(state,body,status,response,now) {
       const operationDeadline=manualOverride?state.operationDeadline:(resume.operationDeadline||state.operationDeadline);
       const audit=manualOverride?{scheduledCutoff:resume.scheduledCutoff||resume.overdueAt,manualDeadlineOverride:true,manualResumedAt:now}:{};
       const correction=correctPreflight?{dispatchIntent:false,preflightRetryOwner:undefined,confirmedPreflightCorrectionFrom:state.preflightRetryOwner,errorCategory:'',errorMessage:''}:resumeTerminal?{transitionTerminal:undefined,errorCategory:'',errorMessage:'',recordFailure:false}:{};
-      const saved={...state,...resume,...audit,...correction,...(lastVerifiedCache?{lastVerifiedCache,cacheActiveManifestHash:lastVerifiedCache.cacheManifestHash}:{}),owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl,sourceMode:state.sourceMode||resume.sourceMode||'publish',ownershipGeneration:state.ownershipGeneration||resume.ownershipGeneration};
+      const saved={...state,...resume,...audit,...correction,...(lastVerifiedCache?{lastVerifiedCache,cacheActiveManifestHash:lastVerifiedCache.cacheManifestHash}:{}),cacheSegmentNewUploads:existing?.owner===state.owner?(resume.cacheSegmentNewUploads||0):0,cacheExpiredUploadEvidence:existing?.owner===state.owner?resume.cacheExpiredUploadEvidence:undefined,owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl,sourceMode:state.sourceMode||resume.sourceMode||'publish',ownershipGeneration:state.ownershipGeneration||resume.ownershipGeneration};
       const stage=!state.isOpen?'holiday':state.mode==='legacy_archive'?'legacyRef':saved.actionsRunId?'pollRun':'findRun';
       return checkpoint(saved,stage);
     }
@@ -458,7 +458,7 @@ function handleRows(state,body) {
   const pendingStocks=selected.filter(stock=>!keys.includes(`${state.payload.payloadHash}:${stock.code}`));
   if(state.stage==='verifyRows'&&pendingStocks.length) throw Error('archive_incomplete');
   if(pendingStocks.length) return createStock({...state,pendingStocks,archiveRows:[],cursor:undefined});
-  return checkpoint({...state,archiveRows:[],cursor:undefined,archivedCount:rows.length,notionStatus:'rows_verified'},state.archiveMethod==='legacy_archive'?'summaryRead':'cacheRun');
+  return checkpoint({...state,...(state.errorCategory==='notion_child_source'?{errorCategory:undefined,errorMessage:undefined}:{}),archiveRows:[],cursor:undefined,archivedCount:rows.length,notionStatus:'rows_verified'},state.archiveMethod==='legacy_archive'?'summaryRead':'cacheRun');
 }
 function createStock(state) {return request(state,'createStock','notion','POST','https://api.notion.com/v1/pages',{parent:{type:'data_source_id',data_source_id:state.dataSourceId},properties:stockProperties(state.pendingStocks[0],state.payload)});}
 function finishNotion(state) {

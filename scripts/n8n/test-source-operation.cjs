@@ -60,22 +60,23 @@ test('publication guard mismatches and unknown responses stop before visible wri
 });
 test('real artifact redirect can have an empty body and GitHub error bodies do not mask HTTP status',()=>{const state={plan:probe,stage:'artifactRedirect',deadline:999};const out=helper.sourceAdvance(state,{statusCode:302,body:'',headers:{location:'https://store.blob.core.windows.net/file?signature=transient'}},0);assert.equal(out.route,'zip');assert.equal(helper.sourceAdvance(state,{statusCode:403,body:'Forbidden'},0).state.errorCategory,'github_http_403');});
 function sizedManifest(bytes){const input={...plan,commit:{...plan.commit,message:''}};const overhead=Buffer.byteLength(JSON.stringify(input),'utf8');return {...input,commit:{...input.commit,message:'x'.repeat(bytes-overhead)}};}
-test('publication manifest accepts exactly 1500000 UTF-8 bytes and rejects one extra byte',()=>{
- const exact=sizedManifest(1500000);assert.equal(Buffer.byteLength(JSON.stringify(exact),'utf8'),1500000);
+test('publication manifest accepts exactly 2000000 UTF-8 bytes and rejects one extra byte',()=>{
+ const exact=sizedManifest(2000000);assert.equal(Buffer.byteLength(JSON.stringify(exact),'utf8'),2000000);
  assert.equal(helper.sourceStart(exact,0).op.method,'GET');
  const overflow={...exact,commit:{...exact.commit,message:exact.commit.message+'x'}};
- assert.equal(Buffer.byteLength(JSON.stringify(overflow),'utf8'),1500001);assert.throws(()=>helper.sourceStart(overflow,0),/source_manifest/);
+ assert.equal(Buffer.byteLength(JSON.stringify(overflow),'utf8'),2000001);assert.throws(()=>helper.sourceStart(overflow,0),/source_manifest/);
 });
 test('publication manifest cap counts Unicode UTF-8 bytes rather than character length',()=>{
- const input={...plan,commit:{...plan.commit,message:'中'.repeat(400000)}};
- assert.ok(JSON.stringify(input).length<1500000);assert.ok(Buffer.byteLength(JSON.stringify(input),'utf8')>1000000);
+ const input={...plan,commit:{...plan.commit,message:'中'.repeat(600000)}};
+ assert.ok(JSON.stringify(input).length<2000000);assert.ok(Buffer.byteLength(JSON.stringify(input),'utf8')>1000000);
  assert.equal(helper.sourceStart(input,0).op.method,'GET');
- const overflow={...input,commit:{...input.commit,message:'中'.repeat(500000)}};
- assert.ok(JSON.stringify(overflow).length<1500000);assert.ok(Buffer.byteLength(JSON.stringify(overflow),'utf8')>1500000);
+ const overflow={...input,commit:{...input.commit,message:'中'.repeat(700000)}};
+ assert.ok(JSON.stringify(overflow).length<2000000);assert.ok(Buffer.byteLength(JSON.stringify(overflow),'utf8')>2000000);
  assert.throws(()=>helper.sourceStart(overflow,0),/source_manifest/);
 });
 test('larger bounded plans retain 100-item path SHA and base guards',()=>{
- const large=sizedManifest(1100000);const hundred={...large,blobs:Array.from({length:100},()=>plan.blobs[0]),treeEntries:Array.from({length:100},(_,i)=>({...plan.treeEntries[0],path:`scripts/fixture-${i}.py`}))};
+ const large=sizedManifest(1600000);const hundred={...large,blobs:Array.from({length:100},()=>plan.blobs[0]),treeEntries:Array.from({length:100},(_,i)=>({...plan.treeEntries[0],path:`scripts/fixture-${i}.py`}))};
  assert.equal(helper.sourceStart(hundred,0).state.plan.blobs.length,100);
  for(const invalid of [{...hundred,blobs:[...hundred.blobs,plan.blobs[0]]},{...hundred,treeEntries:[...hundred.treeEntries,plan.treeEntries[0]]},{...large,treeEntries:[{...plan.treeEntries[0],path:'../escape'}]},{...large,blobs:[{...plan.blobs[0],sha:'invalid'}]},{...large,baseTreeSha:'invalid'}])assert.throws(()=>helper.sourceStart(invalid,0),/source_manifest/);
 });
+test('canonical generated-source-sized base64 plan remains within 2MB publication envelope',()=>{const raw=Buffer.alloc(1170000,120),sha=require('node:crypto').createHash('sha1').update(Buffer.from('blob '+raw.length+'\0')).update(raw).digest('hex');const input={...plan,blobs:[{sha,content:raw.toString('base64')}],treeEntries:[{...plan.treeEntries[0],sha}]};const bytes=Buffer.byteLength(JSON.stringify(input),'utf8');assert.ok(bytes>1500000&&bytes<2000000);assert.equal(helper.sourceStart(input,0).op.method,'GET');});
