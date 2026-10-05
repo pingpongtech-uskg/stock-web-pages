@@ -1,6 +1,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const {calendarOpen,latestCompletedSession}=require('./engine.cjs');
 const {sha256}=require('./runtime.cjs');
+const {safeFailureCategory,finalizeOwnershipOutcome}=require('./outcome.cjs');
 const logic=sha256.toString()+'\n'+calendarOpen.toString()+'\n'+latestCompletedSession.toString()+'\n'+fs.readFileSync(path.join(__dirname,'ownership-update.cjs'),'utf8').replace(/^const \{calendarOpen,latestCompletedSession\}=require[^\n]+\n/m,'').replace(/^const \{sha256\}=require[^\n]+\n/m,'').replace(/if\(typeof module[^\n]+\n?/,'');
 const original=JSON.parse(fs.readFileSync(path.join(__dirname,'stockscreener.workflow.json'),'utf8'));
 const nodes=[],connections={};
@@ -24,7 +25,7 @@ const native=original.nodes.find(n=>n.name==='GitHub Dispatch Actions');
 const dispatch=add('Dispatch one bounded ownership acquisition',native.type,native.typeVersion,{...native.parameters,workflowId:{__rl:true,mode:'filename',value:'ownership.yml'}},{credentials:native.credentials,onError:'continueRegularOutput',alwaysOutputData:true});
 const restore=code('Restore ownership request state','return [{json:{state:$("Read dispatch or sanitized outcome").item.json.state,response:$input.first().json}}];');
 const advance=code('Correlate run without redispatch',logic+'\nconst item=$input.first().json;return [{json:ownershipAdvance(item.state,item.response)}];');
-const outcome=code('Report acquisition status without coverage claim','const state=$input.first().json.state;return [{json:{marketDate:state.marketDate,requestId:state.requestId,actionsRunId:state.actionsRunId||"",status:state.status,errorCategory:state.errorCategory||"",coverage:"read verified ownership manifest; job success alone is not coverage"}}];');
+const outcome=code('Report acquisition status without coverage claim',safeFailureCategory.toString()+'\n'+finalizeOwnershipOutcome.toString()+'\nreturn [{json:finalizeOwnershipOutcome($input.first().json.state)}];');
 link(scheduled,initScheduled);link(manual,inputs);link(inputs,initManual);link(initScheduled,wait);link(initManual,wait);link(wait,gate);link(gate,route);[calendar,read,dispatch,write,outcome].forEach((n,i)=>link(route,n,i));[calendar,read,dispatch,write].forEach(n=>link(n,restore));link(restore,advance);link(advance,wait);
 const settings={timezone:'Asia/Taipei',executionOrder:'v1',executionTimeout:930,saveExecutionProgress:false,saveManualExecutions:true,saveDataErrorExecution:'all',saveDataSuccessExecution:'all'};
 const workflow={name:'Stockscreener bounded official ownership updates',active:false,nodes,connections,settings};

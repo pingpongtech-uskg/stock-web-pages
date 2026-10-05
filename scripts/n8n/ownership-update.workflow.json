@@ -352,7 +352,7 @@
       "typeVersion": 2,
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const state=$input.first().json.state;return [{json:{marketDate:state.marketDate,requestId:state.requestId,actionsRunId:state.actionsRunId||\"\",status:state.status,errorCategory:state.errorCategory||\"\",coverage:\"read verified ownership manifest; job success alone is not coverage\"}}];"
+        "jsCode": "function safeFailureCategory(value,fallback){return typeof value==='string'&&/^[a-zA-Z0-9_:-]{1,80}$/.test(value)?value:fallback;}\nfunction finalizeOwnershipOutcome(state){\n  if(['failed','acquisition_job_failed'].includes(state.status))throw new Error('Ownership acquisition failed: '+safeFailureCategory(state.errorCategory,'acquisition_failed'));\n  return {marketDate:state.marketDate,requestId:state.requestId,actionsRunId:state.actionsRunId||'',status:state.status,errorCategory:state.errorCategory||'',coverage:'read verified ownership manifest; job success alone is not coverage'};\n}\nreturn [{json:finalizeOwnershipOutcome($input.first().json.state)}];"
       },
       "position": [
         2940,
