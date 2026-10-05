@@ -97,6 +97,17 @@ function restoreTreeQuery(state){
   restoreCheck(restoreSha(state.restoreTreeSha)&&(state.restoreTreeLookupSha===undefined||state.restoreTreeLookupSha===state.restoreTreeSha),'tree_query');
   return state.restoreObjectIntent===state.restoreTreeSha?'?recursive=0':state.restoreTreeLookupSha===state.restoreTreeSha?'?recursive=1':'';
 }
+function normalizeRestoreTreeResponse(state,response){
+  const body=response?.body,entries=state.restoreTreeEntries,op=state.op;
+  if(state.stage!=='restoreTreeGet'||response?.statusCode!==422||response.error||body?.message!=='Invalid object requested. SHA must identify a commit or a tree.'||(body.status!==undefined&&String(body.status)!=='422')||(body.errors!==undefined&&body.errors!==null)||!restoreSha(state.restoreTreeSha)||op?.target!=='github'||op.method!=='GET'||!Array.isArray(entries)||entries.length===0||entries.length>259)return response;
+  try{
+    const query=restoreTreeQuery(state);
+    if(!query||op.url!==`${RESTORE_REPO}/git/trees/${state.restoreTreeSha}${query}`||entries.some(e=>e.mode!=='100644'||e.type!=='blob'||!restoreSha(e.sha)||!(e.path==='restore.json'||restoreName(e.path)))||JSON.stringify(entries.map(e=>e.path))!==JSON.stringify([...new Set(entries.map(e=>e.path))].sort()))return response;
+    const bytes=Buffer.concat(entries.map(e=>Buffer.concat([Buffer.from(`100644 ${e.path}\0`),Buffer.from(e.sha,'hex')])));
+    if(gitObject('tree',bytes)!==state.restoreTreeSha)return response;
+    return {...response,statusCode:404};
+  }catch{return response;}
+}
 function nextRestore(state,api){
   if(['restoreTreeCreate','restoreCommitCreate'].includes(state.stage)||['restoreTreeGet','restoreCommitGet'].includes(state.stage)&&state.restoreTransient?.files&&(!state.restoreTreeEntries||!state.restoreCommitBody)){
     restoreCheck(state.restoreTransient?.files&&restoreSha(state.restoreTreeSha)&&restoreSha(state.restoreCommitSha),'derived_objects');
@@ -216,4 +227,4 @@ function advanceRestore(state,response,now,api){
     default:throw Error('restore_unknown_stage');
   }
 }
-module.exports={beginRestore,advanceRestore,nextRestore,ambiguousRestore,prepareRestoreDescriptor,restoreDurable,restoreDispatchInputs,gitObject,captureVerifiedCache,cacheCustodyForDay};
+module.exports={beginRestore,advanceRestore,nextRestore,ambiguousRestore,prepareRestoreDescriptor,restoreDurable,restoreDispatchInputs,gitObject,captureVerifiedCache,cacheCustodyForDay,normalizeRestoreTreeResponse};

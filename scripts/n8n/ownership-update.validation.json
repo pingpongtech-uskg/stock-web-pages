@@ -3,8 +3,8 @@
   "remoteOperations": "read-only SDK validation only; no workflow create/update/execute/activate",
   "workflows": {
     "stockscreener": {
-      "sdkSha256": "d61ea1f8db68d38112558a1c8aa362440ef414b70cb757965982c4fc98a6f2f6",
-      "sdkBytes": 275704,
+      "sdkSha256": "404c53ed957b2921bba473097ec7d1390ef7b10a8c773e342a1a1a1935072aac",
+      "sdkBytes": 276787,
       "nodeCount": 97,
       "readOnlyRemoteSdkValidation": {
         "valid": true,
@@ -25,12 +25,12 @@
   },
   "tests": {
     "command": "node --experimental-test-coverage --test-coverage-include=**/ownership-update.cjs --test-coverage-include=**/runtime.cjs --test-coverage-include=**/engine.cjs --test scripts/n8n/test-*.cjs",
-    "passed": 256,
+    "passed": 264,
     "failed": 0,
     "coverage": {
       "engine": {
         "lines": 98.95,
-        "branches": 93.05,
+        "branches": 93.25,
         "functions": 95.71
       },
       "runtime": {
@@ -46,7 +46,8 @@
     },
     "actualProducerFixture": "pipeline/fixtures/ownership/mops-2547-202608.json -> validated_mops_rows -> evaluate_chip_reference -> n8n exact artifact/archive flow; YYYY-MM sourceDate remains unchanged",
     "notionTransportRegression": "Live A/B1050(GETnoBody)=real database;1051(GETrawempty)=serializedNodeZlib stream. Static bodyless GET + existing PATCH writer route preserves97nodes; full-response data string regression passes.",
-    "cacheRecoveryRegression": "Exact provider-expired identity/MIME/expiry + complete marker absence; owner-bound four-new-upload recovery segments; abandoned ID never resent; fresh owner rechecks provider evidence. Explicit null expiry only after fresh authenticated provider-expired response; bounded 2 MB UTF-8 source plan."
+    "cacheRecoveryRegression": "Exact provider-expired identity/MIME/expiry + complete marker absence; owner-bound four-new-upload recovery segments; abandoned ID never resent; fresh owner rechecks provider evidence. Explicit null expiry only after fresh authenticated provider-expired response; bounded 2 MB UTF-8 source plan.",
+    "restoreTreeRegression": "Observed GitHub recursive missing computed tree exact422 -> bounded404 semantics; generated primary/probe full-host tests verify one create and exact readback; unrelated422 rejected and ambiguous intent never repeats POST."
   },
   "activation": false
 }

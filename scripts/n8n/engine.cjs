@@ -163,8 +163,9 @@ function next(state,now) {
 }
 function cacheApi(now){return {request,checkpoint:(state,nextStage)=>checkpoint(state,nextStage,now),next:state=>next(state,now),fail};}
 function advance(original,response,now=Date.now()) {
-  const state={...original}; const status=Number(response?.statusCode??200); let body=response?.body??response?.data;
+  const state={...original}; let status=Number(response?.statusCode??200); let body=response?.body??response?.data;
   if(typeof body==='string'&&!['liveProbe','liveVerify'].includes(state.stage)) {try{body=JSON.parse(body);}catch{/* Redirects may have no JSON body. */}}
+  response=restoreOperation.normalizeRestoreTreeResponse(state,{...response,body,statusCode:status});status=response.statusCode;
   if(state.lockSha&&now>state.deadline) return fail(state,'writer_deadline');
   if(/^cache_[a-z_]+$/.test(response?.cacheError||''))return fail({...state,cacheStatus:'failed'},response.cacheError);
   if(['cacheDownload','restoreDownload'].includes(state.stage)&&(status===403||status===429||status>=500||response?.error)){
@@ -202,7 +203,7 @@ function advance(original,response,now=Date.now()) {
   const allow404=['branch','state','restoreState','restoreIndex','restoreBlobGet','restoreTreeGet','restoreCommitGet','restoreRefGet'];
   if(state.stage==='restoreRefCreate'&&status===422)return restoreOperation.ambiguousRestore(state,cacheApi(now));
   if(state.stage==='dispatch'&&response.preflightFailed===true&&status===400&&body?.message==='Inputs: Invalid JSON') return fail({...state,dispatchIntent:false,screeningStatus:'failed'},'dispatch_preflight_failed',body.message);
-  if(status>=400&&!allow404.includes(state.stage)) return fail(state,'external_http_'+status,body?.message);
+  if(status>=400&&!(status===404&&allow404.includes(state.stage))) return fail(state,'external_http_'+status,body?.message);
   try {return advanceSuccess(state,body,status,response,now);} catch(error){return fail(state,error.message.split(':')[0],error.message);}
 }
 function advanceSuccess(state,body,status,response,now) {
