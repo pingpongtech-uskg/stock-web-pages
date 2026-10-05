@@ -72,7 +72,7 @@ jobs:
       CACHE_ACTIONS_RUN_ID: ${{ inputs.restore_actions_run_id }}
       CACHE_REQUEST_ID: ${{ inputs.restore_request_id }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
       - name: Validate dispatch inputs and initialize checkpoint directory
@@ -102,7 +102,7 @@ jobs:
           mkdir -p .cache/finmind .cache/market-source
           echo "BUDGET_DATE=$(TZ=Asia/Taipei date +%F)" >> "$GITHUB_ENV"
           echo "SOURCE_GIT_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         id: finmind-cache
         with:
           path: .cache/finmind
@@ -110,11 +110,11 @@ jobs:
           restore-keys: |
             finmind-v1-${{ env.BUDGET_DATE }}-
             finmind-v1-
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: npm ci
@@ -126,7 +126,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python scripts/restore_finmind_checkpoint.py --cache-dir .cache/finmind --budget-date "$BUDGET_DATE"
       - name: Restore complete daily source receipts
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: .cache/market-source
           key: market-source-v1-${{ github.run_id }}-${{ github.run_attempt }}
@@ -243,7 +243,7 @@ jobs:
           python scripts/fetch_finmind.py --supplement --output public/data --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --as-of "$MARKET_DATE" --max-requests 300 --max-runtime-seconds 1500
       - name: Persist completed supplementary checkpoint immediately
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: .cache/finmind
           key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}-checkpoint
@@ -268,7 +268,7 @@ jobs:
           python scripts/export_market_cache.py --input .artifacts/market-cache-index/input.json --expected .artifacts/market-cache-index/expected.json --output .artifacts/market-cache
           cp .artifacts/market-cache-index/expected.json .artifacts/market-cache/expected.json
       - name: Preserve validated complete market cache
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: market-cache
           path: .artifacts/market-cache
@@ -309,24 +309,24 @@ jobs:
           publication['publishedGitCommit'] = os.environ['PUBLISHED_GIT_COMMIT']
           Path('.artifacts/screening-export/publication.json').write_text(json.dumps(publication, sort_keys=True))
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: screening-export
           path: .artifacts/screening-export
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: validated-static-release
           path: dist
       - name: Persist daily source receipts after success or failure
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: .cache/market-source
           key: market-source-v1-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Preserve pinned ownership generation evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ownership-generation
           path: |
@@ -335,20 +335,20 @@ jobs:
           if-no-files-found: warn
       - name: Preserve raw source receipts after failure
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: market-source-checkpoint-${{ github.run_attempt }}
           path: .cache/market-source
           if-no-files-found: warn
       - name: Persist FinMind budget, queue and rows even after failure
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: .cache/finmind
           key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Preserve checkpoint evidence for same-day recovery
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: finmind-checkpoint-${{ github.run_attempt }}
           path: .cache/finmind
@@ -362,7 +362,7 @@ jobs:
       MARKET_DATE: ${{ inputs.market_date }}
       SOURCE_MODE: ${{ inputs.source_mode }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
       - name: Validate probe inputs and initialize checkpoint directory
@@ -380,14 +380,14 @@ jobs:
           mkdir -p .cache/finmind .artifacts/institutional-probe
           echo "BUDGET_DATE=$(TZ=Asia/Taipei date +%F)" >> "$GITHUB_ENV"
           echo "SOURCE_GIT_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: .cache/finmind
           key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             finmind-v1-${{ env.BUDGET_DATE }}-
             finmind-v1-
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements.txt
@@ -430,20 +430,20 @@ jobs:
           python scripts/probe_institutional_history.py --market-date "$MARKET_DATE" --calendar .cache/institutional-probe/trading-calendar.json --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --summary .artifacts/institutional-probe/summary.json --max-data-requests 3 --official-evidence-dir pipeline/source_evidence/tpex
       - name: Persist probe checkpoint
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: .cache/finmind
           key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}-checkpoint
       - name: Preserve checkpoint evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: finmind-checkpoint-${{ github.run_attempt }}
           path: .cache/finmind
           if-no-files-found: warn
       - name: Preserve sanitized probe evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: institutional-probe
           path: .artifacts/institutional-probe

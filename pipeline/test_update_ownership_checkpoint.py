@@ -96,24 +96,42 @@ def test_daily_rollover_retains_exact_completed_months_and_resets_discovery():
     assert fresh['verifiedMarketDate']=='2026-10-05'
 
 
-def test_producer_accepts_previous_verified_priority_roster_without_relabel(tmp_path,monkeypatch):
+@pytest.mark.parametrize('publication_date,accepted', [
+    ('2026-10-02', True),
+    ('2026-10-05', True),
+    ('2026-10-06', False),
+])
+def test_producer_accepts_verified_priority_roster_without_relabel(tmp_path,monkeypatch,publication_date,accepted):
     m=module()
-    publication=json.loads((m.ROOT/'public/data/screening-export.json').read_bytes())
-    publication_path=tmp_path/'publication.json';publication_path.write_text(json.dumps(publication))
-    universe=tmp_path/'universe.json';universe.write_text(json.dumps({'symbols':[row['code'] for row in publication['selectedStocks']]}))
-    monkeypatch.setattr(m,'run_batch',lambda state,*args,**kwargs:state)
+    from pipeline.screening_export import build_export, export_bytes, validate_export
+    from pipeline.test_screening_export import release
     from pipeline.ownership_queue import save_state
-    def manifest(directory,output,commit,**kwargs):
-        save_state(directory,m.load_state(directory/'queue.json') or saved[0]); return {'generationId':'g','coverage':{}}
+    # Keep this test independent of the mutable publication rebuilt by daily.yml.
+    baseline={**release(),'marketDate':publication_date,'generatedAt':publication_date+'T10:00:00Z'}
+    publication=build_export(baseline,request_id='fixture-priority-roster',source_git_commit='a'*40,actions_run_id='1')
+    assert validate_export(publication)==[]
+    publication_path=tmp_path/'publication.json';publication_path.write_bytes(export_bytes(publication))
+    universe=tmp_path/'universe.json';universe.write_text(json.dumps({'symbols':[row['code'] for row in publication['selectedStocks']]}))
+    monkeypatch.setattr(m,'ROOT',tmp_path/'no-checked-in-publication')
     saved=[]
     def batch(state,directory,*args,**kwargs):
         saved.append(state);save_state(directory,state);return state
     monkeypatch.setattr(m,'run_batch',batch)
-    assert m.main(['--verified-market-date','2026-10-05','--state-dir',str(tmp_path/'state'),
-                   '--snapshot-output',str(tmp_path/'snapshot.json'),'--roster-publication',str(publication_path),
-                   '--universe',str(universe),'--source-git-commit','a'*40])==0
-    assert saved[0]['priorityRosterMarketDate']=='2026-10-02'
+    state_dir=tmp_path/'state';output=tmp_path/'snapshot.json'
+    result=m.main(['--verified-market-date','2026-10-05','--state-dir',str(state_dir),
+                   '--snapshot-output',str(output),'--roster-publication',str(publication_path),
+                   '--universe',str(universe),'--source-git-commit','a'*40])
+    assert result==(0 if accepted else 1)
+    if not accepted:
+        assert saved==[] and not output.exists() and not (state_dir/'queue.json').exists()
+        return
+    assert saved[0]['priorityRosterMarketDate']==publication_date
+    assert saved[0]['priorityRosterPublicationHash']==m._hash(m._canonical(publication))
     assert saved[0]['verifiedMarketDate']=='2026-10-05'
+    manifest=json.loads((state_dir/'manifest.json').read_bytes())
+    assert manifest['priorityRosterMarketDate']==publication_date
+    assert manifest['priorityRosterPublicationHash']==saved[0]['priorityRosterPublicationHash']
+    assert m.validate_generation(state_dir,expected_date='2026-10-05',expected_commit='a'*40)==[]
 
 
 def test_official_fixture_transport_roundtrip_receipts_and_semantic_generation(tmp_path,monkeypatch):

@@ -549,8 +549,8 @@
     "executionOrder": "v1",
     "executionTimeout": 930,
     "saveExecutionProgress": false,
-    "saveManualExecutions": false,
-    "saveDataErrorExecution": "none",
-    "saveDataSuccessExecution": "none"
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
   }
 }

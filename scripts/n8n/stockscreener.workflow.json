@@ -454,7 +454,7 @@
         0
       ],
       "onError": "continueRegularOutput",
-      "notes": "Business stage calendar. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage calendar. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read durable state branch",
@@ -507,7 +507,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage branch. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage branch. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read main reference for state initialization",
@@ -560,7 +560,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage mainRef. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage mainRef. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Initialize durable state branch",
@@ -615,7 +615,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage createBranch. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage createBranch. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read exact trading-day checkpoint",
@@ -668,7 +668,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage state. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage state. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Claim or checkpoint GitHub SHA CAS",
@@ -723,7 +723,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage checkpoint. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage checkpoint. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Find exact Actions request and date",
@@ -776,7 +776,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage findRun. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage findRun. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "GitHub Dispatch Actions",
@@ -820,7 +820,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage dispatch. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage dispatch. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read exact Actions run status",
@@ -873,7 +873,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage pollRun. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage pollRun. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Inspect failed source job steps",
@@ -926,7 +926,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage failedRunJobs. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage failedRunJobs. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Check failed run export artifacts",
@@ -979,7 +979,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage failedRunArtifacts. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage failedRunArtifacts. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Find exact screening-export artifact",
@@ -1032,7 +1032,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage artifactList. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage artifactList. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Get temporary artifact download location",
@@ -1085,7 +1085,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage artifactRedirect. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage artifactRedirect. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Download exact artifact without credentials",
@@ -1113,7 +1113,7 @@
         1860,
         720
       ],
-      "notes": "Business stage artifactZip. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage artifactZip. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read export at published immutable Git commit",
@@ -1166,7 +1166,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage publicationExport. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage publicationExport. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Confirm GitHub main publication",
@@ -1219,7 +1219,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage publicationMain. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage publicationMain. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Pin legacy archive main commit",
@@ -1272,7 +1272,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage legacyRef. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage legacyRef. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read pinned archive index",
@@ -1325,7 +1325,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage legacyIndex. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage legacyIndex. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Verify pinned archive month",
@@ -1378,7 +1378,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage legacyMonth. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage legacyMonth. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Verify immutable retained legacy revision",
@@ -1431,7 +1431,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage legacyExport. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage legacyExport. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read Notion root data-source schema",
@@ -1484,7 +1484,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage rootSchema. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage rootSchema. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Ensure Notion operation metadata properties",
@@ -1539,7 +1539,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage rootSchemaUpdate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage rootSchemaUpdate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Find Notion daily record by date",
@@ -1594,7 +1594,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage findDaily. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage findDaily. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Create Notion daily record",
@@ -1649,7 +1649,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage createDaily. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage createDaily. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Record screening failure without stock database",
@@ -1704,7 +1704,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage writeFailure. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage writeFailure. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Find existing inline daily database",
@@ -1757,7 +1757,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage findDatabase. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage findDatabase. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Create Notion inline daily database",
@@ -1812,7 +1812,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage createDatabase. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage createDatabase. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read child database and data-source IDs",
@@ -1865,7 +1865,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage databaseMetadata. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage databaseMetadata. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read existing payload row keys",
@@ -1920,7 +1920,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage queryRows. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage queryRows. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Create missing stock row",
@@ -1975,7 +1975,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage createStock. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage createStock. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read back Notion rows and values",
@@ -2030,7 +2030,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage verifyRows. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage verifyRows. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Reconcile identical duplicate row",
@@ -2085,7 +2085,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage archiveDuplicate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage archiveDuplicate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read existing payload operation summary",
@@ -2138,7 +2138,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage summaryRead. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage summaryRead. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Append immutable revision summary",
@@ -2193,7 +2193,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage appendSummary. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage appendSummary. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Finish archive and active revision after verification",
@@ -2248,7 +2248,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage finishNotion. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage finishNotion. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Probe live publication before archive",
@@ -2283,7 +2283,7 @@
         2160
       ],
       "onError": "continueRegularOutput",
-      "notes": "Business stage liveProbe. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage liveProbe. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Verify live exact payload",
@@ -2318,7 +2318,7 @@
         2160
       ],
       "onError": "continueRegularOutput",
-      "notes": "Business stage liveVerify. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage liveVerify. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Diagnostics read Notion database only",
@@ -2371,7 +2371,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage diagnoseDatabase. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage diagnoseDatabase. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Diagnostics verify Notion data source only",
@@ -2424,7 +2424,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage diagnoseSource. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage diagnoseSource. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Authenticate cache producer Actions run",
@@ -2477,7 +2477,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage cacheRun. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheRun. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read immutable publication fingerprint for cache",
@@ -2530,7 +2530,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage cacheFingerprint. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheFingerprint. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read full published roster for cache",
@@ -2565,7 +2565,7 @@
         2640
       ],
       "onError": "continueRegularOutput",
-      "notes": "Business stage cacheLatest. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheLatest. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Find same-run complete market-cache artifact",
@@ -2618,7 +2618,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage cacheArtifacts. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheArtifacts. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Get authenticated cache artifact location",
@@ -2671,7 +2671,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage cacheRedirect. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheRedirect. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Download authenticated cache artifact without credentials",
@@ -2704,7 +2704,7 @@
         2640
       ],
       "onError": "continueRegularOutput",
-      "notes": "Business stage cacheZip. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheZip. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Reconcile existing cache attachment markers",
@@ -2757,7 +2757,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage cacheChildren. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheChildren. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Create Notion cache file upload",
@@ -2812,7 +2812,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage cacheCreateUpload. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheCreateUpload. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Send exact cache binary multipart",
@@ -2870,7 +2870,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage cacheSendUpload. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheSendUpload. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read ambiguous cache upload status",
@@ -2923,7 +2923,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage cacheUploadStatus. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheUploadStatus. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Attach verified producer cache file",
@@ -2978,7 +2978,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage cacheAppend. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheAppend. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read fresh Notion cache file block",
@@ -3031,7 +3031,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage cacheGetFile. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheGetFile. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Download fresh cache attachment without credentials",
@@ -3064,7 +3064,7 @@
         2880
       ],
       "onError": "continueRegularOutput",
-      "notes": "Business stage cacheDownload. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheDownload. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Promote verified complete cache metadata",
@@ -3119,7 +3119,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage cachePromote. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cachePromote. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read back promoted cache metadata",
@@ -3172,7 +3172,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage cacheVerifyPage. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage cacheVerifyPage. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Pin crossyear cache inventory commit",
@@ -3225,7 +3225,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreIndexRef. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreIndexRef. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read bounded crossyear cache dates",
@@ -3278,7 +3278,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreIndex. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreIndex. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read prior verified cache checkpoint",
@@ -3331,7 +3331,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreState. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreState. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read prior Notion cache metadata",
@@ -3384,7 +3384,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage restorePage. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restorePage. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read prior cache attachment markers",
@@ -3437,7 +3437,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage restoreChildren. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreChildren. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read fresh restore attachment",
@@ -3490,7 +3490,7 @@
           "name": "Notion account 2"
         }
       },
-      "notes": "Business stage restoreFile. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreFile. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Download prior cache bytes without credentials",
@@ -3523,7 +3523,7 @@
         3120
       ],
       "onError": "continueRegularOutput",
-      "notes": "Business stage restoreDownload. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreDownload. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read immutable restore blob",
@@ -3576,7 +3576,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreBlobGet. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreBlobGet. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Create verified restore blob",
@@ -3631,7 +3631,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreBlobCreate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreBlobCreate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read data-only restore tree",
@@ -3684,7 +3684,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreTreeGet. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreTreeGet. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Create empty-base restore tree",
@@ -3739,7 +3739,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreTreeCreate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreTreeCreate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read immutable restore commit",
@@ -3792,7 +3792,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreCommitGet. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreCommitGet. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Create data-only restore root commit",
@@ -3847,7 +3847,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreCommitCreate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreCommitCreate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Read immutable restore reference",
@@ -3900,7 +3900,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreRefGet. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreRefGet. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Create unique restore reference",
@@ -3955,7 +3955,7 @@
           "name": "GitHub account"
         }
       },
-      "notes": "Business stage restoreRefCreate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; execution payload retention disabled."
+      "notes": "Business stage restoreRefCreate. Dispatch intent, owner deadline and allowed origin checked before this node. Recovery uses SHA CAS; successful, failed and manual executions retained for troubleshooting."
     },
     {
       "name": "Prepare sanitized durable progress",
@@ -5775,8 +5775,8 @@
     "executionOrder": "v1",
     "executionTimeout": 3600,
     "saveExecutionProgress": false,
-    "saveManualExecutions": false,
-    "saveDataErrorExecution": "none",
-    "saveDataSuccessExecution": "none"
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
   }
 }
