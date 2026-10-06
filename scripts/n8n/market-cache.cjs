@@ -245,7 +245,7 @@ function validateOwnershipBundle(bundle, marketDate) {
     check(['none', 'transient-session-controls-removed', 'roster-filtered-csv-v1'].includes(receipt.rawSanitization) && HASH.test(receipt.originalResponseSha256) && !/SYNCHRONIZER_TOKEN|SYNCHRONIZER_URI/i.test(files[name].toString('utf8')), 'ownership_sanitization');
     if (receipt.rawSanitization === 'roster-filtered-csv-v1') {
       const selected = receipt.selectedCodes;
-      check(receipt.source === 'TDCC_LATEST' && receipt.sourceURL === 'https://opendata.tdcc.com.tw/getOD.ashx?id=1-5' && Array.isArray(selected) && selected.length > 0 && selected.length <= 100 && unique(selected) && selected.every(code => queue.roster.includes(code)) && Array.isArray(receipt.rows) && receipt.rows.every(row => selected.includes(row.code)), 'ownership_filtered_roster');
+      check(receipt.source === 'TDCC_LATEST' && receipt.sourceURL === 'https://opendata.tdcc.com.tw/getOD.ashx?id=1-5' && Array.isArray(selected) && selected.length > 0 && selected.length <= 100 && unique(selected) && selected.every(code => typeof code === 'string' && /^\d{4,6}[A-Z]?$/.test(code)) && Array.isArray(receipt.rows) && receipt.rows.every(row => selected.includes(row.code)), 'ownership_filtered_roster');
     }
     check(receipt.sourceDate === null || typeof receipt.sourceDate === 'string' && receipt.sourceDate <= manifest.verifiedMarketDate, 'ownership_period');
     const metadata = files[`receipts/${receipt.receiptFile}`];
@@ -254,10 +254,11 @@ function validateOwnershipBundle(bundle, marketDate) {
   check(Array.isArray(queue.rows), 'ownership_rows');
   const rowIdentities = new Set(queue.rows.map(row => canonical(row)));
   check(snapshot.rows.every(row => rowIdentities.has(canonical(row))), 'ownership_snapshot_binding');
+  check(snapshot.rows.every(row => plainJsonObject(row) && queue.roster.includes(row.code)), 'ownership_snapshot_roster');
   const receipts = new Map((queue.receipts || []).map(item => [`receipts/${item.receiptFile}`, item]));
   const fields = ['code', 'period', 'asOf', 'sourceDate', 'largeHolderPct', 'shareholderCount', 'directorSupervisorPct', 'directorSupervisorShares', 'officialDirectorSupervisorShares', 'directorDenominator', 'directorIdentityConsistent'];
   for (const row of queue.rows) {
-    check(plainJsonObject(row) && queue.roster.includes(row.code), 'ownership_row');
+    check(plainJsonObject(row) && typeof row.code === 'string' && /^\d{4,6}[A-Z]?$/.test(row.code), 'ownership_row');
     for (const key of ['period', 'asOf', 'sourceDate', 'publishedAt', 'availableAt']) {
       const value = row[key];
       check(value == null || typeof value === 'string' && value.slice(0, 10) <= manifest.verifiedMarketDate, 'ownership_row_period');

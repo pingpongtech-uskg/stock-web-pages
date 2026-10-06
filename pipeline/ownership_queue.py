@@ -100,13 +100,14 @@ def save_receipt(directory: Path, raw: bytes, *, source: str, url: str, paramete
         raise ValueError('private receipt parameter')
     if not isinstance(raw,bytes) or len(raw)>16*1024*1024:
         raise ValueError('invalid receipt bytes')
+    if selected_codes is not None and (not 1<=len(selected_codes)<=100 or len(set(selected_codes))!=len(selected_codes)
+            or any(not isinstance(code,str) or not re.fullmatch(r'\d{4,6}[A-Z]?',code) for code in selected_codes)):
+        raise ValueError('invalid receipt selected roster')
     directory = safe_directory(directory)
     original_digest = hashlib.sha256(raw).hexdigest()
     sanitized = re.sub(rb'<input\b(?=[^>]*(?:SYNCHRONIZER_TOKEN|SYNCHRONIZER_URI|csrf|sessiontoken))[^>]*>', b'', raw, flags=re.I) if source.startswith('TDCC') else raw
     sanitization = 'transient-session-controls-removed' if sanitized != raw else 'none'
     if source=='TDCC_LATEST' and selected_codes is not None:
-        if not 1<=len(selected_codes)<=100 or any(not re.fullmatch(r'\d{4,6}[A-Z]?',code) for code in selected_codes):
-            raise ValueError('invalid receipt selected roster')
         source_rows=list(csv.reader(io.StringIO(raw.decode('utf-8-sig'))))
         if not source_rows or '證券代號' not in source_rows[0]:
             raise ValueError('invalid TDCC CSV header')
@@ -129,7 +130,7 @@ def save_receipt(directory: Path, raw: bytes, *, source: str, url: str, paramete
     receipt = {'source':source,'sourceURL':url,'parameters':parameters,'rawSha256':digest,
                'rawBytes':len(raw),'rawFile':raw_file,'sourceDate':source_date,
                'originalResponseSha256':original_digest,'rawSanitization':sanitization,
-               'selectedCodes':selected_codes if sanitization=='roster-filtered-csv-v1' else None,
+               'selectedCodes':selected_codes,
                'publishedAt':None,'retrievedAt':retrieved_at,'availableAt':None,
                'availabilityBasis':'retrieval-only','rows':rows,
                'units':{'largeHolderPct':'percent','shareholderCount':'persons',

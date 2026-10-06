@@ -96,6 +96,54 @@ def test_daily_rollover_retains_exact_completed_months_and_resets_discovery():
     assert fresh['verifiedMarketDate']=='2026-10-05'
 
 
+def test_roster_rollover_keeps_prior_official_evidence_without_leaking_it_to_snapshot(tmp_path):
+    m=module()
+    from pipeline.ownership_queue import new_state,save_receipt,save_state
+    old_roster=['2330','2547']
+    receipts_dir=tmp_path/'receipts'
+    csv_raw=('資料日期,證券代號,持股分級,人數,股數,占集保庫存數比例%\n'
+             '20261002,2330,15,1,100,5\n20261002,2547,15,2,200,6\n').encode()
+    tdcc_rows=m.parse_tdcc_csv(csv_raw.decode(),retrieved_at='2026-10-02T12:00:00+00:00')
+    tdcc=save_receipt(receipts_dir,csv_raw,source='TDCC_LATEST',url=m.TDCC_URL,
+        parameters={'id':'1-5'},retrieved_at='2026-10-02T12:00:00+00:00',
+        source_date='2026-10-02',rows=tdcc_rows,selected_codes=old_roster)
+    period_raw=json.dumps([{'公司代號':'2330','資料年月':'11508'},
+                           {'公司代號':'2547','資料年月':'11508'}],ensure_ascii=False).encode()
+    period_url='https://openapi.twse.com.tw/v1/opendata/t187ap11_L'
+    period_rows=[{'code':code,'period':'2026-08','market':'TWSE'} for code in old_roster]
+    periods=save_receipt(receipts_dir,period_raw,source='DIRECTOR_PERIODS',url=period_url,
+        parameters={},retrieved_at='2026-10-02T12:00:00+00:00',source_date='2026-08',
+        rows=period_rows,selected_codes=old_roster)
+
+    old=new_state(old_roster,[],'2026-10-02')
+    old['receipts']=[tdcc,periods]
+    fixture=(m.ROOT/'pipeline/fixtures/ownership/mops-2547-202608.json').read_bytes()
+    parsed=m.validated_mops_rows(json.loads(fixture),code='2547',period='2026-08',retrieved_at='2026-10-02T12:00:00+00:00')
+    mops=save_receipt(receipts_dir,fixture,source='MOPS',url=m.MOPS_URL,
+        parameters={'companyId':'2547','year':'115','month':'8','dataType':'2'},
+        retrieved_at='2026-10-02T12:00:00+00:00',source_date='2026-08',rows=parsed)
+    observation={**parsed[0],'rawSha256':mops['rawSha256'],
+        'rawReceiptPath':'receipts/'+mops['receiptFile'],'sourceURL':m.MOPS_URL}
+    old['receipts'].append(mops)
+    old['rows']=[{**observation,'sourceObservations':[observation]}]
+
+    rolled=m.advance_state(old,['2330'],[],'2026-10-05')
+    save_state(tmp_path,rolled)
+    snapshot=tmp_path/'snapshot.json'
+    m._save_snapshot(snapshot,m._snapshot(rolled))
+    manifest=m.build_manifest(tmp_path,snapshot,'a'*40)
+
+    assert m.validate_generation(tmp_path,expected_date='2026-10-05',expected_commit='a'*40)==[]
+    assert [row['code'] for row in json.loads(snapshot.read_text())['rows']]==[]
+    import base64
+    from pipeline.market_cache import validate_ownership_bundle
+    file_names=['manifest.json',*(item['path'] for item in manifest['files'])]
+    bundle={'schemaVersion':'ownership-bundle-v1','generationCommit':'b'*40,
+        'manifestSha256':m._hash((tmp_path/'manifest.json').read_bytes()),
+        'filesBase64':{name:base64.b64encode((tmp_path/name).read_bytes()).decode() for name in file_names}}
+    assert validate_ownership_bundle(bundle,'2026-10-05')['generationCommit']=='b'*40
+
+
 @pytest.mark.parametrize('publication_date,accepted', [
     ('2026-10-02', True),
     ('2026-10-05', True),

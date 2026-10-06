@@ -58,7 +58,8 @@ def make_worker(state_dir: Path, roster: list[str], verified_market_date=None):
         source=job['source']
         def capture(raw,url,parameters,source_date,rows):
             return save_receipt(receipts_dir,raw,source=source,url=url,parameters=parameters,
-                                retrieved_at=retrieved,source_date=source_date,rows=rows,selected_codes=roster if source=='TDCC_LATEST' else None)
+                                retrieved_at=retrieved,source_date=source_date,rows=rows,
+                                selected_codes=roster if source in {'TDCC_LATEST','DIRECTOR_PERIODS'} else None)
         if source=='DIRECTOR_PERIODS':
             periods={}
             captured=[]
@@ -299,11 +300,20 @@ def _semantic_errors(directory: Path,state: dict,snapshot: dict) -> list[str]:
             errors.append('generation_receipt_transient_token')
         if receipt['sourceURL'] in {'https://openapi.twse.com.tw/v1/opendata/t187ap11_L','https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap11_O'}:
             market='TWSE' if 'twse.com.tw' in receipt['sourceURL'] else 'TPEX'
+            selected=receipt.get('selectedCodes')
+            if selected is None:
+                # Older generations did not store the frozen roster beside period receipts.
+                selected=list(dict.fromkeys(row.get('code') for row in receipt.get('rows',[]) if isinstance(row,dict)))
+            if (not isinstance(selected,list) or not selected or len(selected)>100 or len(set(selected))!=len(selected)
+                    or any(not isinstance(code,str) or not re.fullmatch(r'\d{4,6}[A-Z]?',code) for code in selected)):
+                errors.append('generation_receipt_period_scope_invalid')
+                selected=[]
+            receipt_scope=set(selected)
             normalized=[]
             for raw_row in json.loads(raw):
                 code=str(raw_row.get('公司代號','')).strip()
                 period=str(raw_row.get('資料年月',''))
-                if code not in roster or not re.fullmatch(r'\d{5}',period):
+                if code not in receipt_scope or not re.fullmatch(r'\d{5}',period):
                     continue
                 month=f'{int(period[:3])+1911:04d}-{period[3:]}'
                 if month<=date_value[:7]:
@@ -312,7 +322,11 @@ def _semantic_errors(directory: Path,state: dict,snapshot: dict) -> list[str]:
                 errors.append('generation_receipt_period_proof_invalid')
         if receipt['sourceURL']==TDCC_URL:
             normalized=parse_tdcc_csv(raw.decode('utf-8'),retrieved_at=receipt['retrievedAt'])
-            if normalized!=receipt['rows'] or receipt.get('rawSanitization')!='roster-filtered-csv-v1' or not set(receipt.get('selectedCodes') or [])<=roster:
+            selected=receipt.get('selectedCodes')
+            if (normalized!=receipt['rows'] or receipt.get('rawSanitization')!='roster-filtered-csv-v1'
+                    or not isinstance(selected,list) or not selected or len(selected)>100
+                    or len(set(selected))!=len(selected)
+                    or any(not isinstance(code,str) or not re.fullmatch(r'\d{4,6}[A-Z]?',code) for code in selected)):
                 errors.append('generation_receipt_normalization_mismatch')
         if receipt['sourceURL']==MOPS_URL and receipt.get('rows'):
             parameters=receipt['parameters']
@@ -334,7 +348,8 @@ def _semantic_errors(directory: Path,state: dict,snapshot: dict) -> list[str]:
     if any(_canonical(row) not in encoded_rows for row in snapshot.get('rows',[])):
         errors.append('generation_snapshot_not_from_queue')
     for row in state['rows']:
-        if row.get('code') not in roster or any(str(row[field])>date_value for field in ('period','asOf','sourceDate','publishedAt','availableAt') if row.get(field)):
+        if (not isinstance(row.get('code'),str) or not re.fullmatch(r'\d{4,6}[A-Z]?',row['code'])
+                or any(str(row[field])>date_value for field in ('period','asOf','sourceDate','publishedAt','availableAt') if row.get(field))):
             errors.append('generation_observation_identity_invalid')
         observations=row.get('sourceObservations') or [row]
         from pipeline.ownership_inputs import merge_ownership_rows

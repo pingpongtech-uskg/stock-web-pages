@@ -237,7 +237,7 @@ def validate_ownership_bundle(bundle: Any, market_date: str) -> dict:
             selected = receipt.get('selectedCodes')
             _check(receipt.get('source') == 'TDCC_LATEST' and receipt.get('sourceURL') == 'https://opendata.tdcc.com.tw/getOD.ashx?id=1-5'
                    and isinstance(selected, list) and 1 <= len(selected) <= 100 and len(set(selected)) == len(selected)
-                   and all(code in queue['roster'] for code in selected)
+                   and all(isinstance(code, str) and re.fullmatch(r'\d{4,6}[A-Z]?', code) for code in selected)
                    and all(row.get('code') in selected for row in receipt.get('rows', [])), 'ownership_filtered_roster')
         _check(not re.search(rb'SYNCHRONIZER_TOKEN|SYNCHRONIZER_URI', files[name], re.I), 'ownership_transient_control')
         source_date = receipt.get('sourceDate')
@@ -249,10 +249,11 @@ def validate_ownership_bundle(bundle: Any, market_date: str) -> dict:
     receipt_map = {'receipts/' + str(item.get('receiptFile')): item for item in queue.get('receipts', [])}
     queue_identities = {canonical(row) for row in queue_rows}
     _check(all(canonical(row) in queue_identities for row in snapshot['rows']), 'ownership_snapshot_binding')
+    _check(all(type(row) is dict and row.get('code') in queue.get('roster', []) for row in snapshot['rows']), 'ownership_snapshot_roster')
     fields = ('code', 'period', 'asOf', 'sourceDate', 'largeHolderPct', 'shareholderCount', 'directorSupervisorPct', 'directorSupervisorShares', 'officialDirectorSupervisorShares', 'directorDenominator', 'directorIdentityConsistent')
     metrics = fields[4:]
     for row in queue_rows:
-        _check(type(row) is dict and row.get('code') in queue['roster'], 'ownership_row')
+        _check(type(row) is dict and isinstance(row.get('code'), str) and re.fullmatch(r'\d{4,6}[A-Z]?', row['code']), 'ownership_row')
         for key in ('period', 'asOf', 'sourceDate', 'publishedAt', 'availableAt'):
             value = row.get(key)
             _check(value is None or isinstance(value, str) and value[:10] <= manifest['verifiedMarketDate'], 'ownership_row_period')
