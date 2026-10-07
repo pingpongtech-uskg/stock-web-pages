@@ -252,7 +252,8 @@ jobs:
         timeout-minutes: 5
         run: python scripts/refresh_snapshot.py --recompute-existing --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json
       - run: python scripts/verify_snapshot.py --require-growth-coverage
-      - run: python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json
+      - name: Publish latest data with per-stock freshness warnings
+        run: python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json --publish-advisory
       - name: Build lightweight publication fingerprint
         run: python scripts/build_publication_fingerprint.py --market-date "$MARKET_DATE"
       - name: Build canonical screening export

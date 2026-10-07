@@ -132,6 +132,7 @@ button { cursor: pointer; }
 .evidence-badge.proxy, .evidence-badge.observation { background: var(--amber-soft); color: var(--amber); }
 .evidence-badge.new-entry { background: var(--red-soft); color: var(--red); }
 .stock-reason { display: -webkit-box; margin-top: 5px; overflow: hidden; color: var(--muted); font-size: 10px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.stock-freshness-warning { display: block; margin-top: 6px; color: #b45309; font-size: 11px; line-height: 1.5; }
 .stock-metric { min-width: 78px; text-align: right; }
 .stock-metric small, .stock-metric strong { display: block; }
 .stock-metric small { color: var(--faint); font-size: 10px; line-height: 1.3; }

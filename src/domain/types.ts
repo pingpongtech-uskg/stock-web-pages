@@ -141,6 +141,8 @@ export interface StockSummary {
   signalState: '待補資料' | '值得研究' | '低位觀察' | '進場觀察' | '條件失效' | '資料不足'
   entryReasons: string[]
   risks: string[]
+  dataFreshness?: Freshness
+  freshnessWarnings?: string[]
   institutionNetShares10: number | null
   participation10: number | null
   positiveDays10: number | null
@@ -278,6 +280,8 @@ export interface RankingRow {
   valueLabel: string
   status: MetricStatus
   reason: string
+  dataFreshness?: Freshness
+  freshnessWarnings?: string[]
   chipReference?: ChipReference
   /** Rows from the low-base route are explicitly marked as proxy evidence. */
   proxy?: boolean
@@ -482,6 +486,19 @@ export interface Release {
   generatedAt: string
   nextExpectedUpdateAt: string | null
   freshness: Freshness
+  dataQuality?: {
+    status: 'current' | 'degraded'
+    expectedMarketDate: string
+    warningCount: number
+    affectedStockCount: number
+    warnings: Array<{
+      code: string
+      stockCode: string | null
+      observedDate: string | null
+      expectedDate: string
+      message: string
+    }>
+  }
   statusMessage: string
   sourceRefs: string[]
   marketIndicators?: MarketIndicators

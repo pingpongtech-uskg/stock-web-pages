@@ -39,6 +39,12 @@ function requireArray(value: unknown): unknown[] {
   return value
 }
 
+function requireStringArray(value: unknown): string[] {
+  const items = requireArray(value)
+  for (const item of items) requireString(item)
+  return items as string[]
+}
+
 function requireString(value: unknown): string {
   if (typeof value !== 'string') invalidRelease()
   return value
@@ -135,6 +141,8 @@ function validateRankingRow(value: unknown): void {
   requireString(row.sector)
   expect(STATUS_VALUES.has(requireString(row.status)))
   requireString(row.reason)
+  if (row.dataFreshness !== undefined) expect(['current', 'stale', 'degraded', 'unavailable'].includes(requireString(row.dataFreshness)))
+  if (row.freshnessWarnings !== undefined) requireStringArray(row.freshnessWarnings)
   requireNullableNumber(row.value)
   requireString(row.valueLabel)
   for (const key of ROW_NULLABLE_NUMBERS) {
@@ -158,6 +166,8 @@ function validateStockSummary(value: unknown): void {
   const stock = requireRecord(value)
   expect(requireString(stock.code).length > 0)
   requireString(stock.name)
+  if (stock.dataFreshness !== undefined) expect(FRESHNESS_VALUES.has(requireString(stock.dataFreshness)))
+  if (stock.freshnessWarnings !== undefined) requireStringArray(stock.freshnessWarnings)
   if (stock.slope !== undefined) requireNullableNumber(stock.slope)
   if (stock.zScore !== undefined) requireNullableNumber(stock.zScore)
   if (stock.lastPrice !== undefined) requireNullableNumber(stock.lastPrice)
@@ -278,6 +288,21 @@ export function validateRelease(payload: unknown): Release {
   if (p.nextExpectedUpdateAt !== undefined) requireNullableString(p.nextExpectedUpdateAt)
   if (p.marketIndicators !== undefined) validateMarketIndicators(p.marketIndicators)
   expect(FRESHNESS_VALUES.has(requireString(p.freshness)))
+  if (p.dataQuality !== undefined) {
+    const quality = requireRecord(p.dataQuality)
+    expect(quality.status === 'current' || quality.status === 'degraded')
+    requireString(quality.expectedMarketDate)
+    requireCount(quality.warningCount)
+    requireCount(quality.affectedStockCount)
+    requireArray(quality.warnings).forEach((entry) => {
+      const warning = requireRecord(entry)
+      requireString(warning.code)
+      requireNullableString(warning.stockCode)
+      requireNullableString(warning.observedDate)
+      requireString(warning.expectedDate)
+      requireString(warning.message)
+    })
+  }
   requireString(p.statusMessage)
   expect(requireArray(p.sourceRefs).every((ref) => typeof ref === 'string'))
 

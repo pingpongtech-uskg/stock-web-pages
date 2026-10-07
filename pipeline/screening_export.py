@@ -111,6 +111,8 @@ def _stock_projection(stock: dict[str, Any], row: dict[str, Any], day: str, sour
             'sector': str(stock.get('sector') or row.get('sector') or ''), 'metrics': metrics, 'strategies': [],
             'provenance': {'marketDate': day, 'sourceRefs': stock.get('sourceRefs') or source_refs,
                 'dataStatus': stock.get('dataStatus', 'unknown'), 'market': stock.get('market', 'unknown'),
+                'dataFreshness': stock.get('dataFreshness', 'current'),
+                'freshnessWarnings': stock.get('freshnessWarnings', []),
                 'inputPeriods': periods, 'inputOrigins': origins,
                 'financialCutoff': stock.get('financialCutoff') or stock.get('financialAvailableAt'),
                 'valuationEvidenceLevel': stock.get('valuationEvidenceLevel', 'unknown'),
@@ -174,6 +176,7 @@ def build_export(release: dict[str, Any], *, request_id: str, source_git_commit:
         'runId': str(release['runId']), 'requestId': request_id, 'sourceGitCommit': source_git_commit,
         'actionsRunId': actions_run_id, 'formulaVersions': formula_versions(release),
         'freshness': release.get('freshness', 'degraded'), 'legacy': legacy,
+        'dataQuality': release.get('dataQuality', {'status': release.get('freshness', 'degraded')}),
         'coverage': release.get('coverage', {}), 'funnel': funnel or {},
         'strategies': strategies, 'selectedStocks': [selected[code] for code in sorted(selected)]}
     canonical_json_bytes(value)  # Reject NaN/Infinity before hashing.

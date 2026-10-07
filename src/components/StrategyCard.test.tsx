@@ -293,6 +293,21 @@ describe('StrategyCard', () => {
     expect(markup).not.toContain('PEG 0.75 價值帶')
     expect(markup).not.toContain('未知')
   })
+
+  it('shows data freshness warnings on affected stock rows while keeping the release visible', () => {
+    const row = {
+      ...knownRow,
+      code: '6173',
+      name: '信昌電',
+      dataFreshness: 'stale',
+      freshnessWarnings: ['股價資料截至 2026-10-06（目標 2026-10-07）', '投信十日資料不完整'],
+    } as RankingRow
+    const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[0]} rows={[row]} />)
+
+    expect(markup).toContain('6173 信昌電')
+    expect(markup).toContain('資料提醒：股價資料截至 2026-10-06（目標 2026-10-07）')
+    expect(markup).toContain('投信十日資料不完整')
+  })
 })
 
 

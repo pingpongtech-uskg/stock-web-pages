@@ -234,7 +234,7 @@ def test_daily_workflow_runs_v3_refresh_and_gate() -> None:
     supplement = workflow.index('python scripts/fetch_finmind.py --supplement')
     recompute = workflow.index('python scripts/refresh_snapshot.py --recompute-existing')
     verify = workflow.index('python scripts/verify_snapshot.py')
-    freshness = workflow.index('python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE"')
+    freshness = workflow.index('python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json --publish-advisory')
     export = workflow.index('python scripts/build_screening_export.py')
     pytest_gate = workflow.index('python -m pytest pipeline scripts -q')
     vitest_gate = workflow.index('npm run test:unit')

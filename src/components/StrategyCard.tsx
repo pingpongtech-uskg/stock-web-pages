@@ -195,6 +195,9 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
           {strategy === 'trust' && row.entryStatus === 'unknown' && <em className="evidence-badge observation">前日排行待補</em>}
           {lowPosition && <em className={healthBadgeClass(row)}>{healthLabel(row)}</em>}
         </span>
+        {row.dataFreshness === 'stale' && row.freshnessWarnings?.length ? (
+          <small className="stock-freshness-warning">資料提醒：{row.freshnessWarnings.join('；')}</small>
+        ) : null}
         <span className="stock-reason">{reason}</span>
       </span>
       <span className="stock-metric">
