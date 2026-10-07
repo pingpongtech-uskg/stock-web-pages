@@ -259,7 +259,9 @@ jobs:
       - name: Build canonical screening export
         run: python scripts/build_screening_export.py --data-dir public/data --request-id "$REQUEST_ID" --market-date "$MARKET_DATE" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID"
       - name: Build and validate complete market cache before publication
+        id: market-cache-index
         timeout-minutes: 5
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
@@ -268,7 +270,13 @@ jobs:
           python scripts/build_market_cache_index.py "${ownership_args[@]}" --data-dir public/data --config config/tracked_symbols.json --source-cache-dir .cache/market-source --output .artifacts/market-cache-index --market-date "$MARKET_DATE" --request-id "$REQUEST_ID" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID" --publication-sha256 "$(python -c "import json; print(json.load(open('public/data/publication.json'))['contentHash'])")" --config-sha256 "$(python -c "import hashlib; print(hashlib.sha256(open('config/tracked_symbols.json','rb').read()).hexdigest())")" --export-payload-hash "$(python -c "import json; print(json.load(open('public/data/screening-export.json'))['payloadHash'])")"
           python scripts/export_market_cache.py --input .artifacts/market-cache-index/input.json --expected .artifacts/market-cache-index/expected.json --output .artifacts/market-cache
           cp .artifacts/market-cache-index/expected.json .artifacts/market-cache/expected.json
+      - name: Report non-blocking market cache QA warning
+        if: steps.market-cache-index.outcome == 'failure'
+        run: |
+          echo "The daily snapshot will still publish. Complete market cache QA failed; inspect the failed step before using this cache." >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::Complete market cache QA failed; daily snapshot publication continues."
       - name: Preserve validated complete market cache
+        if: steps.market-cache-index.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
           name: market-cache
