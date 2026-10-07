@@ -16,13 +16,21 @@ def test_restore_source_receipts_before_collection_and_capture_all_inputs():
         assert '--source-cache-dir .cache/market-source' in line
 
 
-def test_complete_cache_must_validate_before_main_publication():
+def test_complete_cache_qa_failure_is_reported_but_does_not_block_main_publication():
     job = snapshot_job()
     export = job.index('scripts/build_screening_export.py')
+    index_start = job.index('- name: Build and validate complete market cache before publication')
     index = job.index('scripts/build_market_cache_index.py')
     validation = job.index('scripts/export_market_cache.py')
+    index_end = job.index('\n      - name:', index_start + 1)
     publication = job.index('Publish validated release to main')
     assert export < index < validation < publication
+    cache_step = job[index_start:index_end]
+    assert 'id: market-cache-index' in cache_step
+    assert 'continue-on-error: true' in cache_step
+    assert 'Report non-blocking market cache QA warning' in job
+    assert "if: steps.market-cache-index.outcome == 'failure'" in job
+    assert "if: steps.market-cache-index.outcome == 'success'" in job
     assert '--source-git-commit "$SOURCE_GIT_COMMIT"' in job[index:validation]
     assert '--actions-run-id "$GITHUB_RUN_ID"' in job[index:validation]
     assert '--export-payload-hash' in job[index:validation]
