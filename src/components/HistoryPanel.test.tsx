@@ -5,10 +5,10 @@ import { HistoryPanel } from './HistoryPanel'
 
 function historyIndex(revision: string) {
   return {
-    schemaVersion: 'screening-history-index-v1', generatedAt: '2026-10-03T00:00:00Z', retentionDays: 365,
-    earliestMarketDate: '2026-10-02', latestMarketDate: '2026-10-02',
+    schemaVersion: 'screening-history-index-v1' as const, generatedAt: '2026-10-03T00:00:00Z', retentionDays: 365,
+    earliestMarketDate: '2026-10-02', latestMarketDate: '2026-10-03',
     months: [{ month: '2026-10', path: `/data/archive/${revision}.json`, sha256: revision.repeat(64), bytes: 1,
-      marketDateStart: '2026-10-02', marketDateEnd: '2026-10-02', marketDates: ['2026-10-02'], recordCount: 1 }],
+      marketDateStart: '2026-10-02', marketDateEnd: '2026-10-03', marketDates: ['2026-10-02', '2026-10-03'], recordCount: 2 }],
   }
 }
 
@@ -24,6 +24,87 @@ function historyMonth(revision: string, name: string) {
 
 describe('HistoryPanel publication refresh', () => {
   afterEach(() => { window.history.replaceState({}, '', '/') })
+
+  it('does not rewrite the URL when browser Back leaves history view', async () => {
+    window.history.replaceState({}, '', '/?view=history&strategy=lowPosition&from=2026-10-02&to=2026-10-03')
+    const host = document.createElement('div')
+    document.body.append(host)
+    const root = createRoot(host)
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    try {
+      await act(async () => { root.render(<HistoryPanel index={historyIndex('interactive')} />) })
+      window.history.pushState({}, '', '/?strategy=lowPosition')
+      await act(async () => { window.dispatchEvent(new PopStateEvent('popstate')) })
+      expect(window.location.search).toBe('?strategy=lowPosition')
+    } finally {
+      await act(async () => root.unmount())
+      host.remove()
+    }
+  })
+
+  it('keeps interactive date fields, URL, and invalid-range feedback in sync', async () => {
+    const previousFetch = globalThis.fetch
+    window.history.replaceState({}, '', '/?view=history&strategy=lowPosition&from=2026-10-02&to=2026-10-03&code=2330')
+    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => historyMonth('interactive', '台積電') }) as Response) as unknown as typeof fetch
+    const host = document.createElement('div')
+    document.body.append(host)
+    const root = createRoot(host)
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    const changeDate = (input: HTMLInputElement, value: string) => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, value)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+    }
+
+    try {
+      await act(async () => { root.render(<HistoryPanel index={historyIndex('interactive')} />) })
+      await vi.waitFor(() => expect(host.textContent).toContain('台積電'))
+
+      const from = host.querySelector('[aria-label="選擇歷史起始交易日"]') as HTMLInputElement
+      const to = host.querySelector('[aria-label="選擇歷史結束交易日"]') as HTMLInputElement
+      await act(async () => { changeDate(from, '2026-10-03') })
+      expect(window.location.search).toContain('from=2026-10-03')
+      expect(from.min).toBe('2026-10-02')
+      expect(from.max).toBe('2026-10-03')
+
+      await act(async () => { changeDate(to, '2026-10-02') })
+      expect(window.location.search).toContain('to=2026-10-02')
+      expect(host.textContent).toContain('起始日不可晚於結束日')
+      expect(from.getAttribute('aria-invalid')).toBe('true')
+    } finally {
+      await act(async () => root.unmount())
+      host.remove()
+      globalThis.fetch = previousFetch
+    }
+  })
+
+  it('preserves the clamp notice while canonicalizing an out-of-range URL', async () => {
+    const previousFetch = globalThis.fetch
+    window.history.replaceState({}, '', '/?view=history&strategy=lowPosition&from=2026-10-04&to=2026-10-03&code=2330')
+    globalThis.fetch = vi.fn(async (input) => {
+      const url = String(input)
+      if (url.endsWith('/index.json')) return { ok: true, json: async () => historyIndex('clamp') } as Response
+      return { ok: true, json: async () => historyMonth('clamp', '台積電') } as Response
+    }) as unknown as typeof fetch
+    const host = document.createElement('div')
+    document.body.append(host)
+    const root = createRoot(host)
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    try {
+      await act(async () => { root.render(<HistoryPanel />) })
+      await vi.waitFor(() => expect(host.textContent).toContain('已限制在可查詢期間'))
+      expect(window.location.search).toContain('from=2026-10-03')
+      expect(window.location.search).toContain('to=2026-10-03')
+      expect(host.textContent).toContain('休市／沒有發布')
+    } finally {
+      await act(async () => root.unmount())
+      host.remove()
+      globalThis.fetch = previousFetch
+    }
+  })
 
   it('loads a same-date correction when publication identity changes and keeps the URL filters', async () => {
     const previousFetch = globalThis.fetch

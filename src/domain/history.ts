@@ -2,6 +2,7 @@ import type { HistoryRankingRow, ScreeningHistoryIndex, ScreeningHistoryMonth, S
 
 export type HistoryStrategy = 'all' | 'trust' | 'growth' | 'lowPosition'
 export interface HistoryQuery { strategy: HistoryStrategy; from: string; to: string; code: string; clamped: boolean; invalidRange: boolean }
+export type HistoryQueryPatch = Partial<Pick<HistoryQuery, 'strategy' | 'from' | 'to' | 'code'>>
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 const STRATEGIES = new Set<HistoryStrategy>(['all', 'trust', 'growth', 'lowPosition'])
 
@@ -25,11 +26,25 @@ export function normalizeHistoryQuery(params: URLSearchParams, bounds: Pick<Scre
   const available = bounds.earliestMarketDate && bounds.latestMarketDate
     ? { from: bounds.earliestMarketDate, to: bounds.latestMarketDate }
     : { from: '', to: '' }
-  if (available.from && from < available.from) { from = available.from; clamped = true }
-  if (available.to && to > available.to) { to = available.to; clamped = true }
+  const clamp = (value: string): string => {
+    if (available.from && value < available.from) { clamped = true; return available.from }
+    if (available.to && value > available.to) { clamped = true; return available.to }
+    return value
+  }
+  from = clamp(from)
+  to = clamp(to)
   const code = normalizeDigits(params.get('code')?.trim() ?? '')
   const strategy = STRATEGIES.has(params.get('strategy') as HistoryStrategy) ? params.get('strategy') as HistoryStrategy : 'all'
   return { strategy, from, to, code, clamped, invalidRange: Boolean(from && to && from > to) }
+}
+export function patchHistoryQuery(current: HistoryQuery, patch: HistoryQueryPatch, bounds: Pick<ScreeningHistoryIndex, 'earliestMarketDate' | 'latestMarketDate' | 'months'> | { earliestMarketDate: string; latestMarketDate: string; months?: Array<{ marketDates?: string[] }> }): HistoryQuery {
+  const params = new URLSearchParams()
+  params.set('strategy', patch.strategy ?? current.strategy)
+  params.set('from', patch.from ?? current.from)
+  params.set('to', patch.to ?? current.to)
+  params.set('code', patch.code ?? current.code)
+  const next = normalizeHistoryQuery(params, bounds)
+  return patch.from === undefined && patch.to === undefined ? { ...next, clamped: current.clamped } : next
 }
 export function filterHistoryRows(rows: HistoryRankingRow[], query: string): HistoryRankingRow[] {
   const needle = normalizeDigits(query.trim()).toLocaleLowerCase()

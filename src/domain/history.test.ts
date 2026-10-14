@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeHistoryQuery, filterHistoryRows, defaultHistoryRange, validateHistoryIndex, validateHistoryMonth, loadHistoryMonth, historyGrowthCoverageSummary } from './history'
+import { normalizeHistoryQuery, patchHistoryQuery, filterHistoryRows, defaultHistoryRange, validateHistoryIndex, validateHistoryMonth, loadHistoryMonth, historyGrowthCoverageSummary } from './history'
 
 describe('history query', () => {
   it('normalizes dates, full-width digits, strategy, and clamps range', () => {
@@ -15,6 +15,40 @@ describe('history query', () => {
     expect(q.invalidRange).toBe(true)
     expect(filterHistoryRows([{ rank: 1, code: '2382', name: '廣達', sector: '', value: null, valueLabel: '', status: 'pass', reason: '' }], '238')).toHaveLength(1)
     expect(filterHistoryRows([{ rank: 1, code: '2382', name: '廣達', sector: '', value: null, valueLabel: '', status: 'pass', reason: '' }], '廣')).toHaveLength(1)
+  })
+
+  it('normalizes interactive date changes against both archive bounds', () => {
+    const bounds = { earliestMarketDate: '2026-09-08', latestMarketDate: '2026-10-13' }
+    const current = normalizeHistoryQuery(new URLSearchParams('strategy=lowPosition&from=2026-09-08&to=2026-10-13&code=2382'), bounds)
+
+    expect(patchHistoryQuery(current, { from: '2026-10-21' }, bounds)).toMatchObject({
+      from: '2026-10-13', to: '2026-10-13', clamped: true, invalidRange: false,
+    })
+    expect(patchHistoryQuery(current, { to: '2026-09-01' }, bounds)).toMatchObject({
+      from: '2026-09-08', to: '2026-09-08', clamped: true, invalidRange: false,
+    })
+    const previouslyClamped = normalizeHistoryQuery(new URLSearchParams('from=2026-10-21&to=2026-10-13'), bounds)
+    expect(patchHistoryQuery(previouslyClamped, { code: '2382' }, bounds).clamped).toBe(true)
+    expect(patchHistoryQuery(previouslyClamped, { from: '2026-10-12' }, bounds).clamped).toBe(false)
+  })
+
+  it('recomputes invalidRange after a user reverses the date range', () => {
+    const bounds = { earliestMarketDate: '2026-09-08', latestMarketDate: '2026-10-13' }
+    const current = normalizeHistoryQuery(new URLSearchParams('from=2026-09-08&to=2026-10-13'), bounds)
+
+    expect(patchHistoryQuery(current, { from: '2026-10-12' }, bounds)).toMatchObject({
+      from: '2026-10-12', to: '2026-10-13', clamped: false, invalidRange: false,
+    })
+    expect(patchHistoryQuery(current, { to: '2026-09-12' }, bounds)).toMatchObject({
+      from: '2026-09-08', to: '2026-09-12', clamped: false, invalidRange: false,
+    })
+    const reversed = patchHistoryQuery(current, { from: '2026-10-14' }, bounds)
+    expect(reversed).toMatchObject({ from: '2026-10-13', to: '2026-10-13', clamped: true, invalidRange: false })
+    expect(patchHistoryQuery(current, { to: '2026-10-01' }, bounds)).toMatchObject({
+      from: '2026-09-08', to: '2026-10-01', clamped: false, invalidRange: false,
+    })
+    const invalid = patchHistoryQuery(current, { from: '2026-10-13', to: '2026-09-12' }, bounds)
+    expect(invalid.invalidRange).toBe(true)
   })
 })
 

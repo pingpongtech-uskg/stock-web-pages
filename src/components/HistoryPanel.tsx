@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ScreeningHistoryIndex, ScreeningHistoryRecord } from '../domain/types'
-import { filterHistoryRows, historyGrowthCoverageSummary, loadHistoryIndex, loadHistoryMonth, normalizeHistoryQuery, recordsForRange, type HistoryStrategy } from '../domain/history'
+import { filterHistoryRows, historyGrowthCoverageSummary, loadHistoryIndex, loadHistoryMonth, normalizeHistoryQuery, patchHistoryQuery, recordsForRange, type HistoryQueryPatch, type HistoryStrategy } from '../domain/history'
 
 interface Props { index?: ScreeningHistoryIndex | null; refreshKey?: string }
 const labels: Record<HistoryStrategy, string> = { all: '全部', trust: '投信新進榜', growth: '成長股', lowPosition: '低位觀察' }
@@ -45,13 +45,19 @@ export function HistoryPanel({ index: suppliedIndex, refreshKey }: Props) {
     if (!index) return
     const next = normalizeHistoryQuery(new URLSearchParams(window.location.search), index)
     setQuery(next)
-    if (!canonicalized.current) {
+    const nextUrl = queryUrl(next)
+    if (!canonicalized.current || `${window.location.pathname}${window.location.search}` !== nextUrl) {
       canonicalized.current = true
       window.history.replaceState(window.history.state, '', queryUrl(next))
     }
-    if (next.invalidRange) {
+  }, [index])
+
+  useEffect(() => {
+    if (!index) return
+    if (query.invalidRange) {
       setRecords([])
       setLoadingRecords(false)
+      setError(false)
       return
     }
 
@@ -59,25 +65,31 @@ export function HistoryPanel({ index: suppliedIndex, refreshKey }: Props) {
     setRecords([])
     setLoadingRecords(true)
     setError(false)
-    const entries = index.months.filter((month) => month.month >= next.from.slice(0, 7) && month.month <= next.to.slice(0, 7))
+    const entries = index.months.filter((month) => month.month >= query.from.slice(0, 7) && month.month <= query.to.slice(0, 7))
     Promise.all(entries.map(loadHistoryMonth)).then((months) => {
-      if (!cancelled) setRecords(recordsForRange(months, next.from, next.to))
+      if (!cancelled) setRecords(recordsForRange(months, query.from, query.to))
     }).catch(() => {
       if (!cancelled) setError(true)
     }).finally(() => {
       if (!cancelled) setLoadingRecords(false)
     })
     return () => { cancelled = true }
-  }, [index, query.from, query.to, retryCount])
+  }, [index, query.from, query.to, query.invalidRange, retryCount])
 
-  const update = (patch: Partial<typeof query>) => {
-    const next = { ...query, ...patch }
+  const update = (patch: HistoryQueryPatch) => {
+    const next = patchHistoryQuery(query, patch, index ?? { earliestMarketDate: '', latestMarketDate: '' })
     setQuery(next)
     window.history.replaceState(window.history.state, '', queryUrl(next))
   }
 
   useEffect(() => {
-    const onPop = () => setQuery(normalizeHistoryQuery(new URLSearchParams(window.location.search), index ?? { earliestMarketDate: '', latestMarketDate: '' }))
+    const onPop = () => {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('view') !== 'history') return
+      const next = normalizeHistoryQuery(params, index ?? { earliestMarketDate: '', latestMarketDate: '' })
+      setQuery(next)
+      window.history.replaceState(window.history.state, '', queryUrl(next))
+    }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [index])
@@ -88,7 +100,7 @@ export function HistoryPanel({ index: suppliedIndex, refreshKey }: Props) {
   return <section className="history-panel" aria-labelledby="history-heading">
     <div className="history-heading"><div><p className="site-kicker">ARCHIVE / HISTORY</p><h2 id="history-heading">歷史篩選</h2></div><button className="method-button" aria-expanded={methodOpen} aria-controls="history-method" onClick={() => setMethodOpen((value) => !value)}>ⓘ 方法說明</button></div>
     {methodOpen && <p id="history-method" className="history-method">本站依公開方法與現有研究文件整理實作；數值是研究參考，不是目標價、買賣建議或即時報價。成長估值：總報酬本益比（本站整理）、總報酬估值參考價（本站整理）、低估門檻參考價。</p>}
-    <div className="history-filters"><label>策略<select value={query.strategy} onChange={(event) => update({ strategy: event.target.value as HistoryStrategy })}>{Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>股票代號／名稱<input value={query.code} onChange={(event) => update({ code: event.target.value })} /></label><label>起始日<input type="date" aria-label="選擇歷史起始交易日" aria-invalid={query.invalidRange} aria-describedby="history-date-error" value={query.from} onChange={(event) => update({ from: event.target.value })} /></label><label>結束日<input type="date" aria-label="選擇歷史結束交易日" aria-invalid={query.invalidRange} aria-describedby="history-date-error" value={query.to} onChange={(event) => update({ to: event.target.value })} /></label></div>
+    <div className="history-filters"><label>策略<select value={query.strategy} onChange={(event) => update({ strategy: event.target.value as HistoryStrategy })}>{Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>股票代號／名稱<input value={query.code} onChange={(event) => update({ code: event.target.value })} /></label><label>起始日<input type="date" min={index?.earliestMarketDate ?? undefined} max={index?.latestMarketDate ?? undefined} aria-label="選擇歷史起始交易日" aria-invalid={query.invalidRange} aria-describedby="history-date-error" value={query.from} onChange={(event) => update({ from: event.target.value })} /></label><label>結束日<input type="date" min={index?.earliestMarketDate ?? undefined} max={index?.latestMarketDate ?? undefined} aria-label="選擇歷史結束交易日" aria-invalid={query.invalidRange} aria-describedby="history-date-error" value={query.to} onChange={(event) => update({ to: event.target.value })} /></label></div>
     {query.invalidRange && <p id="history-date-error" className="history-error" role="alert">起始日不可晚於結束日，未載入資料。</p>}
     {query.clamped && <p className="history-notice">已限制在可查詢期間</p>}
     {query.strategy === 'growth' && records.length > 0 && <details className="history-growth-coverage">
