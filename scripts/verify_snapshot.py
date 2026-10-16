@@ -28,6 +28,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from pipeline.release_contract import chip_reference_error, common_share_universe, growth_coverage_error
+from pipeline.valuation import (
+    GROWTH_TOTAL_RETURN_FORMULA_VERSION,
+    GROWTH_UNDERVALUED_MIN,
+    calculate_growth_total_return_valuation,
+)
 
 RANKING_KEYS = ('trust', 'growth', 'lowPosition', 'lowBase', 'lowBaseGrowth', 'lowBaseQuality')
 STRATEGY_FUNNEL_KEYS = ('trust', 'growth', 'lowPosition')
@@ -207,10 +212,48 @@ def regression_contract_error(
     return None
 
 
+def growth_ranking_valuation_error(row: dict, key: str) -> str | None:
+    """Validate the growth strategy's primary valuation independently of PEG."""
+    error = "ranking_row_growth_valuation:" + key
+    if (key != "growth" or row.get("valuationMethod") != "growth-total-return-pe"
+            or row.get("valuationFormulaVersion") != GROWTH_TOTAL_RETURN_FORMULA_VERSION
+            or row.get("growthValuationStatus") != "available"
+            or row.get("extremeExtrapolation") is not False):
+        return error
+    inputs = {
+        "current_price": row.get("currentPrice"), "current_pe": row.get("currentPe"),
+        "ttm_eps": row.get("currentEps"), "earnings_growth": row.get("valuationGrowthInput"),
+        "dividend_yield": row.get("growthDividendYield"),
+    }
+    if any(not is_number(value) for value in inputs.values()):
+        return error
+    expected = calculate_growth_total_return_valuation(**inputs)
+    if expected["status"] != "available" or expected["total_return_pe"] < GROWTH_UNDERVALUED_MIN:
+        return error
+    fields = {
+        "currentPrice": "current_price", "fairPrice": "fair_price",
+        "growthFairPrice": "fair_price", "growthBuyZonePrice": "buy_zone_price",
+        "growthForwardEps": "forward_eps", "growthTotalReturnPe": "total_return_pe",
+        "growthConservativeGrowth": "conservative_growth", "value": "total_return_pe",
+    }
+    for field, source in fields.items():
+        value = row.get(field)
+        if not is_number(value) or not math.isclose(value, expected[source], rel_tol=1e-9, abs_tol=1e-9):
+            return error
+    if any(row.get(field) is not None for field in ("valuePrice075", "valuePrice066")):
+        return error
+    if row.get("currentPeg") is not None and not is_number(row["currentPeg"]):
+        return error
+    return None
+
+
 def ranking_valuation_error(row: object, key: str) -> str | None:
     """Reject partial numeric valuation payloads without a valuation object."""
     if not isinstance(row, dict):
         return "ranking_row:" + key
+    if (row.get("valuationMethod") == "growth-total-return-pe"
+            or any(field in row for field in ("growthTotalReturnPe", "growthValuationStatus"))):
+        return growth_ranking_valuation_error(row, key)
     fields = ("currentPeg", "currentPrice", "fairPrice", "valuePrice075", "valuePrice066")
     if not any(row.get(field) is not None for field in fields):
         return None

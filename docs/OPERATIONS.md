@@ -62,3 +62,9 @@ To verify a deployed candidate, use `scripts/verify_history_production.py --base
 Backfill uses only the six retained real market dates: 2026-09-08, 2026-09-11, 2026-09-18, 2026-09-23, 2026-09-24, and 2026-10-01. Pin the repository commit, verify the index, month SHA-256 and active immutable revision, then archive the recorded selections without another screening or API fetch. Preserve each original generatedAt and available metrics. Mark all six as legacy_archive; unknown formula versions, financial input provenance, original request IDs and Actions lineage remain unavailable. Archive corrections preserve the earlier revision rather than replacing its evidence.
 
 Free FinMind supplementation may leave partial financial coverage. Report the selected count, complete valuation input count, missing-input reasons and remaining queue separately. A successful validated screening can still be degraded; a missing input never becomes zero, pass, or a fabricated historical value.
+
+## Growth valuation publication contract
+
+Growth rankings use `growth-total-return-pe-v1` as their primary valuation; Zulu PEG is an optional cross-reference. The publication verifier must validate the primary method, version, availability, input numbers and recomputed growth outputs independently of PEG. Never fabricate PEG or remove a valid growth fair price to pass the gate. Ordinary PEG strategies retain their complete PEG requirements.
+
+On 2026-10-16, Actions run `38884306409` acquired current official data but failed with `ranking_row_valuation_partial:growth`: the old gate required optional PEG alongside a valid growth fair price. `scripts/test_growth_ranking_contract.py` now exercises actual producer output without PEG and rejects incomplete, inconsistent or extreme growth estimates. This regression belongs in the existing pre-publication Python test gate.
