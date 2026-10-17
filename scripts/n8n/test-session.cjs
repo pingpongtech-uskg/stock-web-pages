@@ -23,7 +23,7 @@ test('normal manual recovery resumes prior exact run after original cutoff with 
  const out=engine.advance(state,{statusCode:200,body:{sha:'observed',content:Buffer.from(JSON.stringify(prior)).toString('base64')}},now);
  assert.equal(out.state.nextStage,'pollRun');assert.equal(out.state.actionsRunId,'123');assert.equal(out.state.manualDeadlineOverride,true);assert.equal(out.state.operationDeadline,now+90*60000);assert.equal(out.op.url.includes('dispatches'),false);
  const busy=engine.advance(state,{statusCode:200,body:{sha:'observed',content:Buffer.from(JSON.stringify({...prior,deadline:now+1000})).toString('base64')}},now);
- assert.equal(busy.state.errorCategory,'writer_busy');assert.equal(busy.op,null);
+ assert.equal(busy.state.errorCategory,undefined);assert.equal(busy.state.stage,'branch');assert.equal(busy.delaySeconds,30);
 });
 test('explicit diagnostics keep requested date and clearly separate diagnostic status from screening',()=>{
  const now=Date.parse('2026-10-03T01:00:00Z');const out=engine.advance(engine.start({...base,mode:'diagnose'},now).state,{statusCode:200,body:calendar},now);
@@ -52,7 +52,7 @@ test('normal automatic manual adopts same-day corrected request for exact resume
  const otherDate=engine.advance(state,read({...prior,marketDate:'2026-10-01'}),now);assert.equal(otherDate.state.errorCategory,'request_correction_requires_revision');
  const legacy=engine.advance(state,read({...prior,archiveMethod:'legacy_archive'}),now);assert.equal(legacy.state.errorCategory,'request_correction_requires_revision');
  const pendingIntent=engine.advance(state,read({...prior,actionsRunId:'',screeningStatus:'pending',notionStatus:'pending',deployStatus:'pending'}),now);assert.equal(pendingIntent.state.nextStage,'findRun');assert.equal(pendingIntent.state.dispatchIntent,true);
- const busy=engine.advance(state,read({...prior,released:false,deadline:now+1000}),now);assert.equal(busy.state.errorCategory,'writer_busy');assert.equal(busy.state.requestId,'stockscreener:20261002:v1');assert.equal(busy.op,null);
+ const busy=engine.advance(state,read({...prior,released:false,deadline:now+1000}),now);assert.equal(busy.state.errorCategory,undefined);assert.equal(busy.state.stage,'branch');assert.equal(busy.delaySeconds,30);
  for(const invalid of [{...prior,requestId:'../../bad'},{...prior,actionsRunId:'../456'}])assert.equal(engine.advance(state,read(invalid),now).state.errorCategory,'invalid_stored_request_lineage');
 });
 test('scheduled source-step failure gets one metadata-verified retry with a new request id',()=>{
@@ -144,7 +144,8 @@ test('checkpoint transition exceptions persist a sanitized terminal result with 
   assert.equal(done.route,'done');assert.equal(done.state.errorCategory,'checkpoint_advance_failed');assert.equal(done.ledgerRequired,true);
   const recovery={...engine.start({...base,runKind:'scheduled',owner:'recovery'},now).state,stage:'state',isOpen:true};
   const resumed=engine.advance(recovery,{statusCode:200,body:{sha:'terminal-sha-2',content:Buffer.from(JSON.stringify(saved)).toString('base64')}},now);
-  assert.equal(resumed.route,'done');assert.equal(resumed.op,null);assert.equal(resumed.state.errorCategory,'checkpoint_advance_failed');
+  assert.equal(resumed.route,'github');assert.equal(resumed.state.mode,'revision');assert.equal(resumed.state.automaticRetry,true);
+  assert.equal(resumed.state.requestId,'stockscreener:20261003:v1:retry1');assert.equal(resumed.state.actionsRunId,undefined);
  }
 });
 test('successful checkpoint with missing CAS sha stops without issuing a follow-up request',()=>{
@@ -158,7 +159,7 @@ test('explicit manual resume of a terminal checkpoint continues the saved run wi
  const interrupted={...engine.start({...base,runKind:'scheduled'},now).state,stage:'checkpoint',nextStage:'cache_unrecognized',lockSha:'old-sha',deadline:now+60000,actionsRunId:'123',runHeadSha:'a'.repeat(40),cacheUploadIntent:'cache-payload-1.gz',cacheUploadId:'upload-123',cacheSendAttempted:true};
  const failedTransition=engine.advance(interrupted,{statusCode:200,body:{content:{sha:'fresh-sha-1'}}},now);
  const terminal=JSON.parse(Buffer.from(failedTransition.op.body.content,'base64').toString('utf8'));
- const resume={...engine.start({...base,mode:'resume',runKind:'manual',owner:'recovery'},now).state,stage:'state',isOpen:true,mode:'resume'};
+ const resume={...engine.start({...base,marketDate:interrupted.marketDate,requestId:interrupted.requestId,mode:'resume',runKind:'manual',owner:'recovery'},now).state,stage:'state',isOpen:true,mode:'resume'};
  const restored=engine.advance(resume,{statusCode:200,body:{sha:'terminal-sha-2',content:Buffer.from(JSON.stringify(terminal)).toString('base64')}},now);
  assert.equal(restored.state.stage,'checkpoint');assert.equal(restored.state.nextStage,'pollRun');
  const saved=JSON.parse(Buffer.from(restored.op.body.content,'base64').toString('utf8'));

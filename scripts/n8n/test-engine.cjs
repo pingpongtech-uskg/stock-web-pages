@@ -24,13 +24,14 @@ test('calendar closures distinct from explicit opening days; stale calendar fail
   assert.equal(engine.calendarOpen([{Name:'農曆春節前最後交易日',Date:'1150211'}],'2026-02-11'),true);
   assert.equal(engine.calendarOpen([{Name:'農曆春節後開始交易日',Date:'1150223'}],'2026-02-23'),true);
 });
-test('atomic state claims reference exact blob sha and refuse active owner',()=>{
+test('atomic state claims reference exact blob sha and wait for active owner instead of skipping',()=>{
   assert.equal(typeof engine.advance,'function');
   let out=engine.start(input,now);out=engine.advance(out.state,response([{Name:'開始交易日',Date:'1150102'}]),now);
   assert.ok(out.op.url.includes('/git/ref/heads/n8n-state'));
   out=engine.advance(out.state,response({object:{sha:'a'.repeat(40)}}),now);
   out=engine.advance(out.state,response({sha:'blob',content:Buffer.from(JSON.stringify({owner:'other',released:false,deadline:now+100000})).toString('base64')}),now);
-  assert.equal(out.route,'done');assert.equal(out.state.errorCategory,'writer_busy');
+  assert.equal(out.route,'github');assert.equal(out.state.stage,'branch');assert.equal(out.delaySeconds,30);
+  assert.equal(out.state.errorCategory,undefined);assert.ok(out.op.url.endsWith('/git/ref/heads/n8n-state'));
 });
 test('ambiguous dispatch resumes exact request run search, never dispatches twice',()=>{
   assert.equal(typeof engine.advance,'function');
@@ -73,6 +74,26 @@ test('checkpoint conflict aborts writer and malformed schemas fail closed',()=>{
   const malformed=engine.advance(engine.start(input,now).state,response([{Name:'bad',Date:'garbage'}]),now);
   assert.equal(malformed.state.errorCategory,'calendar_schema');
 });
+test('ambiguous checkpoint 500 reads back state before retry and resumes when the write committed',()=>{
+  const committed={...input,stage:'checkpoint',nextStage:'pollRun',lockSha:'old-sha',actionsRunId:'123',owner:'700',deadline:now+100000};
+  const content=Buffer.from(JSON.stringify({...committed,stage:'pollRun',nextStage:undefined,op:undefined})).toString('base64');
+  committed.op={target:'github',method:'PUT',url:'https://api.github.com/repos/pingpongtech-uskg/stock-web-pages/contents/operations/days/2026-10-02.json',body:{message:'checkpoint',branch:'n8n-state',content,sha:'old-sha'}};
+  let out=engine.advance(committed,response({},500),now);
+  assert.equal(out.state.checkpointRecoveryAttempts,0);assert.equal(out.state.stage,'branch');assert.ok(out.op.url.endsWith('/git/ref/heads/n8n-state'));
+  out=engine.advance(out.state,response({object:{sha:'branch-sha'}}),now);
+  assert.equal(out.state.stage,'state');assert.ok(out.op.url.endsWith('/operations/days/2026-10-02.json?ref=n8n-state'));
+  const wrappedContent=content.replace(/(.{16})/g,'$1\n');
+  out=engine.advance(out.state,response({sha:'new-sha',content:wrappedContent}),now);
+  assert.equal(out.state.stage,'pollRun');assert.equal(out.state.lockSha,'new-sha');assert.equal(out.op.url.endsWith('/actions/runs/123'),true);
+});
+test('ambiguous checkpoint retries only when readback still has the expected SHA',()=>{
+  const state={...input,stage:'checkpoint',nextStage:'pollRun',lockSha:'old-sha',actionsRunId:'123',owner:'700',deadline:now+100000,op:{target:'github',method:'PUT',url:'https://api.github.com/repos/pingpongtech-uskg/stock-web-pages/contents/operations/days/2026-10-02.json',body:{message:'checkpoint',branch:'n8n-state',content:Buffer.from('{"stage":"pollRun"}').toString('base64'),sha:'old-sha'}}};
+  let out=engine.advance(state,response({},503),now);out=engine.advance(out.state,response({object:{sha:'branch-sha'}}),now);out=engine.advance(out.state,response({sha:'old-sha',content:Buffer.from('{"stage":"old"}').toString('base64')}),now);
+  assert.equal(out.state.stage,'checkpoint');assert.equal(out.op.method,'PUT');assert.equal(out.op.body.sha,'old-sha');assert.equal(out.op.body.content,state.op.body.content);
+  const conflictState={...state,op:{...state.op,body:{...state.op.body,content:Buffer.from('{"stage":"newer-writer"}').toString('base64')}}};
+  let conflict=engine.advance(conflictState,response({},500),now);conflict=engine.advance(conflict.state,response({object:{sha:'branch-sha'}}),now);conflict=engine.advance(conflict.state,response({sha:'other-sha',content:Buffer.from('{"stage":"other-writer"}').toString('base64')}),now);
+  assert.equal(conflict.route,'done');assert.equal(conflict.state.errorCategory,'writer_conflict');assert.equal(conflict.op,null);
+});
 test('read requests use bounded retries and rate limiting exhaustion persists failure',()=>{
   const state={...input,stage:'rootSchema',deadline:now+100000,lockSha:'blob',op:{target:'notion',method:'GET',url:'https://api.notion.com/v1/data_sources/root',body:{}}};
   const retry=engine.advance(state,response({},503),now);assert.equal(retry.delaySeconds,2);assert.equal(retry.state.retry,1);
@@ -80,23 +101,41 @@ test('read requests use bounded retries and rate limiting exhaustion persists fa
   const checkpointFailure=engine.advance({...state,stage:'checkpoint'},response({},503),now);assert.equal(checkpointFailure.route,'done');assert.equal(checkpointFailure.state.errorCategory,'checkpoint_failed');
 });
 test('live 404 preserves archive and retries; terminal deploy failure still finalizes Notion',()=>{
-  const state={...input,stage:'liveVerify',cacheStatus:'verified',deadline:now+100000,lockSha:'blob',payload:{runId:'run',sourceGitCommit:'a'.repeat(40),generatedAt:'2026-10-02T10:00:00Z',freshness:'current',revision:'b'.repeat(12),payloadHash:'c'.repeat(64),selectedStocks:[],strategies:{trust:[],growth:[],lowPosition:[]},coverage:{},formulaVersions:{}},pageId:'page',actionsRunId:'123'};
+  const state={...input,stage:'liveVerify',cacheStatus:'verified',deadline:now+100000,lockSha:'blob',archivedCount:2,expectedCount:2,payload:{runId:'run',sourceGitCommit:'a'.repeat(40),generatedAt:'2026-10-02T10:00:00Z',freshness:'current',revision:'b'.repeat(12),payloadHash:'c'.repeat(64),selectedStocks:[{code:'2330',provenance:{}},{code:'2303',provenance:{}}],strategies:{trust:[],growth:[],lowPosition:[]},coverage:{},formulaVersions:{}},pageId:'3ee6fb57-ff38-810f-bcb4-f4c15930ebbf',actionsRunId:'123'};
   assert.equal(engine.advance(state,response({},404),now).state.stage,'liveVerify');
-  const terminal=engine.advance({...state,deployAttempts:20},response({},404),now);assert.equal(terminal.state.stage,'finishNotion');assert.equal(terminal.state.deployStatus,'failed');assert.equal(terminal.op.body.properties['Notion Status'].rich_text[0].text.content,'complete');
+  const terminal=engine.advance({...state,deployAttempts:20},response({},404),now);assert.equal(terminal.state.stage,'finishNotion');assert.equal(terminal.state.deployStatus,'failed');assert.equal(terminal.op.body.properties['Notion Status'].rich_text[0].text.content,'deployment_pending');assert.equal(terminal.op.body.properties['Archived Count'].number,2);assert.match(terminal.op.body.properties['Error Summary'].rich_text[0].text.content,/Live website verification did not complete/);
 });
-test('late Actions same-day recovery retains exact run and absolute 19:30 cutoff',()=>{
-  const start18=Date.parse('2026-10-02T10:00:00Z');const retry1910=Date.parse('2026-10-02T11:10:00Z');
-  const original=engine.start({...input,runKind:'scheduled'},start18).state;
-  const previous={...original,stage:'pollRun',actionsRunId:'123',owner:'original',lockSha:'old',released:false};
-  const expired=engine.advance(previous,response({status:'completed'}),Date.parse('2026-10-02T11:05:00Z'));
-  assert.equal(expired.state.errorCategory,'writer_deadline');
-  let recovery=engine.start({...input,runKind:'scheduled',owner:'recovery'},retry1910);
-  recovery=engine.advance(recovery.state,response([{Name:'國曆新年開始交易日',Date:'1150102'}]),retry1910);
-  recovery=engine.advance(recovery.state,response({object:{sha:'main'}}),retry1910);
-  recovery=engine.advance(recovery.state,response({sha:'old',content:Buffer.from(JSON.stringify(previous)).toString('base64')}),retry1910);
+test('scheduled recovery has no 19:30 cutoff and resumes the exact in-flight Actions run',()=>{
+  const retry1940=Date.parse('2026-10-02T11:40:00Z');
+  const original=engine.start({...input,runKind:'scheduled'},retry1940).state;
+  const afterCalendar=engine.advance(original,response([{Name:'國曆新年開始交易日',Date:'1150102'}]),retry1940);
+  assert.equal(afterCalendar.state.errorCategory,undefined);
+  assert.ok(afterCalendar.op.url.endsWith('/git/ref/heads/n8n-state'));
+  const previous={...original,stage:'pollRun',actionsRunId:'123',owner:'original',lockSha:'old',released:false,deadline:retry1940-1};
+  let recovery=engine.advance(afterCalendar.state,response({object:{sha:'main'}}),retry1940);
+  recovery=engine.advance(recovery.state,response({sha:'old',content:Buffer.from(JSON.stringify(previous)).toString('base64')}),retry1940);
   assert.equal(recovery.state.nextStage,'pollRun');assert.equal(recovery.state.actionsRunId,'123');
-  assert.equal(recovery.state.deadline,Date.parse('2026-10-02T11:30:00Z'));
+  assert.equal(recovery.state.deadline,retry1940+59*60000);
   assert.equal(recovery.op.url.includes('/dispatches'),false);
+});
+test('failed daily state creates a unique revision attempt for scheduled and manual triggers',()=>{
+  for (const runKind of ['scheduled','manual']) {
+    const existing={...engine.start({...input,runKind:'scheduled'},now).state,owner:'old',released:true,
+      transitionTerminal:true,screeningStatus:'failed',errorCategory:'screening_failed',automaticRetryCount:0};
+    const state={...engine.start({...input,requestId:'stockscreener:20261002:v1',automaticRequestId:true,runKind},now+1000).state,stage:'state',isOpen:true};
+    const out=engine.advance(state,response({sha:'state-sha',content:Buffer.from(JSON.stringify(existing)).toString('base64')}),now+1000);
+    assert.equal(out.state.mode,'revision');assert.equal(out.state.requestId,'stockscreener:20261002:v1:retry1');
+    assert.equal(out.state.automaticRetryCount,1);assert.equal(out.state.screeningStatus,'pending');
+    assert.equal(out.state.nextStage,'findRun');assert.equal(out.op.method,'PUT');
+  }
+});
+test('verified publication with incomplete archive resumes the same producer',()=>{
+  const existing={...engine.start(input,now).state,owner:'old',released:true,transitionTerminal:true,
+    screeningStatus:'complete',publicationStatus:'verified',deployStatus:'verified',actionsRunId:'123',runHeadSha:'a'.repeat(40),notionStatus:'failed',cacheStatus:'not_generated'};
+  const state={...engine.start({...input,runKind:'manual'},now+1000).state,stage:'state',isOpen:true};
+  const out=engine.advance(state,response({sha:'state-sha',content:Buffer.from(JSON.stringify(existing)).toString('base64')}),now+1000);
+  assert.equal(out.state.publicationStatus,'verified');assert.equal(out.state.nextStage,'pollRun');
+  assert.equal(out.state.actionsRunId,'123');assert.equal(out.state.requestId,existing.requestId);assert.equal(out.op.method,'PUT');
 });
 test('operator Actions IDs are decimal; checkpoint commits skip Cloudflare preview builds',()=>{
   assert.throws(()=>engine.start({...input,actionsRunId:'123/../../issues'},now),/invalid_actions_run_id/);
@@ -106,7 +145,7 @@ test('operator Actions IDs are decimal; checkpoint commits skip Cloudflare previ
   assert.equal(engine.start({...input,actionsRunId:'123'},now).state.actionsRunId,'123');
   assert.throws(()=>engine.start({...input,siteUrl:'https://localhost'},now),/invalid_site_url/);
 });
-test('manual resume after cutoff has an explicit new window but cannot steal a live lease',()=>{
+test('manual resume after former cutoff has a fresh window and waits for a live lease',()=>{
   const manualNow=Date.parse('2026-10-02T13:00:00Z');
   const prior={...engine.start({...input,runKind:'scheduled'},now).state,owner:'old',actionsRunId:'123',released:false};
   const manual={...engine.start({...input,mode:'resume',runKind:'manual',owner:'new'},manualNow).state,stage:'state',isOpen:true};
@@ -114,10 +153,11 @@ test('manual resume after cutoff has an explicit new window but cannot steal a l
   const resumed=engine.advance(manual,read(prior),manualNow);
   assert.equal(resumed.state.actionsRunId,'123');assert.equal(resumed.state.nextStage,'pollRun');
   assert.equal(resumed.state.operationDeadline,manualNow+90*60000);
-  assert.equal(resumed.state.scheduledCutoff,Date.parse('2026-10-02T11:30:00Z'));
+  assert.equal(resumed.state.scheduledCutoff,undefined);
   assert.equal(resumed.state.manualDeadlineOverride,true);
   const busy=engine.advance(manual,read({...prior,deadline:manualNow+10000}),manualNow);
-  assert.equal(busy.state.errorCategory,'writer_busy');assert.equal(busy.op,null);
+  assert.equal(busy.state.errorCategory,undefined);assert.equal(busy.state.stage,'branch');
+  assert.equal(busy.delaySeconds,30);assert.ok(busy.op.url.endsWith('/git/ref/heads/n8n-state'));
 });
 test('completed scheduled recovery makes no CAS, artifact or archive mutation',()=>{
   const previous={...input,owner:'old',released:true,cacheStatus:'verified',screeningStatus:'complete',notionStatus:'complete',deployStatus:'verified'};
@@ -144,5 +184,5 @@ test('artifact acceptance verifies immutable published bytes and main ancestry b
   out=engine.advance(out.state,response({encoding:'base64',size:Buffer.byteLength(raw),content:Buffer.from(raw).toString('base64')}),now);
   assert.equal(out.state.stage,'publicationMain');assert.ok(out.op.url.endsWith(publication.publishedGitCommit+'...main'));
   const rejected=engine.advance(out.state,response({status:'diverged',base_commit:{sha:publication.publishedGitCommit}}),now);assert.equal(rejected.state.errorCategory,'publication_not_on_main');
-  const verified=engine.advance(out.state,response({status:'ahead',base_commit:{sha:publication.publishedGitCommit}}),now);assert.equal(verified.state.nextStage,'liveProbe');assert.equal(verified.state.publicationStatus,'verified');
+  const verified=engine.advance(out.state,response({status:'ahead',base_commit:{sha:publication.publishedGitCommit}}),now);assert.equal(verified.state.stage,'deployTriggerRead');assert.equal(verified.state.publicationStatus,'verified');assert.ok(verified.op.url.endsWith('/contents/public/data/deployment-request.json?ref=main'));
 });

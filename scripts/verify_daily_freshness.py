@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
 from datetime import date
 from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.verify_snapshot import compute_input_hash, input_hash_error
 
 
 def load(path: Path) -> dict[str, Any]:
@@ -141,6 +148,42 @@ def _warning_message(error: str) -> tuple[str, str | None, str | None, str | Non
     return error.split(":", 1)[0], None, None, error
 
 
+def _release_details(data_dir: Path, release: dict[str, Any]) -> list[dict[str, Any]]:
+    directory = data_dir / "releases" / release["runId"] / "stocks"
+    return [load(directory / f"{stock['code']}.json") for stock in release.get("stocks", [])]
+
+
+def _rankings_hash(release: dict[str, Any]) -> str:
+    raw = json.dumps(release.get("rankings"), ensure_ascii=False, sort_keys=True).encode()
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _original_manifest(data_dir: Path, release: dict[str, Any]) -> dict[str, Any] | None:
+    """Reject pre-existing content changes before annotating a validated release."""
+    path = data_dir / "releases" / release.get("runId", "") / "manifest.json"
+    # Small diagnostic fixtures may omit a manifest. Production publication
+    # always runs the mandatory snapshot verifier before this annotation.
+    if not path.exists():
+        return None
+    manifest = load(path)
+    if manifest.get("runId") != release.get("runId") or manifest.get("marketDate") != release.get("marketDate"):
+        raise ValueError("manifest_release_identity")
+    error = input_hash_error(manifest, release, _release_details(data_dir, release))
+    if error:
+        raise ValueError(error)
+    if manifest.get("rankingsHash") != _rankings_hash(release):
+        raise ValueError("manifest_rankings_hash")
+    return manifest
+
+
+def _save_annotated_manifest(data_dir: Path, release: dict[str, Any], manifest: dict[str, Any]) -> None:
+    lineage = {key: manifest[key] for key in ("codeCommit", "baselineRunId", "inputCodes", "formulaVersions", "enrichment") if key in manifest}
+    updated = {**manifest, **release, **lineage,
+               "inputHash": compute_input_hash(manifest, release, _release_details(data_dir, release)),
+               "rankingsHash": _rankings_hash(release)}
+    save(data_dir / "releases" / release["runId"] / "manifest.json", updated)
+
+
 def annotate_publish_advisory(data_dir: Path, config_path: Path, requested_market_date: str | None = None) -> list[str]:
     """Persist data gaps as visible degraded-release metadata instead of blocking publication."""
     latest_path = data_dir / "latest.json"
@@ -151,6 +194,7 @@ def annotate_publish_advisory(data_dir: Path, config_path: Path, requested_marke
                 raise ValueError("exact ISO date required")
         except ValueError as exc:
             raise ValueError("requested_market_date_invalid") from exc
+    manifest = _original_manifest(data_dir, release)
     errors = freshness_errors(data_dir, config_path, requested_market_date)
     expected = requested_market_date or latest_market_date(load(config_path)) or str(release.get("marketDate") or "")
     warnings: list[dict[str, Any]] = []
@@ -173,6 +217,8 @@ def annotate_publish_advisory(data_dir: Path, config_path: Path, requested_marke
         "warnings": warnings,
     }
     release["dataQuality"] = quality
+    base_message = str(release.get("statusMessage") or "").split("資料提醒：", 1)[0].rstrip()
+    release["statusMessage"] = base_message
     if warnings:
         release["freshness"] = "degraded"
         affected = sorted(by_stock)
@@ -183,36 +229,31 @@ def annotate_publish_advisory(data_dir: Path, config_path: Path, requested_marke
         if not affected:
             details = '；'.join(str(warning['message']) for warning in warnings[:3])
             summary = f"資料已照常發布；有 {len(warnings)} 項資料提醒：{details}。"
-        base_message = str(release.get("statusMessage") or "").split("資料提醒：", 1)[0].rstrip()
         release["statusMessage"] = f"{base_message} 資料提醒：{summary}".strip()
 
-    for stock in release.get("stocks", []):
+    def annotate_stock(stock: dict[str, Any]) -> dict[str, Any]:
+        messages = stock_messages.get(str(stock.get("code") or ""), [])
+        # These top-level fields describe only the advisory checks above.
+        # Financial status and nested chip freshness keep their own evidence.
+        return {**stock, "dataFreshness": "stale" if messages else "current",
+                "freshnessWarnings": messages}
+
+    release["stocks"] = [annotate_stock(stock) if isinstance(stock, dict) else stock
+                         for stock in release.get("stocks", [])]
+    release["rankings"] = {
+        key: [annotate_stock(row) if isinstance(row, dict) else row for row in rows]
+        if isinstance(rows, list) else rows
+        for key, rows in (release.get("rankings") or {}).items()
+    }
+    for stock in release["stocks"]:
         if not isinstance(stock, dict):
             continue
         stock_code = str(stock.get("code") or "")
-        if stock_code not in by_stock:
-            continue
-        stock["dataFreshness"] = "stale"
-        stock["freshnessWarnings"] = stock_messages[stock_code]
-    for rows in (release.get("rankings") or {}).values():
-        if not isinstance(rows, list):
-            continue
-        for row in rows:
-            if not isinstance(row, dict):
-                continue
-            stock_code = str(row.get("code") or "")
-            if stock_code not in by_stock:
-                continue
-            row["dataFreshness"] = "stale"
-            row["freshnessWarnings"] = stock_messages[stock_code]
-    for stock_code, messages in stock_messages.items():
         detail_path = data_dir / "releases" / str(release.get("runId") or "") / "stocks" / f"{stock_code}.json"
-        if not detail_path.exists():
-            continue
-        detail = load(detail_path)
-        detail["dataFreshness"] = "stale"
-        detail["freshnessWarnings"] = messages
-        save(detail_path, detail)
+        if detail_path.exists():
+            save(detail_path, annotate_stock(load(detail_path)))
+    if manifest is not None:
+        _save_annotated_manifest(data_dir, release, manifest)
     save(latest_path, release)
     return errors
 

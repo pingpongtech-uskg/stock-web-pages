@@ -3,6 +3,7 @@ const {validateExport,stockProperties,stockSchema,richText,retrySeconds,sha256}=
 const {validateLegacyArchive}=require('./legacy.cjs');
 const cacheOperation=require('./cache-operation.cjs');
 const restoreOperation=require('./cache-restore-operation.cjs');
+const freshnessRecovery=require('./freshness-recovery.cjs');
 const REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';
 const REPOSITORY_ID='1273106108';
 const ROOT_SOURCE='3ed6fb57-ff38-803d-815a-000b148c6b6e';
@@ -104,6 +105,11 @@ function checkpoint(state,nextStage,now=Date.now()) {
   return request({...prepared,nextStage},'checkpoint','github','PUT',contents(prepared),body);
 }
 function fail(state,category,message) {
+  if(state.lockSha&&/^restore[A-Z]/.test(state.stage)&&(state.sourceMode||'publish')==='publish'&&!/^(writer_|checkpoint_|calendar_|dispatch_|screening_|official_)/.test(category)) {
+    const clean=Object.fromEntries(Object.entries(state).filter(([key])=>!key.startsWith('restore')));
+    const reason=/^[a-zA-Z0-9_:-]{1,80}$/.test(category)?category:'cache_unavailable';
+    return checkpoint({...clean,restoreStatus:'missing',restoreWarning:'Optional prior cache unavailable ('+reason+'); collecting fresh official data.',errorCategory:'',errorMessage:'',dispatchIntent:true},'dispatch');
+  }
   const updated={...state,...(state.op?.target==='notion'?{notionStatus:'failed'}:{}),errorCategory:category,errorMessage:String(message||category).slice(0,1000)};
   if(!state.lockSha||category==='writer_busy'||category==='writer_deadline'||category==='writer_conflict') return done(updated);
   return checkpoint({...updated,released:true},'done');
@@ -115,11 +121,13 @@ function findRuns(state,delay=0.5) {return request(state,'findRun','github','GET
 function rootProperties(state,status) {
   const payload=state.payload;
   if(!payload) return {'Market Date':{date:{start:state.marketDate}},'Request ID':{rich_text:richText(state.requestId)},'Actions Run ID':{rich_text:richText(state.actionsRunId||'')},'Actions URL':{url:state.actionsRunId?`https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/${state.actionsRunId}`:null},'Screening Status':{rich_text:richText('failed')},'Notion Status':{rich_text:richText('failure_metadata')},'Error Summary':{rich_text:richText(`${state.errorCategory||'screening_failed'}: ${state.errorMessage||'Screening failed; no child stock database was created.'}`)}};
-  return {'Market Date':{date:{start:state.marketDate}},'Request ID':{rich_text:richText(state.requestId)},'Run ID':{rich_text:richText(payload.runId)},'Actions Run ID':{rich_text:richText(state.actionsRunId)},'Source Commit':{rich_text:richText(payload.sourceGitCommit)},'Payload Hash':{rich_text:richText(payload.payloadHash)},'Screening Status':{rich_text:richText('complete')},'Notion Status':{rich_text:richText(status)},'Deploy Status':{rich_text:richText(state.deployStatus||'pending')},'Selected Count':{number:payload.selectedStocks.length},'Trust Count':{number:payload.strategies.trust.length},'Growth Count':{number:payload.strategies.growth.length},'Low Position Count':{number:payload.strategies.lowPosition.length},'Generated At':{date:{start:payload.generatedAt}},'Quality':{rich_text:richText(payload.freshness)},'Expected Count':{number:payload.selectedStocks.length},'Archived Count':{number:status==='complete'?payload.selectedStocks.length:0},'Actions URL':{url:state.actionsRunId?`https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/${state.actionsRunId}`:null},'Archive Method':{rich_text:richText(state.archiveMethod||'actions_artifact')},'Archive Source Commit':{rich_text:richText(state.archiveCommit||'')},'Archive URL':{url:state.databaseId?`https://www.notion.so/${state.databaseId.replaceAll('-','')}`:null},'Child Database ID':{rich_text:richText(state.databaseId||'')},'Child Data Source ID':{rich_text:richText(state.dataSourceId||'')},'Error Summary':{rich_text:richText(state.deployError||'')},'Coverage':{rich_text:richText(JSON.stringify(payload.coverage))},'Formula Versions':{rich_text:richText(JSON.stringify(payload.formulaVersions))},'Financial Cutoff':{rich_text:richText([...new Set(payload.selectedStocks.map(stock=>stock.provenance.financialCutoff).filter(Boolean))].join(', '))},...(status==='complete'?{'Active Revision':{rich_text:richText(payload.revision)}}:{})};
+  const archived=status==='complete'||status==='published_with_warnings';
+  const archivedCount=Number.isSafeInteger(state.archivedCount)&&state.archivedCount>=0&&state.archivedCount<=payload.selectedStocks.length?state.archivedCount:archived?payload.selectedStocks.length:0;
+  return {'Market Date':{date:{start:state.marketDate}},'Request ID':{rich_text:richText(state.requestId)},'Run ID':{rich_text:richText(payload.runId)},'Actions Run ID':{rich_text:richText(state.actionsRunId)},'Source Commit':{rich_text:richText(payload.sourceGitCommit)},'Payload Hash':{rich_text:richText(payload.payloadHash)},'Screening Status':{rich_text:richText('complete')},'Notion Status':{rich_text:richText(status)},'Deploy Status':{rich_text:richText(state.deployStatus||'pending')},'Selected Count':{number:payload.selectedStocks.length},'Trust Count':{number:payload.strategies.trust.length},'Growth Count':{number:payload.strategies.growth.length},'Low Position Count':{number:payload.strategies.lowPosition.length},'Generated At':{date:{start:payload.generatedAt}},'Quality':{rich_text:richText(payload.freshness)},'Expected Count':{number:payload.selectedStocks.length},'Archived Count':{number:archivedCount},'Actions URL':{url:state.actionsRunId?`https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/${state.actionsRunId}`:null},'Archive Method':{rich_text:richText(state.archiveMethod||'actions_artifact')},'Archive Source Commit':{rich_text:richText(state.archiveCommit||'')},'Archive URL':{url:state.databaseId?`https://www.notion.so/${state.databaseId.replaceAll('-','')}`:null},'Child Database ID':{rich_text:richText(state.databaseId||'')},'Child Data Source ID':{rich_text:richText(state.dataSourceId||'')},'Error Summary':{rich_text:richText(state.operationWarning||state.deployError||state.cacheWarning||'')},'Coverage':{rich_text:richText(JSON.stringify(payload.coverage))},'Formula Versions':{rich_text:richText(JSON.stringify(payload.formulaVersions))},'Financial Cutoff':{rich_text:richText([...new Set(payload.selectedStocks.map(stock=>stock.provenance.financialCutoff).filter(Boolean))].join(', '))},...(archived?{'Active Revision':{rich_text:richText(payload.revision)}}:{})};
 }
 function summary(state) {
   const p=state.payload;
-  return `Archive ${p.marketDate}; revision ${p.revision}; selected ${p.selectedStocks.length}; trust ${p.strategies.trust.length}; growth ${p.strategies.growth.length}; lowPosition ${p.strategies.lowPosition.length}; run ${p.runId}; Actions ${p.actionsRunId}; request ${p.requestId}; source ${p.sourceGitCommit}; payload ${p.payloadHash}; coverage ${JSON.stringify(p.coverage)}; formula ${JSON.stringify(p.formulaVersions)}; deploy ${state.deployStatus||'pending'}.`;
+  return `Archive ${p.marketDate}; revision ${p.revision}; selected ${p.selectedStocks.length}; trust ${p.strategies.trust.length}; growth ${p.strategies.growth.length}; lowPosition ${p.strategies.lowPosition.length}; run ${p.runId}; Actions ${p.actionsRunId}; request ${p.requestId}; source ${p.sourceGitCommit}; payload ${p.payloadHash}; coverage ${JSON.stringify(p.coverage)}; formula ${JSON.stringify(p.formulaVersions)}; deploy ${state.deployStatus||'pending'}.${state.operationWarning||state.cacheWarning?' '+(state.operationWarning||state.cacheWarning):''}`;
 }
 function start(input,now=Date.now()) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(input.marketDate)||new Date(`${input.marketDate}T00:00:00Z`).toISOString().slice(0,10)!==input.marketDate) throw Error('invalid_market_date');
@@ -131,7 +139,7 @@ function start(input,now=Date.now()) {
   if(input.preflightRetryOwner!==undefined&&(input.runKind!=='manual'||input.mode!=='screen'||!/^\d{1,24}$/.test(input.preflightRetryOwner)))throw Error('invalid_preflight_retry_owner');
   if(input.siteUrl!=='https://stockscreener.andyshih.uk') throw Error('invalid_site_url');
   const overdueAt=Date.parse(input.marketDate+'T11:30:00Z');
-  const operationDeadline=input.runKind==='scheduled'?overdueAt:now+90*60000;
+  const operationDeadline=input.runKind==='scheduled'?now+6*60*60000:now+90*60000;
   return request({...input,startedAt:now,operationDeadline,deadline:Math.min(now+59*60000,operationDeadline),targetAt:Date.parse(input.marketDate+'T10:45:00Z'),overdueAt,screeningStatus:'pending',notionStatus:'pending',deployStatus:'pending',released:false},'calendar','public','GET',CALENDAR);
 }
 function next(state,now) {
@@ -179,6 +187,11 @@ function advance(original,response,now=Date.now()) {
   }
   if(state.stage==='checkpoint') {
     if([409,422].includes(status)) return fail({...state,lockSha:undefined},'writer_conflict');
+    if(status>=500||response?.error) {
+      const content=state.op?.body?.content;
+      if(typeof content!=='string')return done({...state,errorCategory:'checkpoint_failed',errorMessage:'State write failed without a recoverable checkpoint payload.'});
+      return request({...state,checkpointRecovery:{content,expectedSha:state.op.body.sha,nextStage:state.nextStage,message:state.op.body.message},checkpointRecoveryAttempts:state.checkpointRecoveryAttempts||0},'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);
+    }
     if(status<200||status>=300) return done({...state,errorCategory:'checkpoint_failed',errorMessage:'State write ambiguous; resume reads GitHub state before any write.'});
     if(typeof body?.content?.sha!=='string'||!body.content.sha||body.content.sha.length>64||!/^[a-zA-Z0-9_-]+$/.test(body.content.sha)) return done({...state,errorCategory:'checkpoint_write_ambiguous',errorMessage:'State write response was incomplete; recovery must read GitHub state before writing again.'});
     const committed={...state,lockSha:body.content.sha,stage:state.nextStage,retry:0};
@@ -200,7 +213,7 @@ function advance(original,response,now=Date.now()) {
   }
   if(['liveProbe','liveVerify'].includes(state.stage)&&status>=400) return deploymentResult(state,'failed','live_http_'+status,now);
   if(state.stage==='createBranch'&&status===422) return request(state,'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);
-  const allow404=['branch','state','restoreState','restoreIndex','restoreBlobGet','restoreTreeGet','restoreCommitGet','restoreRefGet'];
+  const allow404=['branch','state','restoreState','restoreIndex','restoreBlobGet','restoreTreeGet','restoreCommitGet','restoreRefGet','deployTriggerRead'];
   if(state.stage==='restoreRefCreate'&&status===422)return restoreOperation.ambiguousRestore(state,cacheApi(now));
   if(state.stage==='dispatch'&&response.preflightFailed===true&&status===400&&body?.message==='Inputs: Invalid JSON') return fail({...state,dispatchIntent:false,screeningStatus:'failed'},'dispatch_preflight_failed',body.message);
   if(status>=400&&!(status===404&&allow404.includes(state.stage))) return fail(state,'external_http_'+status,body?.message);
@@ -226,7 +239,6 @@ function advanceSuccess(state,body,status,response,now) {
         }
       }
       if(state.mode==='diagnose') return request({...state,isOpen},'diagnoseDatabase','notion','GET',`https://api.notion.com/v1/databases/${ROOT_DATABASE}`);
-      if(state.runKind==='scheduled'&&now>=state.operationDeadline) return done({...state,isOpen,errorCategory:'operation_overdue',errorMessage:'19:30 Asia/Taipei deadline passed; explicit manual resume is required.'});
       return request({...state,isOpen},'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`);
     }
     case 'diagnoseDatabase':
@@ -241,26 +253,58 @@ function advanceSuccess(state,body,status,response,now) {
     case 'mainRef':return request(state,'createBranch','github','POST',`${REPO}/git/refs`,{ref:'refs/heads/n8n-state',sha:body.object.sha});
     case 'createBranch':return request(state,'state','github','GET',contents(state)+'?ref=n8n-state');
     case 'state': {
+      if(state.checkpointRecovery) {
+        const recovery=state.checkpointRecovery;
+        const savedContent=typeof body?.content==='string'?Buffer.from(body.content.replace(/\s/g,''),'base64'):null;
+        const intendedContent=Buffer.from(recovery.content,'base64');
+        if(status!==404&&savedContent?.equals(intendedContent)&&typeof body.sha==='string') {
+          const resumed={...state,stage:recovery.nextStage,nextStage:undefined,lockSha:body.sha,checkpointRecovery:undefined,checkpointRecoveryAttempts:undefined,retry:0};
+          try {return {...next(resumed,now),ledgerRequired:true};}
+          catch {
+            const terminal={...resumed,released:true,nextStage:undefined,transitionTerminal:true,screeningStatus:resumed.screeningStatus==='pending'?'failed':resumed.screeningStatus||'failed',recordFailure:false,errorCategory:'checkpoint_advance_failed',errorMessage:'The checkpoint write was confirmed, but the next request could not be prepared. Resume from saved state.'};
+            return checkpoint(terminal,'done',now);
+          }
+        }
+        const unchanged=(status===404&&!recovery.expectedSha)||(status!==404&&body?.sha===recovery.expectedSha);
+        if(unchanged) {
+          const attempts=Number(state.checkpointRecoveryAttempts||0);
+          if(attempts>=2)return done({...state,checkpointRecovery:undefined,errorCategory:'checkpoint_failed',errorMessage:'GitHub did not save the checkpoint after bounded retries; resume reads GitHub state before any write.'});
+          const writeBody={message:recovery.message,branch:'n8n-state',content:recovery.content,...(body?.sha?{sha:body.sha}:{})};
+          return request({...state,stage:'checkpoint',lockSha:body?.sha||undefined,nextStage:recovery.nextStage,checkpointRecovery:undefined,checkpointRecoveryAttempts:attempts+1},'checkpoint','github','PUT',contents(state),writeBody,2**(attempts+1));
+        }
+        return fail({...state,lockSha:undefined,checkpointRecovery:undefined},'writer_conflict','Checkpoint changed while resolving an ambiguous GitHub write.');
+      }
       const existing=status===404?null:JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));
-      if(existing?.owner!==state.owner&&!existing?.released&&existing?.owner&&now<Number(existing.deadline)+60000) return fail(state,'writer_busy');
+      if(existing?.owner!==state.owner&&!existing?.released&&existing?.owner&&now<Number(existing.deadline))
+        return request({...state,waitingForOwner:existing.owner,waitingUntil:Number(existing.deadline)},'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`,null,30);
+      if(state.mode==='screen'&&state.automaticRequestId===true&&existing?.marketDate===state.marketDate&&existing.screeningStatus==='failed'&&existing.publicationStatus!=='verified') {
+        const retryCount=Number.isSafeInteger(existing.automaticRetryCount)&&existing.automaticRetryCount>=0?existing.automaticRetryCount+1:1;
+        state={...state,requestId:`stockscreener:${state.marketDate.replaceAll('-','')}:v1:retry${retryCount}`,mode:'revision',automaticRetry:true,automaticRetryCount:retryCount,automaticRetryFrom:existing.requestId,actionsRunId:undefined,runHeadSha:undefined,dispatchIntent:false,dispatchStartedAt:undefined};
+      }
       if(state.mode==='screen'&&state.automaticRequestId&&!state.preflightRetryOwner&&existing?.marketDate===state.marketDate&&existing.archiveMethod!=='legacy_archive'&&existing.requestId!==state.requestId){
         if(!/^[a-zA-Z0-9_.:-]{1,160}$/.test(existing.requestId||'')||(existing.actionsRunId&&!/^\d{1,24}$/.test(String(existing.actionsRunId))))throw Error('invalid_stored_request_lineage');
         state={...state,requestId:existing.requestId,automaticRequestAdoptedFrom:state.requestId};
       }
+      const freshnessPlan=freshnessRecovery.planFreshnessRecovery(existing,state,now);
+      if(freshnessPlan)state={...state,...freshnessPlan,actionsRunId:undefined,runHeadSha:undefined,dispatchIntent:false,dispatchStartedAt:undefined};
+      if(state.mode!=='revision'&&existing?.marketDate===state.marketDate&&existing.publicationStatus==='verified'&&existing.screeningStatus==='complete'&&existing.cacheStatus!=='pending_recovery'&&existing.deployStatus==='verified'&&(existing.notionStatus==='complete'||existing.archiveMethod==='legacy_archive'))
+        return done({...existing,owner:state.owner,screeningStatus:'already_complete'});
       const sameRequest=existing?.requestId===state.requestId||(state.mode==='legacy_archive'&&existing?.archiveMethod==='legacy_archive');
       const correctPreflight=!!state.preflightRetryOwner;
       if(correctPreflight&&(!sameRequest||existing?.marketDate!==state.marketDate||existing?.owner!==state.preflightRetryOwner||existing.released!==true||existing.actionsRunId||!existing.dispatchIntent||existing.errorCategory!=='dispatch_run_not_found'))return fail({...state,lockSha:undefined},'preflight_correction_scope');
       if(existing?.requestId&&!sameRequest&&state.mode!=='revision') throw Error('request_correction_requires_revision');
       const resumeTerminal=existing?.transitionTerminal===true&&existing.released===true&&sameRequest&&state.marketDate===existing.marketDate&&state.mode==='resume'&&state.runKind==='manual'&&/^\d{1,24}$/.test(String(existing.actionsRunId||''))&&/^[a-f0-9]{40}$/.test(existing.runHeadSha||'');
-      if(existing?.transitionTerminal===true&&existing.released&&sameRequest&&!resumeTerminal) return done({...existing,owner:state.owner});
+      const recoverArchive=existing?.transitionTerminal===true&&existing.released===true&&sameRequest&&['screen','resume'].includes(state.mode)&&['complete','already_complete'].includes(existing.screeningStatus)&&existing.publicationStatus==='verified'&&existing.deployStatus==='verified'&&existing.notionStatus!=='complete'&&existing.archiveMethod!=='legacy_archive'&&/^\d{1,24}$/.test(String(existing.actionsRunId||''));
+      if(existing?.transitionTerminal===true&&existing.released&&sameRequest&&!resumeTerminal&&!recoverArchive) return done({...existing,owner:state.owner});
       if(existing?.released&&sameRequest&&existing.screeningStatus==='complete'&&existing.notionStatus==='complete'&&existing.deployStatus==='verified'&&(existing.archiveMethod==='legacy_archive'||existing.cacheStatus==='verified')) return done({...existing,owner:state.owner,screeningStatus:'already_complete'});
       const lastVerifiedCache=existing?.marketDate===state.marketDate?(restoreOperation.cacheCustodyForDay(existing,state.marketDate)||(!sameRequest&&existing.cacheStatus==='verified'?restoreOperation.captureVerifiedCache(existing,state.marketDate):undefined)):undefined;
       const resume=sameRequest?existing:{};
       const manualOverride=state.runKind==='manual'&&['screen','resume','legacy_archive'].includes(state.mode)&&!!resume.requestId;
-      const operationDeadline=manualOverride?state.operationDeadline:(resume.operationDeadline||state.operationDeadline);
-      const audit=manualOverride?{scheduledCutoff:resume.scheduledCutoff||resume.overdueAt,manualDeadlineOverride:true,manualResumedAt:now}:{};
+      const resumedDeadline=Number(resume.operationDeadline);
+      const operationDeadline=manualOverride?state.operationDeadline:(Number.isFinite(resumedDeadline)&&resumedDeadline>now?resumedDeadline:state.operationDeadline);
+      const audit=manualOverride?{manualDeadlineOverride:true,manualResumedAt:now}:{};
       const correction=correctPreflight?{dispatchIntent:false,preflightRetryOwner:undefined,confirmedPreflightCorrectionFrom:state.preflightRetryOwner,errorCategory:'',errorMessage:''}:resumeTerminal?{transitionTerminal:undefined,errorCategory:'',errorMessage:'',recordFailure:false}:{};
-      const saved={...state,...resume,...audit,...correction,...(lastVerifiedCache?{lastVerifiedCache,cacheActiveManifestHash:lastVerifiedCache.cacheManifestHash}:{}),cacheSegmentNewUploads:existing?.owner===state.owner?(resume.cacheSegmentNewUploads||0):0,cacheExpiredUploadEvidence:existing?.owner===state.owner?resume.cacheExpiredUploadEvidence:undefined,owner:state.owner,operationDeadline,deadline:Math.min(state.deadline,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl,sourceMode:state.sourceMode||resume.sourceMode||'publish',ownershipGeneration:state.ownershipGeneration||resume.ownershipGeneration};
+      const saved={...state,...resume,...audit,...correction,...(lastVerifiedCache?{lastVerifiedCache,cacheActiveManifestHash:lastVerifiedCache.cacheManifestHash}:{}),cacheSegmentNewUploads:existing?.owner===state.owner?(resume.cacheSegmentNewUploads||0):0,deployAttempts:existing?.deployStatus==='verified'?existing.deployAttempts:0,deployRequestAttempt:Number.isSafeInteger(existing?.deployRequestAttempt)?existing.deployRequestAttempt:0,cacheExpiredUploadEvidence:existing?.owner===state.owner?resume.cacheExpiredUploadEvidence:undefined,owner:state.owner,operationDeadline,deadline:Math.min(now+59*60000,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl,sourceMode:state.sourceMode||resume.sourceMode||'publish',ownershipGeneration:state.ownershipGeneration||resume.ownershipGeneration};
       const stage=!state.isOpen?'holiday':state.mode==='legacy_archive'?'legacyRef':saved.actionsRunId?'pollRun':'findRun';
       return checkpoint(saved,stage);
     }
@@ -331,7 +375,21 @@ function advanceSuccess(state,body,status,response,now) {
     }
     case 'publicationMain': {
       if(!['ahead','identical'].includes(body.status)||body.base_commit?.sha!==state.publication.publishedGitCommit)throw Error('publication_not_on_main');
-      return checkpoint({...state,publicationStatus:'verified'},'liveProbe');
+      const evidence=freshnessRecovery.publicationFreshnessEvidence(state.payload);
+      if(state.deployStatus==='verified')return checkpoint({...state,...evidence,publicationStatus:'verified'},'liveVerify');
+      return request({...state,...evidence,publicationStatus:'verified',deployRequestAttempt:(state.deployRequestAttempt||0)+1},'deployTriggerRead','github','GET',`${REPO}/contents/public/data/deployment-request.json?ref=main`);
+    }
+    case 'deployTriggerRead': {
+      if(status!==200&&status!==404)throw Error('deploy_trigger_read');
+      const existing=status===200?JSON.parse(contentBytes(body).replace(/\\n$/,'')):null;
+      if(existing&&(existing.schemaVersion!=='deployment-request-v1'||typeof existing.marketDate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(existing.marketDate)||!Number.isFinite(Date.parse(existing.marketDate+'T00:00:00Z'))||new Date(existing.marketDate+'T00:00:00Z').toISOString().slice(0,10)!==existing.marketDate||typeof existing.requestId!=='string'||!/^[a-zA-Z0-9_.:-]{1,160}$/.test(existing.requestId)||!Number.isSafeInteger(existing.attempt)||existing.attempt<1)||status===200&&!/^[a-f0-9]{40}$/.test(body.sha||''))throw Error('deploy_trigger_schema');
+      const marker={schemaVersion:'deployment-request-v1',marketDate:state.marketDate,requestId:state.requestId,actionsRunId:String(state.actionsRunId),sourceGitCommit:state.runHeadSha,publishedGitCommit:state.publication.publishedGitCommit,payloadHash:state.payloadHash,attempt:state.deployRequestAttempt};
+      const write={message:`deploy: request Pages refresh for ${state.marketDate} attempt ${state.deployRequestAttempt}`,content:Buffer.from(JSON.stringify(marker),'utf8').toString('base64'),branch:'main',...(status===200?{sha:body.sha}:{})};
+      return request({...state,deployRequestBody:marker},'deployTriggerWrite','github','PUT',`${REPO}/contents/public/data/deployment-request.json`,write);
+    }
+    case 'deployTriggerWrite': {
+      if(![200,201].includes(status))throw Error('deploy_trigger_write');
+      return checkpoint({...state,deployRequestCommit:body.commit?.sha||null},'liveVerify');
     }
     case 'legacyRef': {
       if(!/^[a-f0-9]{40}$/.test(body.object?.sha))throw Error('archive_source_commit');
@@ -428,7 +486,7 @@ function advanceSuccess(state,body,status,response,now) {
       }catch(error){deployError=error.message;}
       return deploymentResult(state,deployStatus,deployError,now);
     }
-    case 'finishNotion':return checkpoint({...state,notionStatus:'complete',released:true,errorCategory:state.deployStatus==='verified'?undefined:'deploy_pending',errorMessage:state.deployError},'done');
+    case 'finishNotion':return checkpoint({...state,notionStatus:state.finalNotionStatus||'complete',released:true,errorCategory:state.deployStatus==='verified'?undefined:'deploy_pending',errorMessage:state.operationWarning||state.deployError||state.cacheWarning},'done');
     default:throw Error('unknown_stage:'+state.stage);
   }
 }
@@ -459,17 +517,27 @@ function handleRows(state,body) {
   const pendingStocks=selected.filter(stock=>!keys.includes(`${state.payload.payloadHash}:${stock.code}`));
   if(state.stage==='verifyRows'&&pendingStocks.length) throw Error('archive_incomplete');
   if(pendingStocks.length) return createStock({...state,pendingStocks,archiveRows:[],cursor:undefined});
-  return checkpoint({...state,...(state.errorCategory==='notion_child_source'?{errorCategory:undefined,errorMessage:undefined}:{}),archiveRows:[],cursor:undefined,archivedCount:rows.length,notionStatus:'rows_verified'},state.archiveMethod==='legacy_archive'?'summaryRead':'cacheRun');
+  return checkpoint({...state,errorCategory:undefined,errorMessage:undefined,archiveRows:[],cursor:undefined,archivedCount:rows.length,notionStatus:'rows_verified'},state.archiveMethod==='legacy_archive'||state.deployStatus!=='verified'?'summaryRead':'cacheRun');
 }
 function createStock(state) {return request(state,'createStock','notion','POST','https://api.notion.com/v1/pages',{parent:{type:'data_source_id',data_source_id:state.dataSourceId},properties:stockProperties(state.pendingStocks[0],state.payload)});}
 function finishNotion(state) {
-  if(state.archiveMethod!=='legacy_archive'&&state.cacheStatus!=='verified')return fail(state,'cache_required_before_archive_completion');
-  return request(state,'finishNotion','notion','PATCH',`https://api.notion.com/v1/pages/${state.pageId}`,{properties:{...rootProperties(state,'complete'),'Summary':{rich_text:richText(summary(state))}}});
+  if(typeof state.pageId!=='string'||!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(state.pageId))return checkpoint(state,'rootSchema');
+  const deploymentVerified=state.deployStatus==='verified';
+  const status=!deploymentVerified?'deployment_pending':state.archiveMethod!=='legacy_archive'&&state.cacheStatus!=='verified'?'published_with_warnings':'complete';
+  const operationWarning=!deploymentVerified?'Live website verification did not complete; the release is not yet confirmed.':'';
+  const cacheWarning=deploymentVerified&&status==='published_with_warnings'?'Website publication verified; optional market cache is '+(state.cacheStatus||'not_generated')+'.':'';
+  const updated={...state,operationWarning,cacheWarning,finalNotionStatus:status};
+  return request({...updated,errorMessage:updated.operationWarning||updated.deployError||updated.cacheWarning},'finishNotion','notion','PATCH',`https://api.notion.com/v1/pages/${state.pageId}`,{properties:{...rootProperties(updated,status),'Summary':{rich_text:richText(summary(updated))}}});
 }
 function deploymentResult(state,deployStatus,deployError,now) {
   const updated={...state,deployStatus,deployError};
   if(state.stage==='liveProbe') return checkpoint(updated,'rootSchema');
   if(deployStatus!=='verified'&&(state.deployAttempts||0)<20&&now+15000<state.deadline) return request({...updated,deployAttempts:(state.deployAttempts||0)+1},'liveVerify','public','GET',liveUrl(state,now),null,15);
+  if(updated.archiveMethod!=='legacy_archive'&&updated.payload&&(!Number.isInteger(updated.archivedCount)||updated.archivedCount!==updated.expectedCount)) {
+    const hasSource=/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(updated.dataSourceId||'');
+    return hasSource?queryRows({...updated,cursor:undefined,archiveRows:[]}):checkpoint(updated,'rootSchema');
+  }
+  if(deployStatus==='verified'&&updated.archiveMethod!=='legacy_archive'&&updated.cacheStatus==='pending_recovery')return checkpoint(updated,'cacheRun');
   return finishNotion(updated);
 }
 function liveUrl(state,now){return `${state.siteUrl}${state.archiveMethod==='legacy_archive'?state.archivePath:'/data/screening-export.json'}?run=${encodeURIComponent(state.actionsRunId||state.revision||'')}&t=${now}`;}

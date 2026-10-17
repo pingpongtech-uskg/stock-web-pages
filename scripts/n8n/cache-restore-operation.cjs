@@ -174,7 +174,9 @@ function advanceRestore(state,response,now,api){
     case 'restoreState':{
       if(status===404)return restoreMissingCandidate(state,api);
       restoreCheck(typeof body?.content==='string'&&body.content.length<=3000000,'prior_size');const day=JSON.parse(Buffer.from(body.content,'base64').toString('utf8')),p=cacheCustodyForDay(day,state.restoreCacheCandidateDate||state.previousSessionDate)||day;
-      if(!Object.prototype.hasOwnProperty.call(p,'cacheActiveManifestHash')&&!Object.prototype.hasOwnProperty.call(p,'cacheManifestHash')&&p.cacheStatus!=='verified')return restoreMissingCandidate(state,api);
+      const incompleteUpload=['uploading','pending_recovery'].includes(p.cacheStatus)&&!Object.prototype.hasOwnProperty.call(p,'cacheActiveManifestHash')&&/^[a-f0-9]{64}$/.test(p.cacheManifestHash||'');
+      const absentCache=!Object.prototype.hasOwnProperty.call(p,'cacheActiveManifestHash')&&!Object.prototype.hasOwnProperty.call(p,'cacheManifestHash')&&p.cacheStatus!=='verified';
+      if(incompleteUpload||absentCache)return restoreMissingCandidate({...state,restoreWarning:'Previous session cache was not verified; collecting fresh official data.',errorCategory:'',errorMessage:''},api);
       validatePrior(p,state);
       return api.request({...state,restorePrior:p,restoreFileMeta:p.cacheFileMeta,restorePageId:p.pageId,restoreManifestHash:p.cacheManifestHash},'restorePage','notion','GET',`${RESTORE_NOTION}/pages/${p.pageId}`);
     }

@@ -173,7 +173,9 @@ function advanceCache(state,response,now,api){
       return api.request({...state,cacheRoster:roster},'cacheArtifacts','github','GET',`${CACHE_REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);
     }
     case 'cacheArtifacts':{
-      const matches=body.artifacts?.filter(item=>item.name==='market-cache'&&item.expired===false);cacheCheck(matches?.length===1,'artifact_missing_or_ambiguous');const item=matches[0];
+      const matches=body.artifacts?.filter(item=>item.name==='market-cache'&&item.expired===false);
+      if(!Array.isArray(matches)||matches.length===0)return api.checkpoint({...state,cacheStatus:'not_generated',cacheWarning:'Complete market cache QA artifact was unavailable; daily website publication and per-stock freshness warnings remain published.',released:true,errorCategory:'',errorMessage:''},'done');
+      cacheCheck(matches.length===1,'artifact_missing_or_ambiguous');const item=matches[0];
       cacheCheck(/^\d{1,20}$/.test(String(item.id))&&Number.isSafeInteger(item.size_in_bytes)&&item.size_in_bytes>0&&item.size_in_bytes<=68*1024*1024&&/^sha256:[a-f0-9]{64}$/.test(item.digest||''),'artifact_metadata');
       cacheCheck(!item.workflow_run||(String(item.workflow_run.id)===state.actionsRunId&&item.workflow_run.head_sha===state.runHeadSha),'artifact_lineage');
       return api.request({...state,cacheArtifactId:String(item.id),cacheArtifactSha256:item.digest.slice(7),cacheArtifactBytes:item.size_in_bytes},'cacheRedirect','github','GET',`${CACHE_REPO}/actions/artifacts/${item.id}/zip`);

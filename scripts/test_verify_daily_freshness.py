@@ -165,3 +165,140 @@ def test_publish_advisory_keeps_release_and_marks_only_affected_stock(tmp_path, 
     assert unaffected.get('dataFreshness') != 'stale'
     assert unaffected_row.get('dataFreshness') != 'stale'
     assert '6173' in capsys.readouterr().out
+
+
+def publisher_fixture(tmp_path, monkeypatch, *, current=False, old_annotations=False):
+    from datetime import date, timedelta
+    from scripts import refresh_snapshot
+    data = tmp_path / 'public' / 'data'
+    data.mkdir(parents=True)
+    day = date(2026, 10, 16)
+    days = [day - timedelta(days=index) for index in range(round(365 * 3.5), -1 if current else 0, -1)
+            if (day - timedelta(days=index)).weekday() < 5]
+    prices = []
+    for index, observed in enumerate(days):
+        close = 100 + index * .05 - (3 if index >= len(days) - 50 else 0) - (2 if index == len(days) - 1 else 0)
+        prices.append({'date': observed.isoformat(), 'close': close, 'adjustedClose': close, 'volume': 1000})
+    indicator = {'symbol': '00631L', 'market': 'TWSE', 'formulaVersion': 'twse-volume-multiple-v1',
+                 'threshold': 2, 'displayOnly': True, 'priorFiveSessions': [], 'status': 'unavailable',
+                 'signal': 'unknown', 'sourceRefs': [], 'multiple': None, 'marketDate': day.isoformat()}
+    baseline = {'runId': 'baseline', 'marketDate': '2026-10-15', 'strategyVersion': 'three-strategy-tabs-v1',
+                'freshness': 'current', 'stocks': [{'code': '2330', 'name': 'Fixture', 'priceSeries': prices}],
+                'marketIndicators': {'volumeMultiple00631L': indicator}}
+    if old_annotations:
+        baseline['stocks'][0].update({'dataFreshness': 'stale', 'freshnessWarnings': ['股價資料截至 2026-10-15']})
+        attach = refresh_snapshot._attach_valuation
+        def attach_with_old_annotations(*args, **kwargs):
+            return [{**row, 'dataFreshness': 'stale', 'freshnessWarnings': ['股價資料截至 2026-10-15']}
+                    for row in attach(*args, **kwargs)]
+        monkeypatch.setattr(refresh_snapshot, '_attach_valuation', attach_with_old_annotations)
+    if current:
+        universe = {'marketDates': [value.isoformat() for value in reversed(days[-10:])],
+                    'dailyRows': [{'date': value.isoformat(), 'rows': [{'code': '2330', 'netShares': 100}]}
+                                  for value in days[-10:]]}
+        config_dir = tmp_path / 'config'
+        config_dir.mkdir()
+        (config_dir / 'tracked_symbols.json').write_text(json.dumps({'universe': universe}))
+    (data / 'latest.json').write_text(json.dumps(baseline))
+    refresh_snapshot.build_release(data, [], as_of=day.isoformat(), offline=False, recompute_existing=True)
+    config = tmp_path / 'tracked_symbols.json'
+    config.write_text(json.dumps({'universe': {'marketDates': [day.isoformat()]}}))
+    return data, config
+
+
+def test_actual_publisher_advisory_preserves_verifiable_manifest(tmp_path, monkeypatch):
+    from scripts.verify_daily_freshness import annotate_publish_advisory
+    from scripts.verify_snapshot import main as verify_snapshot
+    data, config = publisher_fixture(tmp_path, monkeypatch)
+    assert verify_snapshot(tmp_path, require_growth_coverage=True) == 0
+    release = load_json(data / 'latest.json')
+    manifest_path = data / 'releases' / release['runId'] / 'manifest.json'
+    before = load_json(manifest_path)
+    assert annotate_publish_advisory(data, config, '2026-10-16')
+    assert verify_snapshot(tmp_path, require_growth_coverage=True) == 0
+    after = load_json(manifest_path)
+    latest = load_json(data / 'latest.json')
+    assert latest['rankings']['lowPosition']
+    assert after['rankingsHash'] != before['rankingsHash']
+    assert after['inputHash'] != before['inputHash']
+    assert after['dataQuality'] == latest['dataQuality']
+    assert after['freshness'] == latest['freshness'] == 'degraded'
+    assert after['stocks'] == latest['stocks']
+    assert after['rankings'] == latest['rankings']
+    for field in ('codeCommit', 'baselineRunId', 'inputCodes', 'formulaVersions', 'enrichment'):
+        assert after[field] == before[field]
+
+
+def load_json(path):
+    return json.loads(path.read_text())
+
+
+def test_advisory_repeated_application_keeps_manifest_valid(tmp_path, monkeypatch):
+    from scripts.verify_daily_freshness import annotate_publish_advisory
+    from scripts.verify_snapshot import main as verify_snapshot
+    data, config = publisher_fixture(tmp_path, monkeypatch)
+    annotate_publish_advisory(data, config, '2026-10-16')
+    release = load_json(data / 'latest.json')
+    manifest_path = data / 'releases' / release['runId'] / 'manifest.json'
+    before = manifest_path.read_bytes()
+    annotate_publish_advisory(data, config, '2026-10-16')
+    assert manifest_path.read_bytes() == before
+    assert verify_snapshot(tmp_path, require_growth_coverage=True) == 0
+
+
+def test_advisory_refuses_preexisting_detail_tamper_without_changing_files(tmp_path, monkeypatch):
+    import pytest
+    from scripts.verify_daily_freshness import annotate_publish_advisory
+    data, config = publisher_fixture(tmp_path, monkeypatch)
+    release = load_json(data / 'latest.json')
+    directory = data / 'releases' / release['runId']
+    detail_path = directory / 'stocks' / '2330.json'
+    detail = load_json(detail_path)
+    detail['lastPrice'] = 999999
+    detail_path.write_text(json.dumps(detail))
+    before = {path: path.read_bytes() for path in (data / 'latest.json', detail_path, directory / 'manifest.json')}
+    with pytest.raises(ValueError, match='manifest_input_hash'):
+        annotate_publish_advisory(data, config, '2026-10-16')
+    assert all(path.read_bytes() == raw for path, raw in before.items())
+
+
+def test_advisory_refuses_preexisting_ranking_tamper(tmp_path, monkeypatch):
+    import pytest
+    from scripts.verify_daily_freshness import annotate_publish_advisory
+    data, config = publisher_fixture(tmp_path, monkeypatch)
+    release = load_json(data / 'latest.json')
+    release['rankings']['lowPosition'][0]['currentPrice'] = 999999
+    path = data / 'latest.json'
+    path.write_text(json.dumps(release))
+    before = path.read_bytes()
+    with pytest.raises(ValueError, match='manifest_rankings_hash'):
+        annotate_publish_advisory(data, config, '2026-10-16')
+    assert path.read_bytes() == before
+
+
+def test_current_evidence_clears_owned_old_advisories_and_preserves_unknowns(tmp_path, monkeypatch):
+    from scripts.verify_daily_freshness import annotate_publish_advisory
+    from scripts.verify_snapshot import main as verify_snapshot
+    data, config = publisher_fixture(tmp_path, monkeypatch, current=True, old_annotations=True)
+    release_path = data / 'latest.json'
+    before = load_json(release_path)
+    manifest_path = data / 'releases' / before['runId'] / 'manifest.json'
+    manifest = load_json(manifest_path)
+    before['statusMessage'] += ' 資料提醒：股價資料截至 2026-10-15'
+    manifest['statusMessage'] = before['statusMessage']
+    release_path.write_text(json.dumps(before))
+    manifest_path.write_text(json.dumps(manifest))
+    assert before['rankings']['lowPosition'][0]['freshnessWarnings']
+    assert verify_snapshot(tmp_path, require_growth_coverage=True) == 0
+    assert annotate_publish_advisory(data, config, '2026-10-16') == []
+    latest = load_json(release_path)
+    detail = load_json(manifest_path.parent / 'stocks' / '2330.json')
+    assert latest['dataQuality']['warningCount'] == 0
+    assert '資料提醒：' not in latest['statusMessage']
+    for row in [latest['stocks'][0], latest['rankings']['lowPosition'][0], detail]:
+        assert row['dataFreshness'] == 'current'
+        assert row['freshnessWarnings'] == []
+    assert latest['stocks'][0]['chipReference'] == before['stocks'][0]['chipReference']
+    assert detail['growthValuation']['status'] == 'unavailable'
+    assert latest['freshness'] == before['freshness']
+    assert verify_snapshot(tmp_path, require_growth_coverage=True) == 0
