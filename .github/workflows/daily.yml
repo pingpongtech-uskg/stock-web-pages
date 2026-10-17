@@ -240,7 +240,7 @@ jobs:
           fi
           BUDGET_DATE="$(python scripts/prepare_finmind_budget.py --previous-date "$BUDGET_DATE" --cache-dir .cache/finmind)"
           echo "BUDGET_DATE=$BUDGET_DATE" >> "$GITHUB_ENV"
-          python scripts/fetch_finmind.py --supplement --output public/data --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --as-of "$MARKET_DATE" --max-requests 300 --max-runtime-seconds 1500
+          python scripts/run_optional_supplement.py --data-dir public/data --timeout-seconds 1440 -- python scripts/fetch_finmind.py --supplement --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --as-of "$MARKET_DATE" --max-requests 300 --max-runtime-seconds 1380
       - name: Persist completed supplementary checkpoint immediately
         if: always()
         uses: actions/cache/save@v6
@@ -276,13 +276,21 @@ jobs:
           echo "The daily snapshot will still publish. Complete market cache QA failed; inspect the failed step before using this cache." >> "$GITHUB_STEP_SUMMARY"
           echo "::warning::Complete market cache QA failed; daily snapshot publication continues."
       - name: Preserve validated complete market cache
+        id: market-cache-upload
         if: steps.market-cache-index.outcome == 'success'
+        timeout-minutes: 3
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: market-cache
           path: .artifacts/market-cache
           compression-level: 0
           if-no-files-found: error
+      - name: Report non-blocking market cache upload warning
+        if: steps.market-cache-upload.outcome == 'failure'
+        run: |
+          echo "The daily snapshot will still publish. Complete market cache upload failed; a verified backup is unavailable for this run." >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::Complete market cache upload failed; daily snapshot publication continues."
       - run: python scripts/build_history_archive.py --require-export --as-of "$MARKET_DATE"
       - run: python scripts/verify_history_archive.py
       - run: python scripts/prune_releases.py --data-dir public/data --keep 3 --max-bytes 250000000

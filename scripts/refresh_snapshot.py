@@ -525,6 +525,30 @@ def growth_health_qualifies(category: object) -> bool:
     return growth_health_checks_qualify(category)
 
 
+def _raw_quote(points: list[dict[str, Any]]) -> dict[str, Any]:
+    """Keep the observable raw close, its date and its return on one basis."""
+    def valid(point: dict[str, Any]) -> bool:
+        value = point.get("close")
+        day = point.get("date")
+        try:
+            exact_day = isinstance(day, str) and date.fromisoformat(day).isoformat() == day
+        except ValueError:
+            exact_day = False
+        return (exact_day and isinstance(value, (int, float)) and not isinstance(value, bool)
+                and math.isfinite(value) and value > 0)
+
+    indices = [index for index, point in enumerate(points) if valid(point)]
+    if not indices:
+        return {"asOf": None, "quoteAsOf": None, "lastPrice": None, "changePct": None,
+                "quoteBasis": "unavailable", "quoteStatus": "unknown"}
+    index = indices[-1]
+    latest = points[index]
+    previous = points[index - 1] if index > 0 and valid(points[index - 1]) else None
+    change = latest["close"] / previous["close"] - 1 if previous else None
+    return {"asOf": latest["date"], "quoteAsOf": latest["date"], "lastPrice": latest["close"],
+            "changePct": change, "quoteBasis": "raw_close", "quoteStatus": "pass"}
+
+
 def _current_price(detail: dict[str, Any]) -> float | None:
     value = detail.get("lastPrice")
     try:
@@ -613,6 +637,10 @@ def _valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
     valuation_current = health_inputs.get("valuationCurrent") if isinstance(health_inputs, dict) else None
     if not isinstance(valuation_current, dict):
         valuation_current = {}
+    # Reported PE and the displayed raw close must describe the same session.
+    quote_day = normalized_date(detail.get("asOf"))
+    if not quote_day or normalized_date(valuation_current.get("date")) != quote_day:
+        return None
     proxy = _earnings_proxy_from_detail(detail)
     valuation = calculate_zulu_valuation(
         current_price=_current_price(detail),
@@ -1118,29 +1146,18 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
     if errors:
         risks.append("部分免費來源本次未回傳；沿用已發布觀察值")
 
-    raw_values = [point.get("close") for point in price if point.get("close") is not None]
-    latest_raw = raw_values[-1] if raw_values else None
-    previous_raw = raw_values[-2] if len(raw_values) >= 2 else None
-    change_pct = None if latest_raw is None or previous_raw in (None, 0) else (latest_raw - previous_raw) / previous_raw
+    quote = _raw_quote(price)
+    raw_values = [point["close"] for point in price if isinstance(point.get("close"), (int, float))
+                  and not isinstance(point["close"], bool) and math.isfinite(point["close"]) and point["close"] > 0]
     adjusted_values = [point.get("adjustedClose") for point in price if point.get("adjustedClose") is not None]
     adjusted_latest = adjusted_values[-1] if adjusted_values else None
     adjusted_previous = adjusted_values[-2] if len(adjusted_values) >= 2 else None
     adjusted_change = None if adjusted_latest is None or adjusted_previous in (None, 0) else (adjusted_latest - adjusted_previous) / adjusted_previous
     old_formal_status = str(detail.get("qualityStatus") or "unknown")
-    data_status = "pass" if raw_values or adjusted_values else "fail"
-    live_fallback_price = _current_price(detail) if offline else None
+    data_status = "pass" if quote["lastPrice"] is not None else "unknown" if adjusted_values else "fail"
     detail.update(
         {
-            "asOf": (
-                detail.get("asOf") or (price[-1].get("date") if price else None)
-                if offline
-                else (price[-1].get("date") if price else None)
-            ),
-            # Some public rows expose only adjusted close.  It is still a
-            # usable latest quote, so keep the price column populated and
-            # label the research curve separately below.
-            "lastPrice": latest_raw if latest_raw is not None else (adjusted_latest if adjusted_latest is not None else live_fallback_price),
-            "changePct": change_pct if change_pct is not None else (adjusted_change if adjusted_change is not None else None),
+            **quote,
             "adjustedLastPrice": adjusted_latest,
             "adjustedChangePct": adjusted_change,
             "zScore": regression.get("z"),
@@ -1326,7 +1343,15 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
         raise ValueError("no tracked stock details found in baseline release")
     # A daily refresh must query through today's Taipei date. Deriving the end
     # date from the baseline made every run stop at the old snapshot date.
-    end = parse_date(as_of, datetime.now(TAIPEI).date()) if as_of else datetime.now(TAIPEI).date()
+    if as_of:
+        try:
+            end = date.fromisoformat(as_of)
+            if end.isoformat() != as_of:
+                raise ValueError("nonexact date")
+        except (TypeError, ValueError) as exc:
+            raise ValueError("exact requested market date required") from exc
+    else:
+        end = datetime.now(TAIPEI).date()
     if stock_cache_dir is not None:
         details = merge_restored_stock_inputs(details, stock_cache_dir, as_of=end.isoformat())
     errors_by_code: dict[str, list[str]] = {}
@@ -1787,7 +1812,10 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     growth_universe = universe - funnel["instrumentExcluded"]
     funnel.update(growth_funnel(enriched, universe=growth_universe, selected_codes={str(row["code"]) for row in growth_rank}))
     market_dates = [str(detail.get("asOf")) for detail in enriched if detail.get("asOf")]
-    market_date = max(market_dates) if market_dates else baseline.get("marketDate")
+    # The workflow independently verifies the requested exchange session.
+    # Publication identity must survive individual missing/older raw quotes;
+    # their actual dates remain on each stock and in freshness warnings.
+    market_date = end.isoformat() if as_of else (max(market_dates) if market_dates else baseline.get("marketDate"))
     volume_indicator = release_volume_indicator(
         data_dir, baseline, market_date, offline=offline, recompute_existing=recompute_existing,
         source_cache_dir=source_cache_dir)
@@ -1807,7 +1835,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
     adjusted_count = sum(1 for detail in enriched if detail.get("priceBasis") == "adjusted")
     if recompute_existing:
         freshness = str(baseline.get("freshness") or "degraded")
-        status_message = f"沿用已取得來源快取重算 {tracked_count} 檔；行情日期仍為 {market_date}，未再次呼叫外部來源。"
+        status_message = f"沿用已取得來源快取重算 {tracked_count} 檔；發布日期為 {market_date}，個股行情以實際報價日期為準，未再次呼叫外部來源。"
     elif offline:
         freshness = "degraded"
         if adjusted_count:

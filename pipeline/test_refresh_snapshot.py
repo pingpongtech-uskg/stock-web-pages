@@ -349,7 +349,8 @@ def test_cached_recompute_has_no_network_and_selects_growth_without_15_percent_r
         monkeypatch.setattr(refresh, key, unexpected_network)
     result = refresh.build_release(data, [], as_of="2026-10-02", offline=False, recompute_existing=True)
     latest = json.loads((data / "latest.json").read_text())
-    assert result["market_date"] == "2026-10-01"
+    assert result["market_date"] == "2026-10-02"
+    assert latest["stocks"][0]["asOf"] == "2026-10-01"
     assert latest["rankings"]["growth"][0]["code"] == "2330"
     assert latest["funnel"]["growthInputComplete"] == 1
     assert latest["funnel"]["growthThresholdCandidates"] == 1
@@ -530,7 +531,7 @@ def test_public_first_partial_financial_outage_recovers_from_supplemented_cache(
 
     def volume(day):
         calls.append("market_volume")
-        assert day == "2026-10-01"
+        assert day == "2026-10-02"
         return {"status": "unavailable", "reason": "test fixture"}
 
     monkeypatch.delenv("FAST_REFRESH", raising=False)
@@ -543,7 +544,8 @@ def test_public_first_partial_financial_outage_recovers_from_supplemented_cache(
     stock = json.loads(published.read_text())
 
     assert calls == ["official_bulk", "adjusted_prices", "fundamentals", "market_volume"]
-    assert release["marketDate"] == "2026-10-01"
+    assert release["marketDate"] == "2026-10-02"
+    assert stock["asOf"] == "2026-10-01"
     assert release["freshness"] == "degraded"
     assert len(stock["healthInputs"]["incomeQuarterly"]) == 17
     assert stock["healthInputs"]["balanceQuarterly"][0]["equity"] == 500
@@ -567,7 +569,8 @@ def test_public_first_partial_financial_outage_recovers_from_supplemented_cache(
     recovered = json.loads(data.joinpath("latest.json").read_text())
     recovered_stock = json.loads((data / "releases" / second["run_id"] / "stocks" / "2330.json").read_text())
     assert calls == ["official_bulk", "adjusted_prices", "fundamentals", "market_volume"]
-    assert recovered["marketDate"] == "2026-10-01"
+    assert recovered["marketDate"] == "2026-10-02"
+    assert recovered_stock["asOf"] == "2026-10-01"
     assert recovered_stock["growthValuation"]["status"] == "available"
     assert recovered_stock["growthValuation"]["inputAudit"]["ttmEps"]["origin"] == "derived"
     assert recovered["rankings"]["growth"][0]["code"] == "2330"
