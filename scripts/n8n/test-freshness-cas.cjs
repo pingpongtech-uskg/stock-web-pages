@@ -35,3 +35,9 @@ test('verified degraded publication remains warning even when auxiliary tasks co
  assert.equal(outcome.operationOutcome({...state,publicationFreshness:'current'}).nextFreshnessRefreshAfter,null);
  assert.equal(outcome.operationOutcome({...state,deployStatus:'failed'}).outcome,'failed');
 });
+test('failed refresh producer preserves the daily refresh ceiling across automatic retries',()=>{
+ const failed={...old,requestId:'stockscreener:20261016:refresh6',freshnessRefreshCount:6,screeningStatus:'failed',publicationStatus:'pending',deployStatus:'pending',automaticRetryCount:1};
+ const retried=read(failed);
+ assert.equal(retried.state.freshnessRefreshCount,6);
+ assert.equal(JSON.parse(Buffer.from(retried.op.body.content,'base64').toString()).freshnessRefreshCount,6);
+});

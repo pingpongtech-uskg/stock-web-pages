@@ -279,7 +279,7 @@ function advanceSuccess(state,body,status,response,now) {
         return request({...state,waitingForOwner:existing.owner,waitingUntil:Number(existing.deadline)},'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`,null,30);
       if(state.mode==='screen'&&state.automaticRequestId===true&&existing?.marketDate===state.marketDate&&existing.screeningStatus==='failed'&&existing.publicationStatus!=='verified') {
         const retryCount=Number.isSafeInteger(existing.automaticRetryCount)&&existing.automaticRetryCount>=0?existing.automaticRetryCount+1:1;
-        state={...state,requestId:`stockscreener:${state.marketDate.replaceAll('-','')}:v1:retry${retryCount}`,mode:'revision',automaticRetry:true,automaticRetryCount:retryCount,automaticRetryFrom:existing.requestId,actionsRunId:undefined,runHeadSha:undefined,dispatchIntent:false,dispatchStartedAt:undefined};
+        state={...state,requestId:`stockscreener:${state.marketDate.replaceAll('-','')}:v1:retry${retryCount}`,mode:'revision',automaticRetry:true,automaticRetryCount:retryCount,automaticRetryFrom:existing.requestId,freshnessRefreshCount:existing.freshnessRefreshCount,actionsRunId:undefined,runHeadSha:undefined,dispatchIntent:false,dispatchStartedAt:undefined};
       }
       if(state.mode==='screen'&&state.automaticRequestId&&!state.preflightRetryOwner&&existing?.marketDate===state.marketDate&&existing.archiveMethod!=='legacy_archive'&&existing.requestId!==state.requestId){
         if(!/^[a-zA-Z0-9_.:-]{1,160}$/.test(existing.requestId||'')||(existing.actionsRunId&&!/^\d{1,24}$/.test(String(existing.actionsRunId))))throw Error('invalid_stored_request_lineage');
