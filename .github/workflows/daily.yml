@@ -254,6 +254,8 @@ jobs:
       - run: python scripts/verify_snapshot.py --require-growth-coverage
       - name: Publish latest data with per-stock freshness warnings
         run: python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json --publish-advisory
+      - name: Verify final annotated snapshot numbers and manifest
+        run: python scripts/verify_snapshot.py --require-growth-coverage
       - name: Build lightweight publication fingerprint
         run: python scripts/build_publication_fingerprint.py --market-date "$MARKET_DATE"
       - name: Build canonical screening export
