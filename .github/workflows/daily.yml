@@ -312,11 +312,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add config/tracked_symbols.json public/data
-          if ! git diff --cached --quiet; then
-            git commit -m "data: publish daily Taiwan stock snapshot"
-            git push origin HEAD:main
-          fi
+          bash scripts/publish_validated_release.sh
           export PUBLISHED_GIT_COMMIT="$(git rev-parse HEAD)"
           mkdir -p .artifacts/screening-export
           cp public/data/screening-export.json .artifacts/screening-export/screening-export.json
