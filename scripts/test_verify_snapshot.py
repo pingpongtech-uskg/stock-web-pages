@@ -243,7 +243,7 @@ def test_daily_workflow_runs_v3_refresh_and_gate() -> None:
     final_universe_gate = workflow.index(
         'python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json --latest public/data/latest.json'
     )
-    publish = workflow.index('git add config/tracked_symbols.json public/data')
+    publish = workflow.index('bash scripts/publish_validated_release.sh')
     assert request_date < universe_fetch < date_gate < universe_gate < refresh
     assert refresh < supplement < recompute < verify < freshness < export
     assert '--budget-date "$BUDGET_DATE"' in workflow

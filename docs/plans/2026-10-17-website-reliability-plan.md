@@ -47,21 +47,21 @@ Verification: 1,144 Python tests passed, one skipped; independent correctness re
 
 **Files:** `scripts/n8n/engine.cjs`, `outcome.cjs`, `build-workflow.cjs`, cache operation modules, generated workflow JSON/SDK and their tests.
 
-- [ ] Compare exact active nodes, expressions, connections, credentials, schedule and settings against generated artifacts.
-- [ ] Bring already deployed recovery/date/checkpoint/publication behavior into the tracked sources, preserving credential references and graph edges.
-- [ ] Verify generated logic against recorded real execution fixtures before any workflow publication.
-- [ ] Require a fresh active-version check immediately before update and confirm draft/active parity afterward.
+- [x] Compare exact active nodes, expressions, connections, credentials, schedule and settings against generated artifacts.
+- [x] Bring already deployed recovery/date/checkpoint/publication behavior into the tracked sources, preserving credential references and graph edges.
+- [x] Verify generated logic against recorded real execution fixtures before any workflow publication.
+- [x] Require a fresh active-version check immediately before update and confirm draft/active parity afterward.
 
 ## Task 4: Make recovery serve website freshness
 
 **Files:** n8n engine/outcome and new focused recovery tests, export freshness evidence if required.
 
-- [ ] Record publication date, exact public payload identity and actionable freshness gaps in durable state.
-- [ ] If a producer is still running, resume that exact handle; never start a second producer solely because a polling window expired.
-- [ ] If website publication is verified but current-session data is missing, a bounded subsequent recovery must acquire fresh data using a new explicit revision, preserving daily API budgets and the last verified website.
-- [ ] If website publication is current and complete, report an intentional no-op rather than implying another data refresh occurred.
-- [ ] Finish website readback before auxiliary archiving. Auxiliary failures must not suppress website verification or make an unverified deployment look published.
-- [ ] Preserve manual execution after schedule cutoffs and on non-trading days; resolve the latest completed official session and expose whether the run resumed, refreshed, or skipped.
+- [x] Record publication date, exact public payload identity and actionable freshness gaps in durable state.
+- [x] If a producer is still running, resume that exact handle; never start a second producer solely because a polling window expired.
+- [x] If website publication is verified but current-session data is missing, a bounded subsequent recovery must acquire fresh data using a new explicit revision, preserving daily API budgets and the last verified website.
+- [x] If website publication is current and complete, report an intentional no-op rather than implying another data refresh occurred.
+- [x] Finish website readback before auxiliary archiving. Auxiliary failures must not suppress website verification or make an unverified deployment look published.
+- [x] Preserve manual execution after schedule cutoffs and on non-trading days; resolve the latest completed official session and expose whether the run resumed, refreshed, or skipped.
 
 ## Acceptance scenarios
 
@@ -74,3 +74,25 @@ Verification: 1,144 Python tests passed, one skipped; independent correctness re
 7. Manual execution after cutoff/weekend: resolves the intended completed session and produces a clear result.
 
 Final acceptance requires actual public files matching the approved immutable release, correct quote dates/bases, explicit remaining gaps, and real production recovery observations. Unit tests or n8n green status alone are insufficient.
+
+## October 18 deployment evidence (Asia/Taipei)
+
+- Source repair `32eedbdf99e8cb0f470d9cb2bec574b1588a9cf6`; final annotated-manifest gate `82b19796ff0013bb88e7975270158280a705fd6b`.
+- n8n 317 regressions passed. SDK validation accepted all 97 nodes. Previous 41 source/live transition replays established the reconciliation baseline.
+- Main active version `2cea1e66-a2eb-4b69-b7e4-05e0c2eacdb9` read back identical to draft. Exactly three intended Code nodes changed; connections, credentials, 18:00 schedule and 30-minute recovery schedule preserved. Ordinary manual defaults restored.
+- Optional invalid/unavailable prior cache falls back to official acquisition only after owned CAS; checkpoint conflicts and expired leases still stop.
+- Freshness recovery reads gaps across the full roster, not only selected stocks. It waits 30 minutes, uses deterministic revision IDs, caps six acquisitions per session, and preserves provider budget/cache state. Active producers are resumed.
+- Advisory annotation now verifies original manifest integrity before mutation and recomputes hashes after annotation. A second mandatory snapshot check runs before export/publication. Existing tampering remains a hard failure.
+- Live acceptance in progress: n8n `1837`, request `stockscreener:20261016:correct-quotes-v2`, Actions `39076738966`. Weekend manual revision passed calendar and CAS and dispatched the exact current source commit. Public byte/date/quote and archive acceptance remains pending until this run completes.
+
+## Publication acceptance follow-up
+
+- Manual revision `1837` / Actions `39076738966` passed numerical/manifest/cache validation, then GitHub rejected its data push because main advanced with an authorized source repair. Exact log: `HEAD -> main (fetch first)`.
+- Added a data-only bounded publisher (`ace8c94`, workflow wiring `864ae4d`): rebase source-only changes, never force push, reject unrelated staged files.
+- Independent review found that a clean Git merge could still combine concurrent data. Local follow-up now compares the entire `public/data` tree and tracked-symbol config blob against the validated candidate after every rebase, before every push. Added real local-remote regressions for disjoint data/config additions, changes/deletions, retry races, ambiguity and retry bounds.
+- Manual revision `1841` / Actions `39081186161` failed the Python gate. Local reproduction showed two structural tests still searching the previous inline `git add` command. Updated their publication-step locator to the new publisher invocation; all numerical, fingerprint and ordering assertions retained. Focused publication/snapshot/fingerprint suite: 55 passed.
+- Final publisher/test follow-ups are LOCAL ONLY, not pushed. No successful live acceptance of this revision has been claimed. Full Python suite: 1,163 passed, one skipped. Focused safety tests include protected config add/change/delete, disjoint data add/delete, source/data push races, ambiguous accepted push and exactly three attempts on persistent rejection.
+- External GitHub query was rejected by automatic approval review because the workspace owner spend cap prevented the approval review from completing. This is an approval service failure, not a security determination. User guidance requested; do not bypass the approval check.
+- Temporary Personal/root manual repair publisher workflow `Vd5adk3wbzH68VVs` was archived after use. Main Stockscreener remains active, ordinary manual defaults restored, active version `a3cec831-af7a-44b0-8a21-17310ed9934f`.
+
+Local checks: shell syntax and `git diff --check` passed. Offline npm audit reported zero cached advisories (not a fresh registry audit). pip-audit could not evaluate range-based requirements with `--no-deps`; dependencies were unchanged. Final independent reviewer could not complete its post-fix turn because the workspace spend cap was reached; parent reviewed the protected-object comparison and all added integration regressions passed.

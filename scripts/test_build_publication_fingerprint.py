@@ -98,7 +98,7 @@ def test_daily_gate_builds_and_rechecks_exact_snapshot_fingerprint_before_publis
     strict = workflow.index('python scripts/verify_snapshot.py --require-growth-coverage')
     build = workflow.index('python scripts/build_publication_fingerprint.py --market-date "$MARKET_DATE"')
     check = workflow.index('python scripts/build_publication_fingerprint.py --check --market-date "$MARKET_DATE"')
-    publish = workflow.index('git add config/tracked_symbols.json public/data')
+    publish = workflow.index('bash scripts/publish_validated_release.sh')
     assert strict < build < check < publish
     headers = Path('public/_headers').read_text()
     assert '/data/publication.json\n  Cache-Control: no-cache, no-store, must-revalidate' in headers
