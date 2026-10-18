@@ -514,7 +514,7 @@
       "TPEx:insti/dailyTrade"
     ],
     "sourceMethod": "兩市場每日投信買進／賣出；TPEx 張數轉股；最近10個市場日累積；不在子集合內重算",
-    "asOfFetchedAt": "2026-10-16T10:19:50+00:00",
+    "asOfFetchedAt": "2026-10-18T07:38:41+00:00",
     "marketDates": [
       "2026-10-16",
       "2026-10-15",
@@ -634,8 +634,8 @@
         "code": "6147",
         "name": "頎邦",
         "market": "TPEx",
-        "netShares": 13161583,
-        "net": "13161583",
+        "netShares": 13358953,
+        "net": "13358953",
         "previousRank": 8,
         "entryStatus": "retained"
       },
@@ -744,8 +744,8 @@
         "code": "2313",
         "name": "華通",
         "market": "TWSE",
-        "netShares": 9055434,
-        "net": "9055434",
+        "netShares": 9068434,
+        "net": "9068434",
         "previousRank": 24,
         "entryStatus": "not_applicable"
       },
@@ -909,8 +909,8 @@
         "code": "8046",
         "name": "南電",
         "market": "TWSE",
-        "netShares": 4220642,
-        "net": "4220642",
+        "netShares": 4228642,
+        "net": "4228642",
         "previousRank": 30,
         "entryStatus": "not_applicable"
       },
@@ -1107,8 +1107,8 @@
         "code": "2379",
         "name": "瑞昱",
         "market": "TWSE",
-        "netShares": 2431007,
-        "net": "2431007",
+        "netShares": 2429183,
+        "net": "2429183",
         "previousRank": 51,
         "entryStatus": "not_applicable"
       },
@@ -2428,7 +2428,7 @@
         "code": "6147",
         "name": "頎邦",
         "market": "TPEx",
-        "netShares": 13161583,
+        "netShares": 13358953,
         "rank": 9,
         "sourceRank": 9,
         "previousRank": 8,
@@ -2661,9 +2661,9 @@
             "code": "2313",
             "name": "華通",
             "market": "TWSE",
-            "buyShares": 2173208,
+            "buyShares": 2186208,
             "sellShares": 884000,
-            "netShares": 1289208
+            "netShares": 1302208
           },
           {
             "code": "2812",
@@ -2790,8 +2790,8 @@
             "name": "瑞昱",
             "market": "TWSE",
             "buyShares": 596219,
-            "sellShares": 117000,
-            "netShares": 479219
+            "sellShares": 118824,
+            "netShares": 477395
           },
           {
             "code": "6239",
@@ -2837,9 +2837,9 @@
             "code": "8046",
             "name": "南電",
             "market": "TWSE",
-            "buyShares": 611000,
+            "buyShares": 619000,
             "sellShares": 256390,
-            "netShares": 354610
+            "netShares": 362610
           },
           {
             "code": "2345",
@@ -3269,9 +3269,9 @@
             "code": "6147",
             "name": "頎邦",
             "market": "TPEx",
-            "buyShares": 636000,
+            "buyShares": 833370,
             "sellShares": 3156000,
-            "netShares": -2520000
+            "netShares": -2322630
           },
           {
             "code": "6274",
@@ -9828,28 +9828,25 @@
     "sourceEvidence": {
       "schemaVersion": "official-institutional-source-evidence-v1",
       "marketDate": "2026-10-16",
-      "evidenceLevel": "verified_cached_after_refresh_failure",
+      "evidenceLevel": "fresh_response",
       "markets": {
         "TWSE": {
-          "evidenceLevel": "fresh_response",
-          "unit": "shares",
-          "requestDate": "2026-10-16",
+          "retrievedAt": "2026-10-18T07:38:34.729573Z",
           "market": "TWSE",
-          "retrievedAt": "2026-10-16T10:19:23.918230Z",
-          "reportedDate": "2026-10-16",
-          "rawSha256": "748a8e5b13ededd9a6fd851639c8d8a7497967e2d08c5feb1d9a4faf34f8536e"
+          "requestDate": "2026-10-16",
+          "unit": "shares",
+          "evidenceLevel": "fresh_response",
+          "rawSha256": "ebe18f2911937c3b291bc5760115943b9bba1662e718d4f08ca6c2ae40da451a",
+          "reportedDate": "2026-10-16"
         },
         "TPEx": {
-          "evidenceLevel": "verified_cached_after_refresh_failure",
-          "unit": "shares",
-          "requestDate": "2026-10-16",
+          "retrievedAt": "2026-10-18T07:38:37.765729Z",
           "market": "TPEx",
-          "retrievedAt": "2026-10-16T10:01:47.804969Z",
-          "reportedDate": "2026-10-16",
-          "rawSha256": "ff4ff5394642731de8d0502ee293c398530b8dc5d85a0991b0d545bae65044e3",
-          "refreshFailure": {
-            "category": "transport_error"
-          }
+          "requestDate": "2026-10-16",
+          "unit": "shares",
+          "evidenceLevel": "fresh_response",
+          "rawSha256": "ea619ecd2b5f98797b2c6b4bcffd1b1dfea16a5d7576de9d93522381454b95fb",
+          "reportedDate": "2026-10-16"
         }
       },
       "sessions": [
@@ -9857,25 +9854,22 @@
           "marketDate": "2026-10-16",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "fresh_response",
-              "unit": "shares",
-              "requestDate": "2026-10-16",
+              "retrievedAt": "2026-10-18T07:38:34.729573Z",
               "market": "TWSE",
-              "retrievedAt": "2026-10-16T10:19:23.918230Z",
-              "reportedDate": "2026-10-16",
-              "rawSha256": "748a8e5b13ededd9a6fd851639c8d8a7497967e2d08c5feb1d9a4faf34f8536e"
+              "requestDate": "2026-10-16",
+              "unit": "shares",
+              "evidenceLevel": "fresh_response",
+              "rawSha256": "ebe18f2911937c3b291bc5760115943b9bba1662e718d4f08ca6c2ae40da451a",
+              "reportedDate": "2026-10-16"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cached_after_refresh_failure",
-              "unit": "shares",
-              "requestDate": "2026-10-16",
+              "retrievedAt": "2026-10-18T07:38:37.765729Z",
               "market": "TPEx",
-              "retrievedAt": "2026-10-16T10:01:47.804969Z",
-              "reportedDate": "2026-10-16",
-              "rawSha256": "ff4ff5394642731de8d0502ee293c398530b8dc5d85a0991b0d545bae65044e3",
-              "refreshFailure": {
-                "category": "transport_error"
-              }
+              "requestDate": "2026-10-16",
+              "unit": "shares",
+              "evidenceLevel": "fresh_response",
+              "rawSha256": "ea619ecd2b5f98797b2c6b4bcffd1b1dfea16a5d7576de9d93522381454b95fb",
+              "reportedDate": "2026-10-16"
             }
           }
         },
@@ -9883,22 +9877,22 @@
           "marketDate": "2026-10-15",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-15",
-              "market": "TWSE",
               "retrievedAt": "2026-10-15T10:01:38.762682Z",
-              "reportedDate": "2026-10-15",
-              "rawSha256": "19bb0c102cb37da3a0289da45706f0dfff37f17797a159d49e8473d1dcd686f2"
+              "market": "TWSE",
+              "requestDate": "2026-10-15",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "19bb0c102cb37da3a0289da45706f0dfff37f17797a159d49e8473d1dcd686f2",
+              "reportedDate": "2026-10-15"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-15",
-              "market": "TPEx",
               "retrievedAt": "2026-10-15T10:01:47.512358Z",
-              "reportedDate": "2026-10-15",
-              "rawSha256": "156f75d037aefcf6522b96806c959d2db06c04e61bd027c4672ae97c1db9756e"
+              "market": "TPEx",
+              "requestDate": "2026-10-15",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "156f75d037aefcf6522b96806c959d2db06c04e61bd027c4672ae97c1db9756e",
+              "reportedDate": "2026-10-15"
             }
           }
         },
@@ -9906,22 +9900,22 @@
           "marketDate": "2026-10-14",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-14",
-              "market": "TWSE",
               "retrievedAt": "2026-10-14T12:56:35.829989Z",
-              "reportedDate": "2026-10-14",
-              "rawSha256": "e115f644362b29cfe3126733429566d74b990b5dda1024b61e6698e37ecd38bc"
+              "market": "TWSE",
+              "requestDate": "2026-10-14",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "e115f644362b29cfe3126733429566d74b990b5dda1024b61e6698e37ecd38bc",
+              "reportedDate": "2026-10-14"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-14",
-              "market": "TPEx",
               "retrievedAt": "2026-10-14T12:56:43.522697Z",
-              "reportedDate": "2026-10-14",
-              "rawSha256": "353becf3cc7a15d948362938530a7da08f30f1e214b7d43ee512b9a0557bfd37"
+              "market": "TPEx",
+              "requestDate": "2026-10-14",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "353becf3cc7a15d948362938530a7da08f30f1e214b7d43ee512b9a0557bfd37",
+              "reportedDate": "2026-10-14"
             }
           }
         },
@@ -9929,22 +9923,22 @@
           "marketDate": "2026-10-13",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-13",
-              "market": "TWSE",
               "retrievedAt": "2026-10-13T10:00:47.307876Z",
-              "reportedDate": "2026-10-13",
-              "rawSha256": "b42bb99c0eaff4836bc3396a90ff227052ebfe44f813e67f51b3ac3dae541d36"
+              "market": "TWSE",
+              "requestDate": "2026-10-13",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "b42bb99c0eaff4836bc3396a90ff227052ebfe44f813e67f51b3ac3dae541d36",
+              "reportedDate": "2026-10-13"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-13",
-              "market": "TPEx",
               "retrievedAt": "2026-10-13T10:01:32.069854Z",
-              "reportedDate": "2026-10-13",
-              "rawSha256": "d8b5490661796e88c860da2eb3f41ef8c75e230304b8ae6715d3999a0718c1da"
+              "market": "TPEx",
+              "requestDate": "2026-10-13",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "d8b5490661796e88c860da2eb3f41ef8c75e230304b8ae6715d3999a0718c1da",
+              "reportedDate": "2026-10-13"
             }
           }
         },
@@ -9952,22 +9946,22 @@
           "marketDate": "2026-10-12",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-12",
-              "market": "TWSE",
               "retrievedAt": "2026-10-12T10:01:32.645334Z",
-              "reportedDate": "2026-10-12",
-              "rawSha256": "254578e0a83309b08175a8f15b7be1fadb39139d5ffd7c7bbf44a2f36d8cb63f"
+              "market": "TWSE",
+              "requestDate": "2026-10-12",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "254578e0a83309b08175a8f15b7be1fadb39139d5ffd7c7bbf44a2f36d8cb63f",
+              "reportedDate": "2026-10-12"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-12",
-              "market": "TPEx",
               "retrievedAt": "2026-10-12T10:01:51.399269Z",
-              "reportedDate": "2026-10-12",
-              "rawSha256": "19a68ad4b5947c5bbde9c7102619d850e2b8c4fbfb768d7a4bd5877a11ee7925"
+              "market": "TPEx",
+              "requestDate": "2026-10-12",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "19a68ad4b5947c5bbde9c7102619d850e2b8c4fbfb768d7a4bd5877a11ee7925",
+              "reportedDate": "2026-10-12"
             }
           }
         },
@@ -9975,22 +9969,22 @@
           "marketDate": "2026-10-08",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-08",
-              "market": "TWSE",
               "retrievedAt": "2026-10-08T10:03:44.124119Z",
-              "reportedDate": "2026-10-08",
-              "rawSha256": "64b2ec717b1ac2fbe8929f07afb79acd4536e6ebe3426a7eaec22a98bc3652f2"
+              "market": "TWSE",
+              "requestDate": "2026-10-08",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "64b2ec717b1ac2fbe8929f07afb79acd4536e6ebe3426a7eaec22a98bc3652f2",
+              "reportedDate": "2026-10-08"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-08",
-              "market": "TPEx",
               "retrievedAt": "2026-10-08T10:04:08.322891Z",
-              "reportedDate": "2026-10-08",
-              "rawSha256": "22da97b272b9b5210dd31a9f1e40c5f1314996f5c1b5e321fcfce4e2746d95fe"
+              "market": "TPEx",
+              "requestDate": "2026-10-08",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "22da97b272b9b5210dd31a9f1e40c5f1314996f5c1b5e321fcfce4e2746d95fe",
+              "reportedDate": "2026-10-08"
             }
           }
         },
@@ -9998,22 +9992,22 @@
           "marketDate": "2026-10-07",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-07",
-              "market": "TWSE",
               "retrievedAt": "2026-10-07T15:27:05.978827Z",
-              "reportedDate": "2026-10-07",
-              "rawSha256": "af1b3b24724c634ff59cb7dc4f5155e60756529ed1cc3e33f43804af2a969979"
+              "market": "TWSE",
+              "requestDate": "2026-10-07",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "af1b3b24724c634ff59cb7dc4f5155e60756529ed1cc3e33f43804af2a969979",
+              "reportedDate": "2026-10-07"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-07",
-              "market": "TPEx",
               "retrievedAt": "2026-10-07T15:27:08.040079Z",
-              "reportedDate": "2026-10-07",
-              "rawSha256": "0bab1b059fcca5312748dd921649bdb56d940f4a501d64103fb01a6df6e2c700"
+              "market": "TPEx",
+              "requestDate": "2026-10-07",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "0bab1b059fcca5312748dd921649bdb56d940f4a501d64103fb01a6df6e2c700",
+              "reportedDate": "2026-10-07"
             }
           }
         },
@@ -10021,22 +10015,22 @@
           "marketDate": "2026-10-06",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-06",
-              "market": "TWSE",
               "retrievedAt": "2026-10-06T11:05:41.685721Z",
-              "reportedDate": "2026-10-06",
-              "rawSha256": "43df6f3c5aec6fbfe0fa7e9f0d47618f14ef483edbb07448b51e934bf0219eb7"
+              "market": "TWSE",
+              "requestDate": "2026-10-06",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "43df6f3c5aec6fbfe0fa7e9f0d47618f14ef483edbb07448b51e934bf0219eb7",
+              "reportedDate": "2026-10-06"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-06",
-              "market": "TPEx",
               "retrievedAt": "2026-10-06T11:05:46.267392Z",
-              "reportedDate": "2026-10-06",
-              "rawSha256": "b30496a8390e1ce51cd579d19a5a3aeab83a189fef12c13e0b571a2f952ede52"
+              "market": "TPEx",
+              "requestDate": "2026-10-06",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "b30496a8390e1ce51cd579d19a5a3aeab83a189fef12c13e0b571a2f952ede52",
+              "reportedDate": "2026-10-06"
             }
           }
         },
@@ -10044,22 +10038,22 @@
           "marketDate": "2026-10-05",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-05",
-              "market": "TWSE",
               "retrievedAt": "2026-10-05T15:38:18.436133Z",
-              "reportedDate": "2026-10-05",
-              "rawSha256": "833eeceeb80276bb2279d2eebf3d74740d9655ea9fc0eeb1b1343b95c70bac6d"
+              "market": "TWSE",
+              "requestDate": "2026-10-05",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "833eeceeb80276bb2279d2eebf3d74740d9655ea9fc0eeb1b1343b95c70bac6d",
+              "reportedDate": "2026-10-05"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-05",
-              "market": "TPEx",
               "retrievedAt": "2026-10-05T15:38:20.891582Z",
-              "reportedDate": "2026-10-05",
-              "rawSha256": "e2e81e3a2b176bf24d7e9893333c47086aa372bcce775bc2359fdcfcb028693a"
+              "market": "TPEx",
+              "requestDate": "2026-10-05",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "e2e81e3a2b176bf24d7e9893333c47086aa372bcce775bc2359fdcfcb028693a",
+              "reportedDate": "2026-10-05"
             }
           }
         },
@@ -10067,22 +10061,22 @@
           "marketDate": "2026-10-02",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-02",
-              "market": "TWSE",
               "retrievedAt": "2026-10-04T00:39:40.468638Z",
-              "reportedDate": "2026-10-02",
-              "rawSha256": "20ebefdcd5165acbe65523af2cf06f579c7598efe90a5f3e354c9aa792481f7a"
+              "market": "TWSE",
+              "requestDate": "2026-10-02",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "20ebefdcd5165acbe65523af2cf06f579c7598efe90a5f3e354c9aa792481f7a",
+              "reportedDate": "2026-10-02"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-02",
-              "market": "TPEx",
               "retrievedAt": "2026-10-03T21:21:22.186425Z",
-              "reportedDate": "2026-10-02",
-              "rawSha256": "a2eaf28d907b5a9e9858d1f981d0d1d4264665fa6f444c967f6603cf93c3aab8"
+              "market": "TPEx",
+              "requestDate": "2026-10-02",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "a2eaf28d907b5a9e9858d1f981d0d1d4264665fa6f444c967f6603cf93c3aab8",
+              "reportedDate": "2026-10-02"
             }
           }
         },
@@ -10090,22 +10084,22 @@
           "marketDate": "2026-10-01",
           "markets": {
             "TWSE": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-01",
-              "market": "TWSE",
               "retrievedAt": "2026-10-03T19:11:12.547594Z",
-              "reportedDate": "2026-10-01",
-              "rawSha256": "237e4be00b695c9c104aa8cf3e6315d2cd03bb525fb471836142ef794f848d30"
+              "market": "TWSE",
+              "requestDate": "2026-10-01",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "237e4be00b695c9c104aa8cf3e6315d2cd03bb525fb471836142ef794f848d30",
+              "reportedDate": "2026-10-01"
             },
             "TPEx": {
-              "evidenceLevel": "verified_cache_replay",
-              "unit": "shares",
-              "requestDate": "2026-10-01",
-              "market": "TPEx",
               "retrievedAt": "2026-10-03T19:11:16.238487Z",
-              "reportedDate": "2026-10-01",
-              "rawSha256": "d6dc0975176a6e32d4b9e441bfb39dba3887e1f3d9fc5464b94d48a602d2628f"
+              "market": "TPEx",
+              "requestDate": "2026-10-01",
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "rawSha256": "d6dc0975176a6e32d4b9e441bfb39dba3887e1f3d9fc5464b94d48a602d2628f",
+              "reportedDate": "2026-10-01"
             }
           }
         }
