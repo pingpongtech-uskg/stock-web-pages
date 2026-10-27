@@ -16,6 +16,9 @@ sys.path.insert(0, str(ROOT))
 from pipeline.trading_calendar import (SOURCE_URL, build_calendar, compose_calendar_set, is_open,
                                        recent_sessions)
 from pipeline.source_receipts import read_raw, capture_raw, write_bundle, safe_directory
+from pipeline.official_market_closures import (FEED_URL, apply_verified_closures,
+    build_closure_evidence, closure_evidence_for_year, merge_closure_evidence,
+    validate_closure_evidence_size)
 
 
 def _read_file(directory: Path, name: str, limit: int) -> bytes:
@@ -57,6 +60,7 @@ def _verified_restored_calendar(directory: Path) -> tuple[dict, dict[int, tuple[
     if (not isinstance(bundle, dict) or bundle.get('schemaVersion') != 'source-receipt-bundle-v1' or
         not isinstance(receipts, list) or len(receipts) not in {1, 2}):
         raise ValueError('restored calendar receipt bundle is invalid')
+    validate_closure_evidence_size(receipts)
     parsed_by_year, receipt_by_year = {}, {}
     for receipt in receipts:
         if (not isinstance(receipt, dict) or receipt.get('sourceUrl') != SOURCE_URL or
@@ -72,6 +76,8 @@ def _verified_restored_calendar(directory: Path) -> tuple[dict, dict[int, tuple[
         rows = json.loads(raw)
         year = receipt['requestYear']
         parsed = build_calendar(rows, year=year, fetched_at=receipt['retrievedAt'])
+        for evidence in receipt.get('closureEvidence', []):
+            parsed = apply_verified_closures(parsed, evidence)
         reported_dates = sorted(date(int(row['Date'][:3]) + 1911, int(row['Date'][3:5]), int(row['Date'][5:])).isoformat()
                                 for row in rows)
         if receipt.get('reportedDates') != reported_dates:
@@ -137,6 +143,11 @@ def main(argv=None):
         prior_calendar = prior_receipts = None
         if args.prior_calendar_cache_dir is not None:
             prior_calendar, prior_receipts = _verified_restored_calendar(args.prior_calendar_cache_dir)
+        elif cache_directory is not None and (cache_directory / 'calendar-receipt-index.json').is_file():
+            try:
+                prior_calendar, prior_receipts = _verified_restored_calendar(cache_directory)
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                print(f'trading_calendar_cached_closure_evidence_unavailable={exc}', file=sys.stderr)
         req = Request(SOURCE_URL, headers={'Accept':'application/json','User-Agent':'stock-calendar/1.0'})
         with urlopen(req, timeout=30) as response:
             raw = read_raw(response)
@@ -146,11 +157,44 @@ def main(argv=None):
                               retrieved_at=retrieved_at) if args.source_cache_dir is not None else None
         rows = json.loads(raw)
         calendar = build_calendar(rows, year=target.year, fetched_at=retrieved_at)
+        cached_closures = []
+        cached_prior_closures = []
+        if prior_receipts is not None and target.year in prior_receipts:
+            cached_closures = prior_receipts[target.year][0].get('closureEvidence', [])
+        if prior_receipts is not None and target.year - 1 in prior_receipts:
+            cached_prior_closures = prior_receipts[target.year - 1][0].get('closureEvidence', [])
+        closure_evidence = []
+        try:
+            feed_req = Request(FEED_URL, headers={'Accept':'application/rss+xml, application/xml','User-Agent':'stock-calendar/1.0'})
+            with urlopen(feed_req, timeout=10) as response:
+                if getattr(response, 'geturl', lambda: FEED_URL)() != FEED_URL:
+                    raise ValueError('closure feed redirected from canonical official URL')
+                feed_raw = read_raw(response)
+            def fetch_detail(url):
+                detail_req = Request(url, headers={'Accept':'application/json','User-Agent':'stock-calendar/1.0'})
+                with urlopen(detail_req, timeout=10) as response:
+                    if getattr(response, 'geturl', lambda: url)() != url:
+                        raise ValueError('closure detail redirected from canonical official URL')
+                    return read_raw(response, max_bytes=512 * 1024)
+            current = build_closure_evidence(feed_raw, fetch_detail, target=target, retrieved_at=retrieved_at)
+            if current['notices']:
+                closure_evidence.append(current)
+        except (OSError, ValueError, HTTPException) as exc:
+            print(f'trading_calendar_closure_notice_unavailable={exc}', file=sys.stderr)
+        # Preserve only previously captured proof that the cache verifier has
+        # already rebuilt and validated from its exact source bytes.
+        collected_closure_evidence = merge_closure_evidence(cached_prior_closures, cached_closures, closure_evidence)
+        closure_evidence = [item for evidence in collected_closure_evidence
+                            if (item := closure_evidence_for_year(evidence, target.year)) is not None]
+        prior_closure_evidence = [item for evidence in collected_closure_evidence
+                                  if (item := closure_evidence_for_year(evidence, target.year - 1)) is not None]
+        for evidence in closure_evidence:
+            calendar = apply_verified_closures(calendar, evidence)
         if not is_open(calendar, args.market_date):
             raise ValueError('requested date is a market closure')
         needs_prior = _needs_prior_year(calendar, target)
         output_calendar = calendar
-        receipts = [{**receipt, 'reportedDates': sorted(
+        receipts = [{**receipt, 'closureEvidence': closure_evidence, 'reportedDates': sorted(
             date(int(row['Date'][:3]) + 1911, int(row['Date'][3:5]), int(row['Date'][5:])).isoformat()
             for row in rows)}] if receipt is not None else []
         if needs_prior:
@@ -162,6 +206,8 @@ def main(argv=None):
                 raise ValueError('verified prior-year calendar is required for the 11-session window')
             prior_year_calendar = prior_members[0]
             prior_receipt, prior_raw = prior_receipts[prior_year]
+            for evidence in prior_closure_evidence:
+                prior_year_calendar = apply_verified_closures(prior_year_calendar, evidence)
             output_calendar = compose_calendar_set([prior_year_calendar, calendar])
             recent_sessions(output_calendar, args.market_date, count=11)
             if cache_directory is not None:
@@ -169,8 +215,10 @@ def main(argv=None):
                     raw=prior_raw, source_url=prior_receipt['sourceUrl'], unit='calendar',
                     request_period={'requestYear': prior_receipt['requestYear']},
                     retrieved_at=prior_receipt['retrievedAt'])
-                receipts.insert(0, {**prior_copy, 'reportedDates': prior_receipt.get('reportedDates', [])})
+                receipts.insert(0, {**prior_copy, 'reportedDates': prior_receipt.get('reportedDates', []),
+                                    'closureEvidence': prior_closure_evidence})
         if receipt is not None:
+            validate_closure_evidence_size(receipts)
             write_bundle(cache_directory, prefix='calendar', receipts=receipts,
                          normalized=output_calendar, group={'kind': 'calendar', 'market': 'TWSE', 'codes': [],
                          'dates': [args.market_date], 'unit': 'calendar', 'sourceUrl': SOURCE_URL})

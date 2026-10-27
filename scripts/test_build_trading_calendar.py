@@ -46,7 +46,11 @@ def test_calendar_capture_keeps_exact_bytes_and_binds_normalized_calendar(tmp_pa
     cache = tmp_path / 'receipts'
     output = tmp_path / 'calendar.json'
     assert main(['--market-date', '2026-10-02', '--output', str(output), '--source-cache-dir', str(cache)]) == 0
-    assert len(calls) == 1 and calls[0][1]['timeout'] <= 30
+    assert [call[0] for call in calls] == [
+        'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule',
+        'https://www.twse.com.tw/rwd/zh/news/feed?type=rss',
+    ]
+    assert all(call[1]['timeout'] <= 30 for call in calls)
     index = json.loads((cache / 'calendar-receipt-index.json').read_text())
     raw_group, normalized = index['groups']
     bundle = json.loads((cache / raw_group['bodyFile']).read_text())
@@ -138,7 +142,9 @@ def test_january_calendar_set_reuses_verified_prior_year_cache_without_prior_fet
     calls = []
     def respond(request, **kwargs):
         calls.append(request.full_url)
-        return io.BytesIO(replies.pop(0))
+        if request.full_url == 'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule':
+            return io.BytesIO(replies.pop(0))
+        return io.BytesIO(b'<rss><channel/></rss>')
     monkeypatch.setattr('scripts.build_trading_calendar.urlopen', respond)
     prior_cache = tmp_path / 'prior-live'
     prior_output = tmp_path / 'prior.json'
@@ -152,7 +158,8 @@ def test_january_calendar_set_reuses_verified_prior_year_cache_without_prior_fet
     output = tmp_path / 'current.json'
     assert main(['--market-date', '2027-01-04', '--output', str(output),
                  '--source-cache-dir', str(current_cache), '--prior-calendar-cache-dir', str(restored)]) == 0
-    assert len(calls) == 2
+    assert calls.count('https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule') == 2
+    assert calls.count('https://www.twse.com.tw/rwd/zh/news/feed?type=rss') == 2
     calendar_set = json.loads(output.read_text())
     assert calendar_set['schemaVersion'] == 'trading-calendar-set-v1'
     assert [item['year'] for item in calendar_set['calendars']] == [2026, 2027]
@@ -170,7 +177,8 @@ def test_january_calendar_set_reuses_verified_prior_year_cache_without_prior_fet
     later_output = tmp_path / 'later.json'
     assert main(['--market-date', '2027-01-05', '--output', str(later_output),
                  '--source-cache-dir', str(later_cache), '--prior-calendar-cache-dir', str(current_cache)]) == 0
-    assert len(calls) == 3
+    assert calls.count('https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule') == 3
+    assert calls.count('https://www.twse.com.tw/rwd/zh/news/feed?type=rss') == 3
     assert [item['year'] for item in json.loads(later_output.read_text())['calendars']] == [2026, 2027]
 
 
@@ -193,7 +201,10 @@ def test_january_calendar_set_requires_verified_prior_year_cache_and_never_fetch
     cache = tmp_path / 'cache'
     assert main(['--market-date', '2027-01-04', '--output', str(output),
                  '--source-cache-dir', str(cache)]) == 1
-    assert len(calls) == 1
+    assert calls == [
+        'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule',
+        'https://www.twse.com.tw/rwd/zh/news/feed?type=rss',
+    ]
     assert not output.exists()
 
 
