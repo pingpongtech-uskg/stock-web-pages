@@ -39,6 +39,86 @@ def base_calendar():
             'fetchedAt': '2026-01-01T00:00:00+00:00'}
 
 
+def _import_test_module_isolated(module_name, dependencies):
+    sentinel = object()
+    importlib.import_module('pipeline')
+    importlib.import_module('scripts')
+    prior_packages = {
+        name: sys.modules.get(name)
+        for name in ('pipeline', 'scripts')
+        if sys.modules.get(name) is not None
+    }
+    prior_attributes = {
+        name: dict(vars(package)) for name, package in prior_packages.items()
+    }
+    prior_children = {
+        name: module for name, module in sys.modules.items()
+        if name.startswith(('pipeline.', 'scripts.'))
+    }
+    try:
+        with patch.dict(sys.modules, dependencies):
+            sys.modules.pop(module_name, None)
+            return importlib.import_module(module_name)
+    finally:
+        changed_children = {
+            name for name in (*prior_children, *sys.modules)
+            if name.startswith(('pipeline.', 'scripts.'))
+            and sys.modules.get(name, sentinel) is not prior_children.get(name, sentinel)
+        }
+        for name in changed_children:
+            prior_module = prior_children.get(name, sentinel)
+            if prior_module is sentinel:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = prior_module
+        for package_name, package in prior_packages.items():
+            previous = prior_attributes[package_name]
+            for attribute in set(previous) | set(vars(package)):
+                prior_attribute = previous.get(attribute, sentinel)
+                current_attribute = vars(package).get(attribute, sentinel)
+                is_child_module = any(
+                    isinstance(value, types.ModuleType)
+                    and value.__name__.startswith(package_name + '.')
+                    for value in (prior_attribute, current_attribute)
+                )
+                if is_child_module and current_attribute is not prior_attribute:
+                    if prior_attribute is sentinel:
+                        vars(package).pop(attribute, None)
+                    else:
+                        setattr(package, attribute, prior_attribute)
+
+
+def _load_market_cache_restore_with_test_dependencies():
+    release = types.ModuleType('pipeline.release_contract')
+    release.is_common_stock_code = lambda value: True
+    indicators = types.ModuleType('pipeline.market_indicators')
+    indicators.TWSE_STOCK_DAY = 'https://www.twse.com.tw/exchangeReport/STOCK_DAY'
+    indicators.SYMBOL = '2330'
+    indicators._date = lambda value: date.fromisoformat(value.replace('/', '-'))
+    indicators._volume = lambda value: float(value) if value else None
+    cache_index = types.ModuleType('scripts.build_market_cache_index')
+    cache_index._verify_institutional_groups = lambda *args, **kwargs: None
+    cache_index.stock_metrics = lambda *args, **kwargs: {}
+    export = types.ModuleType('scripts.export_market_cache')
+    export._json = lambda raw: json.loads(raw)
+    export._read = lambda *args, **kwargs: b''
+    export.load_inputs = lambda *args, **kwargs: {}
+    return _import_test_module_isolated('pipeline.market_cache_restore', {
+        'pipeline.release_contract': release,
+        'pipeline.market_indicators': indicators,
+        'scripts.build_market_cache_index': cache_index,
+        'scripts.export_market_cache': export,
+    })
+
+
+def _load_official_institutional_with_test_dependencies():
+    release = types.ModuleType('pipeline.release_contract')
+    release.is_common_stock_code = lambda value: True
+    return _import_test_module_isolated('pipeline.official_institutional', {
+        'pipeline.release_contract': release,
+    })
+
+
 class OfficialClosureTests(unittest.TestCase):
     def evidence(self, rss=None, detail=None):
         rss, detail = fixture() if rss is None else (rss, detail)
@@ -239,29 +319,7 @@ class OfficialClosureTests(unittest.TestCase):
             self.assertEqual(len(receipts[2026][0]['closureEvidence']), 1)
 
     def test_market_cache_semantics_replay_closure_and_reject_tampered_evidence(self):
-        from unittest.mock import patch
-        release = types.ModuleType('pipeline.release_contract')
-        release.is_common_stock_code = lambda value: True
-        indicators = types.ModuleType('pipeline.market_indicators')
-        indicators.TWSE_STOCK_DAY = 'https://www.twse.com.tw/exchangeReport/STOCK_DAY'
-        indicators.SYMBOL = '2330'
-        indicators._date = lambda value: date.fromisoformat(value.replace('/', '-'))
-        indicators._volume = lambda value: float(value) if value else None
-        cache_index = types.ModuleType('scripts.build_market_cache_index')
-        cache_index._verify_institutional_groups = lambda *args, **kwargs: None
-        cache_index.stock_metrics = lambda *args, **kwargs: {}
-        export = types.ModuleType('scripts.export_market_cache')
-        export._json = lambda raw: json.loads(raw)
-        export._read = lambda *args, **kwargs: b''
-        export.load_inputs = lambda *args, **kwargs: {}
-        with patch.dict(sys.modules, {
-            'pipeline.release_contract': release,
-            'pipeline.market_indicators': indicators,
-            'scripts.build_market_cache_index': cache_index,
-            'scripts.export_market_cache': export,
-        }):
-            sys.modules.pop('pipeline.market_cache_restore', None)
-            restore = importlib.import_module('pipeline.market_cache_restore')
+        restore = _load_market_cache_restore_with_test_dependencies()
         from pipeline.trading_calendar import build_calendar, recent_sessions
         from pipeline.official_market_closures import apply_verified_closures
         rows = [
@@ -291,7 +349,7 @@ class OfficialClosureTests(unittest.TestCase):
                 for month in ['2026-09', '2026-10']:
                     payload = {'stat': 'OK', 'date': month.replace('-', '/') + '/01',
                         'fields': ['日期', '成交股數'], 'data': []}
-                    url = indicators.TWSE_STOCK_DAY + '?response=json&date=' + month.replace('-', '') + '01&stockNo=2330'
+                    url = 'https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=' + month.replace('-', '') + '01&stockNo=2330'
                     result.append(({'requestMonth': month, 'sourceUrl': url, 'unit': 'shares'},
                                    json.dumps(payload).encode()))
                 return result
@@ -313,25 +371,28 @@ class OfficialClosureTests(unittest.TestCase):
             self.assertEqual(restore._official_semantics(list(raw_groups.values()), legacy_expected)['calendar_normalized']['body'],
                 raw_groups['calendar_normalized']['body'])
 
+    def test_market_cache_test_import_restores_module_state(self):
+        package = importlib.import_module('pipeline')
+        sentinel = object()
+        prior_module = sys.modules.get('pipeline.market_cache_restore', sentinel)
+        prior_attribute = vars(package).get('market_cache_restore', sentinel)
+
+        _load_market_cache_restore_with_test_dependencies()
+
+        self.assertIs(sys.modules.get('pipeline.market_cache_restore', sentinel), prior_module)
+        self.assertIs(vars(package).get('market_cache_restore', sentinel), prior_attribute)
+
     def test_open_session_with_empty_official_data_still_fails(self):
-        from unittest.mock import patch
-        release = types.ModuleType('pipeline.release_contract')
-        release.is_common_stock_code = lambda value: True
-        with patch.dict(sys.modules, {'pipeline.release_contract': release}):
-            from pipeline.official_institutional import OfficialInstitutionalError, fetch_recent_complete_days
+        official = _load_official_institutional_with_test_dependencies()
         merged = apply_verified_closures(base_calendar(), self.evidence())
         self.assertEqual(merged['closedDates'], ['2026-01-01', '2026-10-23'])
-        with patch('pipeline.official_institutional.fetch_complete_day', return_value=[]):
-            with self.assertRaisesRegex(OfficialInstitutionalError, 'open session 2026-10-27'):
-                fetch_recent_complete_days(as_of=date(2026, 10, 27), sessions=1,
+        with patch.object(official, 'fetch_complete_day', return_value=[]):
+            with self.assertRaisesRegex(official.OfficialInstitutionalError, 'open session 2026-10-27'):
+                official.fetch_recent_complete_days(as_of=date(2026, 10, 27), sessions=1,
                     lookback_days=1, calendar=merged)
 
     def test_verified_closure_is_skipped_while_adjacent_open_sessions_remain_required(self):
-        from unittest.mock import patch
-        release = types.ModuleType('pipeline.release_contract')
-        release.is_common_stock_code = lambda value: True
-        with patch.dict(sys.modules, {'pipeline.release_contract': release}):
-            from pipeline.official_institutional import fetch_recent_complete_days
+        official = _load_official_institutional_with_test_dependencies()
         merged = apply_verified_closures(base_calendar(), self.evidence())
         calls = []
         def complete(day, **kwargs):
@@ -339,8 +400,8 @@ class OfficialClosureTests(unittest.TestCase):
             if day.isoformat() == '2026-10-23':
                 raise AssertionError('verified full-day closure must not be fetched')
             return [{'date': day.isoformat(), 'code': '2330', 'netShares': 1}]
-        with patch('pipeline.official_institutional.fetch_complete_day', side_effect=complete):
-            days = fetch_recent_complete_days(as_of=date(2026, 10, 27), sessions=3,
+        with patch.object(official, 'fetch_complete_day', side_effect=complete):
+            days = official.fetch_recent_complete_days(as_of=date(2026, 10, 27), sessions=3,
                 lookback_days=10, calendar=merged)
         self.assertEqual([item['date'] for item in days], ['2026-10-27', '2026-10-26', '2026-10-22'])
         self.assertNotIn('2026-10-23', calls)
