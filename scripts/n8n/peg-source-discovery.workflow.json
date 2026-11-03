@@ -1682,9 +1682,10 @@
   "settings": {
     "timezone": "Asia/Taipei",
     "executionOrder": "v1",
+    "executionTimeout": 900,
     "saveExecutionProgress": false,
-    "saveManualExecutions": false,
-    "saveDataErrorExecution": "none",
-    "saveDataSuccessExecution": "none"
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
   }
 }

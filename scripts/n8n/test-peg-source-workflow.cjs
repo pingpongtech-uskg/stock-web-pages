@@ -48,6 +48,7 @@ const issuerUrl = 'https://api.github.com/repos/pingpongtech-uskg/stock-web-page
 
 test('workflow keeps manual and passthrough triggers and bounds native read/write operations', () => {
   assert.equal(workflow.active, false);
+  assert.ok(workflow.settings.executionTimeout * 1000 < 30 * 60 * 1000, 'execution must end before the durable lease expires');
   assert.equal(byName('Manual Trigger').typeVersion, 1);
   assert.equal(byName('Execute Workflow Trigger').typeVersion, 1.1);
   assert.equal(byName('Execute Workflow Trigger').parameters.inputSource, 'passthrough');

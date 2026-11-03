@@ -202,7 +202,7 @@ link(finalPlan, finalSave);link(finalSave, finalShow);
 
 const workflow = {
   name: 'Stockscreener PEG source discovery', active: false, nodes, connections,
-  settings: { timezone: 'Asia/Taipei', executionOrder: 'v1', saveExecutionProgress: false, saveManualExecutions: false, saveDataErrorExecution: 'none', saveDataSuccessExecution: 'none' },
+  settings: { timezone: 'Asia/Taipei', executionOrder: 'v1', executionTimeout: 900, saveExecutionProgress: false, saveManualExecutions: true, saveDataErrorExecution: 'all', saveDataSuccessExecution: 'all' },
 };
 fs.writeFileSync(path.join(folder, 'peg-source-discovery.workflow.json'), JSON.stringify(workflow, null, 2) + '\n');
 console.log(JSON.stringify({ nodes: nodes.length, output: 'peg-source-discovery.workflow.json' }));
