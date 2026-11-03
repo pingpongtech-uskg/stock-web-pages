@@ -806,7 +806,9 @@ def test_build_release_merges_dated_peg_evidence_without_mutating_baseline_archi
         "healthInputs": {
             "valuationCurrent": {"date": "2026-10-01", "pe": 12.5},
             "incomeQuarterly": [
-                {"year": year, "quarter": quarter, "eps": None if year == 2025 and quarter == 4 else (1.0 if year == 2024 else 2.0)}
+                {"year": year, "quarter": quarter,
+                 "eps": None if year == 2025 and quarter == 4 else (1.0 if year == 2024 else 2.0),
+                 "epsKind": "basic"}
                 for year in (2024, 2025) for quarter in (1, 2, 3, 4)
             ],
         },
