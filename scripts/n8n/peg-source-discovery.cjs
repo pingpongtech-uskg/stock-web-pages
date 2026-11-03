@@ -17,6 +17,35 @@ function parseHttps(value) {
   return isPublicHostname(host) ? { host, path: match[2] || '/', query: match[3] || '', authority } : null;
 }
 function validHttpsUrl(value) { return Boolean(parseHttps(value)); }
+function parseServiceUrl(value, allowQuery = false) {
+  if (typeof value !== 'string' || /[#\\\s\u0000-\u001f\u007f]/.test(value)) return null;
+  const match = value.match(/^(https?):\/\/([^/?#]+)([^?#]*)(?:\?([^#]*))?$/i);
+  if (!match || match[4] && !allowQuery) return null;
+  if (match[2].includes('@')) return null;
+  const authority = match[2];
+  const parts = authority.match(/^([a-z0-9.-]+)(?::(\d+))?$/i);
+  if (!parts) return null;
+  const host = parts[1].toLowerCase().replace(/\.$/, '');
+  const port = parts[2] === undefined ? null : Number(parts[2]);
+  if (parts[2] !== undefined && (!Number.isInteger(port) || port < 1 || port > 65535)) return null;
+  if (!host || host.length > 253 || host.startsWith('.') || host.endsWith('.') || host.includes('..')) return null;
+  const labels = host.split('.');
+  if (labels.some(label => !label || label.length > 63 || !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(label))) return null;
+  const ip = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ip) {
+    const octets = ip.slice(1).map(Number);
+    if (octets.some(n => n > 255)) return null;
+    const privateIpv4 = octets[0] === 10 || octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31 || octets[0] === 192 && octets[1] === 168;
+    if (!privateIpv4) return null;
+  } else {
+    const internalSuffixes = ['.local', '.internal', '.svc', '.cluster.local', '.docker', '.test', '.private', '.home.arpa'];
+    const singleLabelService = labels.length === 1 && !['localhost', 'metadata', 'instance-data'].includes(host);
+    if (!singleLabelService && !internalSuffixes.some(suffix => host.endsWith(suffix))) return null;
+    if (host === 'localhost' || host.endsWith('.localhost') || host.split('.')[0] === 'metadata' || host.split('.')[0] === 'instance-data') return null;
+  }
+  return { scheme: match[1].toLowerCase(), authority: `${host}${port === null ? '' : `:${port}`}`, host, path: match[3] || '/', query: match[4] || '' };
+}
+function validServiceUrl(value, allowQuery = false) { return Boolean(parseServiceUrl(value, allowQuery)); }
 function isPublicHostname(host) {
   const h = host.toLowerCase().replace(/^\[|\]$/g, '');
   if (!h.includes('.') || PRIVATE_SUFFIXES.some(s => h.endsWith(s))) return false;
@@ -65,12 +94,20 @@ function queryFor(stock) {
 }
 function searxUrl(base, query) {
   if (typeof base !== 'string' || /[?#]/.test(base)) return '';
-  const parsed = parseHttps(base);
+  const parsed = parseServiceUrl(base);
   if (!parsed) return '';
   let path = parsed.path.replace(/\/+$/, '');
   if (!path) path = '/search';
   else if (!/\/search$/i.test(path)) path += '/search';
-  return `https://${parsed.authority}${path}?q=${encodeURIComponent(query)}&format=json`;
+  return `${parsed.scheme}://${parsed.authority}${path}?q=${encodeURIComponent(query)}&format=json`;
+}
+function disclosedQuarter(stock) {
+  for (const value of [stock?.currentPeriod, stock?.pegReview?.currentPeriod]) {
+    if (typeof value !== 'string') continue;
+    const matches = [...value.matchAll(/(\d{4})\s*Q\s*([1-4])/gi)];
+    if (matches.length) { const latest = matches[matches.length - 1]; return `${latest[1]}Q${latest[2]}`; }
+  }
+  return null;
 }
 function previousQuarter(marketDate) {
   const m = String(marketDate).match(/^(\d{4})-(\d{2})/);
@@ -80,11 +117,11 @@ function previousQuarter(marketDate) {
   return `${year}Q${quarter}`;
 }
 function safeConfig(config) {
-  return Boolean(config && typeof config.marketDate === 'string' && config.marketDate && typeof config.requestId === 'string' && config.requestId && Number.isInteger(config.braveDailyLimit) && config.braveDailyLimit >= 0 && validHttpsUrl(config.searxBaseUrl));
+  return Boolean(config && typeof config.marketDate === 'string' && config.marketDate && typeof config.requestId === 'string' && config.requestId && Number.isInteger(config.braveDailyLimit) && config.braveDailyLimit >= 0 && validServiceUrl(config.searxBaseUrl));
 }
 function init(input = {}, now = new Date().toISOString()) {
   const { latest, issuers = {}, cachedManifest, config = {} } = input;
-  const state = { config: { ...config }, cursor: 0, stocks: [], pending: null, unavailable: {}, attempts: {}, outcome: null, manifest: null };
+  const state = { config: { ...config }, cursor: 0, stocks: [], pending: null, unavailable: {}, attempts: {}, providerErrors: sanitizeProviderErrors(cachedManifest?.providerErrors), outcome: null, manifest: null };
   const oldUsage = cachedManifest?.searchUsage || {};
   state.braveUsed = oldUsage.date === config.marketDate ? Number(oldUsage.brave) || 0 : 0;
   if (!safeConfig(config)) { state.outcome = 'configuration_required'; state.manifest = { marketDate: config.marketDate || null, requestId: config.requestId || null, generatedAt: now, searchUsage: { date: config.marketDate || null, brave: state.braveUsed }, stocks: [] }; return state; }
@@ -96,7 +133,7 @@ function init(input = {}, now = new Date().toISOString()) {
   state.stocks = candidates.map(x => {
     const code = String(x.code || '').trim();
     const record = issuers[code] || issuers[code.toUpperCase()] || {};
-    return { code, name: String(x.name || record.name || code), period: String(x.currentPeriod || previousQuarter(config.marketDate)), legalName: String(record.legalName || record.name || x.name || code), domains: Array.isArray(record.officialDomains) ? record.officialDomains.filter(d => typeof d === 'string' && d) : [], results: null, reason: null, nextProvider: 'searx' };
+    return { code, name: String(x.name || record.name || code), period: disclosedQuarter(x) || previousQuarter(config.marketDate), legalName: String(record.legalName || record.name || x.name || code), domains: Array.isArray(record.officialDomains) ? record.officialDomains.filter(d => typeof d === 'string' && d) : [], results: null, reason: null, nextProvider: 'searx' };
   });
   if (reusable) {
     const cached = new Map((cachedManifest.stocks || []).map(x => [x.code, x]));
@@ -104,10 +141,26 @@ function init(input = {}, now = new Date().toISOString()) {
   }
   return state;
 }
+function cleanProviderErrors(value) {
+  if (!Array.isArray(value)) return [];
+  const reasons = new Set(['provider_configuration_or_auth', 'provider_client_error', 'provider_rate_limited', 'provider_server_error', 'provider_request_failed', 'provider_unavailable']);
+  return value.filter(e => e && ['searx', 'brave'].includes(e.provider) && Number.isInteger(e.statusCode) && e.statusCode >= 0 && e.statusCode <= 599 && reasons.has(e.reason) && typeof e.time === 'string' && Number.isFinite(Date.parse(e.time)))
+    .map(e => ({ provider: e.provider, statusCode: e.statusCode, reason: e.reason, time: new Date(e.time).toISOString() }));
+}
+function sanitizeProviderErrors(value) { return cleanProviderErrors(value); }
+function addProviderError(state, provider, statusCode, response, now) {
+  let reason;
+  if ([400, 401, 403, 422].includes(statusCode)) reason = 'provider_configuration_or_auth';
+  else if (statusCode === 429) reason = 'provider_rate_limited';
+  else if (statusCode >= 500) reason = 'provider_server_error';
+  else if (response.error && statusCode === 0) reason = 'provider_unavailable';
+  else reason = 'provider_client_error';
+  state.providerErrors.push({ provider, statusCode, reason, time: new Date(now).toISOString() });
+}
 function cloneState(state) { return JSON.parse(JSON.stringify(state)); }
 function finalize(state, now) {
   const stocks = state.stocks.map(s => ({ code: s.code, name: s.name, legalName: s.legalName, officialDomains: [...s.domains], results: s.results || [], providerAttempts: { ...(state.attempts[s.code] || {}) }, ...(s.reason ? { reason: s.reason } : {}) }));
-  state.manifest = { marketDate: state.config.marketDate, requestId: state.config.requestId, generatedAt: now, searchUsage: { date: state.config.marketDate, brave: state.braveUsed }, stocks };
+  state.manifest = { marketDate: state.config.marketDate, requestId: state.config.requestId, generatedAt: now, searchUsage: { date: state.config.marketDate, brave: state.braveUsed }, providerErrors: sanitizeProviderErrors(state.providerErrors), stocks };
   return { state, done: true };
 }
 function plan(inputState, now = new Date().toISOString()) {
@@ -126,7 +179,7 @@ function plan(inputState, now = new Date().toISOString()) {
     }
     const query = queryFor(s);
     const url = provider === 'searx' ? searxUrl(state.config.searxBaseUrl, query) : `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5`;
-    if (!validHttpsUrl(url)) { state.outcome = 'configuration_required'; return { state, done: true, outcome: state.outcome }; }
+    if (!(provider === 'searx' ? validServiceUrl(url, true) : validHttpsUrl(url))) { state.outcome = 'configuration_required'; return { state, done: true, outcome: state.outcome }; }
     const action = { provider, url, method: 'GET' };
     state.pending = action;
     state.attempts[s.code] = { ...(state.attempts[s.code] || {}), [provider]: ((state.attempts[s.code] || {})[provider] || 0) + 1 };
@@ -142,8 +195,12 @@ function apply(inputState, provider, response = {}, now = new Date().toISOString
   state.pending = null;
   const stock = state.stocks[state.cursor];
   const status = Number(response.statusCode) || 0;
-  if (status === 429) state.unavailable[provider] = Date.parse(now) + retryMs(response.headers, now);
   const valid = status >= 200 && status < 300 && !response.error;
+  if (!valid) {
+    addProviderError(state, provider, status, response, now);
+    if ([400, 401, 403, 422].includes(status) || status >= 400 && status < 500 && status !== 429) state.unavailable[provider] = Number.MAX_SAFE_INTEGER;
+    else if (status === 429 || status >= 500 || response.error && status === 0) state.unavailable[provider] = Date.parse(now) + retryMs(response.headers, now);
+  }
   const results = valid ? shapeResults(getItems(provider, response.body), provider, stock.domains) : [];
   if (results.length) { stock.results = results; stock.reason = null; state.cursor++; return state; }
   if (provider === 'searx') { stock.nextProvider = 'brave'; return state; }

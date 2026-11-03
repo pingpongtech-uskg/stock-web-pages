@@ -10,9 +10,15 @@ Every stock has `pegReview`: `available`, `needs_review`, or `not_applicable`, w
 
 ## Source recovery
 
-No AI or model is used. The n8n discovery draft searches SearXNG first and uses Brave only after an unusable result or provider failure. Brave is capped at 20 calls per market date. Approved issuer domains come from TWSE/TPEx company directories. Search snippets are discovery hints, never EPS evidence.
+No AI or model is used. The n8n discovery workflow searches SearXNG first and uses Brave only after an unusable result or provider failure. Brave is capped at 20 calls per market date. Approved issuer domains come from TWSE/TPEx company directories. Search snippets are discovery hints, never EPS evidence.
 
-The draft requires the owner's SearXNG service URL. With the URL unset it returns `configuration_required`, makes no provider calls, and remains unpublished. It is not yet connected to the daily workflow. Generate its auditable graph with `node scripts/n8n/build-peg-source-workflow.cjs`. Credentials remain in n8n; no keys belong in source files.
+The private SearXNG address is read from the singleton `searx_url` column in n8n's `Stockscreener PEG source progress` table. It is not embedded in the checked-in graph. Only explicit private HTTP(S) service addresses are accepted for SearXNG; discovered financial documents still require public HTTPS. A missing address returns `configuration_required` before provider calls. Switching n8n to a private address does not disable an existing public reverse-proxy route; remove that route in the deployment platform separately. Credentials remain in n8n; no keys belong in source files.
+
+Generate the auditable child graph with `node scripts/n8n/build-peg-source-workflow.cjs`. `peg-parent-hook.cjs` exports `applyHook` to attach the child after the parent's verified publication outcome. It preserves the original result, schedules, credentials and ledger. The child runs asynchronously and an auxiliary failure does not fail the parent.
+
+The dedicated progress table uses singleton row 1, a revision compare-and-swap and a 30-minute lease. Brave quota is reserved before search; an expired unrefunded reservation is counted as spent. Source results and dispatch intent survive retries. A deterministic request ID `peg-<marketDate>-ttm-v1` prevents repeating an accepted or ambiguous dispatch. Existing Actions requests are reconciled rather than dispatched again. The public latest artifact's market date drives the run; the calendar date never substitutes for an unavailable session.
+
+Brave requests explicitly send `Accept: application/json`. Configuration/authentication errors stop that provider for the rest of the batch; rate limits and temporary failures use a cooldown. Search targets the last disclosed EPS quarter when provided, not an assumed newly completed quarter.
 
 Candidate documents are bounded, cached and fetched through DNS-pinned HTTPS. The parser accepts explicit historical quarterly EPS only when issuer identity, reporting currency, scope and period can be established. It does not infer forecasts, subtract ambiguous cumulative values, or silently resolve conflicting bases. Source URL, row, document hash and observation/publication date are retained. Unresolved records stay in review.
 
