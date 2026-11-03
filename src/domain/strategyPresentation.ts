@@ -18,7 +18,7 @@ export interface StrategyPresentation {
   accent: StrategyAccent
 }
 
-export const ZULU_VALUATION_FORMULA = '正式 PEG = 目前 PE ÷ 可驗證的 EPS／獲利成長率（%）；若成長輸入只有代理，仍顯示「估算／代理 PEG」與方法，但不等同正式 EPS PEG；當前 EPS 一律由「現價 ÷ 當期 PE」反推；Forward EPS = 當前 EPS ×（1 + 成長率）；祖魯基準價（PEG=1）= Forward EPS × 成長率（%）；PEG < 0.75 可接受、PEG < 0.66 嚴格。只有可追溯的正式或代理成長輸入才計算 PEG 與情境價；營收成長僅為觀察代理，不等同 EPS 成長。'
+export const ZULU_VALUATION_FORMULA = '主要 PEG = 目前 PE ÷ TTM EPS 年增率（%）；TTM EPS 為最近四個已公布、可比季度的 EPS 合計，與前四季合計比較。當前 EPS 使用已驗證的 TTM EPS；同日 PE 缺漏時以原始現價 ÷ TTM EPS 推算並標示來源。Forward EPS = TTM EPS ×（1 + 成長率）；祖魯基準價（PEG=1）= Forward EPS × 成長率（%）；PEG < 0.75 可接受、PEG < 0.66 嚴格。EPS、成長率非正值或口徑不可比時不顯示 PEG。營收成長僅為觀察代理，不代替 EPS 成長；歷史快照若標示「估算／代理 PEG」，應按其舊版方法解讀。'
 export const GROWTH_TOTAL_RETURN_FORMULA = '總報酬本益比（本站整理）：保守獲利成長率 = 多年度 EPS 成長 × 0.8；總報酬率（百分點）= 保守獲利成長率 + 已確認現金股利殖利率；總報酬本益比 = 總報酬率 ÷ 目前 PE；Forward EPS = TTM EPS ×（1 + 保守獲利成長率）；總報酬估值參考價（本站整理） = Forward EPS × 總報酬率；總報酬本益比 ≥ 1.2 才列低估研究候選。缺股利、缺多年度 EPS 或極端外推時不發布主合理價。祖魯 PEG 僅作交叉參考。'
 
 export const strategyPresentations: readonly StrategyPresentation[] = [
