@@ -163,13 +163,17 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
   const proxy = isProxyValuation(row)
   const observation = row.status !== 'pass'
   const lowPosition = strategy === 'lowPosition'
-  const pegAvailable = Number.isFinite(row.currentPeg)
+  const reviewedPeg = row.pegReview && row.pegReview.status !== 'available' ? null : row.currentPeg
+  const pegAvailable = Number.isFinite(reviewedPeg)
+  const pegUnavailableLabel = row.pegReview?.status === 'needs_review'
+    ? '待核對'
+    : row.pegReview?.status === 'not_applicable' ? '不適用' : 'PEG 不可用'
   const growthValuationAvailable = Number.isFinite(row.growthFairPrice) || Number.isFinite(row.growthBuyZonePrice)
   const valuationAvailable = growth
     ? growthValuationAvailable
     : Number.isFinite(row.fairPrice) || Number.isFinite(row.valuePrice075) || Number.isFinite(row.valuePrice066)
   const pegThreshold = row.pegBand === 'strict' ? '< 0.66' : '< 0.75'
-  const pegBadge = !pegAvailable ? '估值資料不足' : proxy ? `PEG ${pegThreshold}（代理）` : row.pegBand === 'strict' ? 'PEG < 0.66 嚴格' : 'PEG < 0.75 可接受'
+  const pegBadge = !pegAvailable ? pegUnavailableLabel : proxy ? `PEG ${pegThreshold}（代理）` : row.pegBand === 'strict' ? 'PEG < 0.66 嚴格' : 'PEG < 0.75 可接受'
   const fairPriceLabel = proxy ? '祖魯基準價（代理情境，PEG=1）' : '祖魯合理價（PEG=1）'
   const band075Label = proxy ? '代理情境價（PEG=0.75）' : 'PEG 0.75 價值帶'
   const band066Label = proxy ? '代理情境價（PEG=0.66）' : 'PEG 0.66 價值帶'
@@ -211,12 +215,12 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
           <strong>{formatMaybeTotalReturnPe(row.growthTotalReturnPe)}</strong>
           <em className={Number(row.growthTotalReturnPe) >= 1.2 ? 'peg-badge strict' : 'peg-badge'}>{Number(row.growthTotalReturnPe) >= 1.2 ? '≥ 1.20 低估研究' : row.growthValuationStatus === 'extreme' ? '極端外推' : '估值不可用'}</em>
           <small>祖魯 PEG 交叉參考</small>
-          <strong>{formatMaybePeg(row.currentPeg)}</strong>
+          <strong>{pegAvailable ? formatMaybePeg(reviewedPeg) : pegUnavailableLabel}</strong>
         </span>
       ) : (
         <span className="stock-peg">
           <small>目前 PEG</small>
-          <strong>{formatMaybePeg(row.currentPeg)}</strong>
+          <strong>{pegAvailable ? formatMaybePeg(reviewedPeg) : pegUnavailableLabel}</strong>
           <em className={row.pegBand === 'strict' ? 'peg-badge strict' : 'peg-badge'}>{pegBadge}</em>
         </span>
       )}
@@ -251,7 +255,7 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`${row.code} ${row.name}${lowPosition ? '，價格／回歸觀察' : growth ? `，總報酬本益比 ${formatMaybeTotalReturnPe(row.growthTotalReturnPe)}` : pegAvailable ? `，目前 PEG ${Number(row.currentPeg).toFixed(2)}` : '，PEG 不可用'}，開啟財報狗股票健檢`}
+      aria-label={`${row.code} ${row.name}${lowPosition ? '，價格／回歸觀察' : growth ? `，總報酬本益比 ${formatMaybeTotalReturnPe(row.growthTotalReturnPe)}` : pegAvailable ? `，目前 PEG ${Number(reviewedPeg).toFixed(2)}` : '，PEG 不可用'}，開啟財報狗股票健檢`}
       onClick={() => trackEvent('candidate_external_open', { strategy, code: row.code })}
     >
       {content}

@@ -2,6 +2,14 @@ export type MetricStatus = 'pass' | 'fail' | 'unknown' | 'not_applicable'
 export type Freshness = 'current' | 'stale' | 'degraded' | 'unavailable'
 export type PriceBasis = 'adjusted' | 'raw_proxy' | 'unknown'
 
+export interface PegReview {
+  status: 'available' | 'needs_review' | 'not_applicable'
+  reasonCodes: string[]
+  currentPeriod: string | null
+  priorPeriod: string | null
+  sourceRefs: string[]
+}
+
 export interface MetricValue<T = number> {
   value: T | null
   unit: string
@@ -153,6 +161,8 @@ export interface StockSummary {
   sourceRefs: string[]
   chipReference?: ChipReference
   valuation?: ValuationSummary
+  /** TTM EPS YoY PEG calculation audit, published when supported by this release. */
+  pegReview?: PegReview
   growthValuation?: GrowthValuationSummary
   growthHealthEligible?: boolean
   healthCategories?: HealthCategory[]
@@ -293,6 +303,7 @@ export interface RankingRow {
   valuePrice075?: number | null
   valuePrice066?: number | null
   currentPeg?: number | null
+  pegReview?: PegReview
   currentPe?: number | null
   currentEps?: number | null
   pegBand?: 'strict' | 'acceptable'

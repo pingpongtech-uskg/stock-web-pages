@@ -83,12 +83,27 @@ def test_raw_return_does_not_bridge_a_missing_intermediate_quote(monkeypatch):
 
 
 def test_zulu_valuation_requires_pe_from_actual_raw_quote_date(monkeypatch):
-    monkeypatch.setattr(refresh, '_earnings_proxy_from_detail', lambda detail: {'growth': .2})
+    eps_rows = [
+        {'year': year, 'quarter': quarter, 'eps': 1.0 if year == 2024 else 2.0}
+        for year in (2024, 2025) for quarter in (1, 2, 3, 4)
+    ]
     detail = {'asOf': '2026-10-15', 'lastPrice': 100, 'quoteBasis': 'raw_close',
-              'healthInputs': {'valuationCurrent': {'date': '2026-10-16', 'pe': 10}}}
-    assert refresh._valuation_from_detail(detail) is None
-    same_day = {**detail, 'healthInputs': {'valuationCurrent': {'date': '2026-10-15', 'pe': 10}}}
-    assert refresh._valuation_from_detail(same_day)['current_price'] == 100
+              'quoteAsOf': '2026-10-15', 'healthInputs': {
+                  'incomeQuarterly': eps_rows,
+                  'valuationCurrent': {'date': '2026-10-16', 'pe': 10},
+              }}
+    stale_pe_value = refresh._valuation_from_detail(detail)
+    assert stale_pe_value['current_price'] == 100
+    assert stale_pe_value['current_pe'] == pytest.approx(12.5)
+    assert stale_pe_value['pe_origin'] == 'derived'
+    assert stale_pe_value['pe_source_date'] is None
+    same_day = {**detail, 'healthInputs': {**detail['healthInputs'],
+                                          'valuationCurrent': {'date': '2026-10-15', 'pe': 12.5}}}
+    same_day_value = refresh._valuation_from_detail(same_day)
+    assert same_day_value['current_price'] == 100
+    assert same_day_value['current_pe'] == 12.5
+    assert same_day_value['pe_origin'] == 'reported'
+    assert same_day_value['pe_source_date'] == '2026-10-15'
 
 
 @pytest.mark.parametrize('prices,quote_date', [

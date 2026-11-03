@@ -102,6 +102,31 @@ describe('validateRelease', () => {
     expect(validateRelease(release)).toBe(release)
   })
 
+  it('accepts optional PEG review diagnostics on stock summaries and ranking rows', () => {
+    const release = validRelease() as unknown as Record<string, unknown>
+    const review = {
+      status: 'needs_review', reasonCodes: ['nonconsecutive_quarters'],
+      currentPeriod: '2025Q1–2025Q4', priorPeriod: null,
+      sourceRefs: ['FinMind', 'https://example.com/filing'],
+    }
+    release.stocks = [{ code: '2330', name: '台積電', pegReview: review }]
+    ;(release.rankings as Record<string, unknown>).trust = [{
+      rank: 1, code: '2330', name: '台積電', sector: '半導體業', value: null,
+      valueLabel: 'PEG', status: 'unknown', reason: '待核對', pegReview: review,
+    }]
+    expect(validateRelease(release)).toBe(release)
+  })
+
+  it('continues accepting legacy releases without PEG review diagnostics', () => {
+    expect(validateRelease(validRelease())).toBeTruthy()
+  })
+
+  it('rejects malformed PEG review diagnostics when present', () => {
+    const release = validRelease() as unknown as Record<string, unknown>
+    release.stocks = [{ code: '2330', name: '台積電', pegReview: { status: 'unknown', reasonCodes: [] } }]
+    expect(() => validateRelease(release)).toThrow('發布快照格式錯誤')
+  })
+
   it('accepts the versioned growth coverage contract when every stage and terminal outcome is present', () => {
     const release = validRelease() as unknown as Record<string, unknown>
     const funnel = release.funnel as Record<string, unknown>

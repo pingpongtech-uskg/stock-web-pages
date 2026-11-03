@@ -3,6 +3,7 @@ import { Component, createContext, useContext, useEffect, useState, Fragment, ty
 import { HistoryPanel } from './components/HistoryPanel'
 import { MarketVolumeIndicator } from './components/MarketVolumeIndicator'
 import { StrategyCard } from './components/StrategyCard'
+import { PegReviewSection } from './components/PegReviewSection'
 import { DataStatus } from './components/DataStatus'
 import { PublicationNotice } from './components/PublicationNotice'
 import { loadLatestRelease, type LoadedRelease } from './data/api'
@@ -184,7 +185,7 @@ function DashboardContent({ release, dataSource, contentHash, onReload, refreshE
           <div>
             <p className="site-kicker">TAIWAN STOCK RESEARCH</p>
             <h1>台股三策略選股</h1>
-            <p className="dashboard-intro">切換策略 tab 後查看該策略的候選；每檔股票同步顯示 PEG、價格、估值帶與正式／代理證據等級。</p>
+            <p className="dashboard-intro">主要 PEG 依連續可比的 TTM EPS 年增率計算；逐檔查核清單說明待核對與不適用項目。切換策略 tab 查看候選與估值證據。</p>
           </div>
           <div className="dashboard-meta" aria-label="資料資訊">
             <button className="history-nav-button" onClick={historyView ? returnToLatest : showHistory} aria-pressed={historyView}>{historyView ? '返回最新發布' : '歷史篩選'}</button>
@@ -207,6 +208,7 @@ function DashboardContent({ release, dataSource, contentHash, onReload, refreshE
           trustSignalCount={release.summary.trustSignalCount}
           trustNewEntryCount={release.summary.trustNewEntryCount}
         />
+        <PegReviewSection stocks={release.stocks} />
 
         <div className="strategy-tabs" role="tablist" aria-label="股票策略">
           {blocks.map((block, index) => {

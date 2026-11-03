@@ -1,4 +1,4 @@
-from scripts.refresh_snapshot import _attach_valuation
+from scripts.refresh_snapshot import _attach_valuation, _valuation_from_detail
 from scripts.refresh_snapshot import apply_official_institutional_metrics
 from scripts.refresh_snapshot import growth_health_qualifies
 from scripts.refresh_snapshot import new_entry_rows
@@ -752,3 +752,129 @@ def test_dividend_all_known_dates_before_cutoff_retains_confirmed_cash(cash):
     result = _dividend_evidence({'asOf': '2026-10-02', 'healthInputs': {'dividends': [dividend]}}, 100)
     assert result['value'] == cash / 100
     assert result['audit']['origin'] == 'derived'
+def test_refresh_formal_peg_ignores_revenue_proxies_and_records_review():
+    detail = {
+        "asOf": "2026-03-01", "lastPrice": 100,
+        "revenueGrowth3m": 0.5,
+        "healthInputs": {
+            "valuationCurrent": {"date": "2026-03-01", "pe": 12.5},
+            "incomeQuarterly": [
+                {"year": year, "quarter": quarter, "eps": eps}
+                for year, eps in ((2024, 1.0), (2025, 2.0))
+                for quarter in (1, 2, 3, 4)
+            ],
+        },
+    }
+    valuation = _valuation_from_detail(detail)
+    assert valuation is not None
+    assert valuation["growth_method"] == "ttm_reported_eps_yoy"
+    assert detail["pegReview"]["status"] == "available"
+
+    detail["healthInputs"]["incomeQuarterly"][-1]["epsComparable"] = False
+    assert _valuation_from_detail(detail) is None
+    assert detail["pegReview"]["reasonCodes"] == ["incomparable_eps_basis"]
+
+
+def test_refresh_peg_preserves_stock_distribution_eps_comparability_guard():
+    detail = {
+        "asOf": "2026-03-01", "lastPrice": 100, "revenueGrowth3m": 0.5,
+        "healthInputs": {
+            "valuationCurrent": {"date": "2026-03-01", "pe": 12.5},
+            "dividends": [{"year": 2025, "stockPerShare": 1}],
+            "incomeQuarterly": [
+                {"year": year, "quarter": quarter, "eps": eps}
+                for year, eps in ((2024, 1.0), (2025, 2.0))
+                for quarter in (1, 2, 3, 4)
+            ],
+        },
+    }
+    assert _valuation_from_detail(detail) is None
+    assert detail["pegReview"]["status"] == "needs_review"
+    assert detail["pegReview"]["reasonCodes"] == ["incomparable_eps_basis"]
+
+
+def test_build_release_merges_dated_peg_evidence_without_mutating_baseline_archive(tmp_path):
+    import json
+    import scripts.refresh_snapshot as refresh
+
+    data = tmp_path / "public" / "data"
+    old_run = data / "releases" / "baseline" / "stocks"
+    old_run.mkdir(parents=True)
+    detail = {
+        "code": "2330", "name": "Test", "asOf": "2026-10-01", "lastPrice": 100,
+        "priceSeries": [{"date": "2026-10-01", "close": 100, "adjustedClose": 100}],
+        "healthInputs": {
+            "valuationCurrent": {"date": "2026-10-01", "pe": 12.5},
+            "incomeQuarterly": [
+                {"year": year, "quarter": quarter, "eps": None if year == 2025 and quarter == 4 else (1.0 if year == 2024 else 2.0)}
+                for year in (2024, 2025) for quarter in (1, 2, 3, 4)
+            ],
+        },
+    }
+    archive_file = old_run / "2330.json"
+    archive_file.write_text(json.dumps(detail))
+    original_archive = archive_file.read_bytes()
+    (data / "latest.json").write_text(json.dumps({
+        "runId": "baseline", "marketDate": "2026-10-01", "freshness": "current",
+        "stocks": [{"code": "2330"}],
+        "marketIndicators": {"volumeMultiple00631L": {"status": "unavailable"}},
+    }))
+    evidence_path = tmp_path / "peg-evidence.json"
+    evidence_path.write_text(json.dumps({
+        "marketDate": "2026-10-02",
+        "stocks": [{"code": "2330", "records": [{
+            "period": "2025-Q4", "eps": 2.0, "currency": "TWD", "scope": "consolidated",
+            "epsKind": "basic", "publishedDate": "2026-02-01", "sourceUrl": "https://issuer.example/report",
+            "quotedRow": "EPS 2.00", "sha256": "abc123",
+        }]}],
+    }))
+
+    result = refresh.build_release(data, [], as_of="2026-10-02", offline=False,
+                                   recompute_existing=True, peg_evidence_path=evidence_path)
+    latest = json.loads((data / "latest.json").read_text())
+    output_detail = json.loads((data / "releases" / result["run_id"] / "stocks" / "2330.json").read_text())
+    assert latest["stocks"][0]["pegReview"]["status"] == "available"
+    assert output_detail["healthInputs"]["incomeQuarterly"][-1]["eps"] == 2.0
+    assert output_detail["valuation"]["formula_version"] == "peg-ttm-yoy-v1"
+    assert archive_file.read_bytes() == original_archive
+
+
+def test_peg_evidence_without_publication_date_is_not_merged(tmp_path):
+    import json
+    import scripts.refresh_snapshot as refresh
+
+    detail = {"code": "2330", "healthInputs": {"incomeQuarterly": [
+        {"year": 2025, "quarter": 4, "eps": None},
+    ]}}
+    path = tmp_path / "evidence.json"
+    path.write_text(json.dumps({"marketDate": "2026-10-02", "stocks": [{
+        "code": "2330", "records": [{"period": "2025-Q4", "eps": 2.0,
+            "currency": "TWD", "scope": "consolidated", "epsKind": "basic"}],
+    }]}))
+    merged = refresh._merge_peg_evidence([detail], path, "2026-10-02")
+    assert merged[0]["healthInputs"]["incomeQuarterly"][0]["eps"] is None
+    assert detail["healthInputs"]["incomeQuarterly"][0]["eps"] is None
+
+
+@pytest.mark.parametrize("observed_at,published_date,expected_eps", [
+    ("2026-10-02T00:01:00+08:00", None, 2.0),
+    ("2026-10-03T00:01:00+08:00", None, None),
+    ("2026-10-02T00:01:00+08:00", "2026-10-03", None),
+])
+def test_peg_evidence_observation_date_must_be_at_cutoff(tmp_path, observed_at, published_date, expected_eps):
+    import json
+    import scripts.refresh_snapshot as refresh
+
+    detail = {"code": "2330", "healthInputs": {"incomeQuarterly": [
+        {"year": 2025, "quarter": 4, "eps": None},
+    ]}}
+    record = {"period": "2025-Q4", "eps": 2.0, "currency": "TWD",
+              "scope": "consolidated", "epsKind": "basic", "observedAt": observed_at}
+    if published_date is not None:
+        record["publishedDate"] = published_date
+    path = tmp_path / "evidence.json"
+    path.write_text(json.dumps({"marketDate": "2026-10-02", "stocks": [{"code": "2330", "records": [record]}]}))
+    merged = refresh._merge_peg_evidence([detail], path, "2026-10-02")
+    assert merged[0]["healthInputs"]["incomeQuarterly"][0]["eps"] == expected_eps
+
+

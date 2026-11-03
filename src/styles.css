@@ -72,6 +72,16 @@ button { cursor: pointer; }
 .funnel-steps strong { color: var(--text); font-family: var(--mono); font-size: 14px; }
 .funnel-steps i { color: var(--line-strong); font-style: normal; }
 .coverage-funnel p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.peg-review-section { margin-top: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); padding: 10px 13px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.peg-review-section > summary { color: var(--text); cursor: pointer; font-weight: 750; }
+.peg-review-section > p { margin: 8px 0; }
+.peg-review-section section { margin-top: 12px; }
+.peg-review-section h3 { margin: 0 0 5px; color: var(--text); font-size: 12px; }
+.peg-review-section ul { display: grid; gap: 7px; margin: 0; padding-left: 20px; }
+.peg-review-section li { display: grid; gap: 2px; }
+.peg-review-section li strong { color: var(--text); }
+.peg-review-section li small { color: var(--faint); overflow-wrap: anywhere; }
+.peg-review-sources a { color: var(--blue); }
 .publication-coverage { display: flex; flex-wrap: wrap; gap: 7px 18px; color: var(--muted); font-size: 10px; line-height: 1.4; }
 .publication-coverage strong { color: var(--text); font-family: var(--mono); font-size: 11px; }
 .growth-stock-diagnostics { border-top: 1px solid var(--line); padding-top: 8px; color: var(--muted); font-size: 10px; }

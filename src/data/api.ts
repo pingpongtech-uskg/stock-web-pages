@@ -133,6 +133,15 @@ function validateChipReference(value: unknown): void {
   }
 }
 
+function validatePegReview(value: unknown): void {
+  const review = requireRecord(value)
+  expect(['available', 'needs_review', 'not_applicable'].includes(requireString(review.status)))
+  requireStringArray(review.reasonCodes)
+  requireNullableString(review.currentPeriod)
+  requireNullableString(review.priorPeriod)
+  requireStringArray(review.sourceRefs)
+}
+
 function validateRankingRow(value: unknown): void {
   const row = requireRecord(value)
   requireFiniteNumber(row.rank)
@@ -160,6 +169,7 @@ function validateRankingRow(value: unknown): void {
   if (row.regressionStart !== undefined) requireNullableString(row.regressionStart)
   if (row.regressionEnd !== undefined) requireNullableString(row.regressionEnd)
   if (row.chipReference !== undefined) validateChipReference(row.chipReference)
+  if (row.pegReview !== undefined) validatePegReview(row.pegReview)
 }
 
 function validateStockSummary(value: unknown): void {
@@ -173,6 +183,7 @@ function validateStockSummary(value: unknown): void {
   if (stock.lastPrice !== undefined) requireNullableNumber(stock.lastPrice)
   if (stock.sourceRefs !== undefined) expect(requireArray(stock.sourceRefs).every((ref) => typeof ref === 'string'))
   if (stock.chipReference !== undefined) validateChipReference(stock.chipReference)
+  if (stock.pegReview !== undefined) validatePegReview(stock.pegReview)
 }
 
 function validateGrowthInputAudit(value: unknown): void {

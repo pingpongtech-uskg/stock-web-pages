@@ -1,0 +1,902 @@
+{
+  "2892": {
+    "name": "第一金",
+    "legalName": "第一金融控股股份有限公司",
+    "officialDomains": [
+      "firstholding.com.tw"
+    ],
+    "website": "www.firstholding.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2890": {
+    "name": "永豐金",
+    "legalName": "永豐金融控股股份有限公司",
+    "officialDomains": [
+      "sinopac.com"
+    ],
+    "website": "https://www.sinopac.com/index.html",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2801": {
+    "name": "彰銀",
+    "legalName": "彰化商業銀行股份有限公司",
+    "officialDomains": [
+      "bankchb.com"
+    ],
+    "website": "www.bankchb.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2884": {
+    "name": "玉山金",
+    "legalName": "玉山金融控股股份有限公司",
+    "officialDomains": [
+      "esunfhc.com"
+    ],
+    "website": "https://www.esunfhc.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2382": {
+    "name": "廣達",
+    "legalName": "廣達電腦股份有限公司",
+    "officialDomains": [
+      "quantatw.com"
+    ],
+    "website": "www.quantatw.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "1101": {
+    "name": "台泥",
+    "legalName": "臺灣水泥股份有限公司",
+    "officialDomains": [
+      "tccgroupholdings.com"
+    ],
+    "website": "https://www.tccgroupholdings.com/tw/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "1303": {
+    "name": "南亞",
+    "legalName": "南亞塑膠工業股份有限公司",
+    "officialDomains": [
+      "npc.com.tw"
+    ],
+    "website": "http://www.npc.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3189": {
+    "name": "景碩",
+    "legalName": "景碩科技股份有限公司",
+    "officialDomains": [
+      "kinsus.com.tw"
+    ],
+    "website": "www.kinsus.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2409": {
+    "name": "友達",
+    "legalName": "友達光電股份有限公司",
+    "officialDomains": [
+      "auo.com"
+    ],
+    "website": "www.auo.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "9945": {
+    "name": "潤泰新",
+    "legalName": "潤泰創新國際股份有限公司",
+    "officialDomains": [
+      "rt-develop.com.tw"
+    ],
+    "website": "www.rt-develop.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "6213": {
+    "name": "聯茂",
+    "legalName": "聯茂電子股份有限公司",
+    "officialDomains": [
+      "iteqcorp.com"
+    ],
+    "website": "www.iteqcorp.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "8021": {
+    "name": "尖點",
+    "legalName": "尖點科技股份有限公司",
+    "officialDomains": [
+      "topoint.tw"
+    ],
+    "website": "http://www.topoint.tw/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2313": {
+    "name": "華通",
+    "legalName": "華通電腦股份有限公司",
+    "officialDomains": [
+      "compeq.com.tw"
+    ],
+    "website": "www.compeq.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2368": {
+    "name": "金像電",
+    "legalName": "金像電子(股)公司",
+    "officialDomains": [
+      "gce.com.tw"
+    ],
+    "website": "http://www.gce.com.tw/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "8046": {
+    "name": "南電",
+    "legalName": "南亞電路板股份有限公司",
+    "officialDomains": [
+      "nanyapcb.com.tw"
+    ],
+    "website": "https://www.nanyapcb.com.tw/nypcb/Chinese/index",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "6257": {
+    "name": "矽格",
+    "legalName": "矽格股份有限公司",
+    "officialDomains": [
+      "sigurd.com.tw"
+    ],
+    "website": "www.sigurd.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2492": {
+    "name": "華新科",
+    "legalName": "華新科技股份有限公司",
+    "officialDomains": [
+      "passivecomponent.com"
+    ],
+    "website": "www.passivecomponent.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2882": {
+    "name": "國泰金",
+    "legalName": "國泰金融控股股份有限公司",
+    "officialDomains": [
+      "cathayholdings.com"
+    ],
+    "website": "www.cathayholdings.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "8150": {
+    "name": "南茂",
+    "legalName": "南茂科技股份有限公司",
+    "officialDomains": [
+      "chipmos.com"
+    ],
+    "website": "www.chipmos.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "8070": {
+    "name": "長華*",
+    "legalName": "長華電材股份有限公司",
+    "officialDomains": [
+      "cwei.com.tw"
+    ],
+    "website": "www.cwei.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "5880": {
+    "name": "合庫金",
+    "legalName": "合作金庫金融控股股份有限公司",
+    "officialDomains": [
+      "tcfhc.com.tw"
+    ],
+    "website": "www.tcfhc.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "4958": {
+    "name": "臻鼎-KY",
+    "legalName": "臻鼎科技控股股份有限公司",
+    "officialDomains": [
+      "zdtco.com"
+    ],
+    "website": "https://www.zdtco.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3406": {
+    "name": "玉晶光",
+    "legalName": "玉晶光電股份有限公司",
+    "officialDomains": [
+      "gseo.com"
+    ],
+    "website": "https://www.gseo.com/tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "4904": {
+    "name": "遠傳",
+    "legalName": "遠傳電信股份有限公司",
+    "officialDomains": [
+      "fareastone.com.tw"
+    ],
+    "website": "www.fareastone.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "6715": {
+    "name": "嘉基",
+    "legalName": "嘉基科技股份有限公司",
+    "officialDomains": [
+      "lintestech.com"
+    ],
+    "website": "www.lintestech.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3034": {
+    "name": "聯詠",
+    "legalName": "聯詠科技股份有限公司",
+    "officialDomains": [
+      "novatek.com.tw"
+    ],
+    "website": "www.novatek.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2330": {
+    "name": "台積電",
+    "legalName": "台灣積體電路製造股份有限公司",
+    "officialDomains": [
+      "tsmc.com"
+    ],
+    "website": "https://www.tsmc.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3481": {
+    "name": "群創",
+    "legalName": "群創光電股份有限公司",
+    "officialDomains": [
+      "innolux.com"
+    ],
+    "website": "http://www.innolux.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2603": {
+    "name": "長榮",
+    "legalName": "長榮海運股份有限公司",
+    "officialDomains": [
+      "evergreen-marine.com"
+    ],
+    "website": "www.evergreen-marine.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2034": {
+    "name": "允強",
+    "legalName": "允強實業股份有限公司",
+    "officialDomains": [
+      "ycinox.com"
+    ],
+    "website": "http://www.ycinox.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "8996": {
+    "name": "高力",
+    "legalName": "高力熱處理工業股份有限公司",
+    "officialDomains": [
+      "kaori.com.tw"
+    ],
+    "website": "https://www.kaori.com.tw/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2337": {
+    "name": "旺宏",
+    "legalName": "旺宏電子股份有限公司",
+    "officialDomains": [
+      "macronix.com"
+    ],
+    "website": "http://www.macronix.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3167": {
+    "name": "大量",
+    "legalName": "大量科技股份有限公司",
+    "officialDomains": [
+      "taliang.com"
+    ],
+    "website": "https://www.taliang.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3045": {
+    "name": "台灣大",
+    "legalName": "台灣大哥大股份有限公司",
+    "officialDomains": [
+      "taiwanmobile.com"
+    ],
+    "website": "www.taiwanmobile.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "1802": {
+    "name": "台玻",
+    "legalName": "台灣玻璃工業股份有限公司",
+    "officialDomains": [
+      "taiwanglass.com"
+    ],
+    "website": "www.taiwanglass.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "6278": {
+    "name": "台表科",
+    "legalName": "台灣表面黏著科技股份有限公司",
+    "officialDomains": [
+      "tsmt.com.tw"
+    ],
+    "website": "www.tsmt.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2351": {
+    "name": "順德",
+    "legalName": "順德工業股份有限公司",
+    "officialDomains": [
+      "sdi.com.tw"
+    ],
+    "website": "www.sdi.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2317": {
+    "name": "鴻海",
+    "legalName": "鴻海精密工業股份有限公司",
+    "officialDomains": [
+      "honhai.com"
+    ],
+    "website": "https://www.honhai.com/zh-tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2834": {
+    "name": "臺企銀",
+    "legalName": "臺灣中小企業銀行股份有限公司",
+    "officialDomains": [
+      "tbb.com.tw"
+    ],
+    "website": "http://www.tbb.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2812": {
+    "name": "台中銀",
+    "legalName": "台中商業銀行股份有限公司",
+    "officialDomains": [
+      "tcbbank.com.tw"
+    ],
+    "website": "http://www.tcbbank.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3016": {
+    "name": "嘉晶",
+    "legalName": "嘉晶電子股份有限公司",
+    "officialDomains": [
+      "epi.episil.com"
+    ],
+    "website": "www.epi.episil.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2412": {
+    "name": "中華電",
+    "legalName": "中華電信股份有限公司",
+    "officialDomains": [
+      "cht.com.tw"
+    ],
+    "website": "https://www.cht.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "1326": {
+    "name": "台化",
+    "legalName": "台灣化學纖維股份有限公司",
+    "officialDomains": [
+      "fcfc.com.tw"
+    ],
+    "website": "http://www.fcfc.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3017": {
+    "name": "奇鋐",
+    "legalName": "奇鋐科技股份有限公司",
+    "officialDomains": [
+      "avc.co"
+    ],
+    "website": "https://www.avc.co",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "6770": {
+    "name": "力積電",
+    "legalName": "力晶積成電子製造股份有限公司",
+    "officialDomains": [
+      "powerchip.com"
+    ],
+    "website": "www.powerchip.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2845": {
+    "name": "遠東銀",
+    "legalName": "遠東國際商業銀行股份有限公司",
+    "officialDomains": [
+      "feib.com.tw"
+    ],
+    "website": "http://www.feib.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2301": {
+    "name": "光寶科",
+    "legalName": "光寶科技股份有限公司",
+    "officialDomains": [
+      "liteon.com"
+    ],
+    "website": "http://www.liteon.com/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3702": {
+    "name": "大聯大",
+    "legalName": "大聯大控股股份有限公司",
+    "officialDomains": [
+      "wpgholdings.com"
+    ],
+    "website": "www.WPGholdings.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3711": {
+    "name": "日月光投控",
+    "legalName": "日月光投資控股股份有限公司",
+    "officialDomains": [
+      "aseglobal.com"
+    ],
+    "website": "www.aseglobal.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2002": {
+    "name": "中鋼",
+    "legalName": "中國鋼鐵股份有限公司",
+    "officialDomains": [
+      "csc.com.tw"
+    ],
+    "website": "http://www.csc.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3231": {
+    "name": "緯創",
+    "legalName": "緯創資通股份有限公司",
+    "officialDomains": [
+      "wistron.com"
+    ],
+    "website": "www.wistron.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2889": {
+    "name": "國票金",
+    "legalName": "國票金融控股股份有限公司",
+    "officialDomains": [
+      "ibf.com.tw"
+    ],
+    "website": "www.ibf.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2897": {
+    "name": "王道銀行",
+    "legalName": "王道商業銀行股份有限公司",
+    "officialDomains": [
+      "o-bank.com"
+    ],
+    "website": "www.o-bank.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2883": {
+    "name": "凱基金",
+    "legalName": "凱基金融控股股份有限公司",
+    "officialDomains": [
+      "kgi.com"
+    ],
+    "website": "www.kgi.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3037": {
+    "name": "欣興",
+    "legalName": "欣興電子股份有限公司",
+    "officialDomains": [
+      "unimicron.com"
+    ],
+    "website": "www.unimicron.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2454": {
+    "name": "聯發科",
+    "legalName": "聯發科技股份有限公司",
+    "officialDomains": [
+      "mediatek.com"
+    ],
+    "website": "http://www.mediatek.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2376": {
+    "name": "技嘉",
+    "legalName": "技嘉科技股份有限公司",
+    "officialDomains": [
+      "gigabyte.com"
+    ],
+    "website": "http://www.gigabyte.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2347": {
+    "name": "聯強",
+    "legalName": "聯強國際股份有限公司",
+    "officialDomains": [
+      "synnex-grp.com"
+    ],
+    "website": "http://www.synnex-grp.com/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "1560": {
+    "name": "中砂",
+    "legalName": "中國砂輪企業股份有限公司",
+    "officialDomains": [
+      "kinik.com.tw"
+    ],
+    "website": "www.kinik.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "1709": {
+    "name": "和益",
+    "legalName": "和益化學工業股份有限公司",
+    "officialDomains": [
+      "fucc.com.tw"
+    ],
+    "website": "http://www.fucc.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3653": {
+    "name": "健策",
+    "legalName": "健策精密工業股份有限公司",
+    "officialDomains": [
+      "jentech.com.tw"
+    ],
+    "website": "https://www.jentech.com.tw/zh",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2352": {
+    "name": "佳世達",
+    "legalName": "佳世達科技股份有限公司",
+    "officialDomains": [
+      "qisda.com.tw"
+    ],
+    "website": "Qisda.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "6805": {
+    "name": "富世達",
+    "legalName": "富世達股份有限公司",
+    "officialDomains": [
+      "fositek.com"
+    ],
+    "website": "www.fositek.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2449": {
+    "name": "京元電子",
+    "legalName": "京元電子股份有限公司",
+    "officialDomains": [
+      "kyec.com.tw"
+    ],
+    "website": "www.kyec.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3443": {
+    "name": "創意",
+    "legalName": "創意電子股份有限公司",
+    "officialDomains": [
+      "guc-asic.com"
+    ],
+    "website": "www.guc-asic.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "6415": {
+    "name": "矽力*-KY",
+    "legalName": "矽力杰股份有限公司",
+    "officialDomains": [
+      "silergy.com"
+    ],
+    "website": "https://www.silergy.com/zh",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2455": {
+    "name": "全新",
+    "legalName": "全新光電科技股份有限公司",
+    "officialDomains": [
+      "vpec.com.tw"
+    ],
+    "website": "http://www.vpec.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2383": {
+    "name": "台光電",
+    "legalName": "台光電子材料股份有限公司",
+    "officialDomains": [
+      "emctw.com"
+    ],
+    "website": "http://www.emctw.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2355": {
+    "name": "敬鵬",
+    "legalName": "敬鵬工業股份有限公司",
+    "officialDomains": [
+      "chinpoon.com"
+    ],
+    "website": "https://www.chinpoon.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2887": {
+    "name": "台新新光金",
+    "legalName": "台新新光金融控股股份有限公司",
+    "officialDomains": [
+      "tsholdings.com.tw"
+    ],
+    "website": "https://www.tsholdings.com.tw/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3706": {
+    "name": "神達",
+    "legalName": "神達控股股份有限公司",
+    "officialDomains": [
+      "mitac.com"
+    ],
+    "website": "www.mitac.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "6446": {
+    "name": "藥華藥",
+    "legalName": "藥華醫藥股份有限公司",
+    "officialDomains": [
+      "pharmaessentia.com"
+    ],
+    "website": "http://www.PharmaEssentia.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2377": {
+    "name": "微星",
+    "legalName": "微星科技股份有限公司",
+    "officialDomains": [
+      "tw.msi.com"
+    ],
+    "website": "http://tw.msi.com/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2615": {
+    "name": "萬海",
+    "legalName": "萬海航運股份有限公司",
+    "officialDomains": [
+      "tw.wanhai.com"
+    ],
+    "website": "http://tw.wanhai.com/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2891": {
+    "name": "中信金",
+    "legalName": "中國信託金融控股股份有限公司",
+    "officialDomains": [
+      "ctbcholding.com"
+    ],
+    "website": "https://www.ctbcholding.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "5876": {
+    "name": "上海商銀",
+    "legalName": "上海商業儲蓄銀行股份有限公司",
+    "officialDomains": [
+      "scsb.com.tw"
+    ],
+    "website": "www.scsb.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "9933": {
+    "name": "中鼎",
+    "legalName": "中鼎工程股份有限公司",
+    "officialDomains": [
+      "ctci.com"
+    ],
+    "website": "www.ctci.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2881": {
+    "name": "富邦金",
+    "legalName": "富邦金融控股股份有限公司",
+    "officialDomains": [
+      "fubon.com"
+    ],
+    "website": "www.fubon.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2006": {
+    "name": "東和鋼鐵",
+    "legalName": "東和鋼鐵企業股份有限公司",
+    "officialDomains": [
+      "tunghosteel.com"
+    ],
+    "website": "www.tunghosteel.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "3533": {
+    "name": "嘉澤",
+    "legalName": "嘉澤端子工業股份有限公司",
+    "officialDomains": [
+      "lotes.cc"
+    ],
+    "website": "https://www.lotes.cc/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2474": {
+    "name": "可成",
+    "legalName": "可成科技股份有限公司",
+    "officialDomains": [
+      "catcher-group.com"
+    ],
+    "website": "www.catcher-group.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2637": {
+    "name": "慧洋-KY",
+    "legalName": "慧洋海運股份有限公司",
+    "officialDomains": [
+      "wisdomlines.com.tw"
+    ],
+    "website": "www.wisdomlines.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "6196": {
+    "name": "帆宣",
+    "legalName": "帆宣系統科技股份有限公司",
+    "officialDomains": [
+      "micb2b.com"
+    ],
+    "website": "https://www.micb2b.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2880": {
+    "name": "華南金",
+    "legalName": "華南金融控股股份有限公司",
+    "officialDomains": [
+      "hnfhc.com.tw"
+    ],
+    "website": "www.hnfhc.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2885": {
+    "name": "元大金",
+    "legalName": "元大金融控股股份有限公司",
+    "officialDomains": [
+      "yuanta.com"
+    ],
+    "website": "http://www.yuanta.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "1605": {
+    "name": "華新",
+    "legalName": "華新麗華股份有限公司",
+    "officialDomains": [
+      "walsin.com"
+    ],
+    "website": "https://www.walsin.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "1301": {
+    "name": "台塑",
+    "legalName": "台灣塑膠工業股份有限公司",
+    "officialDomains": [
+      "fpc.com.tw"
+    ],
+    "website": "http://www.fpc.com.tw",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "5871": {
+    "name": "中租-KY",
+    "legalName": "中租控股股份有限公司",
+    "officialDomains": [
+      "chaileaseholding.com"
+    ],
+    "website": "http://www.chaileaseholding.com/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "2356": {
+    "name": "英業達",
+    "legalName": "英業達股份有限公司",
+    "officialDomains": [
+      "inventec.com"
+    ],
+    "website": "https://www.inventec.com/",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "4938": {
+    "name": "和碩",
+    "legalName": "和碩聯合科技股份有限公司",
+    "officialDomains": [
+      "pegatroncorp.com"
+    ],
+    "website": "www.pegatroncorp.com",
+    "registrySource": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  "6147": {
+    "name": "頎邦",
+    "legalName": "頎邦科技股份有限公司",
+    "officialDomains": [
+      "chipbond.com.tw"
+    ],
+    "website": "www.chipbond.com.tw",
+    "registrySource": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"
+  },
+  "3260": {
+    "name": "威剛",
+    "legalName": "威剛科技股份有限公司",
+    "officialDomains": [
+      "adata.com"
+    ],
+    "website": "www.adata.com",
+    "registrySource": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"
+  },
+  "3264": {
+    "name": "欣銓",
+    "legalName": "欣銓科技股份有限公司",
+    "officialDomains": [
+      "ardentec.com"
+    ],
+    "website": "www.ardentec.com",
+    "registrySource": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"
+  },
+  "6510": {
+    "name": "精測",
+    "legalName": "中華精測科技股份有限公司",
+    "officialDomains": [
+      "chpt.com"
+    ],
+    "website": "https://www.chpt.com",
+    "registrySource": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"
+  },
+  "8069": {
+    "name": "元太",
+    "legalName": "元太科技工業股份有限公司",
+    "officialDomains": [
+      "eink.com"
+    ],
+    "website": "www.eink.com",
+    "registrySource": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"
+  },
+  "1815": {
+    "name": "富喬",
+    "legalName": "富喬工業股份有限公司",
+    "officialDomains": [
+      "ffg.com.tw"
+    ],
+    "website": "http://www.ffg.com.tw",
+    "registrySource": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"
+  },
+  "5347": {
+    "name": "世界",
+    "legalName": "世界先進積體電路股份有限公司",
+    "officialDomains": [
+      "vis.com.tw"
+    ],
+    "website": "www.vis.com.tw",
+    "registrySource": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"
+  },
+  "6182": {
+    "name": "合晶",
+    "legalName": "合晶科技股份有限公司",
+    "officialDomains": [
+      "waferworks.com"
+    ],
+    "website": "Http://www.waferworks.com",
+    "registrySource": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"
+  },
+  "3081": {
+    "name": "聯亞",
+    "legalName": "聯亞光電工業股份有限公司",
+    "officialDomains": [
+      "lmoc.com.tw"
+    ],
+    "website": "https://www.lmoc.com.tw/",
+    "registrySource": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"
+  },
+  "6223": {
+    "name": "旺矽",
+    "legalName": "旺矽科技股份有限公司",
+    "officialDomains": [
+      "mpi.com.tw"
+    ],
+    "website": "www.mpi.com.tw",
+    "registrySource": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O"
+  }
+}

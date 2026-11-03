@@ -28,6 +28,7 @@ import os
 import re
 import subprocess
 import sys
+from calendar import monthrange
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -58,6 +59,7 @@ from pipeline.enrichment import (  # noqa: E402
 from pipeline.health_checks import evaluate_snapshot_health, health_totals  # noqa: E402
 from pipeline.indicators import trust_metrics  # noqa: E402
 from pipeline.financial_periods import gregorian_year, normalized_date, number, dividend_period
+from pipeline.financial_discovery import merge_eps as merge_issuer_eps
 from pipeline.health_inputs import merge_health_inputs, normalize_finmind_health_inputs  # noqa: E402
 from pipeline.growth_health import growth_health_qualifies as growth_health_checks_qualify, _eligible_rows
 from pipeline.source_receipts import safe_directory
@@ -85,6 +87,7 @@ from pipeline.valuation import (  # noqa: E402
     calculate_growth_total_return_valuation,
     calculate_zulu_valuation,
 )
+from pipeline.peg_ttm import calculate_ttm_peg  # noqa: E402
 from pipeline.trading_calendar import next_deadline, is_open
 from pipeline.market_indicators import build_00631l_volume_indicator  # noqa: E402
 
@@ -632,26 +635,21 @@ def _earnings_proxy_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
 
 
 def _valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
-    """Build Zulu PEG from the best known earnings-growth proxy."""
+    """Build formal PEG only from comparable reported TTM EPS and YoY growth."""
     health_inputs = detail.get("healthInputs")
     valuation_current = health_inputs.get("valuationCurrent") if isinstance(health_inputs, dict) else None
     if not isinstance(valuation_current, dict):
         valuation_current = {}
-    # Reported PE and the displayed raw close must describe the same session.
+    validated = derive_growth_inputs(detail)
     quote_day = normalized_date(detail.get("asOf"))
-    if not quote_day or normalized_date(valuation_current.get("date")) != quote_day:
-        return None
-    proxy = _earnings_proxy_from_detail(detail)
-    valuation = calculate_zulu_valuation(
-        current_price=_current_price(detail),
-        current_pe=valuation_current.get("pe"),
-        eps_growth=proxy.get("growth"),
-        growth_method=str(proxy.get("method") or "eps_growth"),
-        growth_method_label=str(proxy.get("method_label") or "EPS 成長"),
+    raw_quote_day = normalized_date(detail.get("quoteAsOf") or detail.get("asOf"))
+    valuation, review = calculate_ttm_peg(
+        validated["rows"], as_of=quote_day,
+        price=validated["current_price"] if raw_quote_day == quote_day and validated["price_origin"] == "reported" else None,
+        reported_pe=valuation_current.get("pe"),
+        pe_date=valuation_current.get("date"),
     )
-    if valuation is not None:
-        valuation["proxy_current_eps"] = proxy.get("current_eps")
-        valuation["proxy_prior_eps"] = proxy.get("prior_eps")
+    detail["pegReview"] = review
     return valuation
 
 
@@ -747,6 +745,7 @@ def _attach_valuation(
         if not is_common_stock_code(code):
             continue
         detail = detail_by_code.get(code, {})
+        peg_review = detail.get("pegReview")
         regression = detail.get("regression")
         if not isinstance(regression, dict):
             regression = {}
@@ -810,6 +809,8 @@ def _attach_valuation(
             row.update(
                 {
                     "valuationEvidenceLevel": "unavailable",
+                    "pegReview": peg_review,
+                    "pegReviewReason": ",".join(peg_review.get("reasonCodes", [])) if isinstance(peg_review, dict) else None,
                     "currentPeg": None,
                     "fairPrice": None,
                     "valuePrice075": None,
@@ -861,6 +862,8 @@ def _attach_valuation(
                 "valuationGrowthMethod": growth_method,
                 "valuationGrowthMethodLabel": growth_method_label,
                 "valuationEvidenceLevel": "proxy" if is_proxy else "formal",
+                "pegReview": peg_review,
+                "pegReviewReason": None,
                 "valuationFormulaVersion": valuation.get("formula_version"),
                 "extremeExtrapolation": extreme,
                 "priceBasis": detail.get("priceBasis"),
@@ -1330,7 +1333,60 @@ def release_volume_indicator(data_dir: Path, baseline: dict[str, Any], market_da
                                         calendar=calendar)
 
 
-def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None, recompute_existing: bool = False, source_cache_dir: Path | None = None, stock_cache_dir: Path | None = None) -> dict[str, Any]:
+def _merge_peg_evidence(details: list[dict[str, Any]], evidence_path: Path | None, market_date: str) -> list[dict[str, Any]]:
+    if evidence_path is None:
+        return details
+    evidence = load_json(evidence_path)
+    if not isinstance(evidence, dict) or evidence.get("marketDate") != market_date:
+        raise ValueError("PEG evidence marketDate must match requested market date")
+    stocks = evidence.get("stocks")
+    if not isinstance(stocks, list):
+        raise ValueError("PEG evidence stocks must be a list")
+    by_code: dict[str, list[dict[str, Any]]] = {}
+    known_codes = {str(detail.get("code")) for detail in details}
+    for stock in stocks:
+        if not isinstance(stock, dict) or not isinstance(stock.get("code"), str) or not isinstance(stock.get("records"), list):
+            raise ValueError("invalid PEG evidence stock entry")
+        code = stock["code"]
+        if code not in known_codes:
+            raise ValueError(f"PEG evidence contains unknown stock code: {code}")
+        if code in by_code:
+            raise ValueError(f"duplicate PEG evidence stock code: {code}")
+        eligible = []
+        for record in stock["records"]:
+            if not isinstance(record, dict):
+                continue
+            published = record.get("publishedDate")
+            period = re.fullmatch(r"(\d{4})-Q([1-4])", str(record.get("period") or ""))
+            publication_day = normalized_date(published)
+            if not period:
+                continue
+            if published not in (None, ""):
+                if (not isinstance(published, str) or publication_day != published
+                        or publication_day > market_date):
+                    continue
+                observed_in_time = True
+            else:
+                observed_at = record.get("observedAt")
+                try:
+                    observation = datetime.fromisoformat(str(observed_at).replace("Z", "+00:00"))
+                except ValueError:
+                    continue
+                if observation.tzinfo is None or observation.astimezone(TAIPEI).date().isoformat() > market_date:
+                    continue
+                observed_in_time = True
+            if not observed_in_time:
+                continue
+            year, quarter = int(period.group(1)), int(period.group(2))
+            quarter_end = date(year, quarter * 3, monthrange(year, quarter * 3)[1]).isoformat()
+            if quarter_end <= market_date:
+                eligible.append(record)
+        by_code[code] = eligible
+    return [merge_issuer_eps(detail, by_code[str(detail.get("code"))])
+            if str(detail.get("code")) in by_code else detail for detail in details]
+
+
+def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None, recompute_existing: bool = False, source_cache_dir: Path | None = None, stock_cache_dir: Path | None = None, peg_evidence_path: Path | None = None) -> dict[str, Any]:
     latest_path = data_dir / "latest.json"
     if not latest_path.exists():
         raise FileNotFoundError(f"missing baseline release: {latest_path}")
@@ -1352,6 +1408,7 @@ def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offlin
             raise ValueError("exact requested market date required") from exc
     else:
         end = datetime.now(TAIPEI).date()
+    details = _merge_peg_evidence(details, peg_evidence_path, end.isoformat())
     if stock_cache_dir is not None:
         details = merge_restored_stock_inputs(details, stock_cache_dir, as_of=end.isoformat())
     errors_by_code: dict[str, list[str]] = {}
@@ -2088,6 +2145,7 @@ def main() -> int:
     parser.add_argument("--ownership-snapshot", default=None, help="validated ownership cache path; ownership is reference-only")
     parser.add_argument("--source-cache-dir", type=Path, default=None, help="retain verified official raw volume receipts")
     parser.add_argument("--stock-cache-dir", type=Path, default=None, help="reuse validated restored historical stock inputs")
+    parser.add_argument("--peg-evidence", type=Path, default=None, help="dated, issuer-verified explicit quarterly EPS evidence JSON")
     args = parser.parse_args()
     codes = list(dict.fromkeys(code.strip() for code in args.codes.split(",") if code.strip()))
     try:
@@ -2101,7 +2159,8 @@ def main() -> int:
         result = build_release(
             Path(args.output), codes, as_of=args.as_of, offline=args.offline,
             ownership_snapshot=Path(args.ownership_snapshot) if args.ownership_snapshot else None,
-            recompute_existing=args.recompute_existing, source_cache_dir=args.source_cache_dir, stock_cache_dir=args.stock_cache_dir,
+            recompute_existing=args.recompute_existing, source_cache_dir=args.source_cache_dir,
+            stock_cache_dir=args.stock_cache_dir, peg_evidence_path=args.peg_evidence,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"snapshot_refresh_failed={type(exc).__name__}: {exc}", file=sys.stderr)

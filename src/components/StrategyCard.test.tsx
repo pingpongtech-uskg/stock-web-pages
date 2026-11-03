@@ -122,6 +122,17 @@ describe('StrategyCard', () => {
     expect(markup).not.toContain('未知')
   })
 
+  it('does not display an old PEG number when the current review status is unavailable', () => {
+    const row: RankingRow = {
+      ...knownRow,
+      currentPeg: 0.52,
+      pegReview: { status: 'needs_review', reasonCodes: ['stale_quote'], currentPeriod: null, priorPeriod: null, sourceRefs: [] },
+    }
+    const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[0]} rows={[row]} />)
+    expect(markup).toContain('待核對')
+    expect(markup).not.toContain('<strong>0.52</strong>')
+  })
+
   it('hides retained trust rows and keeps only new entries', () => {
     const officialUnavailable: RankingRow = {
       ...knownRow,

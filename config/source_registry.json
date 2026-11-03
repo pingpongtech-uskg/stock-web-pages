@@ -1,5 +1,12 @@
 {
-  "allowlist": ["FinMind", "TWSE", "TPEx", "TDCC", "yfinance"],
+  "allowlist": [
+    "FinMind",
+    "TWSE",
+    "TPEx",
+    "TDCC",
+    "yfinance",
+    "IssuerIR"
+  ],
   "sources": {
     "FinMind": {
       "role": "按股歷史價量、法人、月營收、財報與公司行動",
@@ -33,7 +40,19 @@
       "role": "私有行情交叉核對",
       "url": "https://github.com/ranaroussi/yfinance",
       "status": "private check only; not published"
+    },
+    "IssuerIR": {
+      "role": "以股票代號及官方公司網址綁定之公開合併財報與法說實績；只用可核對期間的已公布基本EPS",
+      "discovery": "SearXNG primary; Brave Search API fallback",
+      "public_policy": "發布數值與最少來源證據，不發布完整PDF、不使用搜尋摘要或預估填補EPS"
     }
   },
-  "forbidden_sources": ["財報狗", "新聞站", "公司官網爬蟲", "付費券商報告", "社群資料", "外部 AI 推論服務"]
+  "forbidden_sources": [
+    "財報狗",
+    "新聞站",
+    "付費券商報告",
+    "社群資料",
+    "外部 AI 推論服務",
+    "未核驗公司身分或非官方來源財報"
+  ]
 }
