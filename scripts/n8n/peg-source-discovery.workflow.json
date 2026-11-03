@@ -1,0 +1,445 @@
+{
+  "name": "Stockscreener PEG source discovery",
+  "active": false,
+  "nodes": [
+    {
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "name": "Fetch public latest.json",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "parameters": {
+        "method": "GET",
+        "url": "https://stockscreener.andyshih.uk/data/latest.json",
+        "authentication": "none",
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {
+          "timeout": 15000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "position": [
+        480,
+        0
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Fetch issuer registry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/pingpongtech-uskg/stock-web-pages/contents/config/peg_issuer_domains.json?ref=main",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": false,
+        "options": {
+          "timeout": 15000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "position": [
+        720,
+        0
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "githubApi": {
+          "id": "F0VoGrfOT4OTl2o8",
+          "name": "GitHub_StockScreener"
+        }
+      }
+    },
+    {
+      "name": "Initialize PEG source discovery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const Peg=(()=>{const module={exports:{}};\n'use strict';\n\nconst MAX_RESULTS = 5;\nconst COOLDOWN_MS = 300_000;\nconst DAY_MS = 86_400_000;\nconst PRIVATE_SUFFIXES = ['.localhost', '.local', '.internal', '.test'];\n\nfunction parseHttps(value) {\n  if (typeof value !== 'string') return null;\n  const match = value.match(/^https:\\/\\/([^/?#]+)([^?#]*)(?:\\?([^#]*))?(?:#.*)?$/i);\n  if (!match || match[1].includes('@')) return null;\n  const authority = match[1];\n  const host = authority.replace(/:\\d+$/, '').toLowerCase().replace(/\\.$/, '');\n  const port = authority.match(/:(\\d+)$/)?.[1];\n  if (port && (Number(port) < 1 || Number(port) > 65535)) return null;\n  if (!/^[a-z0-9.-]+$/.test(host) || host.startsWith('.') || host.endsWith('.') || host.includes('..')) return null;\n  return isPublicHostname(host) ? { host, path: match[2] || '/', query: match[3] || '', authority } : null;\n}\nfunction validHttpsUrl(value) { return Boolean(parseHttps(value)); }\nfunction isPublicHostname(host) {\n  const h = host.toLowerCase().replace(/^\\[|\\]$/g, '');\n  if (!h.includes('.') || PRIVATE_SUFFIXES.some(s => h.endsWith(s))) return false;\n  if (/^(localhost|\\d{1,3}(\\.\\d{1,3}){3}|\\d+)$/.test(h) || h.includes(':')) return false;\n  const octets = h.split('.').map(Number);\n  if (octets.length === 4 && octets.every(n => n >= 0 && n <= 255)) {\n    return !(octets[0] === 10 || octets[0] === 127 || octets[0] === 0 || octets[0] === 169 && octets[1] === 254 || octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31 || octets[0] === 192 && octets[1] === 168);\n  }\n  return true;\n}\nfunction hostOf(value) { return parseHttps(value)?.host.replace(/^www\\./, '') || ''; }\nfunction approved(url, domains) {\n  const host = hostOf(url);\n  return Boolean(host && domains.some(d => { const root = String(d).toLowerCase().replace(/^https?:\\/\\//, '').split('/')[0].replace(/^www\\./, '').replace(/\\.$/, ''); return root && (host === root || host.endsWith(`.${root}`)); }));\n}\nfunction financial(item) {\n  const text = `${item.title || ''} ${item.url || ''}`.toLowerCase();\n  return /(investor|financial|earnings|quarter|annual|results|report|filing|\\b10[- ]?[qk]\\b|eps|\\.pdf(?:$|\\?)|財務|財報|季報|年報|法說|投資人)/i.test(text);\n}\nfunction shapeResults(items, provider, domains) {\n  if (!Array.isArray(items)) return [];\n  const seen = new Set(), out = [];\n  for (const item of items) {\n    if (!item || typeof item.url !== 'string' || !validHttpsUrl(item.url) || !approved(item.url, domains) || !financial(item)) continue;\n    const parsed = parseHttps(item.url);\n    const url = `https://${parsed.authority.toLowerCase()}${parsed.path}${parsed.query ? `?${parsed.query}` : ''}`;\n    if (seen.has(url)) continue;\n    seen.add(url); out.push({ url, title: String(item.title || '').slice(0, 300), provider });\n    if (out.length >= MAX_RESULTS) break;\n  }\n  return out;\n}\nfunction getItems(provider, body) {\n  if (typeof body === 'string') { try { body = JSON.parse(body); } catch { return []; } }\n  return provider === 'searx' ? body?.results : body?.web?.results;\n}\nfunction retryMs(headers, now) {\n  const value = headers && (headers['retry-after'] || headers['Retry-After']);\n  let ms = Number(value) * 1000;\n  if (!Number.isFinite(ms) || ms < 0) ms = value ? Math.max(0, Date.parse(value) - Date.parse(now)) : 0;\n  return Math.max(COOLDOWN_MS, Math.min(ms || 0, 86_400_000));\n}\nfunction queryFor(stock) {\n  const d = stock.domains[0] || '';\n  return `site:${d} ${stock.legalName || stock.name} ${stock.code} ${stock.period} EPS financial report prior restated data`;\n}\nfunction searxUrl(base, query) {\n  if (typeof base !== 'string' || /[?#]/.test(base)) return '';\n  const parsed = parseHttps(base);\n  if (!parsed) return '';\n  let path = parsed.path.replace(/\\/+$/, '');\n  if (!path) path = '/search';\n  else if (!/\\/search$/i.test(path)) path += '/search';\n  return `https://${parsed.authority}${path}?q=${encodeURIComponent(query)}&format=json`;\n}\nfunction previousQuarter(marketDate) {\n  const m = String(marketDate).match(/^(\\d{4})-(\\d{2})/);\n  if (!m) return 'latest completed quarter';\n  let year = Number(m[1]), quarter = Math.ceil(Number(m[2]) / 3) - 1;\n  if (quarter < 1) { year--; quarter = 4; }\n  return `${year}Q${quarter}`;\n}\nfunction safeConfig(config) {\n  return Boolean(config && typeof config.marketDate === 'string' && config.marketDate && typeof config.requestId === 'string' && config.requestId && Number.isInteger(config.braveDailyLimit) && config.braveDailyLimit >= 0 && validHttpsUrl(config.searxBaseUrl));\n}\nfunction init(input = {}, now = new Date().toISOString()) {\n  const { latest, issuers = {}, cachedManifest, config = {} } = input;\n  const state = { config: { ...config }, cursor: 0, stocks: [], pending: null, unavailable: {}, attempts: {}, outcome: null, manifest: null };\n  const oldUsage = cachedManifest?.searchUsage || {};\n  state.braveUsed = oldUsage.date === config.marketDate ? Number(oldUsage.brave) || 0 : 0;\n  if (!safeConfig(config)) { state.outcome = 'configuration_required'; state.manifest = { marketDate: config.marketDate || null, requestId: config.requestId || null, generatedAt: now, searchUsage: { date: config.marketDate || null, brave: state.braveUsed }, stocks: [] }; return state; }\n  const cacheTime = Date.parse(cachedManifest?.generatedAt);\n  const reusable = cachedManifest?.marketDate === config.marketDate && Number.isFinite(cacheTime) && Date.parse(now) - cacheTime >= 0 && Date.parse(now) - cacheTime < DAY_MS;\n  const latestStocks = Array.isArray(latest?.stocks) ? latest.stocks : [];\n  let candidates = latestStocks.filter(x => (typeof x?.pegReview === 'string' ? x.pegReview : x?.pegReview?.status) === 'needs_review');\n  if (!candidates.length && latest?.marketDate === config.marketDate && !latestStocks.some(x => x?.pegReview && (typeof x.pegReview !== 'object' || x.pegReview.status))) candidates = config.bootstrapCandidates || [];\n  state.stocks = candidates.map(x => {\n    const code = String(x.code || '').trim();\n    const record = issuers[code] || issuers[code.toUpperCase()] || {};\n    return { code, name: String(x.name || record.name || code), period: String(x.currentPeriod || previousQuarter(config.marketDate)), legalName: String(record.legalName || record.name || x.name || code), domains: Array.isArray(record.officialDomains) ? record.officialDomains.filter(d => typeof d === 'string' && d) : [], results: null, reason: null, nextProvider: 'searx' };\n  });\n  if (reusable) {\n    const cached = new Map((cachedManifest.stocks || []).map(x => [x.code, x]));\n    state.stocks = state.stocks.map(s => cached.has(s.code) ? { ...s, results: cached.get(s.code).results || [], reason: cached.get(s.code).reason, nextProvider: null } : s);\n  }\n  return state;\n}\nfunction cloneState(state) { return JSON.parse(JSON.stringify(state)); }\nfunction finalize(state, now) {\n  const stocks = state.stocks.map(s => ({ code: s.code, name: s.name, legalName: s.legalName, officialDomains: [...s.domains], results: s.results || [], providerAttempts: { ...(state.attempts[s.code] || {}) }, ...(s.reason ? { reason: s.reason } : {}) }));\n  state.manifest = { marketDate: state.config.marketDate, requestId: state.config.requestId, generatedAt: now, searchUsage: { date: state.config.marketDate, brave: state.braveUsed }, stocks };\n  return { state, done: true };\n}\nfunction plan(inputState, now = new Date().toISOString()) {\n  const state = cloneState(inputState);\n  if (state.outcome === 'configuration_required') return { state, done: true, outcome: state.outcome };\n  if (state.pending) return { state, done: false, action: { ...state.pending } };\n  while (state.cursor < state.stocks.length) {\n    const s = state.stocks[state.cursor];\n    if (s.results !== null) { state.cursor++; continue; }\n    if (!s.domains.length) { s.results = []; s.reason = 'source_not_found'; state.cursor++; continue; }\n    let provider = s.nextProvider || 'searx';\n    if (provider === 'searx' && state.unavailable.searx > Date.parse(now)) provider = 'brave';\n    if (provider === 'brave') {\n      if (state.unavailable.brave > Date.parse(now)) { s.results = []; s.reason = 'source_unavailable'; state.cursor++; continue; }\n      if (state.braveUsed >= state.config.braveDailyLimit) { s.results = []; s.reason = 'budget_exhausted'; state.cursor++; continue; }\n    }\n    const query = queryFor(s);\n    const url = provider === 'searx' ? searxUrl(state.config.searxBaseUrl, query) : `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5`;\n    if (!validHttpsUrl(url)) { state.outcome = 'configuration_required'; return { state, done: true, outcome: state.outcome }; }\n    const action = { provider, url, method: 'GET' };\n    state.pending = action;\n    state.attempts[s.code] = { ...(state.attempts[s.code] || {}), [provider]: ((state.attempts[s.code] || {})[provider] || 0) + 1 };\n    if (provider === 'brave') state.braveUsed++;\n    return { state, done: false, action: { ...action } };\n  }\n  return finalize(state, now);\n}\nfunction apply(inputState, provider, response = {}, now = new Date().toISOString()) {\n  const state = cloneState(inputState);\n  const action = state.pending;\n  if (!action || action.provider !== provider) return state;\n  state.pending = null;\n  const stock = state.stocks[state.cursor];\n  const status = Number(response.statusCode) || 0;\n  if (status === 429) state.unavailable[provider] = Date.parse(now) + retryMs(response.headers, now);\n  const valid = status >= 200 && status < 300 && !response.error;\n  const results = valid ? shapeResults(getItems(provider, response.body), provider, stock.domains) : [];\n  if (results.length) { stock.results = results; stock.reason = null; state.cursor++; return state; }\n  if (provider === 'searx') { stock.nextProvider = 'brave'; return state; }\n  stock.results = [];\n  stock.reason = state.unavailable.brave > Date.parse(now) ? 'source_unavailable' : 'source_not_found';\n  state.cursor++;\n  return state;\n}\nmodule.exports = { init, plan, apply };\n\nreturn module.exports;})();\nconst latestResponse=$('Fetch public latest.json').first().json||{};\nlet latest=latestResponse.body||{};\nif(typeof latest==='string'){try{latest=JSON.parse(latest)}catch{latest={}}}\nconst registryResponse=$('Fetch issuer registry').first().json||{};\nlet issuers={};\ntry{const body=registryResponse.body||{};const decoded=body.content?JSON.parse(Buffer.from(body.content,'base64').toString('utf8')):{};issuers=decoded.issuers||decoded.companies||decoded}catch{}\nconst staticData=$getWorkflowStaticData('global');\nconst cached=staticData.pegSourceManifest||null;\nconst usage=staticData.pegSourceUsage||cached?.searchUsage||null;\nconst cachedManifest=cached?{...cached,...(usage?{searchUsage:usage}:{})}:usage?{marketDate:usage.date,searchUsage:usage}:null;\nconst marketDate=String(latest.marketDate||'');\nconst dailyRunId=String(latest.runId||latest.actionsRunId||'unknown');\nconst config={marketDate,requestId:'peg-'+marketDate+'-'+dailyRunId,searxBaseUrl:'',braveDailyLimit:20};\nconst state=Peg.init({latest,issuers,cachedManifest,config});\nreturn [{json:{state}}];"
+      },
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "name": "Plan next provider",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const Peg=(()=>{const module={exports:{}};\n'use strict';\n\nconst MAX_RESULTS = 5;\nconst COOLDOWN_MS = 300_000;\nconst DAY_MS = 86_400_000;\nconst PRIVATE_SUFFIXES = ['.localhost', '.local', '.internal', '.test'];\n\nfunction parseHttps(value) {\n  if (typeof value !== 'string') return null;\n  const match = value.match(/^https:\\/\\/([^/?#]+)([^?#]*)(?:\\?([^#]*))?(?:#.*)?$/i);\n  if (!match || match[1].includes('@')) return null;\n  const authority = match[1];\n  const host = authority.replace(/:\\d+$/, '').toLowerCase().replace(/\\.$/, '');\n  const port = authority.match(/:(\\d+)$/)?.[1];\n  if (port && (Number(port) < 1 || Number(port) > 65535)) return null;\n  if (!/^[a-z0-9.-]+$/.test(host) || host.startsWith('.') || host.endsWith('.') || host.includes('..')) return null;\n  return isPublicHostname(host) ? { host, path: match[2] || '/', query: match[3] || '', authority } : null;\n}\nfunction validHttpsUrl(value) { return Boolean(parseHttps(value)); }\nfunction isPublicHostname(host) {\n  const h = host.toLowerCase().replace(/^\\[|\\]$/g, '');\n  if (!h.includes('.') || PRIVATE_SUFFIXES.some(s => h.endsWith(s))) return false;\n  if (/^(localhost|\\d{1,3}(\\.\\d{1,3}){3}|\\d+)$/.test(h) || h.includes(':')) return false;\n  const octets = h.split('.').map(Number);\n  if (octets.length === 4 && octets.every(n => n >= 0 && n <= 255)) {\n    return !(octets[0] === 10 || octets[0] === 127 || octets[0] === 0 || octets[0] === 169 && octets[1] === 254 || octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31 || octets[0] === 192 && octets[1] === 168);\n  }\n  return true;\n}\nfunction hostOf(value) { return parseHttps(value)?.host.replace(/^www\\./, '') || ''; }\nfunction approved(url, domains) {\n  const host = hostOf(url);\n  return Boolean(host && domains.some(d => { const root = String(d).toLowerCase().replace(/^https?:\\/\\//, '').split('/')[0].replace(/^www\\./, '').replace(/\\.$/, ''); return root && (host === root || host.endsWith(`.${root}`)); }));\n}\nfunction financial(item) {\n  const text = `${item.title || ''} ${item.url || ''}`.toLowerCase();\n  return /(investor|financial|earnings|quarter|annual|results|report|filing|\\b10[- ]?[qk]\\b|eps|\\.pdf(?:$|\\?)|財務|財報|季報|年報|法說|投資人)/i.test(text);\n}\nfunction shapeResults(items, provider, domains) {\n  if (!Array.isArray(items)) return [];\n  const seen = new Set(), out = [];\n  for (const item of items) {\n    if (!item || typeof item.url !== 'string' || !validHttpsUrl(item.url) || !approved(item.url, domains) || !financial(item)) continue;\n    const parsed = parseHttps(item.url);\n    const url = `https://${parsed.authority.toLowerCase()}${parsed.path}${parsed.query ? `?${parsed.query}` : ''}`;\n    if (seen.has(url)) continue;\n    seen.add(url); out.push({ url, title: String(item.title || '').slice(0, 300), provider });\n    if (out.length >= MAX_RESULTS) break;\n  }\n  return out;\n}\nfunction getItems(provider, body) {\n  if (typeof body === 'string') { try { body = JSON.parse(body); } catch { return []; } }\n  return provider === 'searx' ? body?.results : body?.web?.results;\n}\nfunction retryMs(headers, now) {\n  const value = headers && (headers['retry-after'] || headers['Retry-After']);\n  let ms = Number(value) * 1000;\n  if (!Number.isFinite(ms) || ms < 0) ms = value ? Math.max(0, Date.parse(value) - Date.parse(now)) : 0;\n  return Math.max(COOLDOWN_MS, Math.min(ms || 0, 86_400_000));\n}\nfunction queryFor(stock) {\n  const d = stock.domains[0] || '';\n  return `site:${d} ${stock.legalName || stock.name} ${stock.code} ${stock.period} EPS financial report prior restated data`;\n}\nfunction searxUrl(base, query) {\n  if (typeof base !== 'string' || /[?#]/.test(base)) return '';\n  const parsed = parseHttps(base);\n  if (!parsed) return '';\n  let path = parsed.path.replace(/\\/+$/, '');\n  if (!path) path = '/search';\n  else if (!/\\/search$/i.test(path)) path += '/search';\n  return `https://${parsed.authority}${path}?q=${encodeURIComponent(query)}&format=json`;\n}\nfunction previousQuarter(marketDate) {\n  const m = String(marketDate).match(/^(\\d{4})-(\\d{2})/);\n  if (!m) return 'latest completed quarter';\n  let year = Number(m[1]), quarter = Math.ceil(Number(m[2]) / 3) - 1;\n  if (quarter < 1) { year--; quarter = 4; }\n  return `${year}Q${quarter}`;\n}\nfunction safeConfig(config) {\n  return Boolean(config && typeof config.marketDate === 'string' && config.marketDate && typeof config.requestId === 'string' && config.requestId && Number.isInteger(config.braveDailyLimit) && config.braveDailyLimit >= 0 && validHttpsUrl(config.searxBaseUrl));\n}\nfunction init(input = {}, now = new Date().toISOString()) {\n  const { latest, issuers = {}, cachedManifest, config = {} } = input;\n  const state = { config: { ...config }, cursor: 0, stocks: [], pending: null, unavailable: {}, attempts: {}, outcome: null, manifest: null };\n  const oldUsage = cachedManifest?.searchUsage || {};\n  state.braveUsed = oldUsage.date === config.marketDate ? Number(oldUsage.brave) || 0 : 0;\n  if (!safeConfig(config)) { state.outcome = 'configuration_required'; state.manifest = { marketDate: config.marketDate || null, requestId: config.requestId || null, generatedAt: now, searchUsage: { date: config.marketDate || null, brave: state.braveUsed }, stocks: [] }; return state; }\n  const cacheTime = Date.parse(cachedManifest?.generatedAt);\n  const reusable = cachedManifest?.marketDate === config.marketDate && Number.isFinite(cacheTime) && Date.parse(now) - cacheTime >= 0 && Date.parse(now) - cacheTime < DAY_MS;\n  const latestStocks = Array.isArray(latest?.stocks) ? latest.stocks : [];\n  let candidates = latestStocks.filter(x => (typeof x?.pegReview === 'string' ? x.pegReview : x?.pegReview?.status) === 'needs_review');\n  if (!candidates.length && latest?.marketDate === config.marketDate && !latestStocks.some(x => x?.pegReview && (typeof x.pegReview !== 'object' || x.pegReview.status))) candidates = config.bootstrapCandidates || [];\n  state.stocks = candidates.map(x => {\n    const code = String(x.code || '').trim();\n    const record = issuers[code] || issuers[code.toUpperCase()] || {};\n    return { code, name: String(x.name || record.name || code), period: String(x.currentPeriod || previousQuarter(config.marketDate)), legalName: String(record.legalName || record.name || x.name || code), domains: Array.isArray(record.officialDomains) ? record.officialDomains.filter(d => typeof d === 'string' && d) : [], results: null, reason: null, nextProvider: 'searx' };\n  });\n  if (reusable) {\n    const cached = new Map((cachedManifest.stocks || []).map(x => [x.code, x]));\n    state.stocks = state.stocks.map(s => cached.has(s.code) ? { ...s, results: cached.get(s.code).results || [], reason: cached.get(s.code).reason, nextProvider: null } : s);\n  }\n  return state;\n}\nfunction cloneState(state) { return JSON.parse(JSON.stringify(state)); }\nfunction finalize(state, now) {\n  const stocks = state.stocks.map(s => ({ code: s.code, name: s.name, legalName: s.legalName, officialDomains: [...s.domains], results: s.results || [], providerAttempts: { ...(state.attempts[s.code] || {}) }, ...(s.reason ? { reason: s.reason } : {}) }));\n  state.manifest = { marketDate: state.config.marketDate, requestId: state.config.requestId, generatedAt: now, searchUsage: { date: state.config.marketDate, brave: state.braveUsed }, stocks };\n  return { state, done: true };\n}\nfunction plan(inputState, now = new Date().toISOString()) {\n  const state = cloneState(inputState);\n  if (state.outcome === 'configuration_required') return { state, done: true, outcome: state.outcome };\n  if (state.pending) return { state, done: false, action: { ...state.pending } };\n  while (state.cursor < state.stocks.length) {\n    const s = state.stocks[state.cursor];\n    if (s.results !== null) { state.cursor++; continue; }\n    if (!s.domains.length) { s.results = []; s.reason = 'source_not_found'; state.cursor++; continue; }\n    let provider = s.nextProvider || 'searx';\n    if (provider === 'searx' && state.unavailable.searx > Date.parse(now)) provider = 'brave';\n    if (provider === 'brave') {\n      if (state.unavailable.brave > Date.parse(now)) { s.results = []; s.reason = 'source_unavailable'; state.cursor++; continue; }\n      if (state.braveUsed >= state.config.braveDailyLimit) { s.results = []; s.reason = 'budget_exhausted'; state.cursor++; continue; }\n    }\n    const query = queryFor(s);\n    const url = provider === 'searx' ? searxUrl(state.config.searxBaseUrl, query) : `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5`;\n    if (!validHttpsUrl(url)) { state.outcome = 'configuration_required'; return { state, done: true, outcome: state.outcome }; }\n    const action = { provider, url, method: 'GET' };\n    state.pending = action;\n    state.attempts[s.code] = { ...(state.attempts[s.code] || {}), [provider]: ((state.attempts[s.code] || {})[provider] || 0) + 1 };\n    if (provider === 'brave') state.braveUsed++;\n    return { state, done: false, action: { ...action } };\n  }\n  return finalize(state, now);\n}\nfunction apply(inputState, provider, response = {}, now = new Date().toISOString()) {\n  const state = cloneState(inputState);\n  const action = state.pending;\n  if (!action || action.provider !== provider) return state;\n  state.pending = null;\n  const stock = state.stocks[state.cursor];\n  const status = Number(response.statusCode) || 0;\n  if (status === 429) state.unavailable[provider] = Date.parse(now) + retryMs(response.headers, now);\n  const valid = status >= 200 && status < 300 && !response.error;\n  const results = valid ? shapeResults(getItems(provider, response.body), provider, stock.domains) : [];\n  if (results.length) { stock.results = results; stock.reason = null; state.cursor++; return state; }\n  if (provider === 'searx') { stock.nextProvider = 'brave'; return state; }\n  stock.results = [];\n  stock.reason = state.unavailable.brave > Date.parse(now) ? 'source_unavailable' : 'source_not_found';\n  state.cursor++;\n  return state;\n}\nmodule.exports = { init, plan, apply };\n\nreturn module.exports;})();\nconst incoming=$input.first().json||{};\nconst state=incoming.state||incoming;\nreturn [{json:Peg.plan(state,new Date().toISOString())}];"
+      },
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "name": "Discovery complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.done }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "position": [
+        1440,
+        0
+      ]
+    },
+    {
+      "name": "Use SearxNG?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.action.provider === \"searx\" }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "position": [
+        1680,
+        0
+      ]
+    },
+    {
+      "name": "Search with SearxNG",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.action.url }}",
+        "authentication": "none",
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {
+          "timeout": 15000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "position": [
+        1920,
+        0
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Search with Brave",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.action.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "braveSearchApi",
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {
+          "timeout": 15000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "position": [
+        2160,
+        0
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "braveSearchApi": {
+          "id": "keND4ReyUl49IW5p",
+          "name": "Brave Search API"
+        }
+      }
+    },
+    {
+      "name": "Apply provider response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const Peg=(()=>{const module={exports:{}};\n'use strict';\n\nconst MAX_RESULTS = 5;\nconst COOLDOWN_MS = 300_000;\nconst DAY_MS = 86_400_000;\nconst PRIVATE_SUFFIXES = ['.localhost', '.local', '.internal', '.test'];\n\nfunction parseHttps(value) {\n  if (typeof value !== 'string') return null;\n  const match = value.match(/^https:\\/\\/([^/?#]+)([^?#]*)(?:\\?([^#]*))?(?:#.*)?$/i);\n  if (!match || match[1].includes('@')) return null;\n  const authority = match[1];\n  const host = authority.replace(/:\\d+$/, '').toLowerCase().replace(/\\.$/, '');\n  const port = authority.match(/:(\\d+)$/)?.[1];\n  if (port && (Number(port) < 1 || Number(port) > 65535)) return null;\n  if (!/^[a-z0-9.-]+$/.test(host) || host.startsWith('.') || host.endsWith('.') || host.includes('..')) return null;\n  return isPublicHostname(host) ? { host, path: match[2] || '/', query: match[3] || '', authority } : null;\n}\nfunction validHttpsUrl(value) { return Boolean(parseHttps(value)); }\nfunction isPublicHostname(host) {\n  const h = host.toLowerCase().replace(/^\\[|\\]$/g, '');\n  if (!h.includes('.') || PRIVATE_SUFFIXES.some(s => h.endsWith(s))) return false;\n  if (/^(localhost|\\d{1,3}(\\.\\d{1,3}){3}|\\d+)$/.test(h) || h.includes(':')) return false;\n  const octets = h.split('.').map(Number);\n  if (octets.length === 4 && octets.every(n => n >= 0 && n <= 255)) {\n    return !(octets[0] === 10 || octets[0] === 127 || octets[0] === 0 || octets[0] === 169 && octets[1] === 254 || octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31 || octets[0] === 192 && octets[1] === 168);\n  }\n  return true;\n}\nfunction hostOf(value) { return parseHttps(value)?.host.replace(/^www\\./, '') || ''; }\nfunction approved(url, domains) {\n  const host = hostOf(url);\n  return Boolean(host && domains.some(d => { const root = String(d).toLowerCase().replace(/^https?:\\/\\//, '').split('/')[0].replace(/^www\\./, '').replace(/\\.$/, ''); return root && (host === root || host.endsWith(`.${root}`)); }));\n}\nfunction financial(item) {\n  const text = `${item.title || ''} ${item.url || ''}`.toLowerCase();\n  return /(investor|financial|earnings|quarter|annual|results|report|filing|\\b10[- ]?[qk]\\b|eps|\\.pdf(?:$|\\?)|財務|財報|季報|年報|法說|投資人)/i.test(text);\n}\nfunction shapeResults(items, provider, domains) {\n  if (!Array.isArray(items)) return [];\n  const seen = new Set(), out = [];\n  for (const item of items) {\n    if (!item || typeof item.url !== 'string' || !validHttpsUrl(item.url) || !approved(item.url, domains) || !financial(item)) continue;\n    const parsed = parseHttps(item.url);\n    const url = `https://${parsed.authority.toLowerCase()}${parsed.path}${parsed.query ? `?${parsed.query}` : ''}`;\n    if (seen.has(url)) continue;\n    seen.add(url); out.push({ url, title: String(item.title || '').slice(0, 300), provider });\n    if (out.length >= MAX_RESULTS) break;\n  }\n  return out;\n}\nfunction getItems(provider, body) {\n  if (typeof body === 'string') { try { body = JSON.parse(body); } catch { return []; } }\n  return provider === 'searx' ? body?.results : body?.web?.results;\n}\nfunction retryMs(headers, now) {\n  const value = headers && (headers['retry-after'] || headers['Retry-After']);\n  let ms = Number(value) * 1000;\n  if (!Number.isFinite(ms) || ms < 0) ms = value ? Math.max(0, Date.parse(value) - Date.parse(now)) : 0;\n  return Math.max(COOLDOWN_MS, Math.min(ms || 0, 86_400_000));\n}\nfunction queryFor(stock) {\n  const d = stock.domains[0] || '';\n  return `site:${d} ${stock.legalName || stock.name} ${stock.code} ${stock.period} EPS financial report prior restated data`;\n}\nfunction searxUrl(base, query) {\n  if (typeof base !== 'string' || /[?#]/.test(base)) return '';\n  const parsed = parseHttps(base);\n  if (!parsed) return '';\n  let path = parsed.path.replace(/\\/+$/, '');\n  if (!path) path = '/search';\n  else if (!/\\/search$/i.test(path)) path += '/search';\n  return `https://${parsed.authority}${path}?q=${encodeURIComponent(query)}&format=json`;\n}\nfunction previousQuarter(marketDate) {\n  const m = String(marketDate).match(/^(\\d{4})-(\\d{2})/);\n  if (!m) return 'latest completed quarter';\n  let year = Number(m[1]), quarter = Math.ceil(Number(m[2]) / 3) - 1;\n  if (quarter < 1) { year--; quarter = 4; }\n  return `${year}Q${quarter}`;\n}\nfunction safeConfig(config) {\n  return Boolean(config && typeof config.marketDate === 'string' && config.marketDate && typeof config.requestId === 'string' && config.requestId && Number.isInteger(config.braveDailyLimit) && config.braveDailyLimit >= 0 && validHttpsUrl(config.searxBaseUrl));\n}\nfunction init(input = {}, now = new Date().toISOString()) {\n  const { latest, issuers = {}, cachedManifest, config = {} } = input;\n  const state = { config: { ...config }, cursor: 0, stocks: [], pending: null, unavailable: {}, attempts: {}, outcome: null, manifest: null };\n  const oldUsage = cachedManifest?.searchUsage || {};\n  state.braveUsed = oldUsage.date === config.marketDate ? Number(oldUsage.brave) || 0 : 0;\n  if (!safeConfig(config)) { state.outcome = 'configuration_required'; state.manifest = { marketDate: config.marketDate || null, requestId: config.requestId || null, generatedAt: now, searchUsage: { date: config.marketDate || null, brave: state.braveUsed }, stocks: [] }; return state; }\n  const cacheTime = Date.parse(cachedManifest?.generatedAt);\n  const reusable = cachedManifest?.marketDate === config.marketDate && Number.isFinite(cacheTime) && Date.parse(now) - cacheTime >= 0 && Date.parse(now) - cacheTime < DAY_MS;\n  const latestStocks = Array.isArray(latest?.stocks) ? latest.stocks : [];\n  let candidates = latestStocks.filter(x => (typeof x?.pegReview === 'string' ? x.pegReview : x?.pegReview?.status) === 'needs_review');\n  if (!candidates.length && latest?.marketDate === config.marketDate && !latestStocks.some(x => x?.pegReview && (typeof x.pegReview !== 'object' || x.pegReview.status))) candidates = config.bootstrapCandidates || [];\n  state.stocks = candidates.map(x => {\n    const code = String(x.code || '').trim();\n    const record = issuers[code] || issuers[code.toUpperCase()] || {};\n    return { code, name: String(x.name || record.name || code), period: String(x.currentPeriod || previousQuarter(config.marketDate)), legalName: String(record.legalName || record.name || x.name || code), domains: Array.isArray(record.officialDomains) ? record.officialDomains.filter(d => typeof d === 'string' && d) : [], results: null, reason: null, nextProvider: 'searx' };\n  });\n  if (reusable) {\n    const cached = new Map((cachedManifest.stocks || []).map(x => [x.code, x]));\n    state.stocks = state.stocks.map(s => cached.has(s.code) ? { ...s, results: cached.get(s.code).results || [], reason: cached.get(s.code).reason, nextProvider: null } : s);\n  }\n  return state;\n}\nfunction cloneState(state) { return JSON.parse(JSON.stringify(state)); }\nfunction finalize(state, now) {\n  const stocks = state.stocks.map(s => ({ code: s.code, name: s.name, legalName: s.legalName, officialDomains: [...s.domains], results: s.results || [], providerAttempts: { ...(state.attempts[s.code] || {}) }, ...(s.reason ? { reason: s.reason } : {}) }));\n  state.manifest = { marketDate: state.config.marketDate, requestId: state.config.requestId, generatedAt: now, searchUsage: { date: state.config.marketDate, brave: state.braveUsed }, stocks };\n  return { state, done: true };\n}\nfunction plan(inputState, now = new Date().toISOString()) {\n  const state = cloneState(inputState);\n  if (state.outcome === 'configuration_required') return { state, done: true, outcome: state.outcome };\n  if (state.pending) return { state, done: false, action: { ...state.pending } };\n  while (state.cursor < state.stocks.length) {\n    const s = state.stocks[state.cursor];\n    if (s.results !== null) { state.cursor++; continue; }\n    if (!s.domains.length) { s.results = []; s.reason = 'source_not_found'; state.cursor++; continue; }\n    let provider = s.nextProvider || 'searx';\n    if (provider === 'searx' && state.unavailable.searx > Date.parse(now)) provider = 'brave';\n    if (provider === 'brave') {\n      if (state.unavailable.brave > Date.parse(now)) { s.results = []; s.reason = 'source_unavailable'; state.cursor++; continue; }\n      if (state.braveUsed >= state.config.braveDailyLimit) { s.results = []; s.reason = 'budget_exhausted'; state.cursor++; continue; }\n    }\n    const query = queryFor(s);\n    const url = provider === 'searx' ? searxUrl(state.config.searxBaseUrl, query) : `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5`;\n    if (!validHttpsUrl(url)) { state.outcome = 'configuration_required'; return { state, done: true, outcome: state.outcome }; }\n    const action = { provider, url, method: 'GET' };\n    state.pending = action;\n    state.attempts[s.code] = { ...(state.attempts[s.code] || {}), [provider]: ((state.attempts[s.code] || {})[provider] || 0) + 1 };\n    if (provider === 'brave') state.braveUsed++;\n    return { state, done: false, action: { ...action } };\n  }\n  return finalize(state, now);\n}\nfunction apply(inputState, provider, response = {}, now = new Date().toISOString()) {\n  const state = cloneState(inputState);\n  const action = state.pending;\n  if (!action || action.provider !== provider) return state;\n  state.pending = null;\n  const stock = state.stocks[state.cursor];\n  const status = Number(response.statusCode) || 0;\n  if (status === 429) state.unavailable[provider] = Date.parse(now) + retryMs(response.headers, now);\n  const valid = status >= 200 && status < 300 && !response.error;\n  const results = valid ? shapeResults(getItems(provider, response.body), provider, stock.domains) : [];\n  if (results.length) { stock.results = results; stock.reason = null; state.cursor++; return state; }\n  if (provider === 'searx') { stock.nextProvider = 'brave'; return state; }\n  stock.results = [];\n  stock.reason = state.unavailable.brave > Date.parse(now) ? 'source_unavailable' : 'source_not_found';\n  state.cursor++;\n  return state;\n}\nmodule.exports = { init, plan, apply };\n\nreturn module.exports;})();\nconst planned=$('Plan next provider').last().json;\nconst raw=$input.first().json||{};\nconst response={statusCode:Number(raw.statusCode??raw.status)||0,body:raw.body,headers:raw.headers||{},error:raw.error};\nreturn [{json:Peg.apply(planned.state,planned.action.provider,response,new Date().toISOString())}];"
+      },
+      "position": [
+        2400,
+        0
+      ]
+    },
+    {
+      "name": "Finish PEG manifest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const Peg=(()=>{const module={exports:{}};\n'use strict';\n\nconst MAX_RESULTS = 5;\nconst COOLDOWN_MS = 300_000;\nconst DAY_MS = 86_400_000;\nconst PRIVATE_SUFFIXES = ['.localhost', '.local', '.internal', '.test'];\n\nfunction parseHttps(value) {\n  if (typeof value !== 'string') return null;\n  const match = value.match(/^https:\\/\\/([^/?#]+)([^?#]*)(?:\\?([^#]*))?(?:#.*)?$/i);\n  if (!match || match[1].includes('@')) return null;\n  const authority = match[1];\n  const host = authority.replace(/:\\d+$/, '').toLowerCase().replace(/\\.$/, '');\n  const port = authority.match(/:(\\d+)$/)?.[1];\n  if (port && (Number(port) < 1 || Number(port) > 65535)) return null;\n  if (!/^[a-z0-9.-]+$/.test(host) || host.startsWith('.') || host.endsWith('.') || host.includes('..')) return null;\n  return isPublicHostname(host) ? { host, path: match[2] || '/', query: match[3] || '', authority } : null;\n}\nfunction validHttpsUrl(value) { return Boolean(parseHttps(value)); }\nfunction isPublicHostname(host) {\n  const h = host.toLowerCase().replace(/^\\[|\\]$/g, '');\n  if (!h.includes('.') || PRIVATE_SUFFIXES.some(s => h.endsWith(s))) return false;\n  if (/^(localhost|\\d{1,3}(\\.\\d{1,3}){3}|\\d+)$/.test(h) || h.includes(':')) return false;\n  const octets = h.split('.').map(Number);\n  if (octets.length === 4 && octets.every(n => n >= 0 && n <= 255)) {\n    return !(octets[0] === 10 || octets[0] === 127 || octets[0] === 0 || octets[0] === 169 && octets[1] === 254 || octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31 || octets[0] === 192 && octets[1] === 168);\n  }\n  return true;\n}\nfunction hostOf(value) { return parseHttps(value)?.host.replace(/^www\\./, '') || ''; }\nfunction approved(url, domains) {\n  const host = hostOf(url);\n  return Boolean(host && domains.some(d => { const root = String(d).toLowerCase().replace(/^https?:\\/\\//, '').split('/')[0].replace(/^www\\./, '').replace(/\\.$/, ''); return root && (host === root || host.endsWith(`.${root}`)); }));\n}\nfunction financial(item) {\n  const text = `${item.title || ''} ${item.url || ''}`.toLowerCase();\n  return /(investor|financial|earnings|quarter|annual|results|report|filing|\\b10[- ]?[qk]\\b|eps|\\.pdf(?:$|\\?)|財務|財報|季報|年報|法說|投資人)/i.test(text);\n}\nfunction shapeResults(items, provider, domains) {\n  if (!Array.isArray(items)) return [];\n  const seen = new Set(), out = [];\n  for (const item of items) {\n    if (!item || typeof item.url !== 'string' || !validHttpsUrl(item.url) || !approved(item.url, domains) || !financial(item)) continue;\n    const parsed = parseHttps(item.url);\n    const url = `https://${parsed.authority.toLowerCase()}${parsed.path}${parsed.query ? `?${parsed.query}` : ''}`;\n    if (seen.has(url)) continue;\n    seen.add(url); out.push({ url, title: String(item.title || '').slice(0, 300), provider });\n    if (out.length >= MAX_RESULTS) break;\n  }\n  return out;\n}\nfunction getItems(provider, body) {\n  if (typeof body === 'string') { try { body = JSON.parse(body); } catch { return []; } }\n  return provider === 'searx' ? body?.results : body?.web?.results;\n}\nfunction retryMs(headers, now) {\n  const value = headers && (headers['retry-after'] || headers['Retry-After']);\n  let ms = Number(value) * 1000;\n  if (!Number.isFinite(ms) || ms < 0) ms = value ? Math.max(0, Date.parse(value) - Date.parse(now)) : 0;\n  return Math.max(COOLDOWN_MS, Math.min(ms || 0, 86_400_000));\n}\nfunction queryFor(stock) {\n  const d = stock.domains[0] || '';\n  return `site:${d} ${stock.legalName || stock.name} ${stock.code} ${stock.period} EPS financial report prior restated data`;\n}\nfunction searxUrl(base, query) {\n  if (typeof base !== 'string' || /[?#]/.test(base)) return '';\n  const parsed = parseHttps(base);\n  if (!parsed) return '';\n  let path = parsed.path.replace(/\\/+$/, '');\n  if (!path) path = '/search';\n  else if (!/\\/search$/i.test(path)) path += '/search';\n  return `https://${parsed.authority}${path}?q=${encodeURIComponent(query)}&format=json`;\n}\nfunction previousQuarter(marketDate) {\n  const m = String(marketDate).match(/^(\\d{4})-(\\d{2})/);\n  if (!m) return 'latest completed quarter';\n  let year = Number(m[1]), quarter = Math.ceil(Number(m[2]) / 3) - 1;\n  if (quarter < 1) { year--; quarter = 4; }\n  return `${year}Q${quarter}`;\n}\nfunction safeConfig(config) {\n  return Boolean(config && typeof config.marketDate === 'string' && config.marketDate && typeof config.requestId === 'string' && config.requestId && Number.isInteger(config.braveDailyLimit) && config.braveDailyLimit >= 0 && validHttpsUrl(config.searxBaseUrl));\n}\nfunction init(input = {}, now = new Date().toISOString()) {\n  const { latest, issuers = {}, cachedManifest, config = {} } = input;\n  const state = { config: { ...config }, cursor: 0, stocks: [], pending: null, unavailable: {}, attempts: {}, outcome: null, manifest: null };\n  const oldUsage = cachedManifest?.searchUsage || {};\n  state.braveUsed = oldUsage.date === config.marketDate ? Number(oldUsage.brave) || 0 : 0;\n  if (!safeConfig(config)) { state.outcome = 'configuration_required'; state.manifest = { marketDate: config.marketDate || null, requestId: config.requestId || null, generatedAt: now, searchUsage: { date: config.marketDate || null, brave: state.braveUsed }, stocks: [] }; return state; }\n  const cacheTime = Date.parse(cachedManifest?.generatedAt);\n  const reusable = cachedManifest?.marketDate === config.marketDate && Number.isFinite(cacheTime) && Date.parse(now) - cacheTime >= 0 && Date.parse(now) - cacheTime < DAY_MS;\n  const latestStocks = Array.isArray(latest?.stocks) ? latest.stocks : [];\n  let candidates = latestStocks.filter(x => (typeof x?.pegReview === 'string' ? x.pegReview : x?.pegReview?.status) === 'needs_review');\n  if (!candidates.length && latest?.marketDate === config.marketDate && !latestStocks.some(x => x?.pegReview && (typeof x.pegReview !== 'object' || x.pegReview.status))) candidates = config.bootstrapCandidates || [];\n  state.stocks = candidates.map(x => {\n    const code = String(x.code || '').trim();\n    const record = issuers[code] || issuers[code.toUpperCase()] || {};\n    return { code, name: String(x.name || record.name || code), period: String(x.currentPeriod || previousQuarter(config.marketDate)), legalName: String(record.legalName || record.name || x.name || code), domains: Array.isArray(record.officialDomains) ? record.officialDomains.filter(d => typeof d === 'string' && d) : [], results: null, reason: null, nextProvider: 'searx' };\n  });\n  if (reusable) {\n    const cached = new Map((cachedManifest.stocks || []).map(x => [x.code, x]));\n    state.stocks = state.stocks.map(s => cached.has(s.code) ? { ...s, results: cached.get(s.code).results || [], reason: cached.get(s.code).reason, nextProvider: null } : s);\n  }\n  return state;\n}\nfunction cloneState(state) { return JSON.parse(JSON.stringify(state)); }\nfunction finalize(state, now) {\n  const stocks = state.stocks.map(s => ({ code: s.code, name: s.name, legalName: s.legalName, officialDomains: [...s.domains], results: s.results || [], providerAttempts: { ...(state.attempts[s.code] || {}) }, ...(s.reason ? { reason: s.reason } : {}) }));\n  state.manifest = { marketDate: state.config.marketDate, requestId: state.config.requestId, generatedAt: now, searchUsage: { date: state.config.marketDate, brave: state.braveUsed }, stocks };\n  return { state, done: true };\n}\nfunction plan(inputState, now = new Date().toISOString()) {\n  const state = cloneState(inputState);\n  if (state.outcome === 'configuration_required') return { state, done: true, outcome: state.outcome };\n  if (state.pending) return { state, done: false, action: { ...state.pending } };\n  while (state.cursor < state.stocks.length) {\n    const s = state.stocks[state.cursor];\n    if (s.results !== null) { state.cursor++; continue; }\n    if (!s.domains.length) { s.results = []; s.reason = 'source_not_found'; state.cursor++; continue; }\n    let provider = s.nextProvider || 'searx';\n    if (provider === 'searx' && state.unavailable.searx > Date.parse(now)) provider = 'brave';\n    if (provider === 'brave') {\n      if (state.unavailable.brave > Date.parse(now)) { s.results = []; s.reason = 'source_unavailable'; state.cursor++; continue; }\n      if (state.braveUsed >= state.config.braveDailyLimit) { s.results = []; s.reason = 'budget_exhausted'; state.cursor++; continue; }\n    }\n    const query = queryFor(s);\n    const url = provider === 'searx' ? searxUrl(state.config.searxBaseUrl, query) : `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5`;\n    if (!validHttpsUrl(url)) { state.outcome = 'configuration_required'; return { state, done: true, outcome: state.outcome }; }\n    const action = { provider, url, method: 'GET' };\n    state.pending = action;\n    state.attempts[s.code] = { ...(state.attempts[s.code] || {}), [provider]: ((state.attempts[s.code] || {})[provider] || 0) + 1 };\n    if (provider === 'brave') state.braveUsed++;\n    return { state, done: false, action: { ...action } };\n  }\n  return finalize(state, now);\n}\nfunction apply(inputState, provider, response = {}, now = new Date().toISOString()) {\n  const state = cloneState(inputState);\n  const action = state.pending;\n  if (!action || action.provider !== provider) return state;\n  state.pending = null;\n  const stock = state.stocks[state.cursor];\n  const status = Number(response.statusCode) || 0;\n  if (status === 429) state.unavailable[provider] = Date.parse(now) + retryMs(response.headers, now);\n  const valid = status >= 200 && status < 300 && !response.error;\n  const results = valid ? shapeResults(getItems(provider, response.body), provider, stock.domains) : [];\n  if (results.length) { stock.results = results; stock.reason = null; state.cursor++; return state; }\n  if (provider === 'searx') { stock.nextProvider = 'brave'; return state; }\n  stock.results = [];\n  stock.reason = state.unavailable.brave > Date.parse(now) ? 'source_unavailable' : 'source_not_found';\n  state.cursor++;\n  return state;\n}\nmodule.exports = { init, plan, apply };\n\nreturn module.exports;})();\nconst item=$input.first().json||{};\nconst state=item.state||item;\nconst manifest=state.manifest||null;\nconst staticData=$getWorkflowStaticData('global');\nif(manifest){staticData.pegSourceManifest=manifest;staticData.pegSourceUsage=manifest.searchUsage||{date:state.config?.marketDate||null,brave:state.braveUsed||0};}\nconst outcome=state.outcome||'complete';\nconst message=outcome==='configuration_required'?'PEG source discovery skipped: SearxNG base URL is not configured.':'PEG source discovery complete.';\nreturn [{json:manifest?{...manifest,outcome,message}:{outcome,message}}];"
+      },
+      "position": [
+        2640,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch public latest.json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch public latest.json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch public latest.json": {
+      "main": [
+        [
+          {
+            "node": "Fetch issuer registry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch issuer registry": {
+      "main": [
+        [
+          {
+            "node": "Initialize PEG source discovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize PEG source discovery": {
+      "main": [
+        [
+          {
+            "node": "Plan next provider",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan next provider": {
+      "main": [
+        [
+          {
+            "node": "Discovery complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discovery complete?": {
+      "main": [
+        [
+          {
+            "node": "Finish PEG manifest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Use SearxNG?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use SearxNG?": {
+      "main": [
+        [
+          {
+            "node": "Search with SearxNG",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search with Brave",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search with SearxNG": {
+      "main": [
+        [
+          {
+            "node": "Apply provider response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search with Brave": {
+      "main": [
+        [
+          {
+            "node": "Apply provider response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply provider response": {
+      "main": [
+        [
+          {
+            "node": "Plan next provider",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Asia/Taipei",
+    "executionOrder": "v1",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  }
+}

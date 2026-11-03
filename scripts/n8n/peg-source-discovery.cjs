@@ -64,10 +64,13 @@ function queryFor(stock) {
   return `site:${d} ${stock.legalName || stock.name} ${stock.code} ${stock.period} EPS financial report prior restated data`;
 }
 function searxUrl(base, query) {
+  if (typeof base !== 'string' || /[?#]/.test(base)) return '';
   const parsed = parseHttps(base);
   if (!parsed) return '';
-  const params = parsed.query ? `${parsed.query}&` : '';
-  return `https://${parsed.authority}${parsed.path}?${params}q=${encodeURIComponent(query)}&format=json`;
+  let path = parsed.path.replace(/\/+$/, '');
+  if (!path) path = '/search';
+  else if (!/\/search$/i.test(path)) path += '/search';
+  return `https://${parsed.authority}${path}?q=${encodeURIComponent(query)}&format=json`;
 }
 function previousQuarter(marketDate) {
   const m = String(marketDate).match(/^(\d{4})-(\d{2})/);
@@ -101,13 +104,14 @@ function init(input = {}, now = new Date().toISOString()) {
   }
   return state;
 }
+function cloneState(state) { return JSON.parse(JSON.stringify(state)); }
 function finalize(state, now) {
   const stocks = state.stocks.map(s => ({ code: s.code, name: s.name, legalName: s.legalName, officialDomains: [...s.domains], results: s.results || [], providerAttempts: { ...(state.attempts[s.code] || {}) }, ...(s.reason ? { reason: s.reason } : {}) }));
   state.manifest = { marketDate: state.config.marketDate, requestId: state.config.requestId, generatedAt: now, searchUsage: { date: state.config.marketDate, brave: state.braveUsed }, stocks };
   return { state, done: true };
 }
 function plan(inputState, now = new Date().toISOString()) {
-  const state = structuredClone(inputState);
+  const state = cloneState(inputState);
   if (state.outcome === 'configuration_required') return { state, done: true, outcome: state.outcome };
   if (state.pending) return { state, done: false, action: { ...state.pending } };
   while (state.cursor < state.stocks.length) {
@@ -132,7 +136,7 @@ function plan(inputState, now = new Date().toISOString()) {
   return finalize(state, now);
 }
 function apply(inputState, provider, response = {}, now = new Date().toISOString()) {
-  const state = structuredClone(inputState);
+  const state = cloneState(inputState);
   const action = state.pending;
   if (!action || action.provider !== provider) return state;
   state.pending = null;
