@@ -2,9 +2,9 @@
   "schemaVersion": "1.1",
   "strategyVersion": "quality-growth-v1",
   "formulaVersion": "lohas-linear-3.5y-research-v1",
-  "runId": "enriched-20261103-180445-46f9c23db2",
+  "runId": "enriched-20261103-231157-1517a852e9",
   "marketDate": "2026-11-03",
-  "generatedAt": "2026-11-03T10:04:44+00:00",
+  "generatedAt": "2026-11-03T15:11:56+00:00",
   "nextExpectedUpdateAt": "2026-11-04T11:30:00+00:00",
   "freshness": "current",
   "statusMessage": "沿用已取得來源快取重算 100 檔；發布日期為 2026-11-03，個股行情以實際報價日期為準，未再次呼叫外部來源。",
@@ -73,11 +73,11 @@
       "trust": 3,
       "growth": 3,
       "lowPosition": 15,
-      "lowBase": 1,
-      "lowBaseGrowth": 1,
-      "lowBaseQuality": 1,
-      "lowBaseGrowthStrict": 1,
-      "lowBaseQualityStrict": 1
+      "lowBase": 2,
+      "lowBaseGrowth": 2,
+      "lowBaseQuality": 2,
+      "lowBaseGrowthStrict": 0,
+      "lowBaseQualityStrict": 0
     },
     "addedToday": 0,
     "improvedToday": 0,
@@ -85,9 +85,9 @@
     "formalEntryCount": 0,
     "proxyCandidateCount": 100,
     "lowBaseGap": {
-      "candidateCount": 1,
+      "candidateCount": 2,
       "trackedCount": 100,
-      "explanation": "目前追蹤 100 檔，低位代理低基期策略共 1 檔；嚴格 Z ≤ -1 成長 1 檔、品質 1 檔。",
+      "explanation": "目前追蹤 100 檔，低位代理低基期策略共 2 檔；嚴格 Z ≤ -1 成長 0 檔、品質 0 檔。",
       "missing": [
         "3.5年 Z ≤ -1：未通過",
         "三月營收年增 ≥ 15%：未通過",
@@ -121,7 +121,7 @@
     },
     "trustSignalCount": 3,
     "trustNewEntryCount": 3,
-    "trustValuationVisibleCount": 1
+    "trustValuationVisibleCount": 0
   },
   "stocks": [
     {
@@ -1496,28 +1496,16 @@
       "sourceUniverseNetShares": 10685140.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 4.350368555502046,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 42.599998474121094,
-        "current_pe": 19.91,
-        "current_eps": 2.1396282508348112,
-        "eps_growth": 0.03314917127071837,
-        "eps_growth_pct": 3.314917127071837,
-        "forward_eps": 2.210555154177402,
-        "current_peg": 6.006183333333309,
-        "reasonable_pe": 3.314917127071837,
-        "fair_price": 7.327807140919594,
-        "value_price_075": 5.495855355689695,
-        "value_price_066": 4.836352713006932,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 1.87,
-        "proxy_prior_eps": 1.81
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -2900,28 +2888,16 @@
       "sourceUniverseNetShares": 16012715.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 2.5105298878036786,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 44.400001525878906,
-        "current_pe": 16.75,
-        "current_eps": 2.6507463597539647,
-        "eps_growth": 0.12571428571428567,
-        "eps_growth_pct": 12.571428571428566,
-        "forward_eps": 2.983983044980177,
-        "current_peg": 1.3323863636363642,
-        "reasonable_pe": 12.571428571428566,
-        "fair_price": 37.51292970832221,
-        "value_price_075": 28.134697281241657,
-        "value_price_066": 24.758533607492662,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 1.97,
-        "proxy_prior_eps": 1.75
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -4278,28 +4254,16 @@
       "sourceUniverseNetShares": 5191757.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 3.9061183728006053,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 29.700000762939453,
-        "current_pe": 17.47,
-        "current_eps": 1.7000572846559505,
-        "eps_growth": 0.13533834586466154,
-        "eps_growth_pct": 13.533834586466153,
-        "forward_eps": 1.9301402254364548,
-        "current_peg": 1.29083888888889,
-        "reasonable_pe": 13.533834586466153,
-        "fair_price": 26.12219853974147,
-        "value_price_075": 19.5916489048061,
-        "value_price_066": 17.24065103622937,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 1.51,
-        "proxy_prior_eps": 1.33
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -5679,28 +5643,16 @@
       "sourceUniverseNetShares": 23976060.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 3.6047954113059704,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 47.400001525878906,
-        "current_pe": 19.67,
-        "current_eps": 2.409761135021805,
-        "eps_growth": 0.3006134969325154,
-        "eps_growth_pct": 30.061349693251536,
-        "forward_eps": 3.134167856592777,
-        "current_peg": 0.6543285714285715,
-        "reasonable_pe": 30.061349693251536,
-        "fair_price": 94.2173159343841,
-        "value_price_075": 70.66298695078808,
-        "value_price_066": 62.18342851669351,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": true,
-        "below_066": true,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 2.12,
-        "proxy_prior_eps": 1.6300000000000001
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -7086,7 +7038,45 @@
       "sourceUniverseNetLots": 957.0,
       "sourceUniverseNetShares": 7334041.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.5923735581478594
+      "zScore": -0.5923735581478594,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 311.5,
+        "current_pe": 13.57890148212729,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 22.939999999999998,
+        "prior_ttm_eps": 17.87,
+        "eps_growth": 0.2837157246782316,
+        "eps_growth_pct": 28.371572467823157,
+        "forward_eps": 29.44843872411863,
+        "current_peg": 0.4786094072694571,
+        "reasonable_pe": 28.371572467823157,
+        "fair_price": 835.4985133255815,
+        "value_price_075": 626.6238849941861,
+        "value_price_066": 551.4290187948837,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.014234861676160308,
@@ -8410,7 +8400,18 @@
       "sourceUniverseNetLots": 410.0,
       "sourceUniverseNetShares": 11119767.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.5073786798859
+      "zScore": 2.5073786798859,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09966777408637874,
@@ -9790,7 +9791,18 @@
       "sourceUniverseNetLots": 195.0,
       "sourceUniverseNetShares": 11351463.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.948821153157363
+      "zScore": 2.948821153157363,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.1,
@@ -11087,7 +11099,45 @@
       "sourceUniverseNetLots": 160.0,
       "sourceUniverseNetShares": 5822425.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.6192840188742785
+      "zScore": 1.6192840188742785,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 819.0,
+        "current_pe": 138.8135593220339,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 5.8999999999999995,
+        "prior_ttm_eps": 1.21,
+        "eps_growth": 3.876033057851239,
+        "eps_growth_pct": 387.6033057851239,
+        "forward_eps": 28.768595041322307,
+        "current_peg": 0.35813306349607904,
+        "reasonable_pe": 387.6033057851239,
+        "fair_price": 11150.80254081005,
+        "value_price_075": 8363.101905607537,
+        "value_price_066": 7359.529676934632,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.06341465895738059,
@@ -12261,7 +12311,18 @@
       ],
       "sourceUniverseNetShares": 15147359.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.7286744509182546
+      "zScore": 1.7286744509182546,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.017421602324333527,
@@ -13350,7 +13411,45 @@
       ],
       "sourceUniverseNetShares": 1833710.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.23495441360033872
+      "zScore": 0.23495441360033872,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 28.200000762939453,
+        "current_pe": 4.763513642388421,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 5.92,
+        "prior_ttm_eps": 3.7800000000000002,
+        "eps_growth": 0.566137566137566,
+        "eps_growth_pct": 56.61375661375661,
+        "forward_eps": 9.271534391534392,
+        "current_peg": 0.08414056807583287,
+        "reasonable_pe": 56.61375661375661,
+        "fair_price": 524.8963914784019,
+        "value_price_075": 393.6722936088015,
+        "value_price_066": 346.4316183757453,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.08536585365853659,
@@ -14439,7 +14538,45 @@
       ],
       "sourceUniverseNetShares": 2858973.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.6365042514665555
+      "zScore": 2.6365042514665555,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 600.0,
+        "current_pe": 92.87925696594428,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 6.46,
+        "prior_ttm_eps": 3.38,
+        "eps_growth": 0.9112426035502958,
+        "eps_growth_pct": 91.12426035502959,
+        "forward_eps": 12.34662721893491,
+        "current_peg": 1.0192593783925052,
+        "reasonable_pe": 91.12426035502959,
+        "fair_price": 1125.0772732047199,
+        "value_price_075": 843.8079549035398,
+        "value_price_066": 742.5510003151151,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.0989399293286219,
@@ -15531,7 +15668,45 @@
       ],
       "sourceUniverseNetShares": 2115464.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.4279348379255599
+      "zScore": 0.4279348379255599,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 382.5,
+        "current_pe": 75.29527559055119,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 5.08,
+        "prior_ttm_eps": 1.73,
+        "eps_growth": 1.9364161849710984,
+        "eps_growth_pct": 193.64161849710985,
+        "forward_eps": 14.91699421965318,
+        "current_peg": 0.38883828887060756,
+        "reasonable_pe": 193.64161849710985,
+        "fair_price": 2888.5509038056734,
+        "value_price_075": 2166.413177854255,
+        "value_price_066": 1906.4435965117445,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09268292682926829,
@@ -16621,7 +16796,45 @@
       ],
       "sourceUniverseNetShares": 2275703.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.21567484685478036
+      "zScore": -0.21567484685478036,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 186.0,
+        "current_pe": 29.95169082125604,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 6.21,
+        "prior_ttm_eps": 4.7,
+        "eps_growth": 0.3212765957446808,
+        "eps_growth_pct": 32.12765957446808,
+        "forward_eps": 8.205127659574467,
+        "current_peg": 0.9322711712576384,
+        "reasonable_pe": 32.12765957446808,
+        "fair_price": 263.6115482118605,
+        "value_price_075": 197.70866115889538,
+        "value_price_066": 173.98362181982796,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.08490566037735849,
@@ -17726,7 +17939,45 @@
       ],
       "sourceUniverseNetShares": 7062104.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.01482413794423794
+      "zScore": 0.01482413794423794,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 970.0,
+        "current_pe": 34.03508771929825,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 28.5,
+        "prior_ttm_eps": 13.0,
+        "eps_growth": 1.1923076923076925,
+        "eps_growth_pct": 119.23076923076925,
+        "forward_eps": 62.48076923076923,
+        "current_peg": 0.2854555744199207,
+        "reasonable_pe": 119.23076923076925,
+        "fair_price": 7449.630177514794,
+        "value_price_075": 5587.222633136095,
+        "value_price_066": 4916.755917159764,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.0970464135021097,
@@ -18815,7 +19066,45 @@
       ],
       "sourceUniverseNetShares": 3509455.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.2932908687845202
+      "zScore": 1.2932908687845202,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 1070.0,
+        "current_pe": 125.73443008225617,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 8.51,
+        "prior_ttm_eps": 0.4,
+        "eps_growth": 20.275,
+        "eps_growth_pct": 2027.4999999999998,
+        "forward_eps": 181.05024999999998,
+        "current_peg": 0.062014515453640534,
+        "reasonable_pe": 2027.4999999999998,
+        "fair_price": 367079.38187499996,
+        "value_price_075": 275309.53640625,
+        "value_price_066": 242272.39203749996,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09263657957244656,
@@ -19882,7 +20171,45 @@
       ],
       "sourceUniverseNetShares": 4259687.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.3220169746575796
+      "zScore": 0.3220169746575796,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 191.0,
+        "current_pe": 22.3915592028136,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 8.53,
+        "prior_ttm_eps": 4.92,
+        "eps_growth": 0.7337398373983739,
+        "eps_growth_pct": 73.37398373983739,
+        "forward_eps": 14.788800813008129,
+        "current_peg": 0.30517028054804135,
+        "reasonable_pe": 73.37398373983739,
+        "fair_price": 1085.1132303853524,
+        "value_price_075": 813.8349227890143,
+        "value_price_066": 716.1747320543326,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.0997191011235955,
@@ -20888,7 +21215,45 @@
       ],
       "sourceUniverseNetShares": 11575038.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.0808954161465005
+      "zScore": 1.0808954161465005,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 320.5,
+        "current_pe": 36.01123595505618,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 8.9,
+        "prior_ttm_eps": 3.59,
+        "eps_growth": 1.4791086350974934,
+        "eps_growth_pct": 147.91086350974933,
+        "forward_eps": 22.06406685236769,
+        "current_peg": 0.2434657948750502,
+        "reasonable_pe": 147.91086350974933,
+        "fair_price": 3263.515180670542,
+        "value_price_075": 2447.6363855029067,
+        "value_price_066": 2153.920019242558,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.02586206896551724,
@@ -21895,7 +22260,18 @@
       ],
       "sourceUniverseNetShares": 18177488.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.374888603453894
+      "zScore": 2.374888603453894,
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09239130434782608,
@@ -22900,7 +23276,45 @@
       ],
       "sourceUniverseNetShares": 1030944.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.653526814933342
+      "zScore": 0.653526814933342,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 83.5,
+        "current_pe": 26.01246105919003,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 3.21,
+        "prior_ttm_eps": 0.21999999999999997,
+        "eps_growth": 13.590909090909092,
+        "eps_growth_pct": 1359.0909090909092,
+        "forward_eps": 46.83681818181818,
+        "current_peg": 0.019139603454922428,
+        "reasonable_pe": 1359.0909090909092,
+        "fair_price": 63655.49380165289,
+        "value_price_075": 47741.62035123967,
+        "value_price_066": 42012.62590909091,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.04266387657878255,
@@ -23933,7 +24347,18 @@
       ],
       "sourceUniverseNetShares": 3162831.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.8126746506856494
+      "zScore": -0.8126746506856494,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.020653992766913588,
@@ -24952,28 +25377,16 @@
       "sourceUniverseNetShares": 12635068.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 4.242810634711946,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 28.450000762939453,
-        "current_pe": 18.59,
-        "current_eps": 1.530392725279153,
-        "eps_growth": 0.07936507936507953,
-        "eps_growth_pct": 7.936507936507953,
-        "forward_eps": 1.6518524653806732,
-        "current_peg": 2.342339999999995,
-        "reasonable_pe": 7.936507936507953,
-        "fair_price": 13.109940201433941,
-        "value_price_075": 9.832455151075456,
-        "value_price_066": 8.652560532946401,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 1.36,
-        "proxy_prior_eps": 1.26
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -25979,7 +26392,45 @@
       ],
       "sourceUniverseNetShares": 12160168.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8581696567771598
+      "zScore": 0.8581696567771598,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 172.5,
+        "current_pe": 41.56626506024096,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 4.15,
+        "prior_ttm_eps": 4.0200000000000005,
+        "eps_growth": 0.03233830845771135,
+        "eps_growth_pct": 3.233830845771135,
+        "forward_eps": 4.284203980099503,
+        "current_peg": 12.853568118628395,
+        "reasonable_pe": 3.233830845771135,
+        "fair_price": 13.854390980421238,
+        "value_price_075": 10.390793235315929,
+        "value_price_066": 9.143898047078018,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09034907597535935,
@@ -26984,7 +27435,18 @@
       ],
       "sourceUniverseNetShares": 4938111.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8162627742415692
+      "zScore": 0.8162627742415692,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09565217391304348,
@@ -27991,7 +28453,45 @@
       ],
       "sourceUniverseNetShares": 1114143.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.459912381734306
+      "zScore": 2.459912381734306,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 936.0,
+        "current_pe": 25.324675324675326,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 36.96,
+        "prior_ttm_eps": 29.71,
+        "eps_growth": 0.2440255806125884,
+        "eps_growth_pct": 24.402558061258837,
+        "forward_eps": 45.97918545944127,
+        "current_peg": 1.0377877295118674,
+        "reasonable_pe": 24.402558061258837,
+        "fair_price": 1122.0097427834037,
+        "value_price_075": 841.5073070875528,
+        "value_price_066": 740.5264302370465,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.00881057268722467,
@@ -28997,7 +29497,45 @@
       ],
       "sourceUniverseNetShares": 3972093.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.835367713453154
+      "zScore": 2.835367713453154,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 112.5,
+        "current_pe": 27.305825242718445,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 4.12,
+        "prior_ttm_eps": 3.73,
+        "eps_growth": 0.10455764075067031,
+        "eps_growth_pct": 10.45576407506703,
+        "forward_eps": 4.550777479892762,
+        "current_peg": 2.6115571321881985,
+        "reasonable_pe": 10.45576407506703,
+        "fair_price": 47.58185568788682,
+        "value_price_075": 35.68639176591512,
+        "value_price_066": 31.404024754005302,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.1,
@@ -29997,7 +30535,18 @@
       ],
       "sourceUniverseNetShares": 702000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8970637605818241
+      "zScore": 0.8970637605818241,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.028021015761821366,
@@ -30997,7 +31546,18 @@
       ],
       "sourceUniverseNetShares": 841384.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.277012364525565
+      "zScore": 1.277012364525565,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.015021459227467811,
@@ -32026,7 +32586,45 @@
       ],
       "sourceUniverseNetShares": 19145330.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.46589232046199286
+      "zScore": 0.46589232046199286,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 2295.0,
+        "current_pe": 26.59944367176634,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 86.28,
+        "prior_ttm_eps": 56.31,
+        "eps_growth": 0.5322322855620671,
+        "eps_growth_pct": 53.22322855620671,
+        "forward_eps": 132.20100159829516,
+        "current_peg": 0.49977132904810234,
+        "reasonable_pe": 53.22322855620671,
+        "fair_price": 7036.164123425513,
+        "value_price_075": 5277.123092569135,
+        "value_price_066": 4643.868321460839,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.0751963755665853,
@@ -33033,7 +33631,18 @@
       ],
       "sourceUniverseNetShares": 1042452.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.6316158430331794
+      "zScore": 0.6316158430331794,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.029143897996357013,
@@ -34061,7 +34670,18 @@
       ],
       "sourceUniverseNetShares": 5125156.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.8798265130137033
+      "zScore": 1.8798265130137033,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.021834061499084432,
@@ -35063,7 +35683,18 @@
       ],
       "sourceUniverseNetShares": 879000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.188970372230763
+      "zScore": 2.188970372230763,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09933774834437085,
@@ -36069,7 +36700,45 @@
       ],
       "sourceUniverseNetShares": 1326048.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.4534607073130483
+      "zScore": 1.4534607073130483,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 1360.0,
+        "current_pe": 90.78771695594125,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 14.98,
+        "prior_ttm_eps": 6.07,
+        "eps_growth": 1.4678747940691927,
+        "eps_growth_pct": 146.78747940691926,
+        "forward_eps": 36.96876441515651,
+        "current_peg": 0.6184976901487805,
+        "reasonable_pe": 146.78747940691926,
+        "fair_price": 5426.551745289035,
+        "value_price_075": 4069.9138089667767,
+        "value_price_066": 3581.5241518907637,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.0821205212795875,
@@ -37106,7 +37775,18 @@
       ],
       "sourceUniverseNetShares": 2525035.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.3808245526160016
+      "zScore": -0.3808245526160016,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09978070175438597,
@@ -38107,7 +38787,45 @@
       ],
       "sourceUniverseNetShares": 772000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.3793597235292243
+      "zScore": 1.3793597235292243,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 821.0,
+        "current_pe": 56.97432338653713,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 14.41,
+        "prior_ttm_eps": 4.37,
+        "eps_growth": 2.2974828375286043,
+        "eps_growth_pct": 229.74828375286043,
+        "forward_eps": 47.516727688787185,
+        "current_peg": 0.24798584979996738,
+        "reasonable_pe": 229.74828375286043,
+        "fair_price": 10916.886636050878,
+        "value_price_075": 8187.664977038159,
+        "value_price_066": 7205.14517979358,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": 0.0,
@@ -39113,7 +39831,45 @@
       ],
       "sourceUniverseNetShares": 2620030.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.418640554367417
+      "zScore": 3.418640554367417,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 133.0,
+        "current_pe": 24.953095684803003,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 5.33,
+        "prior_ttm_eps": 4.82,
+        "eps_growth": 0.10580912863070524,
+        "eps_growth_pct": 10.580912863070523,
+        "forward_eps": 5.893962655601659,
+        "current_peg": 2.358312180406876,
+        "reasonable_pe": 10.580912863070523,
+        "fair_price": 62.36350527711291,
+        "value_price_075": 46.772628957834684,
+        "value_price_066": 41.15991348289452,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": 0.06279428787118516,
@@ -40120,7 +40876,18 @@
       ],
       "sourceUniverseNetShares": 22124363.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.2609322651769541
+      "zScore": 1.2609322651769541,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.08582834331337326,
@@ -41131,7 +41898,19 @@
       ],
       "sourceUniverseNetShares": 6874994.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.1821597721991215
+      "zScore": 2.1821597721991215,
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09749303621169916,
@@ -42136,7 +42915,45 @@
       ],
       "sourceUniverseNetShares": 1086000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.5992467692843138
+      "zScore": 0.5992467692843138,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 162.0,
+        "current_pe": 39.608801955990224,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 4.09,
+        "prior_ttm_eps": 2.0,
+        "eps_growth": 1.045,
+        "eps_growth_pct": 104.5,
+        "forward_eps": 8.364049999999999,
+        "current_peg": 0.37903159766497824,
+        "reasonable_pe": 104.5,
+        "fair_price": 874.0432249999998,
+        "value_price_075": 655.5324187499998,
+        "value_price_066": 576.8685284999999,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.021912350597609563,
@@ -43168,7 +43985,45 @@
       ],
       "sourceUniverseNetShares": 6230641.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.40665543222386663
+      "zScore": -0.40665543222386663,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 245.5,
+        "current_pe": 16.14069690992768,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 15.21,
+        "prior_ttm_eps": 13.11,
+        "eps_growth": 0.16018306636155621,
+        "eps_growth_pct": 16.01830663615562,
+        "forward_eps": 17.64638443935927,
+        "current_peg": 1.0076406499483415,
+        "reasonable_pe": 16.01830663615562,
+        "fair_price": 282.6651969691419,
+        "value_price_075": 211.9988977268564,
+        "value_price_066": 186.55902999963365,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.019390498000823805,
@@ -44172,28 +45027,16 @@
       "sourceUniverseNetShares": 2755344.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 1.438168132287528,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 17.700000762939453,
-        "current_pe": 13.01,
-        "current_eps": 1.360491987927706,
-        "eps_growth": 0.024390243902439046,
-        "eps_growth_pct": 2.4390243902439046,
-        "forward_eps": 1.393674719340577,
-        "current_peg": 5.334099999999995,
-        "reasonable_pe": 2.4390243902439046,
-        "fair_price": 3.3992066325379957,
-        "value_price_075": 2.5494049744034966,
-        "value_price_066": 2.243476377475077,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 1.26,
-        "proxy_prior_eps": 1.23
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -45224,28 +46067,16 @@
       "sourceUniverseNetShares": 1708997.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": -2.396104751322249,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 18.149999618530273,
-        "current_pe": 10.8,
-        "current_eps": 1.6805555202342846,
-        "eps_growth": 0.020000000000000018,
-        "eps_growth_pct": 2.0000000000000018,
-        "forward_eps": 1.7141666306389702,
-        "current_peg": 5.399999999999996,
-        "reasonable_pe": 2.0000000000000018,
-        "fair_price": 3.4283332612779436,
-        "value_price_075": 2.5712499459584577,
-        "value_price_066": 2.262699952443443,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 1.53,
-        "proxy_prior_eps": 1.5
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -46246,7 +47077,45 @@
       ],
       "sourceUniverseNetShares": 1134000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.278273108880627
+      "zScore": 1.278273108880627,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 116.0,
+        "current_pe": 95.86776859504133,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 1.21,
+        "prior_ttm_eps": 0.12000000000000001,
+        "eps_growth": 9.083333333333332,
+        "eps_growth_pct": 908.3333333333333,
+        "forward_eps": 12.200833333333332,
+        "current_peg": 0.10554249753582533,
+        "reasonable_pe": 908.3333333333333,
+        "fair_price": 11082.423611111108,
+        "value_price_075": 8311.81770833333,
+        "value_price_066": 7314.399583333331,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.06607929515418502,
@@ -47248,7 +48117,45 @@
       ],
       "sourceUniverseNetShares": 1006311.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.05161671312110463
+      "zScore": -0.05161671312110463,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 318.0,
+        "current_pe": 3.920601652077426,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 81.11,
+        "prior_ttm_eps": 7.52,
+        "eps_growth": 9.78590425531915,
+        "eps_growth_pct": 978.5904255319149,
+        "forward_eps": 874.8446941489362,
+        "current_peg": 0.004006376467403485,
+        "reasonable_pe": 978.5904255319149,
+        "fair_price": 856114.6415215455,
+        "value_price_075": 642085.9811411591,
+        "value_price_066": 565035.66340422,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.003134796238244514,
@@ -48254,7 +49161,45 @@
       ],
       "sourceUniverseNetShares": 8284132.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 5.370936573561155
+      "zScore": 5.370936573561155,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 159.0,
+        "current_pe": 31.176470588235297,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 5.1,
+        "prior_ttm_eps": 4.89,
+        "eps_growth": 0.042944785276073594,
+        "eps_growth_pct": 4.294478527607359,
+        "forward_eps": 5.319018404907975,
+        "current_peg": 7.259663865546224,
+        "reasonable_pe": 4.294478527607359,
+        "fair_price": 22.842410327825647,
+        "value_price_075": 17.131807745869235,
+        "value_price_066": 15.075990816364927,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.07065213391370637,
@@ -49261,7 +50206,18 @@
       ],
       "sourceUniverseNetShares": 8173622.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.0168687444638644
+      "zScore": 2.0168687444638644,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.04084967320261438,
@@ -50293,7 +51249,45 @@
       ],
       "sourceUniverseNetShares": 3779233.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.2321180260663682
+      "zScore": 1.2321180260663682,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 2935.0,
+        "current_pe": 39.06561959270597,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 75.13000000000001,
+        "prior_ttm_eps": 30.63,
+        "eps_growth": 1.4528240287300038,
+        "eps_growth_pct": 145.2824028730004,
+        "forward_eps": 184.28066927848522,
+        "current_peg": 0.2688943658706929,
+        "reasonable_pe": 145.2824028730004,
+        "fair_price": 26772.738435823034,
+        "value_price_075": 20079.553826867275,
+        "value_price_066": 17670.0073676432,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.07810110337630485,
@@ -51324,7 +52318,18 @@
       ],
       "sourceUniverseNetShares": 28161202.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.4098222535886656
+      "zScore": 0.4098222535886656,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.015209111411935535,
@@ -52327,7 +53332,18 @@
       ],
       "sourceUniverseNetShares": 1867419.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.08859398427744176
+      "zScore": -0.08859398427744176,
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.06365503080082136,
@@ -53340,28 +54356,17 @@
       "sourceUniverseNetShares": 3828857.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 0.6469180979641578,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 228.0,
-        "current_pe": 23.31,
-        "current_eps": 9.781209781209782,
-        "eps_growth": 0.2763915547024951,
-        "eps_growth_pct": 27.63915547024951,
-        "forward_eps": 12.484653559509605,
-        "current_peg": 0.8433687500000003,
-        "reasonable_pe": 27.63915547024951,
-        "fair_price": 345.0652807234899,
-        "value_price_075": 258.7989605426174,
-        "value_price_066": 227.74308527750333,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 6.6499999999999995,
-        "proxy_prior_eps": 5.21
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
       }
     },
     {
@@ -54367,7 +55372,45 @@
       ],
       "sourceUniverseNetShares": 3932977.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.5210737281266218
+      "zScore": 0.5210737281266218,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 101.0,
+        "current_pe": 8.409658617818485,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 12.01,
+        "prior_ttm_eps": 4.359999999999999,
+        "eps_growth": 1.754587155963303,
+        "eps_growth_pct": 175.4587155963303,
+        "forward_eps": 33.082591743119266,
+        "current_peg": 0.04792955761266482,
+        "reasonable_pe": 175.4587155963303,
+        "fair_price": 5804.629055845468,
+        "value_price_075": 4353.471791884102,
+        "value_price_066": 3831.0551768580094,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.08605341246290801,
@@ -55395,7 +56438,45 @@
       ],
       "sourceUniverseNetShares": 29317692.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.317201610217058
+      "zScore": 1.317201610217058,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 616.0,
+        "current_pe": 44.252873563218394,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 13.92,
+        "prior_ttm_eps": 7.9,
+        "eps_growth": 0.762025316455696,
+        "eps_growth_pct": 76.20253164556961,
+        "forward_eps": 24.52739240506329,
+        "current_peg": 0.5807270783213047,
+        "reasonable_pe": 76.20253164556961,
+        "fair_price": 1869.0493959301389,
+        "value_price_075": 1401.787046947604,
+        "value_price_066": 1233.5726013138917,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09930715935334873,
@@ -56423,7 +57504,45 @@
       ],
       "sourceUniverseNetShares": 11386692.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.3718151843941594
+      "zScore": 0.3718151843941594,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 195.0,
+        "current_pe": 24.59016393442623,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 7.93,
+        "prior_ttm_eps": 4.59,
+        "eps_growth": 0.7276688453159041,
+        "eps_growth_pct": 72.76688453159042,
+        "forward_eps": 13.70041394335512,
+        "current_peg": 0.33793069598507897,
+        "reasonable_pe": 72.76688453159042,
+        "fair_price": 996.9364394511134,
+        "value_price_075": 747.702329588335,
+        "value_price_066": 657.9780500377349,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.07894736842105263,
@@ -57455,7 +58574,45 @@
       ],
       "sourceUniverseNetShares": 2195497.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.5618885635424624
+      "zScore": -0.5618885635424624,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 2625.0,
+        "current_pe": 61.706629055007056,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 42.54,
+        "prior_ttm_eps": 26.4,
+        "eps_growth": 0.6113636363636363,
+        "eps_growth_pct": 61.13636363636363,
+        "forward_eps": 68.54740909090908,
+        "current_peg": 1.0093277614945393,
+        "reasonable_pe": 61.13636363636363,
+        "fair_price": 4190.739328512396,
+        "value_price_075": 3143.0544963842967,
+        "value_price_066": 2765.8879568181815,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.0025772803115309945,
@@ -58487,7 +59644,18 @@
       ],
       "sourceUniverseNetShares": 18757208.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.6988088982588705
+      "zScore": 1.6988088982588705,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.027548209366391185,
@@ -59519,7 +60687,45 @@
       ],
       "sourceUniverseNetShares": 4971480.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.1177451380404217
+      "zScore": 1.1177451380404217,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 176.5,
+        "current_pe": 13.843137254901961,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 12.75,
+        "prior_ttm_eps": 7.37,
+        "eps_growth": 0.7299864314789688,
+        "eps_growth_pct": 72.99864314789689,
+        "forward_eps": 22.057327001356853,
+        "current_peg": 0.18963554194912166,
+        "reasonable_pe": 72.99864314789689,
+        "fair_price": 1610.1549425685193,
+        "value_price_075": 1207.6162069263894,
+        "value_price_066": 1062.7022620952227,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.01483679491633305,
@@ -60523,28 +61729,16 @@
       "sourceUniverseNetShares": 4032784.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 0.3061088195814846,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 16.600000381469727,
-        "current_pe": 13.61,
-        "current_eps": 1.219691431408503,
-        "eps_growth": 0.032786885245901676,
-        "eps_growth_pct": 3.2786885245901676,
-        "forward_eps": 1.2596813144055032,
-        "current_peg": 4.151049999999995,
-        "reasonable_pe": 3.2786885245901676,
-        "fair_price": 4.130102670181983,
-        "value_price_075": 3.097577002636487,
-        "value_price_066": 2.725867762320109,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 0.63,
-        "proxy_prior_eps": 0.61
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -61550,7 +62744,45 @@
       ],
       "sourceUniverseNetShares": 2071138.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.9639142354465393
+      "zScore": 1.9639142354465393,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 10.699999809265137,
+        "current_pe": 12.8915660352592,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 0.8300000000000001,
+        "prior_ttm_eps": 0.77,
+        "eps_growth": 0.07792207792207795,
+        "eps_growth_pct": 7.792207792207795,
+        "forward_eps": 0.8946753246753247,
+        "current_peg": 1.6544176411915967,
+        "reasonable_pe": 7.792207792207795,
+        "fair_price": 6.9714960364311045,
+        "value_price_075": 5.228622027323328,
+        "value_price_066": 4.601187384044529,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.05901639344262295,
@@ -62556,7 +63788,45 @@
       ],
       "sourceUniverseNetShares": 2166564.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -1.2406260994976284
+      "zScore": -1.2406260994976284,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 143.5,
+        "current_pe": 13.959143968871595,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 10.28,
+        "prior_ttm_eps": 9.32,
+        "eps_growth": 0.10300429184549342,
+        "eps_growth_pct": 10.300429184549342,
+        "forward_eps": 11.338884120171672,
+        "current_peg": 1.3552002269779526,
+        "reasonable_pe": 10.300429184549342,
+        "fair_price": 116.79537291163938,
+        "value_price_075": 87.59652968372953,
+        "value_price_066": 77.08494612168198,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.06174494596135696,
@@ -63555,7 +64825,18 @@
       ],
       "sourceUniverseNetShares": 7343985.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.1462073641793142
+      "zScore": 2.1462073641793142,
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09528585757271815,
@@ -64567,28 +65848,17 @@
       "sourceUniverseNetShares": 7459738.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 1.0445010463244238,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 902.0,
-        "current_pe": 46.69,
-        "current_eps": 19.318911972585138,
-        "eps_growth": 0.30746268656716413,
-        "eps_growth_pct": 30.746268656716413,
-        "forward_eps": 25.258756549230718,
-        "current_peg": 1.5185582524271846,
-        "reasonable_pe": 30.746268656716413,
-        "fair_price": 776.6125147972429,
-        "value_price_075": 582.4593860979321,
-        "value_price_066": 512.5642597661803,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 4.38,
-        "proxy_prior_eps": 3.35
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
       }
     },
     {
@@ -65596,7 +66866,18 @@
       ],
       "sourceUniverseNetShares": 5037422.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8322580925197254
+      "zScore": 0.8322580925197254,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.036818851251840944,
@@ -66628,7 +67909,45 @@
       ],
       "sourceUniverseNetShares": 1497038.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.694509361536707
+      "zScore": 0.694509361536707,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 327.0,
+        "current_pe": 12.242605765630849,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 26.71,
+        "prior_ttm_eps": 16.42,
+        "eps_growth": 0.6266747868453104,
+        "eps_growth_pct": 62.66747868453104,
+        "forward_eps": 43.448483556638244,
+        "current_peg": 0.19535819890345832,
+        "reasonable_pe": 62.66747868453104,
+        "fair_price": 2722.806917160825,
+        "value_price_075": 2042.1051878706185,
+        "value_price_066": 1797.0525653261443,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.03280421665736607,
@@ -67633,7 +68952,45 @@
       ],
       "sourceUniverseNetShares": 3090638.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.4153650619705451
+      "zScore": 1.4153650619705451,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 91.4000015258789,
+        "current_pe": 12.503420181378784,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 7.31,
+        "prior_ttm_eps": 5.0,
+        "eps_growth": 0.46199999999999997,
+        "eps_growth_pct": 46.199999999999996,
+        "forward_eps": 10.68722,
+        "current_peg": 0.2706368004627443,
+        "reasonable_pe": 46.199999999999996,
+        "fair_price": 493.74956399999996,
+        "value_price_075": 370.312173,
+        "value_price_066": 325.87471224,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09953703703703703,
@@ -68639,7 +69996,45 @@
       ],
       "sourceUniverseNetShares": 1926972.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.467928461834331
+      "zScore": 1.467928461834331,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 778.0,
+        "current_pe": 65.21374685666387,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 11.93,
+        "prior_ttm_eps": 7.36,
+        "eps_growth": 0.620923913043478,
+        "eps_growth_pct": 62.09239130434781,
+        "forward_eps": 19.33762228260869,
+        "current_peg": 1.0502695336215455,
+        "reasonable_pe": 62.09239130434781,
+        "fair_price": 1200.7192096674141,
+        "value_price_075": 900.5394072505607,
+        "value_price_066": 792.4746783804934,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.07368421052631578,
@@ -69641,7 +71036,45 @@
       ],
       "sourceUniverseNetShares": 1012000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.901591805605705
+      "zScore": 2.901591805605705,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 44.0,
+        "current_pe": 22.0,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 2.0,
+        "prior_ttm_eps": 1.11,
+        "eps_growth": 0.8018018018018016,
+        "eps_growth_pct": 80.18018018018016,
+        "forward_eps": 3.603603603603603,
+        "current_peg": 0.2743820224719102,
+        "reasonable_pe": 80.18018018018016,
+        "fair_price": 288.93758623488344,
+        "value_price_075": 216.70318967616257,
+        "value_price_066": 190.69880691502306,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.04509493670886076,
@@ -70642,7 +72075,45 @@
       ],
       "sourceUniverseNetShares": 689699.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.342678545320949
+      "zScore": 2.342678545320949,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 6035.0,
+        "current_pe": 135.1623740201568,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 44.65,
+        "prior_ttm_eps": 30.509999999999998,
+        "eps_growth": 0.46345460504752545,
+        "eps_growth_pct": 46.345460504752545,
+        "forward_eps": 65.343248115372,
+        "current_peg": 2.9164102060502004,
+        "reasonable_pe": 46.345460504752545,
+        "fair_price": 3028.3629247832196,
+        "value_price_075": 2271.2721935874147,
+        "value_price_066": 1998.719530356925,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.05755395683453238,
@@ -71646,28 +73117,16 @@
       "sourceUniverseNetShares": 7678000.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 1.8168108556423177,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 131.0,
-        "current_pe": 37.97,
-        "current_eps": 3.450092178035291,
-        "eps_growth": 11.615384615384619,
-        "eps_growth_pct": 1161.538461538462,
-        "forward_eps": 43.52423978444522,
-        "current_peg": 0.032689403973509924,
-        "reasonable_pe": 1161.538461538462,
-        "fair_price": 50555.07851885562,
-        "value_price_075": 37916.308889141714,
-        "value_price_066": 33366.35182244471,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": true,
-        "below_066": true,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 1.6400000000000001,
-        "proxy_prior_eps": 0.12999999999999998
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -72673,7 +74132,18 @@
       ],
       "sourceUniverseNetShares": 10605735.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.7100479689967807
+      "zScore": 1.7100479689967807,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.08085106382978724,
@@ -73679,7 +75149,45 @@
       ],
       "sourceUniverseNetShares": 2662030.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.1148621252432644
+      "zScore": 1.1148621252432644,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 2160.0,
+        "current_pe": 46.20320855614973,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 46.75,
+        "prior_ttm_eps": 20.91,
+        "eps_growth": 1.2357723577235773,
+        "eps_growth_pct": 123.57723577235772,
+        "forward_eps": 104.52235772357724,
+        "current_peg": 0.3738812271320011,
+        "reasonable_pe": 123.57723577235772,
+        "fair_price": 12916.584043889221,
+        "value_price_075": 9687.438032916916,
+        "value_price_066": 8524.945468966886,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.03612167300380228,
@@ -74709,28 +76217,16 @@
       "sourceUniverseNetShares": 6238460.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": -0.38603267471867797,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 253.5,
-        "current_pe": 33.22,
-        "current_eps": 7.630945213726671,
-        "eps_growth": 0.4144427001569859,
-        "eps_growth_pct": 41.44427001569859,
-        "forward_eps": 10.79353475285358,
-        "current_peg": 0.8015583333333333,
-        "reasonable_pe": 41.44427001569859,
-        "fair_price": 447.33016872109033,
-        "value_price_075": 335.49762654081775,
-        "value_price_066": 295.2379113559196,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 9.01,
-        "proxy_prior_eps": 6.37
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -75738,28 +77234,17 @@
       "sourceUniverseNetShares": 910657.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 2.3173059756919994,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 6795.0,
-        "current_pe": 137.27,
-        "current_eps": 49.50098346324761,
-        "eps_growth": 0.09242718446601939,
-        "eps_growth_pct": 9.242718446601938,
-        "forward_eps": 54.07621999305457,
-        "current_peg": 14.851691176470595,
-        "reasonable_pe": 9.242718446601938,
-        "fair_price": 499.81127605231,
-        "value_price_075": 374.8584570392325,
-        "value_price_066": 329.8754421945246,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 28.13,
-        "proxy_prior_eps": 25.75
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
       }
     },
     {
@@ -76760,7 +78245,45 @@
       ],
       "sourceUniverseNetShares": 1631949.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.9472382744596121
+      "zScore": 0.9472382744596121,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 472.5,
+        "current_pe": 47.82388663967612,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 9.879999999999999,
+        "prior_ttm_eps": 6.84,
+        "eps_growth": 0.4444444444444444,
+        "eps_growth_pct": 44.44444444444444,
+        "forward_eps": 14.271111111111109,
+        "current_peg": 1.0760374493927127,
+        "reasonable_pe": 44.44444444444444,
+        "fair_price": 634.2716049382715,
+        "value_price_075": 475.70370370370364,
+        "value_price_066": 418.6192592592592,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09899888765294772,
@@ -77766,7 +79289,19 @@
       ],
       "sourceUniverseNetShares": 2133764.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.1546464561802547
+      "zScore": 1.1546464561802547,
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.06588735387885228,
@@ -78773,28 +80308,17 @@
       "sourceUniverseNetShares": 1308934.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 0.574142977036549,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 4395.0,
-        "current_pe": 47.08,
-        "current_eps": 93.3517417162277,
-        "eps_growth": 0.49802229413879884,
-        "eps_growth_pct": 49.802229413879886,
-        "forward_eps": 139.84299028759605,
-        "current_peg": 0.9453392057761735,
-        "reasonable_pe": 49.802229413879886,
-        "fair_price": 6964.492684225836,
-        "value_price_075": 5223.369513169377,
-        "value_price_066": 4596.565171589052,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 41.66,
-        "proxy_prior_eps": 27.81
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
       }
     },
     {
@@ -79815,7 +81339,18 @@
       ],
       "sourceUniverseNetShares": 1507432.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.5367720567548891
+      "zScore": -0.5367720567548891,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09351748740764763,
@@ -80818,7 +82353,18 @@
       ],
       "sourceUniverseNetShares": 677000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.7274977089257019
+      "zScore": 0.7274977089257019,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.05468748428393179,
@@ -81819,7 +83365,18 @@
       ],
       "sourceUniverseNetShares": 700000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8371633854355013
+      "zScore": 0.8371633854355013,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.010791385004946757,
@@ -82841,28 +84398,16 @@
       "sourceUniverseNetShares": 33002982.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 2.5746741269160727,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 41.25,
-        "current_pe": 15.28,
-        "current_eps": 2.699607329842932,
-        "eps_growth": 0.37410071942446055,
-        "eps_growth_pct": 37.41007194244605,
-        "forward_eps": 3.7095323741007196,
-        "current_peg": 0.40844615384615374,
-        "reasonable_pe": 37.41007194244605,
-        "fair_price": 138.77387298794062,
-        "value_price_075": 104.08040474095546,
-        "value_price_066": 91.59075617204081,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": true,
-        "below_066": true,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 1.91,
-        "proxy_prior_eps": 1.39
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -83893,28 +85438,16 @@
       "sourceUniverseNetShares": 2576621.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": -1.3193424313153879,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 74.0,
-        "current_pe": 13.21,
-        "current_eps": 5.601816805450416,
-        "eps_growth": 0.6341463414634148,
-        "eps_growth_pct": 63.41463414634148,
-        "forward_eps": 9.15418843817507,
-        "current_peg": 0.20831153846153844,
-        "reasonable_pe": 63.41463414634148,
-        "fair_price": 580.5095107135412,
-        "value_price_075": 435.3821330351559,
-        "value_price_066": 383.13627707093724,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": true,
-        "below_066": true,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 5.36,
-        "proxy_prior_eps": 3.28
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -84914,28 +86447,16 @@
       "sourceUniverseNetShares": 646724.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 1.7619236821028856,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 1225.0,
-        "current_pe": 59.99,
-        "current_eps": 20.42007001166861,
-        "eps_growth": 0.5802879291251386,
-        "eps_growth_pct": 58.02879291251386,
-        "forward_eps": 32.269590151330135,
-        "current_peg": 1.03379713740458,
-        "reasonable_pe": 58.02879291251386,
-        "fair_price": 1872.565364263233,
-        "value_price_075": 1404.4240231974247,
-        "value_price_066": 1235.8931404137338,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 14.27,
-        "proxy_prior_eps": 9.03
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -85936,7 +87457,45 @@
       ],
       "sourceUniverseNetShares": 1505842.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.5802998250602305
+      "zScore": 1.5802998250602305,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 153.0,
+        "current_pe": 13.269731136166524,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 11.53,
+        "prior_ttm_eps": 5.46,
+        "eps_growth": 1.1117216117216118,
+        "eps_growth_pct": 111.17216117216118,
+        "forward_eps": 24.34815018315018,
+        "current_peg": 0.11936199671082243,
+        "reasonable_pe": 111.17216117216118,
+        "fair_price": 2706.8364764051576,
+        "value_price_075": 2030.1273573038682,
+        "value_price_066": 1786.512074427404,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.03347280334728033,
@@ -86938,7 +88497,18 @@
       ],
       "sourceUniverseNetShares": 1301630.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.3911829990438553
+      "zScore": 1.3911829990438553,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.010666707356770833,
@@ -87947,28 +89517,16 @@
       "sourceUniverseNetShares": 17419234.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 2.7535403426496035,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 74.19999694824219,
-        "current_pe": 17.75,
-        "current_eps": 4.180281518210827,
-        "eps_growth": 0.1208791208791209,
-        "eps_growth_pct": 12.08791208791209,
-        "forward_eps": 4.685590273159389,
-        "current_peg": 1.4684090909090908,
-        "reasonable_pe": 12.08791208791209,
-        "fair_price": 56.639003301926685,
-        "value_price_075": 42.47925247644501,
-        "value_price_066": 37.38174217927161,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 4.08,
-        "proxy_prior_eps": 3.64
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
       }
     },
     {
@@ -88969,7 +90527,45 @@
       ],
       "sourceUniverseNetShares": 2748450.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.5058457682852953
+      "zScore": 3.5058457682852953,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 52.599998474121094,
+        "current_pe": 14.858756631107653,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 3.54,
+        "prior_ttm_eps": 3.19,
+        "eps_growth": 0.10971786833855801,
+        "eps_growth_pct": 10.971786833855802,
+        "forward_eps": 3.9284012539184956,
+        "current_peg": 1.3542695329495258,
+        "reasonable_pe": 10.971786833855802,
+        "fair_price": 43.10158115584557,
+        "value_price_075": 32.326185866884174,
+        "value_price_066": 28.447043562858077,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": 0.0032502211532436996,
@@ -89967,7 +91563,18 @@
       ],
       "sourceUniverseNetShares": 1787138.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.165473638199997
+      "zScore": 2.165473638199997,
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.034482758620689655,
@@ -90966,7 +92573,18 @@
       ],
       "sourceUniverseNetShares": 7969875.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.7272971981865193
+      "zScore": 2.7272971981865193,
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.021834061499084432,
@@ -91971,7 +93589,45 @@
       ],
       "sourceUniverseNetShares": 1195704.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.4707733461966943
+      "zScore": 2.4707733461966943,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 89.5999984741211,
+        "current_pe": 10.67938003267236,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 8.39,
+        "prior_ttm_eps": 6.11,
+        "eps_growth": 0.3731587561374796,
+        "eps_growth_pct": 37.31587561374796,
+        "forward_eps": 11.520801963993454,
+        "current_peg": 0.28618864912117586,
+        "reasonable_pe": 37.31587561374796,
+        "fair_price": 429.90881305900297,
+        "value_price_075": 322.4316097942522,
+        "value_price_066": 283.739816618942,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q4–2026Q3",
+        "prior_period": "2024Q4–2025Q3",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.046703296703296704,
@@ -93003,7 +94659,45 @@
       ],
       "sourceUniverseNetShares": 723862.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.9076962055566306
+      "zScore": -0.9076962055566306,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 1735.0,
+        "current_pe": 21.083971320938144,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 82.29,
+        "prior_ttm_eps": 71.11,
+        "eps_growth": 0.15722120658135297,
+        "eps_growth_pct": 15.722120658135296,
+        "forward_eps": 95.22773308957954,
+        "current_peg": 1.341038640994553,
+        "reasonable_pe": 15.722120658135296,
+        "fair_price": 1497.1819096350725,
+        "value_price_075": 1122.8864322263046,
+        "value_price_066": 988.1400603591479,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.031007751937984496,
@@ -94036,7 +95730,18 @@
       ],
       "sourceUniverseNetShares": 1009736.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -1.3433878283763663
+      "zScore": -1.3433878283763663,
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.03743845371189963,
@@ -95036,7 +96741,45 @@
       ],
       "sourceUniverseNetShares": 747788.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.9526139176278188
+      "zScore": 1.9526139176278188,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 97.69999694824219,
+        "current_pe": 10.879732399581535,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 8.98,
+        "prior_ttm_eps": 4.17,
+        "eps_growth": 1.1534772182254196,
+        "eps_growth_pct": 115.34772182254196,
+        "forward_eps": 19.33822541966427,
+        "current_peg": 0.09432117277807693,
+        "reasonable_pe": 115.34772182254196,
+        "fair_price": 2230.620246249044,
+        "value_price_075": 1672.965184686783,
+        "value_price_066": 1472.209362524369,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.08724202626641651,
@@ -96037,7 +97780,45 @@
       ],
       "sourceUniverseNetShares": 695953.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.84964199881695
+      "zScore": 0.84964199881695,
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 486.5,
+        "current_pe": 21.796594982078854,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 22.32,
+        "prior_ttm_eps": 11.040000000000001,
+        "eps_growth": 1.0217391304347823,
+        "eps_growth_pct": 102.17391304347822,
+        "forward_eps": 45.12521739130434,
+        "current_peg": 0.21332837642034633,
+        "reasonable_pe": 102.17391304347822,
+        "fair_price": 4610.620037807181,
+        "value_price_075": 3457.965028355386,
+        "value_price_066": 3043.0092249527397,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.01108869463670468,
@@ -97024,31 +98805,19 @@
       "sourceUniverseNetShares": 4214196.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 3.6274558091217575,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 49.04999923706055,
-        "current_pe": 21.23,
-        "current_eps": 2.3104097615195736,
-        "eps_growth": 0.13095238095238093,
-        "eps_growth_pct": 13.095238095238093,
-        "forward_eps": 2.6129634207661843,
-        "current_peg": 1.6212000000000002,
-        "reasonable_pe": 13.095238095238093,
-        "fair_price": 34.21737812908098,
-        "value_price_075": 25.663033596810735,
-        "value_price_066": 22.583469565193447,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": false,
-        "below_066": false,
-        "growth_method": "ltm_reported_eps",
-        "growth_method_label": "LTM 已公布 EPS 成長",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": 1.9,
-        "proxy_prior_eps": 1.68
-      },
       "dataFreshness": "current",
-      "freshnessWarnings": []
+      "freshnessWarnings": [],
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.032167874849759616,
@@ -98036,7 +99805,18 @@
       "ttmOperatingProfitGrowth": null,
       "zScore": 2.0744812088328364,
       "dataFreshness": "current",
-      "freshnessWarnings": []
+      "freshnessWarnings": [],
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.06914889839451965,
@@ -99026,7 +100806,45 @@
       "ttmOperatingProfitGrowth": null,
       "zScore": 0.9208204347691479,
       "dataFreshness": "current",
-      "freshnessWarnings": []
+      "freshnessWarnings": [],
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 35.0,
+        "current_pe": 10.574018126888218,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 3.31,
+        "prior_ttm_eps": 0.23,
+        "eps_growth": 13.391304347826086,
+        "eps_growth_pct": 1339.1304347826085,
+        "forward_eps": 47.635217391304344,
+        "current_peg": 0.007896182367481462,
+        "reasonable_pe": 1339.1304347826085,
+        "fair_price": 63789.76937618147,
+        "value_price_075": 47842.327032136105,
+        "value_price_066": 42101.24778827977,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.060191540598138284,
@@ -100018,7 +101836,18 @@
       "ttmOperatingProfitGrowth": null,
       "zScore": 2.231693181471217,
       "dataFreshness": "current",
-      "freshnessWarnings": []
+      "freshnessWarnings": [],
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": 0.0,
@@ -101006,7 +102835,18 @@
       "ttmOperatingProfitGrowth": null,
       "zScore": 1.3367778004239492,
       "dataFreshness": "current",
-      "freshnessWarnings": []
+      "freshnessWarnings": [],
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.040268419003798184,
@@ -101997,7 +103837,45 @@
       "ttmOperatingProfitGrowth": null,
       "zScore": 0.6338440033584987,
       "dataFreshness": "current",
-      "freshnessWarnings": []
+      "freshnessWarnings": [],
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 57.20000076293945,
+        "current_pe": 18.45161314933531,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 3.1,
+        "prior_ttm_eps": 2.3,
+        "eps_growth": 0.34782608695652195,
+        "eps_growth_pct": 34.78260869565219,
+        "forward_eps": 4.178260869565218,
+        "current_peg": 0.5304838780433898,
+        "reasonable_pe": 34.78260869565219,
+        "fair_price": 145.33081285444246,
+        "value_price_075": 108.99810964083184,
+        "value_price_066": 95.91833648393201,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": true,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.00975609756097561,
@@ -102987,7 +104865,45 @@
       "ttmOperatingProfitGrowth": null,
       "zScore": 1.7355272137213469,
       "dataFreshness": "current",
-      "freshnessWarnings": []
+      "freshnessWarnings": [],
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 101.5,
+        "current_pe": 17.14527027027027,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 5.92,
+        "prior_ttm_eps": 4.75,
+        "eps_growth": 0.24631578947368427,
+        "eps_growth_pct": 24.631578947368425,
+        "forward_eps": 7.378189473684211,
+        "current_peg": 0.6960686648186647,
+        "reasonable_pe": 24.631578947368425,
+        "fair_price": 181.73645650969533,
+        "value_price_075": 136.30234238227152,
+        "value_price_066": 119.94606129639892,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": true,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09937888198757763,
@@ -103974,31 +105890,19 @@
       "sourceUniverseNetShares": 651256.0,
       "ttmOperatingProfitGrowth": null,
       "zScore": 0.7083772377590251,
-      "valuation": {
-        "method": "zulu-peg",
-        "current_price": 2175.0,
-        "current_pe": 138.71,
-        "current_eps": 15.680196092567225,
-        "eps_growth": 2.93721299191668,
-        "eps_growth_pct": 293.721299191668,
-        "forward_eps": 61.73627177145684,
-        "current_peg": 0.47225039648719763,
-        "reasonable_pe": 293.721299191668,
-        "fair_price": 18133.2579519622,
-        "value_price_075": 13599.943463971651,
-        "value_price_066": 11967.950248295054,
-        "peg_acceptable_max": 0.75,
-        "peg_strict_max": 0.66,
-        "below_075": true,
-        "below_066": true,
-        "growth_method": "ltm_gross_profit_eps_proxy",
-        "growth_method_label": "LTM 營收×毛利率／股數 EPS 代理",
-        "formula_version": "zulu-peg-eps-growth-v2",
-        "proxy_current_eps": null,
-        "proxy_prior_eps": null
-      },
       "dataFreshness": "current",
-      "freshnessWarnings": []
+      "freshnessWarnings": [],
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     },
     {
       "adjustedChangePct": -0.09989258861439312,
@@ -104989,7 +106893,45 @@
       "ttmOperatingProfitGrowth": null,
       "zScore": -0.2925462450281567,
       "dataFreshness": "current",
-      "freshnessWarnings": []
+      "freshnessWarnings": [],
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      },
+      "valuation": {
+        "method": "zulu-peg",
+        "formula_version": "peg-ttm-yoy-v1",
+        "growth_method": "ttm_reported_eps_yoy",
+        "growth_method_label": "TTM EPS 年增率",
+        "current_price": 4190.0,
+        "current_pe": 88.73358746293944,
+        "pe_origin": "derived",
+        "pe_source_date": null,
+        "current_eps": 47.22,
+        "prior_ttm_eps": 28.83,
+        "eps_growth": 0.6378772112382936,
+        "eps_growth_pct": 63.78772112382936,
+        "forward_eps": 77.34056191467222,
+        "current_peg": 1.3910763059035038,
+        "reasonable_pe": 63.78772112382936,
+        "fair_price": 4933.378194973369,
+        "value_price_075": 3700.033646230027,
+        "value_price_066": 3256.0296086824237,
+        "peg_acceptable_max": 0.75,
+        "peg_strict_max": 0.66,
+        "below_075": false,
+        "below_066": false,
+        "current_period": "2025Q3–2026Q2",
+        "prior_period": "2024Q3–2025Q2",
+        "source_refs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
     }
   ],
   "rankings": {
@@ -105008,6 +106950,18 @@
         "reason": "官方投信十日買超前100 Top10 新進榜，第 5 名；前期名次 31。",
         "source": "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "not_applicable",
+          "reasonCodes": [
+            "nonpositive_eps"
+          ],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "nonpositive_eps",
         "currentPeg": null,
         "fairPrice": null,
         "valuePrice075": null,
@@ -105073,9 +107027,7 @@
             "TDCC:1-5:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 8,
@@ -105091,6 +107043,18 @@
         "reason": "官方投信十日買超前100 Top10 新進榜，第 8 名；前期名次 18。",
         "source": "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "needs_review",
+          "reasonCodes": [
+            "missing_quarter_eps"
+          ],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "missing_quarter_eps",
         "currentPeg": null,
         "fairPrice": null,
         "valuePrice075": null,
@@ -105156,9 +107120,7 @@
             "TDCC:1-5:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 9,
@@ -105173,21 +107135,24 @@
         "entryStatus": "new",
         "reason": "官方投信十日買超前100 Top10 新進榜，第 9 名；前期名次 42。",
         "source": "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
+        "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "needs_review",
+          "reasonCodes": [
+            "missing_quarter_eps"
+          ],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "missing_quarter_eps",
+        "currentPeg": null,
+        "fairPrice": null,
+        "valuePrice075": null,
+        "valuePrice066": null,
         "currentPrice": 74.19999694824219,
-        "fairPrice": 56.639003301926685,
-        "valuePrice075": 42.47925247644501,
-        "valuePrice066": 37.38174217927161,
-        "currentPeg": 1.4684090909090908,
-        "currentPe": 17.75,
-        "currentEps": 4.180281518210827,
-        "pegBand": "acceptable",
-        "valuationMethod": "zulu-peg",
-        "valuationGrowthInput": 0.1208791208791209,
-        "valuationGrowthMethod": "ltm_reported_eps",
-        "valuationGrowthMethodLabel": "LTM 已公布 EPS 成長",
-        "valuationEvidenceLevel": "formal",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": 2.7535403426496035,
         "slope": 0.0549935430934432,
@@ -105248,9 +107213,7 @@
             "TDCC:1-5:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       }
     ],
     "growth": [
@@ -105338,7 +107301,7 @@
         "fairPrice": 444.59068008281895,
         "valuePrice075": null,
         "valuePrice066": null,
-        "currentPeg": null,
+        "currentPeg": 0.18963554194912166,
         "currentPe": 13.843137254901961,
         "currentEps": 12.75,
         "valuationMethod": "growth-total-return-pe",
@@ -105363,6 +107326,7 @@
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
         "regressionExpectedObservations": 850,
+        "pegBand": "strict",
         "chipReference": {
           "schemaVersion": "chip-reference-v1",
           "status": "fail",
@@ -105442,9 +107406,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 2,
@@ -105530,7 +107492,7 @@
         "fairPrice": 636.0446331837471,
         "valuePrice075": null,
         "valuePrice066": null,
-        "currentPeg": null,
+        "currentPeg": 0.19535819890345832,
         "currentPe": 12.242605765630849,
         "currentEps": 26.71,
         "valuationMethod": "growth-total-return-pe",
@@ -105555,6 +107517,7 @@
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
         "regressionExpectedObservations": 850,
+        "pegBand": "strict",
         "chipReference": {
           "schemaVersion": "chip-reference-v1",
           "status": "fail",
@@ -105634,9 +107597,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 3,
@@ -105722,7 +107683,7 @@
         "fairPrice": 5536.195870827917,
         "valuePrice075": null,
         "valuePrice066": null,
-        "currentPeg": null,
+        "currentPeg": 0.2688943658706929,
         "currentPe": 39.06561959270597,
         "currentEps": 75.13000000000001,
         "valuationMethod": "growth-total-return-pe",
@@ -105747,6 +107708,7 @@
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
         "regressionExpectedObservations": 850,
+        "pegBand": "strict",
         "chipReference": {
           "schemaVersion": "chip-reference-v1",
           "status": "fail",
@@ -105826,9 +107788,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       }
     ],
     "lowPosition": [
@@ -105850,21 +107810,24 @@
           "evidenceLevel": "formal"
         },
         "reason": "Z -2.40 ≤ 0；價格觀察與成長健康分開，成長健康為 unknown",
+        "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "needs_review",
+          "reasonCodes": [
+            "incomparable_eps_basis"
+          ],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "incomparable_eps_basis",
+        "currentPeg": null,
+        "fairPrice": null,
+        "valuePrice075": null,
+        "valuePrice066": null,
         "currentPrice": 18.149999618530273,
-        "fairPrice": 3.4283332612779436,
-        "valuePrice075": 2.5712499459584577,
-        "valuePrice066": 2.262699952443443,
-        "currentPeg": 5.399999999999996,
-        "currentPe": 10.8,
-        "currentEps": 1.6805555202342846,
-        "pegBand": "acceptable",
-        "valuationMethod": "zulu-peg",
-        "valuationGrowthInput": 0.020000000000000018,
-        "valuationGrowthMethod": "ltm_reported_eps",
-        "valuationGrowthMethodLabel": "LTM 已公布 EPS 成長",
-        "valuationEvidenceLevel": "formal",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": -2.396104751322249,
         "slope": 0.01145999678424662,
@@ -105951,9 +107914,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 2,
@@ -105974,6 +107935,18 @@
         },
         "reason": "Z -1.34 ≤ 0；價格觀察與成長健康分開，成長健康為 fail",
         "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "not_applicable",
+          "reasonCodes": [
+            "nonpositive_growth"
+          ],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "nonpositive_growth",
         "currentPeg": null,
         "fairPrice": null,
         "valuePrice075": null,
@@ -106065,9 +108038,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 3,
@@ -106087,21 +108058,24 @@
           "evidenceLevel": "formal"
         },
         "reason": "Z -1.32 ≤ 0；價格觀察與成長健康分開，成長健康為 pass",
+        "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "needs_review",
+          "reasonCodes": [
+            "incomparable_eps_basis"
+          ],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "incomparable_eps_basis",
+        "currentPeg": null,
+        "fairPrice": null,
+        "valuePrice075": null,
+        "valuePrice066": null,
         "currentPrice": 74.0,
-        "fairPrice": 580.5095107135412,
-        "valuePrice075": 435.3821330351559,
-        "valuePrice066": 383.13627707093724,
-        "currentPeg": 0.20831153846153844,
-        "currentPe": 13.21,
-        "currentEps": 5.601816805450416,
-        "pegBand": "strict",
-        "valuationMethod": "zulu-peg",
-        "valuationGrowthInput": 0.6341463414634148,
-        "valuationGrowthMethod": "ltm_reported_eps",
-        "valuationGrowthMethodLabel": "LTM 已公布 EPS 成長",
-        "valuationEvidenceLevel": "formal",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": -1.3193424313153879,
         "slope": 0.07450392270093664,
@@ -106188,9 +108162,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 4,
@@ -106210,12 +108182,31 @@
           "evidenceLevel": "formal"
         },
         "reason": "Z -0.91 ≤ 0；價格觀察與成長健康分開，成長健康為 fail",
-        "valuationEvidenceLevel": "unavailable",
-        "currentPeg": null,
-        "fairPrice": null,
-        "valuePrice075": null,
-        "valuePrice066": null,
         "currentPrice": 1735.0,
+        "fairPrice": 1497.1819096350725,
+        "valuePrice075": 1122.8864322263046,
+        "valuePrice066": 988.1400603591479,
+        "currentPeg": 1.341038640994553,
+        "currentPe": 21.083971320938144,
+        "currentEps": 82.29,
+        "pegBand": "acceptable",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.15722120658135297,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
+        "valuationEvidenceLevel": "formal",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
+        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": -0.9076962055566306,
         "slope": 1.3852652470734865,
@@ -106302,9 +108293,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 5,
@@ -106325,6 +108314,18 @@
         },
         "reason": "Z -0.81 ≤ 0；價格觀察與成長健康分開，成長健康為 pass",
         "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "not_applicable",
+          "reasonCodes": [
+            "nonpositive_growth"
+          ],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "nonpositive_growth",
         "currentPeg": null,
         "fairPrice": null,
         "valuePrice075": null,
@@ -106416,9 +108417,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 6,
@@ -106438,12 +108437,31 @@
           "evidenceLevel": "formal"
         },
         "reason": "Z -0.59 ≤ 0；價格觀察與成長健康分開，成長健康為 pass",
-        "valuationEvidenceLevel": "unavailable",
-        "currentPeg": null,
-        "fairPrice": null,
-        "valuePrice075": null,
-        "valuePrice066": null,
         "currentPrice": 311.5,
+        "fairPrice": 835.4985133255815,
+        "valuePrice075": 626.6238849941861,
+        "valuePrice066": 551.4290187948837,
+        "currentPeg": 0.4786094072694571,
+        "currentPe": 13.57890148212729,
+        "currentEps": 22.939999999999998,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.2837157246782316,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
+        "valuationEvidenceLevel": "formal",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
+        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": -0.5923735581478594,
         "slope": 0.18600066643082616,
@@ -106530,9 +108548,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 7,
@@ -106552,12 +108568,31 @@
           "evidenceLevel": "formal"
         },
         "reason": "Z -0.56 ≤ 0；價格觀察與成長健康分開，成長健康為 pass",
-        "valuationEvidenceLevel": "unavailable",
-        "currentPeg": null,
-        "fairPrice": null,
-        "valuePrice075": null,
-        "valuePrice066": null,
         "currentPrice": 2625.0,
+        "fairPrice": 4190.739328512396,
+        "valuePrice075": 3143.0544963842967,
+        "valuePrice066": 2765.8879568181815,
+        "currentPeg": 1.0093277614945393,
+        "currentPe": 61.706629055007056,
+        "currentEps": 42.54,
+        "pegBand": "acceptable",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.6113636363636363,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
+        "valuationEvidenceLevel": "formal",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
+        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": -0.5618885635424624,
         "slope": 3.850684020498067,
@@ -106644,9 +108679,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 8,
@@ -106667,6 +108700,18 @@
         },
         "reason": "Z -0.54 ≤ 0；價格觀察與成長健康分開，成長健康為 pass",
         "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "not_applicable",
+          "reasonCodes": [
+            "nonpositive_growth"
+          ],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "nonpositive_growth",
         "currentPeg": null,
         "fairPrice": null,
         "valuePrice075": null,
@@ -106747,9 +108792,7 @@
             "TDCC:1-5:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 9,
@@ -106769,12 +108812,31 @@
           "evidenceLevel": "formal"
         },
         "reason": "Z -0.41 ≤ 0；價格觀察與成長健康分開，成長健康為 pass",
-        "valuationEvidenceLevel": "unavailable",
-        "currentPeg": null,
-        "fairPrice": null,
-        "valuePrice075": null,
-        "valuePrice066": null,
         "currentPrice": 245.5,
+        "fairPrice": 282.6651969691419,
+        "valuePrice075": 211.9988977268564,
+        "valuePrice066": 186.55902999963365,
+        "currentPeg": 1.0076406499483415,
+        "currentPe": 16.14069690992768,
+        "currentEps": 15.21,
+        "pegBand": "acceptable",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.16018306636155621,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
+        "valuationEvidenceLevel": "formal",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
+        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": -0.40665543222386663,
         "slope": 0.20085784908822193,
@@ -106861,9 +108923,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 10,
@@ -106883,21 +108943,24 @@
           "evidenceLevel": "formal"
         },
         "reason": "Z -0.39 ≤ 0；價格觀察與成長健康分開，成長健康為 pass",
+        "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "needs_review",
+          "reasonCodes": [
+            "incomparable_eps_basis"
+          ],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "incomparable_eps_basis",
+        "currentPeg": null,
+        "fairPrice": null,
+        "valuePrice075": null,
+        "valuePrice066": null,
         "currentPrice": 253.5,
-        "fairPrice": 447.33016872109033,
-        "valuePrice075": 335.49762654081775,
-        "valuePrice066": 295.2379113559196,
-        "currentPeg": 0.8015583333333333,
-        "currentPe": 33.22,
-        "currentEps": 7.630945213726671,
-        "pegBand": "acceptable",
-        "valuationMethod": "zulu-peg",
-        "valuationGrowthInput": 0.4144427001569859,
-        "valuationGrowthMethod": "ltm_reported_eps",
-        "valuationGrowthMethodLabel": "LTM 已公布 EPS 成長",
-        "valuationEvidenceLevel": "formal",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
-        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": -0.38603267471867797,
         "slope": 0.3001296953357874,
@@ -106984,9 +109047,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 11,
@@ -107007,6 +109068,18 @@
         },
         "reason": "Z -0.38 ≤ 0；價格觀察與成長健康分開，成長健康為 unknown",
         "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "not_applicable",
+          "reasonCodes": [
+            "nonpositive_eps"
+          ],
+          "currentPeriod": "2025Q4–2026Q3",
+          "priorPeriod": "2024Q4–2025Q3",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "nonpositive_eps",
         "currentPeg": null,
         "fairPrice": null,
         "valuePrice075": null,
@@ -107098,9 +109171,7 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 12,
@@ -107120,12 +109191,31 @@
           "evidenceLevel": "formal"
         },
         "reason": "Z -0.29 ≤ 0；價格觀察與成長健康分開，成長健康為 pass",
-        "valuationEvidenceLevel": "unavailable",
-        "currentPeg": null,
-        "fairPrice": null,
-        "valuePrice075": null,
-        "valuePrice066": null,
         "currentPrice": 4190.0,
+        "fairPrice": 4933.378194973369,
+        "valuePrice075": 3700.033646230027,
+        "valuePrice066": 3256.0296086824237,
+        "currentPeg": 1.3910763059035038,
+        "currentPe": 88.73358746293944,
+        "currentEps": 47.22,
+        "pegBand": "acceptable",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.6378772112382936,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
+        "valuationEvidenceLevel": "formal",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
+        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": -0.2925462450281567,
         "slope": 6.638968481201561,
@@ -107171,9 +109261,7 @@
           },
           "sourceRefs": [],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 13,
@@ -107193,12 +109281,31 @@
           "evidenceLevel": "formal"
         },
         "reason": "Z -0.22 ≤ 0；價格觀察與成長健康分開，成長健康為 pass",
-        "valuationEvidenceLevel": "unavailable",
-        "currentPeg": null,
-        "fairPrice": null,
-        "valuePrice075": null,
-        "valuePrice066": null,
         "currentPrice": 186.0,
+        "fairPrice": 263.6115482118605,
+        "valuePrice075": 197.70866115889538,
+        "valuePrice066": 173.98362181982796,
+        "currentPeg": 0.9322711712576384,
+        "currentPe": 29.95169082125604,
+        "currentEps": 6.21,
+        "pegBand": "acceptable",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.3212765957446808,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
+        "valuationEvidenceLevel": "formal",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
+        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": -0.21567484685478036,
         "slope": 0.22359047495394627,
@@ -107259,9 +109366,7 @@
             "TDCC:1-5:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 14,
@@ -107282,6 +109387,18 @@
         },
         "reason": "Z -0.09 ≤ 0；價格觀察與成長健康分開，成長健康為 unknown",
         "valuationEvidenceLevel": "unavailable",
+        "pegReview": {
+          "status": "needs_review",
+          "reasonCodes": [
+            "incomparable_eps_basis"
+          ],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": "incomparable_eps_basis",
         "currentPeg": null,
         "fairPrice": null,
         "valuePrice075": null,
@@ -107347,9 +109464,7 @@
             "TDCC:1-5:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       },
       {
         "rank": 15,
@@ -107369,12 +109484,31 @@
           "evidenceLevel": "formal"
         },
         "reason": "Z -0.05 ≤ 0；價格觀察與成長健康分開，成長健康為 pass",
-        "valuationEvidenceLevel": "unavailable",
-        "currentPeg": null,
-        "fairPrice": null,
-        "valuePrice075": null,
-        "valuePrice066": null,
         "currentPrice": 318.0,
+        "fairPrice": 856114.6415215455,
+        "valuePrice075": 642085.9811411591,
+        "valuePrice066": 565035.66340422,
+        "currentPeg": 0.004006376467403485,
+        "currentPe": 3.920601652077426,
+        "currentEps": 81.11,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 9.78590425531915,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
+        "valuationEvidenceLevel": "formal",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
+        "extremeExtrapolation": false,
         "priceBasis": "adjusted",
         "zScore": -0.05161671312110463,
         "slope": 0.3944385803446468,
@@ -107430,18 +109564,16 @@
             "TDCC:1-5:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       }
     ],
     "lowBase": [
       {
-        "rank": 5,
-        "code": "3706",
-        "name": "神達",
+        "rank": 1,
+        "code": "2382",
+        "name": "廣達",
         "sector": "",
-        "value": -1.3193424313153879,
+        "value": -0.5923735581478594,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -107459,21 +109591,197 @@
             "key": "lowZ",
             "label": "3.5年 Z ≤ 0",
             "status": "pass",
-            "value": "Z -1.32",
+            "value": "Z -0.59",
             "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
           },
           {
             "key": "positiveSlope",
             "label": "正向回歸 slope",
             "status": "pass",
-            "value": "+0.0745 / 日",
+            "value": "+0.1860 / 日",
             "reason": "回歸斜率需大於 0；這是策略計算條件。"
           },
           {
             "key": "growthProxy",
             "label": "三月營收年增 ≥ 15%",
             "status": "pass",
-            "value": "+83.0%",
+            "value": "+177.5%",
+            "reason": "三月合計營收年增代理；不能替代正式營業利益成長。"
+          },
+          {
+            "key": "ttmOperatingProfitNonNegative",
+            "label": "TTM 營業利益年增不負（可選）",
+            "status": "not_applicable",
+            "value": "未提供",
+            "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
+          },
+          {
+            "key": "qualityAnchors",
+            "label": "最新年度淨利與 CFO > 0",
+            "status": "fail",
+            "value": "至少一項錨點未通過",
+            "reason": "淨利與營業現金流是低基期品質路徑必要錨點；缺資料保持 unknown。"
+          },
+          {
+            "key": "qualityProxy",
+            "label": "五項品質代理至少 4/5",
+            "status": "pass",
+            "value": "4/5 通過",
+            "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。"
+          }
+        ],
+        "reason": "投信十日淨買超排序第 26 名（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.59）；正向回歸 slope：通過（+0.1860 / 日）；三月營收年增 ≥ 15%：通過（+177.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）；另一路徑亦通過",
+        "currentPrice": 311.5,
+        "fairPrice": 835.4985133255815,
+        "valuePrice075": 626.6238849941861,
+        "valuePrice066": 551.4290187948837,
+        "currentPeg": 0.4786094072694571,
+        "currentPe": 13.57890148212729,
+        "currentEps": 22.939999999999998,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.2837157246782316,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
+        "valuationEvidenceLevel": "formal",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
+        "extremeExtrapolation": false,
+        "priceBasis": "adjusted",
+        "zScore": -0.5923735581478594,
+        "slope": 0.18600066643082616,
+        "regressionStart": "2023-05-05",
+        "regressionEnd": "2026-11-03",
+        "regressionObservations": 850,
+        "regressionExpectedObservations": 850,
+        "chipReference": {
+          "schemaVersion": "chip-reference-v1",
+          "status": "fail",
+          "displayOnly": true,
+          "formulaVersion": "chip-reference-v1",
+          "dataFreshness": "stale",
+          "largeHolderTrend": {
+            "status": "fail",
+            "value": "81.34 → 81.66 → 81.31",
+            "period": "2026-08..2026-10",
+            "sourceRefs": [
+              "TDCC:history:2026-08-28",
+              "TDCC:history:2026-09-24",
+              "TDCC:1-5:2026-10-30",
+              "TDCC:history:2026-10-30"
+            ],
+            "rawValues": [
+              81.34,
+              81.66,
+              81.31
+            ],
+            "explanation": "大股東持股比重未符合嚴格逐期趨勢。",
+            "sourceDates": [
+              "2026-08-28",
+              "2026-09-24",
+              "2026-10-30"
+            ],
+            "retrievedAt": "2026-11-03T09:01:04+00:00",
+            "historicalBackfill": true
+          },
+          "directorSupervisor12m": {
+            "status": "unknown",
+            "value": "官方合計 503566575股；比例待補",
+            "period": "2026-09 vs 2025-09",
+            "sourceRefs": [
+              "MOPS:stapap1:2026-09",
+              "MOPS:stapap1:2025-09"
+            ],
+            "explanation": "最新董監持股資料無效或缺少分母。",
+            "sourceDates": [
+              "2026-09",
+              "2025-09"
+            ],
+            "retrievedAt": "2026-11-03T09:31:23+00:00",
+            "historicalBackfill": true
+          },
+          "shareholderCountTrend": {
+            "status": "fail",
+            "value": "282999 → 276737 → 281067",
+            "period": "2026-08..2026-10",
+            "sourceRefs": [
+              "TDCC:history:2026-08-28",
+              "TDCC:history:2026-09-24",
+              "TDCC:1-5:2026-10-30",
+              "TDCC:history:2026-10-30"
+            ],
+            "rawValues": [
+              282999.0,
+              276737.0,
+              281067.0
+            ],
+            "explanation": "總股東人數未符合嚴格逐期趨勢。",
+            "sourceDates": [
+              "2026-08-28",
+              "2026-09-24",
+              "2026-10-30"
+            ],
+            "retrievedAt": "2026-11-03T09:01:04+00:00",
+            "historicalBackfill": true
+          },
+          "sourceRefs": [
+            "MOPS:stapap1:2025-09",
+            "TDCC:history:2026-08-28",
+            "TDCC:history:2026-09-24",
+            "MOPS:stapap1:2026-09",
+            "TDCC:1-5:2026-10-30",
+            "TDCC:history:2026-10-30"
+          ],
+          "availableAt": null
+        }
+      },
+      {
+        "rank": 11,
+        "code": "3260",
+        "name": "威剛",
+        "sector": "",
+        "value": -0.05161671312110463,
+        "valueLabel": "",
+        "status": "pass",
+        "proxy": true,
+        "evidenceLevel": "proxy",
+        "route": "lowBase",
+        "gates": [
+          {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": "pass",
+            "value": "調整後價格回歸可用",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。"
+          },
+          {
+            "key": "lowZ",
+            "label": "3.5年 Z ≤ 0",
+            "status": "pass",
+            "value": "Z -0.05",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
+          },
+          {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": "pass",
+            "value": "+0.3944 / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。"
+          },
+          {
+            "key": "growthProxy",
+            "label": "三月營收年增 ≥ 15%",
+            "status": "pass",
+            "value": "+266.0%",
             "reason": "三月合計營收年增代理；不能替代正式營業利益成長。"
           },
           {
@@ -107498,54 +109806,54 @@
             "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。"
           }
         ],
-        "reason": "投信十日淨買超排序第 52 名（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -1.32）；正向回歸 slope：通過（+0.0745 / 日）；三月營收年增 ≥ 15%：通過（+83.0%）；TTM 營業利益年增不負（可選）：不適用（未提供）；另一路徑亦通過",
-        "currentPrice": 74.0,
-        "fairPrice": 580.5095107135412,
-        "valuePrice075": 435.3821330351559,
-        "valuePrice066": 383.13627707093724,
-        "currentPeg": 0.20831153846153844,
-        "currentPe": 13.21,
-        "currentEps": 5.601816805450416,
+        "reason": "投信十日淨買超排序第 83 名（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.05）；正向回歸 slope：通過（+0.3944 / 日）；三月營收年增 ≥ 15%：通過（+266.0%）；TTM 營業利益年增不負（可選）：不適用（未提供）；另一路徑亦通過",
+        "currentPrice": 318.0,
+        "fairPrice": 856114.6415215455,
+        "valuePrice075": 642085.9811411591,
+        "valuePrice066": 565035.66340422,
+        "currentPeg": 0.004006376467403485,
+        "currentPe": 3.920601652077426,
+        "currentEps": 81.11,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
-        "valuationGrowthInput": 0.6341463414634148,
-        "valuationGrowthMethod": "ltm_reported_eps",
-        "valuationGrowthMethodLabel": "LTM 已公布 EPS 成長",
+        "valuationGrowthInput": 9.78590425531915,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
         "valuationEvidenceLevel": "formal",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -1.3193424313153879,
-        "slope": 0.07450392270093664,
+        "zScore": -0.05161671312110463,
+        "slope": 0.3944385803446468,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
         "regressionExpectedObservations": 850,
         "chipReference": {
           "schemaVersion": "chip-reference-v1",
-          "status": "fail",
+          "status": "unknown",
           "displayOnly": true,
           "formulaVersion": "chip-reference-v1",
           "dataFreshness": "stale",
           "largeHolderTrend": {
-            "status": "fail",
-            "value": "53.88 → 52.45 → 53.31",
+            "status": "unknown",
+            "value": "? → ? → 27.76",
             "period": "2026-08..2026-10",
             "sourceRefs": [
-              "TDCC:history:2026-08-28",
-              "TDCC:history:2026-09-24",
-              "TDCC:1-5:2026-10-30",
-              "TDCC:history:2026-10-30"
+              "TDCC:1-5:2026-10-30"
             ],
-            "rawValues": [
-              53.88,
-              52.45,
-              53.31
-            ],
-            "explanation": "大股東持股比重未符合嚴格逐期趨勢。",
+            "explanation": "大股東持股比重缺少三個有效且連續的完整月份。",
             "sourceDates": [
-              "2026-08-28",
-              "2026-09-24",
               "2026-10-30"
             ],
             "retrievedAt": "2026-11-03T09:01:04+00:00",
@@ -107553,65 +109861,42 @@
           },
           "directorSupervisor12m": {
             "status": "unknown",
-            "value": "官方合計 260356898股；比例待補",
-            "period": "2026-09 vs 2025-09",
-            "sourceRefs": [
-              "MOPS:stapap1:2026-09",
-              "MOPS:stapap1:2025-09"
-            ],
-            "explanation": "最新董監持股資料無效或缺少分母。",
-            "sourceDates": [
-              "2026-09",
-              "2025-09"
-            ],
-            "retrievedAt": "2026-11-03T09:31:38+00:00",
-            "historicalBackfill": true
+            "value": "—",
+            "period": "—",
+            "sourceRefs": [],
+            "explanation": "缺少董監持股有效月份或分母。",
+            "sourceDates": [],
+            "retrievedAt": null,
+            "historicalBackfill": false
           },
           "shareholderCountTrend": {
-            "status": "fail",
-            "value": "189975 → 196072 → 198528",
+            "status": "unknown",
+            "value": "? → ? → 149437",
             "period": "2026-08..2026-10",
             "sourceRefs": [
-              "TDCC:history:2026-08-28",
-              "TDCC:history:2026-09-24",
-              "TDCC:1-5:2026-10-30",
-              "TDCC:history:2026-10-30"
+              "TDCC:1-5:2026-10-30"
             ],
-            "rawValues": [
-              189975.0,
-              196072.0,
-              198528.0
-            ],
-            "explanation": "總股東人數未符合嚴格逐期趨勢。",
+            "explanation": "總股東人數缺少三個有效且連續的完整月份。",
             "sourceDates": [
-              "2026-08-28",
-              "2026-09-24",
               "2026-10-30"
             ],
             "retrievedAt": "2026-11-03T09:01:04+00:00",
             "historicalBackfill": true
           },
           "sourceRefs": [
-            "MOPS:stapap1:2025-09",
-            "TDCC:history:2026-08-28",
-            "TDCC:history:2026-09-24",
-            "MOPS:stapap1:2026-09",
-            "TDCC:1-5:2026-10-30",
-            "TDCC:history:2026-10-30"
+            "TDCC:1-5:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       }
     ],
     "lowBaseGrowth": [
       {
-        "rank": 3,
-        "code": "3706",
-        "name": "神達",
+        "rank": 1,
+        "code": "2382",
+        "name": "廣達",
         "sector": "",
-        "value": -1.3193424313153879,
+        "value": -0.5923735581478594,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -107629,21 +109914,21 @@
             "key": "lowZ",
             "label": "3.5年 Z ≤ 0",
             "status": "pass",
-            "value": "Z -1.32",
+            "value": "Z -0.59",
             "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
           },
           {
             "key": "positiveSlope",
             "label": "正向回歸 slope",
             "status": "pass",
-            "value": "+0.0745 / 日",
+            "value": "+0.1860 / 日",
             "reason": "回歸斜率需大於 0；這是策略計算條件。"
           },
           {
             "key": "growthProxy",
             "label": "三月營收年增 ≥ 15%",
             "status": "pass",
-            "value": "+83.0%",
+            "value": "+177.5%",
             "reason": "三月合計營收年增代理；不能替代正式營業利益成長。"
           },
           {
@@ -107654,25 +109939,35 @@
             "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
           }
         ],
-        "reason": "投信十日淨買超排序第 52 名（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -1.32）；正向回歸 slope：通過（+0.0745 / 日）；三月營收年增 ≥ 15%：通過（+83.0%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
-        "currentPrice": 74.0,
-        "fairPrice": 580.5095107135412,
-        "valuePrice075": 435.3821330351559,
-        "valuePrice066": 383.13627707093724,
-        "currentPeg": 0.20831153846153844,
-        "currentPe": 13.21,
-        "currentEps": 5.601816805450416,
+        "reason": "投信十日淨買超排序第 26 名（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.59）；正向回歸 slope：通過（+0.1860 / 日）；三月營收年增 ≥ 15%：通過（+177.5%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "currentPrice": 311.5,
+        "fairPrice": 835.4985133255815,
+        "valuePrice075": 626.6238849941861,
+        "valuePrice066": 551.4290187948837,
+        "currentPeg": 0.4786094072694571,
+        "currentPe": 13.57890148212729,
+        "currentEps": 22.939999999999998,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
-        "valuationGrowthInput": 0.6341463414634148,
-        "valuationGrowthMethod": "ltm_reported_eps",
-        "valuationGrowthMethodLabel": "LTM 已公布 EPS 成長",
+        "valuationGrowthInput": 0.2837157246782316,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
         "valuationEvidenceLevel": "formal",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -1.3193424313153879,
-        "slope": 0.07450392270093664,
+        "zScore": -0.5923735581478594,
+        "slope": 0.18600066643082616,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -107685,7 +109980,7 @@
           "dataFreshness": "stale",
           "largeHolderTrend": {
             "status": "fail",
-            "value": "53.88 → 52.45 → 53.31",
+            "value": "81.34 → 81.66 → 81.31",
             "period": "2026-08..2026-10",
             "sourceRefs": [
               "TDCC:history:2026-08-28",
@@ -107694,9 +109989,9 @@
               "TDCC:history:2026-10-30"
             ],
             "rawValues": [
-              53.88,
-              52.45,
-              53.31
+              81.34,
+              81.66,
+              81.31
             ],
             "explanation": "大股東持股比重未符合嚴格逐期趨勢。",
             "sourceDates": [
@@ -107709,7 +110004,7 @@
           },
           "directorSupervisor12m": {
             "status": "unknown",
-            "value": "官方合計 260356898股；比例待補",
+            "value": "官方合計 503566575股；比例待補",
             "period": "2026-09 vs 2025-09",
             "sourceRefs": [
               "MOPS:stapap1:2026-09",
@@ -107720,12 +110015,12 @@
               "2026-09",
               "2025-09"
             ],
-            "retrievedAt": "2026-11-03T09:31:38+00:00",
+            "retrievedAt": "2026-11-03T09:31:23+00:00",
             "historicalBackfill": true
           },
           "shareholderCountTrend": {
             "status": "fail",
-            "value": "189975 → 196072 → 198528",
+            "value": "282999 → 276737 → 281067",
             "period": "2026-08..2026-10",
             "sourceRefs": [
               "TDCC:history:2026-08-28",
@@ -107734,9 +110029,9 @@
               "TDCC:history:2026-10-30"
             ],
             "rawValues": [
-              189975.0,
-              196072.0,
-              198528.0
+              282999.0,
+              276737.0,
+              281067.0
             ],
             "explanation": "總股東人數未符合嚴格逐期趨勢。",
             "sourceDates": [
@@ -107756,18 +110051,309 @@
             "TDCC:history:2026-10-30"
           ],
           "availableAt": null
+        }
+      },
+      {
+        "rank": 7,
+        "code": "3260",
+        "name": "威剛",
+        "sector": "",
+        "value": -0.05161671312110463,
+        "valueLabel": "",
+        "status": "pass",
+        "proxy": true,
+        "evidenceLevel": "proxy",
+        "route": "lowBaseGrowth",
+        "gates": [
+          {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": "pass",
+            "value": "調整後價格回歸可用",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。"
+          },
+          {
+            "key": "lowZ",
+            "label": "3.5年 Z ≤ 0",
+            "status": "pass",
+            "value": "Z -0.05",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
+          },
+          {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": "pass",
+            "value": "+0.3944 / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。"
+          },
+          {
+            "key": "growthProxy",
+            "label": "三月營收年增 ≥ 15%",
+            "status": "pass",
+            "value": "+266.0%",
+            "reason": "三月合計營收年增代理；不能替代正式營業利益成長。"
+          },
+          {
+            "key": "ttmOperatingProfitNonNegative",
+            "label": "TTM 營業利益年增不負（可選）",
+            "status": "not_applicable",
+            "value": "未提供",
+            "reason": "若有可比 TTM 營業利益年增，負值會擋下成長代理；缺資料不作必要門檻。"
+          }
+        ],
+        "reason": "投信十日淨買超排序第 83 名（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.05）；正向回歸 slope：通過（+0.3944 / 日）；三月營收年增 ≥ 15%：通過（+266.0%）；TTM 營業利益年增不負（可選）：不適用（未提供）",
+        "currentPrice": 318.0,
+        "fairPrice": 856114.6415215455,
+        "valuePrice075": 642085.9811411591,
+        "valuePrice066": 565035.66340422,
+        "currentPeg": 0.004006376467403485,
+        "currentPe": 3.920601652077426,
+        "currentEps": 81.11,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 9.78590425531915,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
+        "valuationEvidenceLevel": "formal",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
         },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
+        "extremeExtrapolation": false,
+        "priceBasis": "adjusted",
+        "zScore": -0.05161671312110463,
+        "slope": 0.3944385803446468,
+        "regressionStart": "2023-05-05",
+        "regressionEnd": "2026-11-03",
+        "regressionObservations": 850,
+        "regressionExpectedObservations": 850,
+        "chipReference": {
+          "schemaVersion": "chip-reference-v1",
+          "status": "unknown",
+          "displayOnly": true,
+          "formulaVersion": "chip-reference-v1",
+          "dataFreshness": "stale",
+          "largeHolderTrend": {
+            "status": "unknown",
+            "value": "? → ? → 27.76",
+            "period": "2026-08..2026-10",
+            "sourceRefs": [
+              "TDCC:1-5:2026-10-30"
+            ],
+            "explanation": "大股東持股比重缺少三個有效且連續的完整月份。",
+            "sourceDates": [
+              "2026-10-30"
+            ],
+            "retrievedAt": "2026-11-03T09:01:04+00:00",
+            "historicalBackfill": true
+          },
+          "directorSupervisor12m": {
+            "status": "unknown",
+            "value": "—",
+            "period": "—",
+            "sourceRefs": [],
+            "explanation": "缺少董監持股有效月份或分母。",
+            "sourceDates": [],
+            "retrievedAt": null,
+            "historicalBackfill": false
+          },
+          "shareholderCountTrend": {
+            "status": "unknown",
+            "value": "? → ? → 149437",
+            "period": "2026-08..2026-10",
+            "sourceRefs": [
+              "TDCC:1-5:2026-10-30"
+            ],
+            "explanation": "總股東人數缺少三個有效且連續的完整月份。",
+            "sourceDates": [
+              "2026-10-30"
+            ],
+            "retrievedAt": "2026-11-03T09:01:04+00:00",
+            "historicalBackfill": true
+          },
+          "sourceRefs": [
+            "TDCC:1-5:2026-10-30"
+          ],
+          "availableAt": null
+        }
       }
     ],
     "lowBaseQuality": [
       {
-        "rank": 5,
-        "code": "3706",
-        "name": "神達",
+        "rank": 1,
+        "code": "2382",
+        "name": "廣達",
         "sector": "",
-        "value": -1.3193424313153879,
+        "value": -0.5923735581478594,
+        "valueLabel": "",
+        "status": "unknown",
+        "proxy": true,
+        "evidenceLevel": "proxy",
+        "route": "lowBaseQuality",
+        "gates": [
+          {
+            "key": "priceEligible",
+            "label": "價格資料合格",
+            "status": "pass",
+            "value": "調整後價格回歸可用",
+            "reason": "需要足量、覆蓋率合格的調整後價格；代理或缺值不升級為通過。"
+          },
+          {
+            "key": "lowZ",
+            "label": "3.5年 Z ≤ 0",
+            "status": "pass",
+            "value": "Z -0.59",
+            "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
+          },
+          {
+            "key": "positiveSlope",
+            "label": "正向回歸 slope",
+            "status": "pass",
+            "value": "+0.1860 / 日",
+            "reason": "回歸斜率需大於 0；這是策略計算條件。"
+          },
+          {
+            "key": "qualityAnchors",
+            "label": "最新年度淨利與 CFO > 0",
+            "status": "fail",
+            "value": "至少一項錨點未通過",
+            "reason": "淨利與營業現金流是低基期品質路徑必要錨點；缺資料保持 unknown。"
+          },
+          {
+            "key": "qualityProxy",
+            "label": "五項品質代理至少 4/5",
+            "status": "pass",
+            "value": "4/5 通過",
+            "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。"
+          }
+        ],
+        "reason": "投信十日淨買超排序第 26 名（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.59）；正向回歸 slope：通過（+0.1860 / 日）；最新年度淨利與 CFO > 0：未通過（至少一項錨點未通過）；五項品質代理至少 4/5：通過（4/5 通過）",
+        "currentPrice": 311.5,
+        "fairPrice": 835.4985133255815,
+        "valuePrice075": 626.6238849941861,
+        "valuePrice066": 551.4290187948837,
+        "currentPeg": 0.4786094072694571,
+        "currentPe": 13.57890148212729,
+        "currentEps": 22.939999999999998,
+        "pegBand": "strict",
+        "valuationMethod": "zulu-peg",
+        "valuationGrowthInput": 0.2837157246782316,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
+        "valuationEvidenceLevel": "formal",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
+        "extremeExtrapolation": false,
+        "priceBasis": "adjusted",
+        "zScore": -0.5923735581478594,
+        "slope": 0.18600066643082616,
+        "regressionStart": "2023-05-05",
+        "regressionEnd": "2026-11-03",
+        "regressionObservations": 850,
+        "regressionExpectedObservations": 850,
+        "chipReference": {
+          "schemaVersion": "chip-reference-v1",
+          "status": "fail",
+          "displayOnly": true,
+          "formulaVersion": "chip-reference-v1",
+          "dataFreshness": "stale",
+          "largeHolderTrend": {
+            "status": "fail",
+            "value": "81.34 → 81.66 → 81.31",
+            "period": "2026-08..2026-10",
+            "sourceRefs": [
+              "TDCC:history:2026-08-28",
+              "TDCC:history:2026-09-24",
+              "TDCC:1-5:2026-10-30",
+              "TDCC:history:2026-10-30"
+            ],
+            "rawValues": [
+              81.34,
+              81.66,
+              81.31
+            ],
+            "explanation": "大股東持股比重未符合嚴格逐期趨勢。",
+            "sourceDates": [
+              "2026-08-28",
+              "2026-09-24",
+              "2026-10-30"
+            ],
+            "retrievedAt": "2026-11-03T09:01:04+00:00",
+            "historicalBackfill": true
+          },
+          "directorSupervisor12m": {
+            "status": "unknown",
+            "value": "官方合計 503566575股；比例待補",
+            "period": "2026-09 vs 2025-09",
+            "sourceRefs": [
+              "MOPS:stapap1:2026-09",
+              "MOPS:stapap1:2025-09"
+            ],
+            "explanation": "最新董監持股資料無效或缺少分母。",
+            "sourceDates": [
+              "2026-09",
+              "2025-09"
+            ],
+            "retrievedAt": "2026-11-03T09:31:23+00:00",
+            "historicalBackfill": true
+          },
+          "shareholderCountTrend": {
+            "status": "fail",
+            "value": "282999 → 276737 → 281067",
+            "period": "2026-08..2026-10",
+            "sourceRefs": [
+              "TDCC:history:2026-08-28",
+              "TDCC:history:2026-09-24",
+              "TDCC:1-5:2026-10-30",
+              "TDCC:history:2026-10-30"
+            ],
+            "rawValues": [
+              282999.0,
+              276737.0,
+              281067.0
+            ],
+            "explanation": "總股東人數未符合嚴格逐期趨勢。",
+            "sourceDates": [
+              "2026-08-28",
+              "2026-09-24",
+              "2026-10-30"
+            ],
+            "retrievedAt": "2026-11-03T09:01:04+00:00",
+            "historicalBackfill": true
+          },
+          "sourceRefs": [
+            "MOPS:stapap1:2025-09",
+            "TDCC:history:2026-08-28",
+            "TDCC:history:2026-09-24",
+            "MOPS:stapap1:2026-09",
+            "TDCC:1-5:2026-10-30",
+            "TDCC:history:2026-10-30"
+          ],
+          "availableAt": null
+        }
+      },
+      {
+        "rank": 10,
+        "code": "3260",
+        "name": "威剛",
+        "sector": "",
+        "value": -0.05161671312110463,
         "valueLabel": "",
         "status": "pass",
         "proxy": true,
@@ -107785,14 +110371,14 @@
             "key": "lowZ",
             "label": "3.5年 Z ≤ 0",
             "status": "pass",
-            "value": "Z -1.32",
+            "value": "Z -0.05",
             "reason": "使用合格價格回歸的當期 Z；缺值保持 unknown。"
           },
           {
             "key": "positiveSlope",
             "label": "正向回歸 slope",
             "status": "pass",
-            "value": "+0.0745 / 日",
+            "value": "+0.3944 / 日",
             "reason": "回歸斜率需大於 0；這是策略計算條件。"
           },
           {
@@ -107810,54 +110396,54 @@
             "reason": "最新年度五項代理需至少四項明確通過；unknown 不會補成通過。"
           }
         ],
-        "reason": "投信十日淨買超排序第 52 名（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -1.32）；正向回歸 slope：通過（+0.0745 / 日）；最新年度淨利與 CFO > 0：通過（兩項必要錨點通過）；五項品質代理至少 4/5：通過（4/5 通過）",
-        "currentPrice": 74.0,
-        "fairPrice": 580.5095107135412,
-        "valuePrice075": 435.3821330351559,
-        "valuePrice066": 383.13627707093724,
-        "currentPeg": 0.20831153846153844,
-        "currentPe": 13.21,
-        "currentEps": 5.601816805450416,
+        "reason": "投信十日淨買超排序第 83 名（只作排序）；低位代理（Z ≤ 0）取代嚴格 Z ≤ -1 作為研究入口；價格資料合格：通過（調整後價格回歸可用）；3.5年 Z ≤ 0：通過（Z -0.05）；正向回歸 slope：通過（+0.3944 / 日）；最新年度淨利與 CFO > 0：通過（兩項必要錨點通過）；五項品質代理至少 4/5：通過（4/5 通過）",
+        "currentPrice": 318.0,
+        "fairPrice": 856114.6415215455,
+        "valuePrice075": 642085.9811411591,
+        "valuePrice066": 565035.66340422,
+        "currentPeg": 0.004006376467403485,
+        "currentPe": 3.920601652077426,
+        "currentEps": 81.11,
         "pegBand": "strict",
         "valuationMethod": "zulu-peg",
-        "valuationGrowthInput": 0.6341463414634148,
-        "valuationGrowthMethod": "ltm_reported_eps",
-        "valuationGrowthMethodLabel": "LTM 已公布 EPS 成長",
+        "valuationGrowthInput": 9.78590425531915,
+        "valuationGrowthMethod": "ttm_reported_eps_yoy",
+        "valuationGrowthMethodLabel": "TTM EPS 年增率",
         "valuationEvidenceLevel": "formal",
-        "valuationFormulaVersion": "zulu-peg-eps-growth-v2",
+        "pegReview": {
+          "status": "available",
+          "reasonCodes": [],
+          "currentPeriod": "2025Q3–2026Q2",
+          "priorPeriod": "2024Q3–2025Q2",
+          "sourceRefs": [
+            "FinMind:TaiwanStockFinancialStatements"
+          ]
+        },
+        "pegReviewReason": null,
+        "valuationFormulaVersion": "peg-ttm-yoy-v1",
         "extremeExtrapolation": false,
         "priceBasis": "adjusted",
-        "zScore": -1.3193424313153879,
-        "slope": 0.07450392270093664,
+        "zScore": -0.05161671312110463,
+        "slope": 0.3944385803446468,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
         "regressionExpectedObservations": 850,
         "chipReference": {
           "schemaVersion": "chip-reference-v1",
-          "status": "fail",
+          "status": "unknown",
           "displayOnly": true,
           "formulaVersion": "chip-reference-v1",
           "dataFreshness": "stale",
           "largeHolderTrend": {
-            "status": "fail",
-            "value": "53.88 → 52.45 → 53.31",
+            "status": "unknown",
+            "value": "? → ? → 27.76",
             "period": "2026-08..2026-10",
             "sourceRefs": [
-              "TDCC:history:2026-08-28",
-              "TDCC:history:2026-09-24",
-              "TDCC:1-5:2026-10-30",
-              "TDCC:history:2026-10-30"
+              "TDCC:1-5:2026-10-30"
             ],
-            "rawValues": [
-              53.88,
-              52.45,
-              53.31
-            ],
-            "explanation": "大股東持股比重未符合嚴格逐期趨勢。",
+            "explanation": "大股東持股比重缺少三個有效且連續的完整月份。",
             "sourceDates": [
-              "2026-08-28",
-              "2026-09-24",
               "2026-10-30"
             ],
             "retrievedAt": "2026-11-03T09:01:04+00:00",
@@ -107865,56 +110451,33 @@
           },
           "directorSupervisor12m": {
             "status": "unknown",
-            "value": "官方合計 260356898股；比例待補",
-            "period": "2026-09 vs 2025-09",
-            "sourceRefs": [
-              "MOPS:stapap1:2026-09",
-              "MOPS:stapap1:2025-09"
-            ],
-            "explanation": "最新董監持股資料無效或缺少分母。",
-            "sourceDates": [
-              "2026-09",
-              "2025-09"
-            ],
-            "retrievedAt": "2026-11-03T09:31:38+00:00",
-            "historicalBackfill": true
+            "value": "—",
+            "period": "—",
+            "sourceRefs": [],
+            "explanation": "缺少董監持股有效月份或分母。",
+            "sourceDates": [],
+            "retrievedAt": null,
+            "historicalBackfill": false
           },
           "shareholderCountTrend": {
-            "status": "fail",
-            "value": "189975 → 196072 → 198528",
+            "status": "unknown",
+            "value": "? → ? → 149437",
             "period": "2026-08..2026-10",
             "sourceRefs": [
-              "TDCC:history:2026-08-28",
-              "TDCC:history:2026-09-24",
-              "TDCC:1-5:2026-10-30",
-              "TDCC:history:2026-10-30"
+              "TDCC:1-5:2026-10-30"
             ],
-            "rawValues": [
-              189975.0,
-              196072.0,
-              198528.0
-            ],
-            "explanation": "總股東人數未符合嚴格逐期趨勢。",
+            "explanation": "總股東人數缺少三個有效且連續的完整月份。",
             "sourceDates": [
-              "2026-08-28",
-              "2026-09-24",
               "2026-10-30"
             ],
             "retrievedAt": "2026-11-03T09:01:04+00:00",
             "historicalBackfill": true
           },
           "sourceRefs": [
-            "MOPS:stapap1:2025-09",
-            "TDCC:history:2026-08-28",
-            "TDCC:history:2026-09-24",
-            "MOPS:stapap1:2026-09",
-            "TDCC:1-5:2026-10-30",
-            "TDCC:history:2026-10-30"
+            "TDCC:1-5:2026-10-30"
           ],
           "availableAt": null
-        },
-        "dataFreshness": "current",
-        "freshnessWarnings": []
+        }
       }
     ]
   },
@@ -107935,17 +110498,17 @@
     "version": "funnel-v2-independent-trust-low-position",
     "universe": 100,
     "priceComplete": 100,
-    "valuationComplete": 20,
+    "valuationComplete": 48,
     "growthValuationComplete": 22,
-    "pegCandidates": 5,
+    "pegCandidates": 31,
     "growthCandidates": 3,
     "strategyCandidates": {
       "trust": 3,
       "growth": 3,
       "lowPosition": 15
     },
-    "formalValuations": 19,
-    "proxyValuations": 1,
+    "formalValuations": 48,
+    "proxyValuations": 0,
     "instrumentPolicy": "peg-strategies-exclude-non-common-codes-v1",
     "instrumentExcluded": 0,
     "growthCoverageVersion": "growth-coverage-v1",

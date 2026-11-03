@@ -1,0 +1,1422 @@
+{
+  "marketDate": "2026-11-03",
+  "runId": "enriched-20261103-231157-1517a852e9",
+  "requestId": "peg-20261103-2306",
+  "counts": {
+    "not_applicable": 23,
+    "available": 48,
+    "needs_review": 29
+  },
+  "stocks": [
+    {
+      "code": "1101",
+      "name": "台泥",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "1301",
+      "name": "台塑",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "1303",
+      "name": "南亞",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "1326",
+      "name": "台化",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "1560",
+      "name": "中砂",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "1605",
+      "name": "華新",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "1709",
+      "name": "和益",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "1802",
+      "name": "台玻",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "1815",
+      "name": "富喬",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2002",
+      "name": "中鋼",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2006",
+      "name": "東和鋼鐵",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2034",
+      "name": "允強",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2301",
+      "name": "光寶科",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
+      }
+    },
+    {
+      "code": "2313",
+      "name": "華通",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2317",
+      "name": "鴻海",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2330",
+      "name": "台積電",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2337",
+      "name": "旺宏",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2347",
+      "name": "聯強",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2351",
+      "name": "順德",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2352",
+      "name": "佳世達",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2355",
+      "name": "敬鵬",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2356",
+      "name": "英業達",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2368",
+      "name": "金像電",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2376",
+      "name": "技嘉",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2377",
+      "name": "微星",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2382",
+      "name": "廣達",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2383",
+      "name": "台光電",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
+      }
+    },
+    {
+      "code": "2409",
+      "name": "友達",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2412",
+      "name": "中華電",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2449",
+      "name": "京元電子",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2454",
+      "name": "聯發科",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2455",
+      "name": "全新",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
+      }
+    },
+    {
+      "code": "2474",
+      "name": "可成",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2492",
+      "name": "華新科",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2603",
+      "name": "長榮",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2615",
+      "name": "萬海",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2637",
+      "name": "慧洋-KY",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2801",
+      "name": "彰銀",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2812",
+      "name": "台中銀",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2834",
+      "name": "臺企銀",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2845",
+      "name": "遠東銀",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2880",
+      "name": "華南金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2881",
+      "name": "富邦金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2882",
+      "name": "國泰金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2883",
+      "name": "凱基金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2884",
+      "name": "玉山金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2885",
+      "name": "元大金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2887",
+      "name": "台新新光金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2889",
+      "name": "國票金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2890",
+      "name": "永豐金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2891",
+      "name": "中信金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2892",
+      "name": "第一金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "2897",
+      "name": "王道銀行",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3016",
+      "name": "嘉晶",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3017",
+      "name": "奇鋐",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3034",
+      "name": "聯詠",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3037",
+      "name": "欣興",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
+      }
+    },
+    {
+      "code": "3045",
+      "name": "台灣大",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3081",
+      "name": "聯亞",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3167",
+      "name": "大量",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3189",
+      "name": "景碩",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3231",
+      "name": "緯創",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3260",
+      "name": "威剛",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3264",
+      "name": "欣銓",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3406",
+      "name": "玉晶光",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3443",
+      "name": "創意",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
+      }
+    },
+    {
+      "code": "3481",
+      "name": "群創",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3533",
+      "name": "嘉澤",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3653",
+      "name": "健策",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3702",
+      "name": "大聯大",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3706",
+      "name": "神達",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "3711",
+      "name": "日月光投控",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "4904",
+      "name": "遠傳",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "4938",
+      "name": "和碩",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "4958",
+      "name": "臻鼎-KY",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "5347",
+      "name": "世界",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "5871",
+      "name": "中租-KY",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "5876",
+      "name": "上海商銀",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "5880",
+      "name": "合庫金",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6147",
+      "name": "頎邦",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6182",
+      "name": "合晶",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6196",
+      "name": "帆宣",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6213",
+      "name": "聯茂",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6223",
+      "name": "旺矽",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6257",
+      "name": "矽格",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6278",
+      "name": "台表科",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "missing_quarter_eps"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements",
+          "TWSE OpenAPI"
+        ]
+      }
+    },
+    {
+      "code": "6415",
+      "name": "矽力*-KY",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6446",
+      "name": "藥華藥",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6510",
+      "name": "精測",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6715",
+      "name": "嘉基",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6770",
+      "name": "力積電",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_eps"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "6805",
+      "name": "富世達",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "8021",
+      "name": "尖點",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "8046",
+      "name": "南電",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "8069",
+      "name": "元太",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "8070",
+      "name": "長華*",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "nonpositive_growth"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "8150",
+      "name": "南茂",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "8996",
+      "name": "高力",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "9933",
+      "name": "中鼎",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "incomparable_eps_basis"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    },
+    {
+      "code": "9945",
+      "name": "潤泰新",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ]
+      }
+    }
+  ]
+}
