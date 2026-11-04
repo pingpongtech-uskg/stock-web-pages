@@ -100,7 +100,7 @@ function archiveContents(state,stage,path){return request(state,stage,'github','
 function contentBytes(body){if(body.encoding!=='base64'||typeof body.content!=='string'||body.size>3000000)throw Error('archive_contents_schema');return Buffer.from(body.content,'base64').toString('utf8');}
 function checkpoint(state,nextStage,now=Date.now()) {
   if(nextStage==='dispatch'&&(state.sourceMode||'publish')==='publish'&&!state.pegFinalReady) {state={...state,dispatchIntent:false,pegPhase:'prepare'};nextStage='pegFindPrepare';}
-  const prepared=nextStage==='dispatch'?{...state,dispatchStartedAt:now}:state.stage==='cacheVerifyPage'&&nextStage==='summaryRead'?{...state,lastVerifiedCache:restoreOperation.captureVerifiedCache(state,state.marketDate)}:state;
+  const prepared={...(nextStage==='dispatch'?{...state,dispatchStartedAt:now}:state.stage==='cacheVerifyPage'&&nextStage==='summaryRead'?{...state,lastVerifiedCache:restoreOperation.captureVerifiedCache(state,state.marketDate)}:state),checkpointRecoveryAttempts:0};
   const saved={...durable(prepared),stage:nextStage};
   const bytes=Buffer.from(JSON.stringify(saved));
   if(bytes.length>900*1024)return done({...prepared,errorCategory:'checkpoint_too_large',errorMessage:'Checkpoint exceeds 900 KiB; no checkpoint was written. The existing writer lease must expire before another owner retries.'});
@@ -208,7 +208,7 @@ function advance(original,response,now=Date.now()) {
     }
     if(status<200||status>=300) return done({...state,errorCategory:'checkpoint_failed',errorMessage:'State write ambiguous; resume reads GitHub state before any write.'});
     if(typeof body?.content?.sha!=='string'||!body.content.sha||body.content.sha.length>64||!/^[a-zA-Z0-9_-]+$/.test(body.content.sha)) return done({...state,errorCategory:'checkpoint_write_ambiguous',errorMessage:'State write response was incomplete; recovery must read GitHub state before writing again.'});
-    const committed={...state,lockSha:body.content.sha,stage:state.nextStage,retry:0};
+    const committed={...state,lockSha:body.content.sha,stage:state.nextStage,checkpointRecoveryAttempts:0,retry:0};
     try {return {...next(committed,now),ledgerRequired:true};}
     catch {
       if(/^restore[A-Z]/.test(committed.stage)&&(committed.sourceMode||'publish')==='publish')return fail(committed,'restore_checkpoint_unavailable','Optional prior cache checkpoint could not be resumed; collecting fresh official data.');
@@ -277,7 +277,7 @@ function advanceSuccess(state,body,status,response,now) {
         const savedContent=typeof body?.content==='string'?Buffer.from(body.content.replace(/\s/g,''),'base64'):null;
         const intendedContent=Buffer.from(recovery.content,'base64');
         if(status!==404&&savedContent?.equals(intendedContent)&&typeof body.sha==='string') {
-          const resumed={...state,stage:recovery.nextStage,nextStage:undefined,lockSha:body.sha,checkpointRecovery:undefined,checkpointRecoveryAttempts:undefined,retry:0};
+          const resumed={...state,stage:recovery.nextStage,nextStage:undefined,lockSha:body.sha,checkpointRecovery:undefined,checkpointRecoveryAttempts:0,retry:0};
           try {return {...next(resumed,now),ledgerRequired:true};}
           catch {
             const terminal={...resumed,released:true,nextStage:undefined,transitionTerminal:true,screeningStatus:resumed.screeningStatus==='pending'?'failed':resumed.screeningStatus||'failed',recordFailure:false,errorCategory:'checkpoint_advance_failed',errorMessage:'The checkpoint write was confirmed, but the next request could not be prepared. Resume from saved state.'};

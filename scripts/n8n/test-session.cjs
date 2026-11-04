@@ -154,6 +154,20 @@ test('successful checkpoint with missing CAS sha stops without issuing a follow-
   {statusCode:200,body:{content:{}}},now);
  assert.equal(out.route,'done');assert.equal(out.state.errorCategory,'checkpoint_write_ambiguous');assert.equal(out.op,null);
 });
+test('checkpoint recovery budget resets after one write and after matching ambiguous-write recovery',()=>{
+ const now=Date.parse('2026-10-02T10:30:00Z');
+ const first=engine.advance({...engine.start({...base,runKind:'scheduled'},now).state,stage:'checkpoint',nextStage:'pegDiscovery',checkpointRecoveryAttempts:2,lockSha:'old-sha',deadline:now+60000},
+  {statusCode:200,body:{content:{sha:'fresh-sha-1'}}},now);
+ assert.equal(first.state.stage,'pegDiscovery');assert.equal(first.state.checkpointRecoveryAttempts,0);
+ const second=engine.advance({...first.state,stage:'pegDiscovery',pegPreview:{marketDate:base.marketDate,requestId:base.requestId,prepareRunId:'123',prepareRunAttempt:1,sourceGitCommit:'a'.repeat(40),candidateSha256:'b'.repeat(64),stocks:Array.from({length:100},(_,i)=>({code:String(1000+i),name:'Company',pegReview:{status:'needs_review'},currentPeriod:null}))},pegPrepareRunId:'123',pegPrepareRunAttempt:1,pegPrepareHeadSha:'a'.repeat(40),pegCandidateSha256:'b'.repeat(64),pegManifestCommit:undefined,checkpointRecoveryAttempts:2},
+  {statusCode:200,body:{manifestCommit:'c'.repeat(40)}},now);
+ assert.equal(second.state.stage,'checkpoint');
+ const nextPayload=JSON.parse(Buffer.from(second.op.body.content,'base64').toString());assert.equal(nextPayload.checkpointRecoveryAttempts,0);
+ const content=Buffer.from('{}').toString('base64');
+ const recovered=engine.advance({...base,stage:'state',checkpointRecovery:{content,expectedSha:'expected',nextStage:'pegDiscovery',message:'checkpoint'},checkpointRecoveryAttempts:2},
+  {statusCode:200,body:{sha:'confirmed-sha',content}},now);
+ assert.equal(recovered.state.stage,'pegDiscovery');assert.equal(recovered.state.checkpointRecoveryAttempts,0);
+});
 test('committed optional restore checkpoint with missing transient restore parts falls back to fresh PEG preparation',()=>{
  const now=Date.parse('2026-10-02T10:30:00Z');
  const checkpoint={...engine.start({...base,runKind:'scheduled',sourceMode:'publish'},now).state,stage:'checkpoint',nextStage:'restoreBlobGet',lockSha:'old-sha',deadline:now+60000,restoreBlobCursor:0,dispatchIntent:true};
