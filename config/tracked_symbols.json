@@ -21,8 +21,8 @@
     "2892",
     "2352",
     "2412",
-    "1326",
     "2881",
+    "1326",
     "1815",
     "3037",
     "2883",
@@ -56,19 +56,19 @@
     "2885",
     "2337",
     "2313",
-    "6510",
     "8069",
-    "2455",
+    "6510",
     "8021",
+    "2455",
     "2897",
-    "1605",
     "1560",
+    "1605",
     "2845",
     "9945",
     "9933",
+    "5347",
     "2812",
     "6415",
-    "5347",
     "2377",
     "2376",
     "8996",
@@ -183,12 +183,12 @@
       "name": "中華電",
       "market": "TWSE"
     },
-    "1326": {
-      "name": "台化",
-      "market": "TWSE"
-    },
     "2881": {
       "name": "富邦金",
+      "market": "TWSE"
+    },
+    "1326": {
+      "name": "台化",
       "market": "TWSE"
     },
     "1815": {
@@ -323,32 +323,32 @@
       "name": "華通",
       "market": "TWSE"
     },
-    "6510": {
-      "name": "精測",
-      "market": "TPEx"
-    },
     "8069": {
       "name": "元太",
       "market": "TPEx"
     },
-    "2455": {
-      "name": "全新",
-      "market": "TWSE"
+    "6510": {
+      "name": "精測",
+      "market": "TPEx"
     },
     "8021": {
       "name": "尖點",
+      "market": "TWSE"
+    },
+    "2455": {
+      "name": "全新",
       "market": "TWSE"
     },
     "2897": {
       "name": "王道銀行",
       "market": "TWSE"
     },
-    "1605": {
-      "name": "華新",
-      "market": "TWSE"
-    },
     "1560": {
       "name": "中砂",
+      "market": "TWSE"
+    },
+    "1605": {
+      "name": "華新",
       "market": "TWSE"
     },
     "2845": {
@@ -363,6 +363,10 @@
       "name": "中鼎",
       "market": "TWSE"
     },
+    "5347": {
+      "name": "世界",
+      "market": "TPEx"
+    },
     "2812": {
       "name": "台中銀",
       "market": "TWSE"
@@ -370,10 +374,6 @@
     "6415": {
       "name": "矽力*-KY",
       "market": "TWSE"
-    },
-    "5347": {
-      "name": "世界",
-      "market": "TPEx"
     },
     "2377": {
       "name": "微星",
@@ -514,7 +514,7 @@
       "TPEx:insti/dailyTrade"
     ],
     "sourceMethod": "兩市場每日投信買進／賣出；TPEx 張數轉股；最近10個市場日累積；不在子集合內重算",
-    "asOfFetchedAt": "2026-11-03T10:01:18+00:00",
+    "asOfFetchedAt": "2026-11-04T03:57:36+00:00",
     "marketDates": [
       "2026-11-03",
       "2026-11-02",
@@ -557,8 +557,8 @@
         "code": "3711",
         "name": "日月光投控",
         "market": "TWSE",
-        "netShares": 29317692,
-        "net": "29317692",
+        "netShares": 29342692,
+        "net": "29342692",
         "previousRank": 2,
         "entryStatus": "retained"
       },
@@ -601,8 +601,8 @@
         "code": "2330",
         "name": "台積電",
         "market": "TWSE",
-        "netShares": 19145330,
-        "net": "19145330",
+        "netShares": 19151840,
+        "net": "19151840",
         "previousRank": 5,
         "entryStatus": "retained"
       },
@@ -645,8 +645,8 @@
         "code": "2890",
         "name": "永豐金",
         "market": "TWSE",
-        "netShares": 16012715,
-        "net": "16012715",
+        "netShares": 16247795,
+        "net": "16247795",
         "previousRank": 8,
         "entryStatus": "retained"
       },
@@ -711,8 +711,8 @@
         "code": "1303",
         "name": "南亞",
         "market": "TWSE",
-        "netShares": 11351463,
-        "net": "11351463",
+        "netShares": 11332463,
+        "net": "11332463",
         "previousRank": 12,
         "entryStatus": "not_applicable"
       },
@@ -763,23 +763,23 @@
       {
         "rank": 21,
         "sourceRank": 21,
-        "code": "1326",
-        "name": "台化",
-        "market": "TWSE",
-        "netShares": 8173622,
-        "net": "8173622",
-        "previousRank": 15,
-        "entryStatus": "not_applicable"
-      },
-      {
-        "rank": 22,
-        "sourceRank": 22,
         "code": "2881",
         "name": "富邦金",
         "market": "TWSE",
         "netShares": 7969875,
         "net": "7969875",
         "previousRank": 70,
+        "entryStatus": "not_applicable"
+      },
+      {
+        "rank": 22,
+        "sourceRank": 22,
+        "code": "1326",
+        "name": "台化",
+        "market": "TWSE",
+        "netShares": 7837622,
+        "net": "7837622",
+        "previousRank": 15,
         "entryStatus": "not_applicable"
       },
       {
@@ -799,8 +799,8 @@
         "code": "3037",
         "name": "欣興",
         "market": "TWSE",
-        "netShares": 7459738,
-        "net": "7459738",
+        "netShares": 7552738,
+        "net": "7552738",
         "previousRank": 20,
         "entryStatus": "not_applicable"
       },
@@ -821,8 +821,8 @@
         "code": "2382",
         "name": "廣達",
         "market": "TWSE",
-        "netShares": 7334041,
-        "net": "7334041",
+        "netShares": 7333129,
+        "net": "7333129",
         "previousRank": 25,
         "entryStatus": "not_applicable"
       },
@@ -909,8 +909,8 @@
         "code": "2454",
         "name": "聯發科",
         "market": "TWSE",
-        "netShares": 5037422,
-        "net": "5037422",
+        "netShares": 5034422,
+        "net": "5034422",
         "previousRank": 32,
         "entryStatus": "not_applicable"
       },
@@ -1096,8 +1096,8 @@
         "code": "3045",
         "name": "台灣大",
         "market": "TWSE",
-        "netShares": 2620030,
-        "net": "2620030",
+        "netShares": 2614030,
+        "net": "2614030",
         "previousRank": 50,
         "entryStatus": "not_applicable"
       },
@@ -1148,6 +1148,17 @@
       {
         "rank": 56,
         "sourceRank": 56,
+        "code": "8069",
+        "name": "元太",
+        "market": "TPEx",
+        "netShares": 2211564,
+        "net": "2211564",
+        "previousRank": 57,
+        "entryStatus": "not_applicable"
+      },
+      {
+        "rank": 57,
+        "sourceRank": 57,
         "code": "6510",
         "name": "精測",
         "market": "TPEx",
@@ -1157,36 +1168,25 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 57,
-        "sourceRank": 57,
-        "code": "8069",
-        "name": "元太",
-        "market": "TPEx",
-        "netShares": 2166564,
-        "net": "2166564",
-        "previousRank": 57,
-        "entryStatus": "not_applicable"
-      },
-      {
         "rank": 58,
         "sourceRank": 58,
-        "code": "2455",
-        "name": "全新",
-        "market": "TWSE",
-        "netShares": 2133764,
-        "net": "2133764",
-        "previousRank": 53,
-        "entryStatus": "not_applicable"
-      },
-      {
-        "rank": 59,
-        "sourceRank": 59,
         "code": "8021",
         "name": "尖點",
         "market": "TWSE",
         "netShares": 2115464,
         "net": "2115464",
         "previousRank": 56,
+        "entryStatus": "not_applicable"
+      },
+      {
+        "rank": 59,
+        "sourceRank": 59,
+        "code": "2455",
+        "name": "全新",
+        "market": "TWSE",
+        "netShares": 2105764,
+        "net": "2105764",
+        "previousRank": 53,
         "entryStatus": "not_applicable"
       },
       {
@@ -1203,23 +1203,23 @@
       {
         "rank": 61,
         "sourceRank": 61,
+        "code": "1560",
+        "name": "中砂",
+        "market": "TWSE",
+        "netShares": 2057972,
+        "net": "2057972",
+        "previousRank": 61,
+        "entryStatus": "not_applicable"
+      },
+      {
+        "rank": 62,
+        "sourceRank": 62,
         "code": "1605",
         "name": "華新",
         "market": "TWSE",
         "netShares": 1965037,
         "net": "1965037",
         "previousRank": null,
-        "entryStatus": "not_applicable"
-      },
-      {
-        "rank": 62,
-        "sourceRank": 62,
-        "code": "1560",
-        "name": "中砂",
-        "market": "TWSE",
-        "netShares": 1926972,
-        "net": "1926972",
-        "previousRank": 61,
         "entryStatus": "not_applicable"
       },
       {
@@ -1258,6 +1258,17 @@
       {
         "rank": 66,
         "sourceRank": 66,
+        "code": "5347",
+        "name": "世界",
+        "market": "TPEx",
+        "netShares": 1784432,
+        "net": "1784432",
+        "previousRank": 58,
+        "entryStatus": "not_applicable"
+      },
+      {
+        "rank": 67,
+        "sourceRank": 67,
         "code": "2812",
         "name": "台中銀",
         "market": "TWSE",
@@ -1267,25 +1278,14 @@
         "entryStatus": "not_applicable"
       },
       {
-        "rank": 67,
-        "sourceRank": 67,
+        "rank": 68,
+        "sourceRank": 68,
         "code": "6415",
         "name": "矽力*-KY",
         "market": "TWSE",
-        "netShares": 1631949,
-        "net": "1631949",
+        "netShares": 1628949,
+        "net": "1628949",
         "previousRank": 69,
-        "entryStatus": "not_applicable"
-      },
-      {
-        "rank": 68,
-        "sourceRank": 68,
-        "code": "5347",
-        "name": "世界",
-        "market": "TPEx",
-        "netShares": 1507432,
-        "net": "1507432",
-        "previousRank": 58,
         "entryStatus": "not_applicable"
       },
       {
@@ -1470,8 +1470,8 @@
         "code": "3443",
         "name": "創意",
         "market": "TWSE",
-        "netShares": 910657,
-        "net": "910657",
+        "netShares": 939657,
+        "net": "939657",
         "previousRank": 94,
         "entryStatus": "not_applicable"
       },
@@ -1569,8 +1569,8 @@
         "code": "3653",
         "name": "健策",
         "market": "TWSE",
-        "netShares": 689699,
-        "net": "689699",
+        "netShares": 692699,
+        "net": "692699",
         "previousRank": 99,
         "entryStatus": "not_applicable"
       },
@@ -1635,8 +1635,8 @@
         "code": "6223",
         "name": "旺矽",
         "market": "TPEx",
-        "netShares": 637486,
-        "net": "637486",
+        "netShares": 639772,
+        "net": "639772",
         "previousRank": 105,
         "entryStatus": "not_applicable"
       }
@@ -2358,7 +2358,7 @@
         "code": "3711",
         "name": "日月光投控",
         "market": "TWSE",
-        "netShares": 29317692,
+        "netShares": 29342692,
         "rank": 2,
         "sourceRank": 2,
         "previousRank": 2,
@@ -2398,7 +2398,7 @@
         "code": "2330",
         "name": "台積電",
         "market": "TWSE",
-        "netShares": 19145330,
+        "netShares": 19151840,
         "rank": 6,
         "sourceRank": 6,
         "previousRank": 5,
@@ -2438,7 +2438,7 @@
         "code": "2890",
         "name": "永豐金",
         "market": "TWSE",
-        "netShares": 16012715,
+        "netShares": 16247795,
         "rank": 10,
         "sourceRank": 10,
         "previousRank": 8,
@@ -2581,25 +2581,25 @@
             "code": "3711",
             "name": "日月光投控",
             "market": "TWSE",
-            "buyShares": 2632406,
+            "buyShares": 2657406,
             "sellShares": 75000,
-            "netShares": 2557406
+            "netShares": 2582406
           },
           {
             "code": "2382",
             "name": "廣達",
             "market": "TWSE",
             "buyShares": 2496181,
-            "sellShares": 128000,
-            "netShares": 2368181
+            "sellShares": 128912,
+            "netShares": 2367269
           },
           {
             "code": "2330",
             "name": "台積電",
             "market": "TWSE",
-            "buyShares": 2340135,
-            "sellShares": 1000,
-            "netShares": 2339135
+            "buyShares": 2348645,
+            "sellShares": 3000,
+            "netShares": 2345645
           },
           {
             "code": "2412",
@@ -2618,20 +2618,20 @@
             "netShares": 2020000
           },
           {
+            "code": "2890",
+            "name": "永豐金",
+            "market": "TWSE",
+            "buyShares": 1990080,
+            "sellShares": 174000,
+            "netShares": 1816080
+          },
+          {
             "code": "2002",
             "name": "中鋼",
             "market": "TWSE",
             "buyShares": 1805000,
             "sellShares": 0,
             "netShares": 1805000
-          },
-          {
-            "code": "2890",
-            "name": "永豐金",
-            "market": "TWSE",
-            "buyShares": 1755000,
-            "sellShares": 174000,
-            "netShares": 1581000
           },
           {
             "code": "4904",
@@ -2646,16 +2646,16 @@
             "name": "台灣大",
             "market": "TWSE",
             "buyShares": 1854786,
-            "sellShares": 449000,
-            "netShares": 1405786
+            "sellShares": 455000,
+            "netShares": 1399786
           },
           {
             "code": "1303",
             "name": "南亞",
             "market": "TWSE",
             "buyShares": 1784000,
-            "sellShares": 526000,
-            "netShares": 1258000
+            "sellShares": 545000,
+            "netShares": 1239000
           },
           {
             "code": "6213",
@@ -2734,8 +2734,8 @@
             "name": "聯發科",
             "market": "TWSE",
             "buyShares": 475640,
-            "sellShares": 0,
-            "netShares": 475640
+            "sellShares": 3000,
+            "netShares": 472640
           },
           {
             "code": "3034",
@@ -2818,14 +2818,6 @@
             "netShares": 170000
           },
           {
-            "code": "2455",
-            "name": "全新",
-            "market": "TWSE",
-            "buyShares": 233000,
-            "sellShares": 100000,
-            "netShares": 133000
-          },
-          {
             "code": "2383",
             "name": "台光電",
             "market": "TWSE",
@@ -2842,6 +2834,30 @@
             "netShares": 116092
           },
           {
+            "code": "3443",
+            "name": "創意",
+            "market": "TWSE",
+            "buyShares": 105381,
+            "sellShares": 0,
+            "netShares": 105381
+          },
+          {
+            "code": "2455",
+            "name": "全新",
+            "market": "TWSE",
+            "buyShares": 233000,
+            "sellShares": 128000,
+            "netShares": 105000
+          },
+          {
+            "code": "1560",
+            "name": "中砂",
+            "market": "TWSE",
+            "buyShares": 161000,
+            "sellShares": 63000,
+            "netShares": 98000
+          },
+          {
             "code": "2801",
             "name": "彰銀",
             "market": "TWSE",
@@ -2856,14 +2872,6 @@
             "buyShares": 83000,
             "sellShares": 0,
             "netShares": 83000
-          },
-          {
-            "code": "3443",
-            "name": "創意",
-            "market": "TWSE",
-            "buyShares": 76381,
-            "sellShares": 0,
-            "netShares": 76381
           },
           {
             "code": "2449",
@@ -2886,8 +2894,8 @@
             "name": "矽力*-KY",
             "market": "TWSE",
             "buyShares": 74000,
-            "sellShares": 0,
-            "netShares": 74000
+            "sellShares": 3000,
+            "netShares": 71000
           },
           {
             "code": "2313",
@@ -2909,9 +2917,9 @@
             "code": "3653",
             "name": "健策",
             "market": "TWSE",
-            "buyShares": 81000,
+            "buyShares": 84000,
             "sellShares": 32000,
-            "netShares": 49000
+            "netShares": 52000
           },
           {
             "code": "9933",
@@ -2968,14 +2976,6 @@
             "buyShares": 21000,
             "sellShares": 0,
             "netShares": 21000
-          },
-          {
-            "code": "1326",
-            "name": "台化",
-            "market": "TWSE",
-            "buyShares": 20000,
-            "sellShares": 0,
-            "netShares": 20000
           },
           {
             "code": "1301",
@@ -3053,9 +3053,9 @@
             "code": "3037",
             "name": "欣興",
             "market": "TWSE",
-            "buyShares": 470000,
-            "sellShares": 1300000,
-            "netShares": -830000
+            "buyShares": 570000,
+            "sellShares": 1307000,
+            "netShares": -737000
           },
           {
             "code": "8150",
@@ -3088,6 +3088,14 @@
             "buyShares": 32000,
             "sellShares": 386000,
             "netShares": -354000
+          },
+          {
+            "code": "1326",
+            "name": "台化",
+            "market": "TWSE",
+            "buyShares": 20000,
+            "sellShares": 336000,
+            "netShares": -316000
           },
           {
             "code": "3702",
@@ -3146,14 +3154,6 @@
             "netShares": -53987
           },
           {
-            "code": "1560",
-            "name": "中砂",
-            "market": "TWSE",
-            "buyShares": 17000,
-            "sellShares": 50000,
-            "netShares": -33000
-          },
-          {
             "code": "1815",
             "name": "富喬",
             "market": "TPEx",
@@ -3189,9 +3189,9 @@
             "code": "5347",
             "name": "世界",
             "market": "TPEx",
-            "buyShares": 982370,
+            "buyShares": 1259370,
             "sellShares": 96000,
-            "netShares": 886370
+            "netShares": 1163370
           },
           {
             "code": "6147",
@@ -3213,9 +3213,9 @@
             "code": "6223",
             "name": "旺矽",
             "market": "TPEx",
-            "buyShares": 130529,
+            "buyShares": 132815,
             "sellShares": 14410,
-            "netShares": 116119
+            "netShares": 118405
           },
           {
             "code": "6510",
@@ -3229,9 +3229,9 @@
             "code": "8069",
             "name": "元太",
             "market": "TPEx",
-            "buyShares": 99000,
+            "buyShares": 144000,
             "sellShares": 0,
-            "netShares": 99000
+            "netShares": 144000
           }
         ]
       },
@@ -9892,25 +9892,28 @@
     "sourceEvidence": {
       "schemaVersion": "official-institutional-source-evidence-v1",
       "marketDate": "2026-11-03",
-      "evidenceLevel": "fresh_response",
+      "evidenceLevel": "verified_cached_after_refresh_failure",
       "markets": {
         "TWSE": {
+          "market": "TWSE",
+          "reportedDate": "2026-11-03",
+          "rawSha256": "4686d009a14f30d0520d52407134acfc3029fb3ea8571f4555ea75b2831ac165",
+          "retrievedAt": "2026-11-04T03:57:28.988855Z",
           "unit": "shares",
           "evidenceLevel": "fresh_response",
-          "market": "TWSE",
-          "requestDate": "2026-11-03",
-          "rawSha256": "b329dec452086f3e1fec33acc7b975d1186006267c6931841a53d56a3458457d",
-          "retrievedAt": "2026-11-03T10:01:02.420219Z",
-          "reportedDate": "2026-11-03"
+          "requestDate": "2026-11-03"
         },
         "TPEx": {
-          "unit": "shares",
-          "evidenceLevel": "fresh_response",
           "market": "TPEx",
+          "reportedDate": "2026-11-03",
+          "rawSha256": "e95bbfa7b309a173824b3a3810c51f0fb53ca8c8f787db2617cbc2e1921311cb",
+          "retrievedAt": "2026-11-04T03:17:54.947477Z",
+          "unit": "shares",
+          "evidenceLevel": "verified_cached_after_refresh_failure",
           "requestDate": "2026-11-03",
-          "rawSha256": "e420a0eb03c8687e9a6114149275c00ffda9e40eafa8939979e388f0c02705fb",
-          "retrievedAt": "2026-11-03T10:01:15.119339Z",
-          "reportedDate": "2026-11-03"
+          "refreshFailure": {
+            "category": "transport_error"
+          }
         }
       },
       "sessions": [
@@ -9918,22 +9921,25 @@
           "marketDate": "2026-11-03",
           "markets": {
             "TWSE": {
+              "market": "TWSE",
+              "reportedDate": "2026-11-03",
+              "rawSha256": "4686d009a14f30d0520d52407134acfc3029fb3ea8571f4555ea75b2831ac165",
+              "retrievedAt": "2026-11-04T03:57:28.988855Z",
               "unit": "shares",
               "evidenceLevel": "fresh_response",
-              "market": "TWSE",
-              "requestDate": "2026-11-03",
-              "rawSha256": "b329dec452086f3e1fec33acc7b975d1186006267c6931841a53d56a3458457d",
-              "retrievedAt": "2026-11-03T10:01:02.420219Z",
-              "reportedDate": "2026-11-03"
+              "requestDate": "2026-11-03"
             },
             "TPEx": {
-              "unit": "shares",
-              "evidenceLevel": "fresh_response",
               "market": "TPEx",
+              "reportedDate": "2026-11-03",
+              "rawSha256": "e95bbfa7b309a173824b3a3810c51f0fb53ca8c8f787db2617cbc2e1921311cb",
+              "retrievedAt": "2026-11-04T03:17:54.947477Z",
+              "unit": "shares",
+              "evidenceLevel": "verified_cached_after_refresh_failure",
               "requestDate": "2026-11-03",
-              "rawSha256": "e420a0eb03c8687e9a6114149275c00ffda9e40eafa8939979e388f0c02705fb",
-              "retrievedAt": "2026-11-03T10:01:15.119339Z",
-              "reportedDate": "2026-11-03"
+              "refreshFailure": {
+                "category": "transport_error"
+              }
             }
           }
         },
@@ -9941,22 +9947,22 @@
           "marketDate": "2026-11-02",
           "markets": {
             "TWSE": {
-              "unit": "shares",
-              "evidenceLevel": "verified_cache_replay",
               "market": "TWSE",
-              "requestDate": "2026-11-02",
+              "reportedDate": "2026-11-02",
               "rawSha256": "1a7dcd4a13d71b83df8657a90eb95853c9413aaf721c4b4b33f2da6fcdebc2d0",
               "retrievedAt": "2026-11-02T10:01:11.464392Z",
-              "reportedDate": "2026-11-02"
-            },
-            "TPEx": {
               "unit": "shares",
               "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-11-02"
+            },
+            "TPEx": {
               "market": "TPEx",
-              "requestDate": "2026-11-02",
+              "reportedDate": "2026-11-02",
               "rawSha256": "eeed01213f8ed5cdb773590230729c8b8fda9296320a34cc9eb099d0f1441bec",
               "retrievedAt": "2026-11-02T10:01:21.026083Z",
-              "reportedDate": "2026-11-02"
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-11-02"
             }
           }
         },
@@ -9964,22 +9970,22 @@
           "marketDate": "2026-10-30",
           "markets": {
             "TWSE": {
-              "unit": "shares",
-              "evidenceLevel": "verified_cache_replay",
               "market": "TWSE",
-              "requestDate": "2026-10-30",
+              "reportedDate": "2026-10-30",
               "rawSha256": "0ccbd2109587b1b0a701e770d0b9cc335f8f3d985a1b13ac287711a6dae8a5cd",
               "retrievedAt": "2026-10-30T11:08:14.094628Z",
-              "reportedDate": "2026-10-30"
-            },
-            "TPEx": {
               "unit": "shares",
               "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-30"
+            },
+            "TPEx": {
               "market": "TPEx",
-              "requestDate": "2026-10-30",
+              "reportedDate": "2026-10-30",
               "rawSha256": "f970561b680c2a1f34c4830d5f44f2c3324c62d23895a4f96d97dca2207ffa8f",
               "retrievedAt": "2026-10-30T11:08:17.563049Z",
-              "reportedDate": "2026-10-30"
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-30"
             }
           }
         },
@@ -9987,22 +9993,22 @@
           "marketDate": "2026-10-29",
           "markets": {
             "TWSE": {
-              "unit": "shares",
-              "evidenceLevel": "verified_cache_replay",
               "market": "TWSE",
-              "requestDate": "2026-10-29",
+              "reportedDate": "2026-10-29",
               "rawSha256": "c6d62c1702dc22bc39f6dad62d8864546f3fbb2da86fda9d58787d3b7c2848d1",
               "retrievedAt": "2026-10-29T11:08:16.158955Z",
-              "reportedDate": "2026-10-29"
-            },
-            "TPEx": {
               "unit": "shares",
               "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-29"
+            },
+            "TPEx": {
               "market": "TPEx",
-              "requestDate": "2026-10-29",
+              "reportedDate": "2026-10-29",
               "rawSha256": "fd43f00d25140280c09280a470916ebabae7b14cb06c478395607d6e0ecf36ab",
               "retrievedAt": "2026-10-29T11:08:18.973743Z",
-              "reportedDate": "2026-10-29"
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-29"
             }
           }
         },
@@ -10010,22 +10016,22 @@
           "marketDate": "2026-10-28",
           "markets": {
             "TWSE": {
-              "unit": "shares",
-              "evidenceLevel": "verified_cache_replay",
               "market": "TWSE",
-              "requestDate": "2026-10-28",
+              "reportedDate": "2026-10-28",
               "rawSha256": "673bf6b7fa8269c80e6cd77e0c23adc53fbdabcc37d4fa6b3d27b70d3dd899e4",
               "retrievedAt": "2026-10-28T10:01:09.581596Z",
-              "reportedDate": "2026-10-28"
-            },
-            "TPEx": {
               "unit": "shares",
               "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-28"
+            },
+            "TPEx": {
               "market": "TPEx",
-              "requestDate": "2026-10-28",
+              "reportedDate": "2026-10-28",
               "rawSha256": "23c9e478c48480d23400dc049e01310f1119d93823ddb4571fa7ea7e3a2a039a",
               "retrievedAt": "2026-10-28T10:01:11.086145Z",
-              "reportedDate": "2026-10-28"
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-28"
             }
           }
         },
@@ -10033,22 +10039,22 @@
           "marketDate": "2026-10-27",
           "markets": {
             "TWSE": {
-              "unit": "shares",
-              "evidenceLevel": "verified_cache_replay",
               "market": "TWSE",
-              "requestDate": "2026-10-27",
+              "reportedDate": "2026-10-27",
               "rawSha256": "97c741d75e11a6d6d69fb33094324c12ac2852245f021114a061dc9ef339f708",
               "retrievedAt": "2026-10-27T23:17:15.434352Z",
-              "reportedDate": "2026-10-27"
-            },
-            "TPEx": {
               "unit": "shares",
               "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-27"
+            },
+            "TPEx": {
               "market": "TPEx",
-              "requestDate": "2026-10-27",
+              "reportedDate": "2026-10-27",
               "rawSha256": "11b2a1790dc8ac32fe6d0279bfa8890de9f7870a706b80d991003791f7a9fcd7",
               "retrievedAt": "2026-10-27T23:17:20.068807Z",
-              "reportedDate": "2026-10-27"
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-27"
             }
           }
         },
@@ -10056,22 +10062,22 @@
           "marketDate": "2026-10-22",
           "markets": {
             "TWSE": {
-              "unit": "shares",
-              "evidenceLevel": "verified_cache_replay",
               "market": "TWSE",
-              "requestDate": "2026-10-22",
+              "reportedDate": "2026-10-22",
               "rawSha256": "c3db1e2b39015b282b1d996286a5a4d4f7cf370079dad333573b4266854fe672",
               "retrievedAt": "2026-10-22T11:08:05.604513Z",
-              "reportedDate": "2026-10-22"
-            },
-            "TPEx": {
               "unit": "shares",
               "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-22"
+            },
+            "TPEx": {
               "market": "TPEx",
-              "requestDate": "2026-10-22",
+              "reportedDate": "2026-10-22",
               "rawSha256": "159d72588931ad7d44bf77e5f622433300d2609b4e3993a6b757c18016c3e9de",
               "retrievedAt": "2026-10-22T11:08:09.391586Z",
-              "reportedDate": "2026-10-22"
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-22"
             }
           }
         },
@@ -10079,22 +10085,22 @@
           "marketDate": "2026-10-21",
           "markets": {
             "TWSE": {
-              "unit": "shares",
-              "evidenceLevel": "verified_cache_replay",
               "market": "TWSE",
-              "requestDate": "2026-10-21",
+              "reportedDate": "2026-10-21",
               "rawSha256": "880010aa85a88237ea5cd753182ec6bea2a34db4847d7a39bee7b12f8024b7d1",
               "retrievedAt": "2026-10-21T11:06:50.569070Z",
-              "reportedDate": "2026-10-21"
-            },
-            "TPEx": {
               "unit": "shares",
               "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-21"
+            },
+            "TPEx": {
               "market": "TPEx",
-              "requestDate": "2026-10-21",
+              "reportedDate": "2026-10-21",
               "rawSha256": "e2f7d6ea3dea27573e92f6533af445fcd4113d178bd4cede3c3880c2d6b76d53",
               "retrievedAt": "2026-10-21T11:07:07.690840Z",
-              "reportedDate": "2026-10-21"
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-21"
             }
           }
         },
@@ -10102,22 +10108,22 @@
           "marketDate": "2026-10-20",
           "markets": {
             "TWSE": {
-              "unit": "shares",
-              "evidenceLevel": "verified_cache_replay",
               "market": "TWSE",
-              "requestDate": "2026-10-20",
+              "reportedDate": "2026-10-20",
               "rawSha256": "7886d86b7a4598851a6a2fbeadf3c02455153bf7f06cabb2e8760e004e805fea",
               "retrievedAt": "2026-10-20T11:04:54.015057Z",
-              "reportedDate": "2026-10-20"
-            },
-            "TPEx": {
               "unit": "shares",
               "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-20"
+            },
+            "TPEx": {
               "market": "TPEx",
-              "requestDate": "2026-10-20",
+              "reportedDate": "2026-10-20",
               "rawSha256": "a7e866039c0841843464072af6a1ba00fc5502e01417cf75de4df11993ae40e6",
               "retrievedAt": "2026-10-20T11:04:59.483778Z",
-              "reportedDate": "2026-10-20"
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-20"
             }
           }
         },
@@ -10125,22 +10131,22 @@
           "marketDate": "2026-10-19",
           "markets": {
             "TWSE": {
-              "unit": "shares",
-              "evidenceLevel": "verified_cache_replay",
               "market": "TWSE",
-              "requestDate": "2026-10-19",
+              "reportedDate": "2026-10-19",
               "rawSha256": "34b4f27c73c8ab9b7bf14f2502faede3620e771c36287b2bfb3dac5d5b6e72fd",
               "retrievedAt": "2026-10-19T10:00:54.651746Z",
-              "reportedDate": "2026-10-19"
-            },
-            "TPEx": {
               "unit": "shares",
               "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-19"
+            },
+            "TPEx": {
               "market": "TPEx",
-              "requestDate": "2026-10-19",
+              "reportedDate": "2026-10-19",
               "rawSha256": "a3c5fe11b2bc9200f4d53961ca5ebc1d54be5b99026130f1c0fa8597166c2d7f",
               "retrievedAt": "2026-10-19T10:02:26.194533Z",
-              "reportedDate": "2026-10-19"
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-19"
             }
           }
         },
@@ -10148,22 +10154,22 @@
           "marketDate": "2026-10-16",
           "markets": {
             "TWSE": {
-              "unit": "shares",
-              "evidenceLevel": "verified_cache_replay",
               "market": "TWSE",
-              "requestDate": "2026-10-16",
+              "reportedDate": "2026-10-16",
               "rawSha256": "ebe18f2911937c3b291bc5760115943b9bba1662e718d4f08ca6c2ae40da451a",
               "retrievedAt": "2026-10-18T07:38:34.729573Z",
-              "reportedDate": "2026-10-16"
-            },
-            "TPEx": {
               "unit": "shares",
               "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-16"
+            },
+            "TPEx": {
               "market": "TPEx",
-              "requestDate": "2026-10-16",
+              "reportedDate": "2026-10-16",
               "rawSha256": "ea619ecd2b5f98797b2c6b4bcffd1b1dfea16a5d7576de9d93522381454b95fb",
               "retrievedAt": "2026-10-18T07:38:37.765729Z",
-              "reportedDate": "2026-10-16"
+              "unit": "shares",
+              "evidenceLevel": "verified_cache_replay",
+              "requestDate": "2026-10-16"
             }
           }
         }
