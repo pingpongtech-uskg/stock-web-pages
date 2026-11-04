@@ -121,6 +121,9 @@ function findDaily(state) {return request(state,'findDaily','notion','POST',`htt
 function findDatabase(state) {return request(state,'findDatabase','notion','GET',`https://api.notion.com/v1/blocks/${state.pageId}/children?page_size=100${state.cursor?'&start_cursor='+encodeURIComponent(state.cursor):''}`);}
 function queryRows(state,stage='queryRows') {return request(state,stage,'notion','POST',`https://api.notion.com/v1/data_sources/${state.dataSourceId}/query`,{filter:{property:'Payload Hash',rich_text:{equals:state.payload.payloadHash}},page_size:100,...(state.cursor?{start_cursor:state.cursor}:{})});}
 function findRuns(state,delay=0.5) {return request(state,'findRun','github','GET',`${REPO}/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=100&page=${state.runPage||1}`,null,delay);}
+function hasPinnedPegFinal(state) {
+  return state.pegFinalReady===true&&(state.sourceMode||'publish')==='publish'&&/^[1-9]\d{0,23}$/.test(String(state.pegPrepareRunId||''))&&Number.isSafeInteger(state.pegPrepareRunAttempt)&&state.pegPrepareRunAttempt>=1&&state.pegPrepareRunAttempt<=999999&&/^[a-f0-9]{40}$/.test(state.pegPrepareHeadSha||'')&&/^[a-f0-9]{64}$/.test(state.pegCandidateSha256||'')&&/^[a-f0-9]{40}$/.test(state.pegManifestCommit||'');
+}
 function rootProperties(state,status) {
   const payload=state.payload;
   if(!payload) return {'Market Date':{date:{start:state.marketDate}},'Request ID':{rich_text:richText(state.requestId)},'Actions Run ID':{rich_text:richText(state.actionsRunId||'')},'Actions URL':{url:state.actionsRunId?`https://github.com/pingpongtech-uskg/stock-web-pages/actions/runs/${state.actionsRunId}`:null},'Screening Status':{rich_text:richText('failed')},'Notion Status':{rich_text:richText('failure_metadata')},'Error Summary':{rich_text:richText(`${state.errorCategory||'screening_failed'}: ${state.errorMessage||'Screening failed; no child stock database was created.'}`)}};
@@ -217,7 +220,10 @@ function advance(original,response,now=Date.now()) {
     if(['cacheCreateUpload','cacheSendUpload','cacheAppend'].includes(state.stage))return cacheOperation.ambiguousCacheWrite(state,cacheApi(now));
     const readStage={createDaily:'findDaily',createDatabase:'findDatabase',createStock:'queryRows',appendSummary:'summaryRead'}[state.stage];
     if(readStage) return next({...state,stage:readStage,retry:(state.retry||0)+1},now);
-    if(state.stage==='dispatch') return findRuns({...state,dispatchIntent:true,runPage:1},15);
+    if(state.stage==='dispatch') {
+      if(state.pegFinalReady===true)return checkpoint({...state,dispatchIntent:true,dispatchAmbiguousStatus:status,dispatchAmbiguousAt:now,runPage:1,runMatches:[]},'findRun',now);
+      return findRuns({...state,dispatchIntent:true,runPage:1},15);
+    }
     if(state.stage==='pegDispatchPrepare') return next({...state,stage:'pegFindPrepare',pegPrepareIntent:true,pegRunPage:1,pegRunMatches:[]},now);
     if(['liveProbe','liveVerify'].includes(state.stage)) return deploymentResult(state,'failed',['live_binary_missing','live_file_too_large','live_binary_read_failed'].includes(response.liveReadError)?response.liveReadError:'live_http_'+status,now);
     if((state.retry||0)<3&&state.op?.method==='GET') return result({...state,retry:(state.retry||0)+1},state.op,2**((state.retry||0)+1));
@@ -397,8 +403,19 @@ function advanceSuccess(state,body,status,response,now) {
         return findRuns({...state,runPage:(state.runPage||1)+1,runMatches:matches});
       }
       if(match) return checkpoint({...state,actionsRunId:String(match.id),runHeadSha:match.head_sha,runPage:1,runMatches:[]},'pollRun');
+      if(state.pegFinalDispatchRetryReady===true&&hasPinnedPegFinal(state)) {
+        return checkpoint({...state,pegFinalDispatchRetryReady:false,dispatchIntent:true,dispatchStartedAt:now,runPage:1,runMatches:[]},'dispatch',now);
+      }
+      if(!state.dispatchIntent&&hasPinnedPegFinal(state)) {
+        return checkpoint({...state,dispatchIntent:true,dispatchStartedAt:now,runPage:1,runMatches:[]},'dispatch',now);
+      }
       if(state.dispatchIntent) {
-        if(now-(state.dispatchStartedAt||state.startedAt)>5*60000) return fail(state,'dispatch_run_not_found','Dispatch was attempted; never resend without new operator request ID.');
+        if(now-(state.dispatchStartedAt||state.startedAt)>5*60000) {
+          if(hasPinnedPegFinal(state)&&(state.pegFinalDispatchRetryCount||0)===0) {
+            return checkpoint({...state,pegFinalDispatchRetryCount:1,pegFinalDispatchRetryReady:true,runPage:1,runMatches:[]},'findRun',now);
+          }
+          return fail(state,'dispatch_run_not_found','Dispatch was attempted; never resend without new operator request ID.');
+        }
         return findRuns({...state,runPage:1},15);
       }
       if(state.mode==='resume') return fail(state,'resume_run_not_found');

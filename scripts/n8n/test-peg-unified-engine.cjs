@@ -25,6 +25,54 @@ test('authenticated prepare artifact and exact preview lead to pinned final disp
  out=engine.advance(out.state,response({manifestCommit:'c'.repeat(40)}),now);out=committed(out);
  assert.equal(out.state.stage,'dispatch');assert.equal(out.op.body.inputs.source_mode,'finalize_peg');assert.equal(out.op.body.inputs.prepare_run_id,'123');assert.equal(out.op.body.inputs.candidate_sha256,'b'.repeat(64));assert.equal(out.op.body.inputs.search_manifest_commit,'c'.repeat(40));
 });
+test('ambiguous final dispatch gets one durable retry only after exact-run reconciliation',()=>{
+ const pinned={...base,stage:'dispatch',dispatchIntent:true,dispatchStartedAt:now,pegFinalReady:true,pegPrepareRunId:'123',pegPrepareRunAttempt:1,pegPrepareHeadSha:run.head_sha,pegCandidateSha256:preview.candidateSha256,pegManifestCommit:'c'.repeat(40)};
+ let out=engine.advance(pinned,{statusCode:503,error:true},now);
+ assert.equal(out.state.stage,'checkpoint');assert.equal(out.state.nextStage,'findRun');
+ const ambiguous=JSON.parse(Buffer.from(out.op.body.content,'base64').toString());assert.equal(ambiguous.dispatchAmbiguousStatus,503);
+ out=committed(out);assert.equal(out.state.stage,'findRun');assert.equal(out.op.method,'GET');
+ out=engine.advance(out.state,response({workflow_runs:[]}),now+5*60000+1);
+ assert.equal(out.state.stage,'checkpoint');assert.equal(out.state.nextStage,'findRun');
+ const saved=JSON.parse(Buffer.from(out.op.body.content,'base64').toString());
+ assert.equal(saved.pegFinalDispatchRetryCount,1);assert.equal(saved.pegFinalDispatchRetryReady,true);
+ out=committed(out);assert.equal(out.op.method,'GET');
+ out=engine.advance(out.state,response({workflow_runs:[]}),now+5*60000+2000);
+ assert.equal(out.state.stage,'checkpoint');assert.equal(out.state.nextStage,'dispatch');
+ out=committed(out);assert.equal(out.state.stage,'dispatch');assert.equal(out.op.body.inputs.source_mode,'finalize_peg');
+ const retry=engine.advance(out.state,{statusCode:503,error:true},now+5*60000+3000);
+ assert.equal(retry.state.stage,'checkpoint');assert.equal(retry.state.nextStage,'findRun');
+ const reconciled=committed(retry);
+ const exhausted=engine.advance({...reconciled.state,dispatchStartedAt:now-10*60000},response({workflow_runs:[]}),now+5*60000+4000);
+ assert.equal(exhausted.state.errorCategory,'dispatch_run_not_found');
+});
+test('exact finalized run found during retry reconciliation is adopted without another POST',()=>{
+ const pinned={...base,stage:'findRun',dispatchIntent:true,dispatchStartedAt:now-6*60000,pegFinalReady:true,pegPrepareRunId:'123',pegPrepareRunAttempt:1,pegPrepareHeadSha:run.head_sha,pegCandidateSha256:preview.candidateSha256,pegManifestCommit:'c'.repeat(40),pegFinalDispatchRetryCount:1,pegFinalDispatchRetryReady:true};
+ const finalized={...run,id:124,display_title:'Daily screening | test-1 | 2026-11-03'};
+ const out=engine.advance(pinned,response({workflow_runs:[finalized]}),now);
+ assert.equal(out.state.nextStage,'pollRun');assert.equal(out.state.actionsRunId,'124');
+});
+test('retry authorization waits for every populated Actions run page',()=>{
+ const pinned={...base,stage:'findRun',dispatchIntent:true,dispatchStartedAt:now-6*60000,runPage:1,pegFinalReady:true,pegPrepareRunId:'123',pegPrepareRunAttempt:1,pegPrepareHeadSha:run.head_sha,pegCandidateSha256:preview.candidateSha256,pegManifestCommit:'c'.repeat(40),pegFinalDispatchRetryCount:1,pegFinalDispatchRetryReady:true};
+ const page=Array.from({length:100},(_,i)=>({...run,id:1000+i,display_title:`unrelated-${i}`}));
+ const first=engine.advance(pinned,response({workflow_runs:page}),now);
+ assert.equal(first.state.stage,'findRun');assert.equal(first.state.runPage,2);assert.match(first.op.url,/page=2/);
+ const final=engine.advance(first.state,response({workflow_runs:[]}),now);
+ assert.equal(final.state.stage,'checkpoint');assert.equal(final.state.nextStage,'dispatch');
+});
+test('released PEG dispatch failure resumes by exact-run lookup with pinned lineage',()=>{
+ const pinned={...base,stage:'done',released:true,errorCategory:'dispatch_run_not_found',dispatchIntent:true,dispatchStartedAt:now-6*60000,pegFinalReady:true,pegPrepareRunId:'123',pegPrepareRunAttempt:1,pegPrepareHeadSha:run.head_sha,pegCandidateSha256:preview.candidateSha256,pegManifestCommit:'c'.repeat(40),pegFinalDispatchRetryCount:0};
+ const incoming={...base,stage:'state',isOpen:true,owner:'701'};
+ let out=engine.advance(incoming,response({sha:'state-sha',content:Buffer.from(JSON.stringify(pinned)).toString('base64')}),now);
+ assert.equal(out.state.nextStage,'findRun');
+ out=committed(out);assert.equal(out.op.method,'GET');assert.match(out.op.url,/actions\/workflows\/daily.yml\/runs/);
+ assert.equal(out.state.pegFinalReady,true);assert.equal(out.state.pegPrepareRunId,'123');assert.equal(out.state.pegManifestCommit,'c'.repeat(40));
+});
+test('operator-corrected finalized PEG state dispatches only after exact-run lookup',()=>{
+ const state={...base,stage:'findRun',dispatchIntent:false,pegFinalReady:true,pegPrepareRunId:'123',pegPrepareRunAttempt:1,pegPrepareHeadSha:run.head_sha,pegCandidateSha256:preview.candidateSha256,pegManifestCommit:'c'.repeat(40)};
+ const out=engine.advance(state,response({workflow_runs:[]}),now);
+ assert.equal(out.state.stage,'checkpoint');assert.equal(out.state.nextStage,'dispatch');
+ const saved=JSON.parse(Buffer.from(out.op.body.content,'base64').toString());assert.equal(saved.dispatchIntent,true);assert.equal(saved.pegFinalReady,true);
+});
 test('rejects mismatched prepare artifact, preview or manifest',()=>{
  const state={...base,stage:'pegArtifactList',pegPrepareRunId:'123',pegPrepareRunAttempt:1,pegPrepareHeadSha:run.head_sha};
  const bad=engine.advance(state,response({total_count:1,artifacts:[{...artifact,workflow_run:{...artifact.workflow_run,id:124}}]}),now);
