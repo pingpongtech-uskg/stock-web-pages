@@ -1,12 +1,12 @@
 {
   "marketDate": "2026-11-03",
-  "runId": "enriched-20261104-124116-1cc5f4f45c",
-  "requestId": "stockscreener:20261103:unified-peg-v3-20261104",
-  "sourceGitCommit": "eaad491cedc3b484042a0a5da4cacad7a2551e94",
-  "actionsRunId": "41774629177",
-  "prepareRunId": "41773892523",
+  "runId": "enriched-20261104-132917-92b297d96d",
+  "requestId": "stockscreener:20261103:manual-visible-peg-20261104-1318",
+  "sourceGitCommit": "c8b632b440bcb2712411ab7ff7412e76baee063b",
+  "actionsRunId": "41779456684",
+  "prepareRunId": "41778385811",
   "prepareRunAttempt": 1,
-  "candidateSha256": "1de36a5606c140854ebf2f523ef6eafb99c2cad0e4014bd02e35c2e7dc085557",
+  "candidateSha256": "d3337e303e9c83838d6acc6e29b11c64dde8b029731e7480593a160c9b22b5b5",
   "counts": {
     "needs_review": 89,
     "available": 10,

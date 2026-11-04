@@ -2,9 +2,9 @@
   "schemaVersion": "1.1",
   "strategyVersion": "quality-growth-v1",
   "formulaVersion": "lohas-linear-3.5y-research-v1",
-  "runId": "enriched-20261104-124116-1cc5f4f45c",
+  "runId": "enriched-20261104-132917-92b297d96d",
   "marketDate": "2026-11-03",
-  "generatedAt": "2026-11-04T04:41:15+00:00",
+  "generatedAt": "2026-11-04T05:29:16+00:00",
   "nextExpectedUpdateAt": "2026-11-04T11:30:00+00:00",
   "freshness": "current",
   "statusMessage": "沿用已取得來源快取重算 100 檔；發布日期為 2026-11-03，個股行情以實際報價日期為準，未再次呼叫外部來源。",
@@ -1496,7 +1496,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.01384072498186933,
+      "slope": 0.013840724714478326,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -1517,7 +1517,7 @@
       "sourceUniverseNetLots": 9874.0,
       "sourceUniverseNetShares": 10685140.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 4.350368555502046
+      "zScore": 4.350368537366852
     },
     {
       "adjustedChangePct": -0.030567636124517385,
@@ -2899,7 +2899,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.028988680499212056,
+      "slope": 0.02898868040796667,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -2920,7 +2920,7 @@
       "sourceUniverseNetLots": 7980.0,
       "sourceUniverseNetShares": 16949795.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.5105298846003063
+      "zScore": 2.5105298882561913
     },
     {
       "adjustedChangePct": -0.037277134661594005,
@@ -4276,7 +4276,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.012377682608466077,
+      "slope": 0.012377682608335633,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -4297,7 +4297,7 @@
       "sourceUniverseNetLots": 7592.0,
       "sourceUniverseNetShares": 5191757.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.9061183128881565
+      "zScore": 3.906118312702588
     },
     {
       "adjustedChangePct": -0.02669402909023858,
@@ -5676,7 +5676,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.022418221172981694,
+      "slope": 0.022418221042295714,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -5697,7 +5697,7 @@
       "sourceUniverseNetLots": 1514.0,
       "sourceUniverseNetShares": 23995060.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.604795418144662
+      "zScore": 3.604795424358149
     },
     {
       "adjustedChangePct": -0.020440251572327043,
@@ -7083,7 +7083,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.18600066569475085,
+      "slope": 0.18600066565323248,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -7104,7 +7104,7 @@
       "sourceUniverseNetLots": 957.0,
       "sourceUniverseNetShares": 7336129.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.5923735550450029
+      "zScore": -0.5923735531506382
     },
     {
       "adjustedChangePct": -0.014234861676160308,
@@ -8429,7 +8429,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.012880979954366796,
+      "slope": -0.012880980014892686,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -8450,7 +8450,7 @@
       "sourceUniverseNetLots": 410.0,
       "sourceUniverseNetShares": 11119767.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.5073785580363297
+      "zScore": 2.5073785561367803
     },
     {
       "adjustedChangePct": -0.09966777408637874,
@@ -9831,7 +9831,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.11821422236886885,
+      "slope": 0.11821422155504907,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -9852,7 +9852,7 @@
       "sourceUniverseNetLots": 195.0,
       "sourceUniverseNetShares": 11263463.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.948821151923418
+      "zScore": 2.948821152370075
     },
     {
       "adjustedChangePct": -0.1,
@@ -11148,7 +11148,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.713842148165076,
+      "slope": 0.7138421484287214,
       "sourceRefs": [
         "FinMind:TaiwanStockInfo",
         "FinMind:TaiwanStockPrice",
@@ -11198,7 +11198,7 @@
           "FinMind:TaiwanStockFinancialStatements"
         ]
       },
-      "zScore": 1.6192840192940317
+      "zScore": 1.6192840192787024
     },
     {
       "adjustedChangePct": -0.06341465895738059,
@@ -12382,7 +12382,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.008941619368656391,
+      "slope": 0.008941619453295736,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -12394,7 +12394,7 @@
       ],
       "sourceUniverseNetShares": 15147359.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.7286744536165222
+      "zScore": 1.7286744509182546
     },
     {
       "adjustedChangePct": -0.017421602324333527,
@@ -13493,7 +13493,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.013280259945608481,
+      "slope": -0.013280260831899062,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -13505,7 +13505,7 @@
       ],
       "sourceUniverseNetShares": 1833710.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.23495442323093454
+      "zScore": 0.23495446657086572
     },
     {
       "adjustedChangePct": -0.08536585365853659,
@@ -14604,7 +14604,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.37689917723222466,
+      "slope": 0.3768991777692056,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "TWSE OpenAPI",
@@ -14616,7 +14616,7 @@
       ],
       "sourceUniverseNetShares": 2858973.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.636504251474259
+      "zScore": 2.6365042509945464
     },
     {
       "adjustedChangePct": -0.0989399293286219,
@@ -15718,7 +15718,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.5093776793787651,
+      "slope": 0.5093776793135806,
       "sourceRefs": [
         "https://www.twse.com.tw/zh/trading/foreign/twt44u.html + https://www.tpex.org.tw/zh-tw/mainboard/trading/major-institutional/domestic-inst/day.html",
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
@@ -15730,7 +15730,7 @@
       ],
       "sourceUniverseNetShares": 2115464.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.42793483771569235
+      "zScore": 0.4279348378593309
     },
     {
       "adjustedChangePct": -0.09268292682926829,
@@ -19068,7 +19068,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.9026428803209844,
+      "slope": 0.9026428812091943,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -19080,7 +19080,7 @@
       ],
       "sourceUniverseNetShares": 4056455.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.2932908692210283
+      "zScore": 1.293290868935647
     },
     {
       "adjustedChangePct": -0.09263657957244656,
@@ -20158,7 +20158,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.19606178442115313,
+      "slope": 0.19606178445756556,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -20169,7 +20169,7 @@
       ],
       "sourceUniverseNetShares": 4259687.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.32201697657597167
+      "zScore": 0.3220169767951441
     },
     {
       "adjustedChangePct": -0.0997191011235955,
@@ -21186,7 +21186,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.2292546588971673,
+      "slope": 0.2292546595080912,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -21197,7 +21197,7 @@
       ],
       "sourceUniverseNetShares": 11575038.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.080895413735061
+      "zScore": 1.0808954129773378
     },
     {
       "adjustedChangePct": -0.02586206896551724,
@@ -22215,7 +22215,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.0728594015803616,
+      "slope": 0.07285940215450033,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -22226,7 +22226,7 @@
       ],
       "sourceUniverseNetShares": 18181488.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.374888631897323
+      "zScore": 2.374888630631431
     },
     {
       "adjustedChangePct": -0.09239130434782608,
@@ -23242,7 +23242,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.061455582314153136,
+      "slope": 0.061455582320582146,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -23253,7 +23253,7 @@
       ],
       "sourceUniverseNetShares": 1030944.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.6535268124047607
+      "zScore": 0.6535268115926673
     },
     {
       "adjustedChangePct": -0.04266387657878255,
@@ -24297,7 +24297,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.02571434426474827,
+      "slope": 0.02571434439869534,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -24308,7 +24308,7 @@
       ],
       "sourceUniverseNetShares": 3162831.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.8126746403912573
+      "zScore": -0.8126746449033483
     },
     {
       "adjustedChangePct": -0.020653992766913588,
@@ -25337,7 +25337,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.0028456247682325064,
+      "slope": 0.002845624836622289,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -25348,7 +25348,7 @@
       ],
       "sourceUniverseNetShares": 12635068.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 4.242810742448132
+      "zScore": 4.242810613597303
     },
     {
       "adjustedChangePct": -0.09921671018276762,
@@ -26362,7 +26362,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.12741079256075105,
+      "slope": 0.12741079216148146,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -26402,7 +26402,7 @@
           "FinMind:TaiwanStockFinancialStatements"
         ]
       },
-      "zScore": 0.8581696562920923
+      "zScore": 0.8581696586840286
     },
     {
       "adjustedChangePct": -0.09034907597535935,
@@ -27418,7 +27418,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.42885673086128584,
+      "slope": 0.4288567318706967,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -27429,7 +27429,7 @@
       ],
       "sourceUniverseNetShares": 4939111.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8162627748714184
+      "zScore": 0.8162627735508424
     },
     {
       "adjustedChangePct": -0.09565217391304348,
@@ -28447,7 +28447,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.37871168249617315,
+      "slope": 0.37871168138523986,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -28458,7 +28458,7 @@
       ],
       "sourceUniverseNetShares": 1276143.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.459912385528555
+      "zScore": 2.4599123727400256
     },
     {
       "adjustedChangePct": -0.00881057268722467,
@@ -29475,7 +29475,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.04408793668801914,
+      "slope": 0.04408793763824578,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -29486,7 +29486,7 @@
       ],
       "sourceUniverseNetShares": 3975093.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.835367647395377
+      "zScore": 2.835367784860662
     },
     {
       "adjustedChangePct": -0.1,
@@ -30497,7 +30497,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.2746253518863976,
+      "slope": 0.274625351685067,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -30508,7 +30508,7 @@
       ],
       "sourceUniverseNetShares": 702000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.897063755954973
+      "zScore": 0.8970637564247591
     },
     {
       "adjustedChangePct": -0.028021015761821366,
@@ -31517,7 +31517,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.0768179675260413,
+      "slope": 0.07681796899476312,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -31557,7 +31557,7 @@
           "FinMind:TaiwanStockFinancialStatements"
         ]
       },
-      "zScore": 1.2770123829753224
+      "zScore": 1.2770123707186947
     },
     {
       "adjustedChangePct": -0.015021459227467811,
@@ -32597,7 +32597,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 2.3508373538768246,
+      "slope": 2.350837353856848,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -32608,7 +32608,7 @@
       ],
       "sourceUniverseNetShares": 19251840.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.4658923215140167
+      "zScore": 0.46589234273664193
     },
     {
       "adjustedChangePct": -0.0751963755665853,
@@ -33626,7 +33626,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.035549549809051194,
+      "slope": 0.035549549874813464,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -33637,7 +33637,7 @@
       ],
       "sourceUniverseNetShares": 1042452.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.631615844891099
+      "zScore": 0.6316158449902244
     },
     {
       "adjustedChangePct": -0.029143897996357013,
@@ -34676,7 +34676,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.17376393841205998,
+      "slope": 0.17376393963040437,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -34687,7 +34687,7 @@
       ],
       "sourceUniverseNetShares": 5261156.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.8798265680014457
+      "zScore": 1.8798265276284623
     },
     {
       "adjustedChangePct": -0.021834061499084432,
@@ -35700,7 +35700,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.005169319915586813,
+      "slope": -0.005169319587520841,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -35711,7 +35711,7 @@
       ],
       "sourceUniverseNetShares": 879000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.1889704775114955
+      "zScore": 2.1889704621326778
     },
     {
       "adjustedChangePct": -0.09933774834437085,
@@ -36728,7 +36728,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 1.1567647986929896,
+      "slope": 1.1567647968190724,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -36739,7 +36739,7 @@
       ],
       "sourceUniverseNetShares": 1689648.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.4534607066700926
+      "zScore": 1.4534607082171325
     },
     {
       "adjustedChangePct": -0.0821205212795875,
@@ -38810,7 +38810,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.8638926914235607,
+      "slope": 0.8638926915921686,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -38821,7 +38821,7 @@
       ],
       "sourceUniverseNetShares": 772000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.379359723666255
+      "zScore": 1.379359723452304
     },
     {
       "adjustedChangePct": 0.0,
@@ -39838,7 +39838,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.03847604598294571,
+      "slope": 0.03847604669360313,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -39849,7 +39849,7 @@
       ],
       "sourceUniverseNetShares": 2614030.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.4186406091813213
+      "zScore": 3.4186405674215194
     },
     {
       "adjustedChangePct": 0.06279428787118516,
@@ -41896,7 +41896,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.11670318697725811,
+      "slope": 0.11670318651541278,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -41936,7 +41936,7 @@
           "FinMind:TaiwanStockFinancialStatements"
         ]
       },
-      "zScore": 2.1821597700625808
+      "zScore": 2.1821597793090266
     },
     {
       "adjustedChangePct": -0.09749303621169916,
@@ -42952,7 +42952,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.06501160995606362,
+      "slope": 0.0650116095550796,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -42963,7 +42963,7 @@
       ],
       "sourceUniverseNetShares": 1086000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.5992467679163435
+      "zScore": 0.5992467699059929
     },
     {
       "adjustedChangePct": -0.021912350597609563,
@@ -44006,7 +44006,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.20085784760511402,
+      "slope": 0.20085784708378637,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -44017,7 +44017,7 @@
       ],
       "sourceUniverseNetShares": 6231641.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.40665541376880815
+      "zScore": -0.406655411607365
     },
     {
       "adjustedChangePct": -0.019390498000823805,
@@ -45031,7 +45031,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.007837904024621218,
+      "slope": 0.007837903876968236,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -45042,7 +45042,7 @@
       ],
       "sourceUniverseNetShares": 2755344.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.438168109275496
+      "zScore": 1.438168111150039
     },
     {
       "adjustedChangePct": -0.021563322640527387,
@@ -46082,7 +46082,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.011459996702728608,
+      "slope": 0.011459996813261032,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -46093,7 +46093,7 @@
       ],
       "sourceUniverseNetShares": 1708997.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -2.396104739926107
+      "zScore": -2.3961047553557004
     },
     {
       "adjustedChangePct": -0.09019607843137255,
@@ -47104,7 +47104,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.04951013265690932,
+      "slope": 0.04951013276724608,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -47115,7 +47115,7 @@
       ],
       "sourceUniverseNetShares": 1134000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.2782731126718074
+      "zScore": 1.2782731091074284
     },
     {
       "adjustedChangePct": -0.06607929515418502,
@@ -48128,7 +48128,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.3944385806535748,
+      "slope": 0.39443858052465913,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -48139,7 +48139,7 @@
       ],
       "sourceUniverseNetShares": 1006311.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.051616713218843153
+      "zScore": -0.05161671318002891
     },
     {
       "adjustedChangePct": -0.003134796238244514,
@@ -49156,7 +49156,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.046970838017409026,
+      "slope": 0.0469708352244225,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -49167,7 +49167,7 @@
       ],
       "sourceUniverseNetShares": 8287132.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 5.370937347567215
+      "zScore": 5.370936731175095
     },
     {
       "adjustedChangePct": -0.07065213391370637,
@@ -50185,7 +50185,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.013911252605179317,
+      "slope": -0.013911253161819967,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -50196,7 +50196,7 @@
       ],
       "sourceUniverseNetShares": 7837622.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.016868749406519
+      "zScore": 2.016868744456931
     },
     {
       "adjustedChangePct": -0.04084967320261438,
@@ -51239,7 +51239,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 3.120405192776914,
+      "slope": 3.120405195798438,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -51250,7 +51250,7 @@
       ],
       "sourceUniverseNetShares": 3780299.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.2321180265839122
+      "zScore": 1.232118025899144
     },
     {
       "adjustedChangePct": -0.07810110337630485,
@@ -53317,7 +53317,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.0036704416970436225,
+      "slope": 0.003670441742801418,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -53328,7 +53328,7 @@
       ],
       "sourceUniverseNetShares": 1867419.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.08859406718082254
+      "zScore": -0.08859409239952215
     },
     {
       "adjustedChangePct": -0.06365503080082136,
@@ -54348,7 +54348,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.1714451493465775,
+      "slope": 0.1714451504900845,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -54388,7 +54388,7 @@
           "FinMind:TaiwanStockFinancialStatements"
         ]
       },
-      "zScore": 0.6469180955448384
+      "zScore": 0.6469180955044787
     },
     {
       "adjustedChangePct": -0.04265402843601896,
@@ -55404,7 +55404,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.04879667493964204,
+      "slope": 0.04879667471244634,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -55415,7 +55415,7 @@
       ],
       "sourceUniverseNetShares": 3932977.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.5210737347101686
+      "zScore": 0.5210737344371604
     },
     {
       "adjustedChangePct": -0.08605341246290801,
@@ -56454,7 +56454,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.5705943613890299,
+      "slope": 0.5705943608460113,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -56465,7 +56465,7 @@
       ],
       "sourceUniverseNetShares": 30265692.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.317201610422349
+      "zScore": 1.3172016098343708
     },
     {
       "adjustedChangePct": -0.09930715935334873,
@@ -59666,7 +59666,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.010222687952010888,
+      "slope": -0.01022268789744814,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -59677,7 +59677,7 @@
       ],
       "sourceUniverseNetShares": 18757208.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.698808916569009
+      "zScore": 1.6988088896490996
     },
     {
       "adjustedChangePct": -0.027548209366391185,
@@ -60720,7 +60720,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.09866736055551459,
+      "slope": 0.0986673596451292,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -60731,7 +60731,7 @@
       ],
       "sourceUniverseNetShares": 4975480.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.1177451391505386
+      "zScore": 1.1177451465008201
     },
     {
       "adjustedChangePct": -0.01483679491633305,
@@ -62772,7 +62772,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.001932507289215853,
+      "slope": 0.001932507316101237,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -62783,7 +62783,7 @@
       ],
       "sourceUniverseNetShares": 2071138.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.9639142301965369
+      "zScore": 1.9639142354465393
     },
     {
       "adjustedChangePct": -0.05901639344262295,
@@ -63800,7 +63800,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.02961190892409651,
+      "slope": -0.029611909456903226,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -63811,7 +63811,7 @@
       ],
       "sourceUniverseNetShares": 2356564.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -1.2406261022984342
+      "zScore": -1.2406260985118418
     },
     {
       "adjustedChangePct": -0.06174494596135696,
@@ -65852,7 +65852,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.8500444376982849,
+      "slope": 0.8500444348310572,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -65863,7 +65863,7 @@
       ],
       "sourceUniverseNetShares": 7633638.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.0445010462131952
+      "zScore": 1.044501047618953
     },
     {
       "adjustedChangePct": -0.0743073047858942,
@@ -66881,7 +66881,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 3.556302170844625,
+      "slope": 3.556302172937092,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -66892,7 +66892,7 @@
       ],
       "sourceUniverseNetShares": 5348022.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8322581021695771
+      "zScore": 0.8322580984867397
     },
     {
       "adjustedChangePct": -0.036818851251840944,
@@ -67935,7 +67935,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.08529488499539808,
+      "slope": 0.08529488525203681,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -67946,7 +67946,7 @@
       ],
       "sourceUniverseNetShares": 1497038.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.6945093723302797
+      "zScore": 0.6945093726546094
     },
     {
       "adjustedChangePct": -0.03280421665736607,
@@ -68962,7 +68962,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.03177681074046088,
+      "slope": 0.03177681055627434,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -68973,7 +68973,7 @@
       ],
       "sourceUniverseNetShares": 3108638.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.4153650473737382
+      "zScore": 1.4153650628178016
     },
     {
       "adjustedChangePct": -0.09953703703703703,
@@ -69990,7 +69990,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.6787505332176528,
+      "slope": 0.678750533805395,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -70001,7 +70001,7 @@
       ],
       "sourceUniverseNetShares": 2984972.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.467928464370745
+      "zScore": 1.4679284631591736
     },
     {
       "adjustedChangePct": -0.07368421052631578,
@@ -71014,7 +71014,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.008921753405617025,
+      "slope": 0.008921753258252885,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -71025,7 +71025,7 @@
       ],
       "sourceUniverseNetShares": 1012000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.9015918041776114
+      "zScore": 2.9015918052343888
     },
     {
       "adjustedChangePct": -0.05755395683453238,
@@ -73066,7 +73066,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.029046372250550546,
+      "slope": -0.02904637203567246,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -73077,7 +73077,7 @@
       ],
       "sourceUniverseNetShares": 10605735.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.7100479580641008
+      "zScore": 1.7100479496834018
     },
     {
       "adjustedChangePct": -0.08085106382978724,
@@ -74094,7 +74094,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 2.1726648906619053,
+      "slope": 2.172664893315056,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -74105,7 +74105,7 @@
       ],
       "sourceUniverseNetShares": 2662030.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.1148621247117547
+      "zScore": 1.1148621226771638
     },
     {
       "adjustedChangePct": -0.03612167300380228,
@@ -75145,7 +75145,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.30012969551486807,
+      "slope": 0.30012969570807385,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -75156,7 +75156,7 @@
       ],
       "sourceUniverseNetShares": 6238460.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.3860326788115698
+      "zScore": -0.3860326773562882
     },
     {
       "adjustedChangePct": -0.06726149622512011,
@@ -76170,7 +76170,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 4.344730827198865,
+      "slope": 4.34473082378914,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -76210,7 +76210,7 @@
           "FinMind:TaiwanStockFinancialStatements"
         ]
       },
-      "zScore": 2.317305977379572
+      "zScore": 2.3173059756338166
     },
     {
       "adjustedChangePct": -0.05688622754491018,
@@ -77221,7 +77221,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.0200072437567363,
+      "slope": 0.020007245979646475,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -77232,7 +77232,7 @@
       ],
       "sourceUniverseNetShares": 1628949.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.9472382744596121
+      "zScore": 0.9472382821505904
     },
     {
       "adjustedChangePct": -0.09899888765294772,
@@ -78246,7 +78246,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.2976864595990708,
+      "slope": 0.2976864611922732,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -78286,7 +78286,7 @@
           "FinMind:TaiwanStockFinancialStatements"
         ]
       },
-      "zScore": 1.1546464559799698
+      "zScore": 1.1546464547441926
     },
     {
       "adjustedChangePct": -0.06588735387885228,
@@ -79300,7 +79300,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 5.5587612315569634,
+      "slope": 5.558761232210375,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -79340,7 +79340,7 @@
           "FinMind:TaiwanStockFinancialStatements"
         ]
       },
-      "zScore": 0.5741429772566238
+      "zScore": 0.5741429772050084
     },
     {
       "adjustedChangePct": -0.07586206896551724,
@@ -80371,7 +80371,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.10484431731348119,
+      "slope": 0.10484431811011967,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -80382,7 +80382,7 @@
       ],
       "sourceUniverseNetShares": 1804716.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.5367720426587392
+      "zScore": -0.5367720545761729
     },
     {
       "adjustedChangePct": -0.09351748740764763,
@@ -82419,7 +82419,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.011606481639885166,
+      "slope": 0.011606481442859234,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -82430,7 +82430,7 @@
       ],
       "sourceUniverseNetShares": 700000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.8371633829984428
+      "zScore": 0.8371633873720912
     },
     {
       "adjustedChangePct": -0.010791385004946757,
@@ -83462,7 +83462,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.02160123856421199,
+      "slope": 0.021601238667113457,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -83473,7 +83473,7 @@
       ],
       "sourceUniverseNetShares": 33014982.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.574674126316823
+      "zScore": 2.574674125448668
     },
     {
       "adjustedChangePct": -0.03896103896103896,
@@ -84513,7 +84513,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.07450392284628822,
+      "slope": 0.07450392270093664,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -84524,7 +84524,7 @@
       ],
       "sourceUniverseNetShares": 2576621.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -1.3193424092618806
+      "zScore": -1.3193424313153879
     },
     {
       "adjustedChangePct": -0.022364217252396165,
@@ -85535,7 +85535,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.05730112875050681,
+      "slope": -0.057301129755445275,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -85546,7 +85546,7 @@
       ],
       "sourceUniverseNetShares": 1505842.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.5802998275149955
+      "zScore": 1.5802998307669058
     },
     {
       "adjustedChangePct": -0.03347280334728033,
@@ -86559,7 +86559,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.06385243627180007,
+      "slope": 0.06385243624723938,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -86570,7 +86570,7 @@
       ],
       "sourceUniverseNetShares": 1301630.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.3911829985119204
+      "zScore": 1.3911829991141398
     },
     {
       "adjustedChangePct": -0.010666707356770833,
@@ -87589,7 +87589,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.054993542846587765,
+      "slope": 0.0549935430499309,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -87600,7 +87600,7 @@
       ],
       "sourceUniverseNetShares": 17670234.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.753540316925342
+      "zScore": 2.7535403368139666
     },
     {
       "adjustedChangePct": -0.03130756513490294,
@@ -88611,7 +88611,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.005032626912140923,
+      "slope": 0.0050326270783635,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -88622,7 +88622,7 @@
       ],
       "sourceUniverseNetShares": 2748450.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.505845759958815
+      "zScore": 3.505845621135187
     },
     {
       "adjustedChangePct": 0.0032502211532436996,
@@ -89631,7 +89631,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.0007865430461304111,
+      "slope": 0.0007865423732271313,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -89642,7 +89642,7 @@
       ],
       "sourceUniverseNetShares": 1787138.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.165473657197674
+      "zScore": 2.165473674994176
     },
     {
       "adjustedChangePct": -0.034482758620689655,
@@ -90652,7 +90652,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.09608624234196457,
+      "slope": 0.09608624272196578,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -90663,7 +90663,7 @@
       ],
       "sourceUniverseNetShares": 7975875.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.7272972163370124
+      "zScore": 2.727297213622175
     },
     {
       "adjustedChangePct": -0.021834061499084432,
@@ -91679,7 +91679,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.026148848558019855,
+      "slope": 0.026148848645156264,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -91690,7 +91690,7 @@
       ],
       "sourceUniverseNetShares": 1214704.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.4707733275378496
+      "zScore": 2.4707733461966943
     },
     {
       "adjustedChangePct": -0.046703296703296704,
@@ -93788,7 +93788,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 0.0539538204919889,
+      "slope": 0.053953823019764695,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -93799,7 +93799,7 @@
       ],
       "sourceUniverseNetShares": 1009736.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -1.3433878286276204
+      "zScore": -1.3433878689824454
     },
     {
       "adjustedChangePct": -0.03743845371189963,
@@ -95833,7 +95833,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.45992747019446184,
+      "slope": 0.45992746893519537,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -95844,7 +95844,7 @@
       ],
       "sourceUniverseNetShares": 695953.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.849641998080971
+      "zScore": 0.8496420001167696
     },
     {
       "adjustedChangePct": -0.01108869463670468,
@@ -96843,7 +96843,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.027774408607253918,
+      "slope": 0.027774408774594583,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -96854,7 +96854,7 @@
       ],
       "sourceUniverseNetShares": 4214196.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.6274558091217575
+      "zScore": 3.6274557920572392
     },
     {
       "adjustedChangePct": -0.032167874849759616,
@@ -97853,7 +97853,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.050196948352191816,
+      "slope": 0.050196948582741784,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -97864,7 +97864,7 @@
       ],
       "sourceUniverseNetShares": 2551037.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.0744812088395514
+      "zScore": 2.0744812087374527
     },
     {
       "adjustedChangePct": -0.06914889839451965,
@@ -98865,7 +98865,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.004986331385295589,
+      "slope": -0.00498633140366952,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -98876,7 +98876,7 @@
       ],
       "sourceUniverseNetShares": 1965037.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.9208204384285626
+      "zScore": 0.9208204306117133
     },
     {
       "adjustedChangePct": -0.060191540598138284,
@@ -99879,7 +99879,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.03862847788270143,
+      "slope": -0.03862847810412033,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -99890,7 +99890,7 @@
       ],
       "sourceUniverseNetShares": 1162582.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 2.2316931877073505
+      "zScore": 2.2316931827480717
     },
     {
       "adjustedChangePct": 0.0,
@@ -100889,7 +100889,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": -0.07280899930355549,
+      "slope": -0.07280899898586911,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -100900,7 +100900,7 @@
       ],
       "sourceUniverseNetShares": 1002956.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.3367778218104343
+      "zScore": 1.336777808914394
     },
     {
       "adjustedChangePct": -0.040268419003798184,
@@ -101902,7 +101902,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.013505745767328603,
+      "slope": 0.01350574595606204,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -101913,7 +101913,7 @@
       ],
       "sourceUniverseNetShares": 666284.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.6338439987306175
+      "zScore": 0.633843999092256
     },
     {
       "adjustedChangePct": -0.00975609756097561,
@@ -102914,7 +102914,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.011429841832161771,
+      "slope": 0.011429841068283311,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -102925,7 +102925,7 @@
       ],
       "sourceUniverseNetShares": 656710.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 1.7355271798602385
+      "zScore": 1.7355272088298028
     },
     {
       "adjustedChangePct": -0.09937888198757763,
@@ -103924,7 +103924,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 2.7024093850476376,
+      "slope": 2.7024093860623406,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -103935,7 +103935,7 @@
       ],
       "sourceUniverseNetShares": 651256.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 0.7083772376030695
+      "zScore": 0.708377237366042
     },
     {
       "adjustedChangePct": -0.09989258861439312,
@@ -104937,7 +104937,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 6.6389684843943755,
+      "slope": 6.638968484918759,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -104948,7 +104948,7 @@
       ],
       "sourceUniverseNetShares": 658172.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.2925462458213782
+      "zScore": -0.29254624587050654
     },
     {
       "adjustedChangePct": -0.05572755417956656,
@@ -104996,6 +104996,7 @@
         "availableAt": null
       },
       "code": "3605",
+      "dataFreshness": "current",
       "dataStatus": "pass",
       "entryReasons": [
         "投信關注：十日淨買超 2,163,000 股，該股成交占比 2.77%",
@@ -105004,6 +105005,7 @@
         "價格描述：Adj Close 3.5 年 Z +3.04；未形成低位條件"
       ],
       "fiveLineStatus": "pass",
+      "freshnessWarnings": [],
       "growthHealthEligible": true,
       "growthHealthPassCount": 4,
       "growthHealthStatus": "pass",
@@ -105949,7 +105951,7 @@
       ],
       "sector": "",
       "signalState": "值得研究",
-      "slope": 0.09856994518032809,
+      "slope": 0.09856994495417594,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -105960,9 +105962,7 @@
       ],
       "sourceUniverseNetShares": 2163000.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": 3.0371480432080364,
-      "dataFreshness": "current",
-      "freshnessWarnings": []
+      "zScore": 3.037148047435679
     },
     {
       "adjustedChangePct": -0.03076923076923077,
@@ -106010,6 +106010,7 @@
         "availableAt": null
       },
       "code": "3491",
+      "dataFreshness": "current",
       "dataStatus": "pass",
       "entryReasons": [
         "投信關注：十日淨買超 724,202 股，該股成交占比 6.84%",
@@ -106018,6 +106019,7 @@
         "低位代理：Adj Close 3.5 年 Z -0.07、斜率 +1.7157；正式八週與品質條件仍待核對"
       ],
       "fiveLineStatus": "pass",
+      "freshnessWarnings": [],
       "growthHealthEligible": true,
       "growthHealthPassCount": 5,
       "growthHealthStatus": "pass",
@@ -106962,7 +106964,7 @@
       ],
       "sector": "",
       "signalState": "低位觀察",
-      "slope": 1.7156721762542255,
+      "slope": 1.7156721775600043,
       "sourceRefs": [
         "YahooFinance:chart.adjclose (yfinance-compatible fallback)",
         "yfinance:Ticker.financials/cashflow/balance_sheet",
@@ -106973,9 +106975,7 @@
       ],
       "sourceUniverseNetShares": 724202.0,
       "ttmOperatingProfitGrowth": null,
-      "zScore": -0.07188621727139369,
-      "dataFreshness": "current",
-      "freshnessWarnings": []
+      "zScore": -0.07188621826397396
     }
   ],
   "rankings": {
@@ -107129,8 +107129,8 @@
         "valuePrice066": null,
         "currentPrice": 113.0,
         "priceBasis": "adjusted",
-        "zScore": 2.374888631897323,
-        "slope": 0.0728594015803616,
+        "zScore": 2.374888630631431,
+        "slope": 0.07285940215450033,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -107235,8 +107235,8 @@
         "valuePrice066": null,
         "currentPrice": 74.19999694824219,
         "priceBasis": "adjusted",
-        "zScore": 2.753540316925342,
-        "slope": 0.054993542846587765,
+        "zScore": 2.7535403368139666,
+        "slope": 0.0549935430499309,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -107403,8 +107403,8 @@
         "growthValuationStatus": "available",
         "growthValuationReason": "可用的總報酬本益比（本站整理）",
         "priceBasis": "adjusted",
-        "zScore": 1.1177451391505386,
-        "slope": 0.09866736055551459,
+        "zScore": 1.1177451465008201,
+        "slope": 0.0986673596451292,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -107595,8 +107595,8 @@
         "growthValuationStatus": "available",
         "growthValuationReason": "可用的總報酬本益比（本站整理）",
         "priceBasis": "adjusted",
-        "zScore": 0.6945093723302797,
-        "slope": 0.08529488499539808,
+        "zScore": 0.6945093726546094,
+        "slope": 0.08529488525203681,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -107787,8 +107787,8 @@
         "growthValuationStatus": "available",
         "growthValuationReason": "可用的總報酬本益比（本站整理）",
         "priceBasis": "adjusted",
-        "zScore": 1.2321180265839122,
-        "slope": 3.120405192776914,
+        "zScore": 1.232118025899144,
+        "slope": 3.120405195798438,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -107883,7 +107883,7 @@
         "code": "2812",
         "name": "台中銀",
         "sector": "",
-        "value": -2.396104739926107,
+        "value": -2.3961047553557004,
         "valueLabel": "",
         "status": "unknown",
         "growthHealth": {
@@ -107926,8 +107926,8 @@
         "valuePrice066": null,
         "currentPrice": 18.149999618530273,
         "priceBasis": "adjusted",
-        "zScore": -2.396104739926107,
-        "slope": 0.011459996702728608,
+        "zScore": -2.3961047553557004,
+        "slope": 0.011459996813261032,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -108020,7 +108020,7 @@
         "code": "2474",
         "name": "可成",
         "sector": "",
-        "value": -1.3433878286276204,
+        "value": -1.3433878689824454,
         "valueLabel": "",
         "status": "fail",
         "growthHealth": {
@@ -108063,8 +108063,8 @@
         "valuePrice066": null,
         "currentPrice": 187.5,
         "priceBasis": "adjusted",
-        "zScore": -1.3433878286276204,
-        "slope": 0.0539538204919889,
+        "zScore": -1.3433878689824454,
+        "slope": 0.053953823019764695,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -108157,7 +108157,7 @@
         "code": "3706",
         "name": "神達",
         "sector": "",
-        "value": -1.3193424092618806,
+        "value": -1.3193424313153879,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -108200,8 +108200,8 @@
         "valuePrice066": null,
         "currentPrice": 74.0,
         "priceBasis": "adjusted",
-        "zScore": -1.3193424092618806,
-        "slope": 0.07450392284628822,
+        "zScore": -1.3193424313153879,
+        "slope": 0.07450392270093664,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -108431,7 +108431,7 @@
         "code": "8070",
         "name": "長華*",
         "sector": "",
-        "value": -0.8126746403912573,
+        "value": -0.8126746449033483,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -108474,8 +108474,8 @@
         "valuePrice066": null,
         "currentPrice": 46.0,
         "priceBasis": "adjusted",
-        "zScore": -0.8126746403912573,
-        "slope": 0.02571434426474827,
+        "zScore": -0.8126746449033483,
+        "slope": 0.02571434439869534,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -108568,7 +108568,7 @@
         "code": "2382",
         "name": "廣達",
         "sector": "",
-        "value": -0.5923735550450029,
+        "value": -0.5923735531506382,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -108611,8 +108611,8 @@
         "valuePrice066": null,
         "currentPrice": 311.5,
         "priceBasis": "adjusted",
-        "zScore": -0.5923735550450029,
-        "slope": 0.18600066569475085,
+        "zScore": -0.5923735531506382,
+        "slope": 0.18600066565323248,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -108849,7 +108849,7 @@
         "code": "5347",
         "name": "世界",
         "sector": "",
-        "value": -0.5367720426587392,
+        "value": -0.5367720545761729,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -108892,8 +108892,8 @@
         "valuePrice066": null,
         "currentPrice": 134.0,
         "priceBasis": "adjusted",
-        "zScore": -0.5367720426587392,
-        "slope": 0.10484431731348119,
+        "zScore": -0.5367720545761729,
+        "slope": 0.10484431811011967,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -108975,7 +108975,7 @@
         "code": "2317",
         "name": "鴻海",
         "sector": "",
-        "value": -0.40665541376880815,
+        "value": -0.406655411607365,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -109018,8 +109018,8 @@
         "valuePrice066": null,
         "currentPrice": 245.5,
         "priceBasis": "adjusted",
-        "zScore": -0.40665541376880815,
-        "slope": 0.20085784760511402,
+        "zScore": -0.406655411607365,
+        "slope": 0.20085784708378637,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -109112,7 +109112,7 @@
         "code": "2449",
         "name": "京元電子",
         "sector": "",
-        "value": -0.3860326788115698,
+        "value": -0.3860326773562882,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -109155,8 +109155,8 @@
         "valuePrice066": null,
         "currentPrice": 253.5,
         "priceBasis": "adjusted",
-        "zScore": -0.3860326788115698,
-        "slope": 0.30012969551486807,
+        "zScore": -0.3860326773562882,
+        "slope": 0.30012969570807385,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -109386,7 +109386,7 @@
         "code": "6223",
         "name": "旺矽",
         "sector": "",
-        "value": -0.2925462458213782,
+        "value": -0.29254624587050654,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -109429,8 +109429,8 @@
         "valuePrice066": null,
         "currentPrice": 4190.0,
         "priceBasis": "adjusted",
-        "zScore": -0.2925462458213782,
-        "slope": 6.6389684843943755,
+        "zScore": -0.29254624587050654,
+        "slope": 6.638968484918759,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -109593,7 +109593,7 @@
         "code": "2845",
         "name": "遠東銀",
         "sector": "",
-        "value": -0.08859406718082254,
+        "value": -0.08859409239952215,
         "valueLabel": "",
         "status": "unknown",
         "growthHealth": {
@@ -109636,8 +109636,8 @@
         "valuePrice066": null,
         "currentPrice": 12.949999809265137,
         "priceBasis": "adjusted",
-        "zScore": -0.08859406718082254,
-        "slope": 0.0036704416970436225,
+        "zScore": -0.08859409239952215,
+        "slope": 0.003670441742801418,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -109704,7 +109704,7 @@
         "code": "3491",
         "name": "昇達科",
         "sector": "",
-        "value": -0.07188621727139369,
+        "value": -0.07188621826397396,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -109747,8 +109747,8 @@
         "valuePrice066": null,
         "currentPrice": 1260.0,
         "priceBasis": "adjusted",
-        "zScore": -0.07188621727139369,
-        "slope": 1.7156721762542255,
+        "zScore": -0.07188621826397396,
+        "slope": 1.7156721775600043,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
@@ -109800,7 +109800,7 @@
         "code": "3260",
         "name": "威剛",
         "sector": "",
-        "value": -0.051616713218843153,
+        "value": -0.05161671318002891,
         "valueLabel": "",
         "status": "pass",
         "growthHealth": {
@@ -109843,8 +109843,8 @@
         "valuePrice066": null,
         "currentPrice": 318.0,
         "priceBasis": "adjusted",
-        "zScore": -0.051616713218843153,
-        "slope": 0.3944385806535748,
+        "zScore": -0.05161671318002891,
+        "slope": 0.39443858052465913,
         "regressionStart": "2023-05-05",
         "regressionEnd": "2026-11-03",
         "regressionObservations": 850,
