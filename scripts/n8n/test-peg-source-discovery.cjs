@@ -7,6 +7,7 @@ const issuer = { AAA: { legalName: 'Alpha Corp', officialDomains: ['alpha.exampl
 const url = 'https://alpha.example/investors/q3-2026-results.pdf';
 const searxHit = { statusCode: 200, body: { results: [{ url, title: 'Q3 financial results' }] } };
 function cycle(s, hit = searxHit) { let p = plan(s, '2026-11-03T12:00:00Z'); assert.equal(p.action.provider, 'searx'); return apply(p.state, 'searx', hit, '2026-11-03T12:00:01Z'); }
+function queryFromAction(action) { return decodeURIComponent(action.url.split('?q=')[1].split('&')[0]); }
 
 test('Searx success needs no fallback and filters to normalized financial URLs', () => { const s = init({ latest: { marketDate: cfg.marketDate, stocks: [{ code: 'AAA', name: 'Alpha', pegReview: 'needs_review' }] }, issuers: issuer, config: cfg }, '2026-11-03T12:00:00Z'); const n = cycle(s); const done = plan(n, '2026-11-03T12:01:00Z'); assert.equal(done.state.manifest.stocks[0].results[0].provider, 'searx'); assert.equal(done.done, true); });
 test('failed Searx response falls back once to Brave', () => { let s = init({ latest: { marketDate: cfg.marketDate, stocks: [{ code: 'AAA', name: 'Alpha', pegReview: 'needs_review' }] }, issuers: issuer, config: cfg }, '2026-11-03T12:00:00Z'); let p = plan(s, '2026-11-03T12:00:00Z'); s = apply(p.state, 'searx', { statusCode: 500, body: {} }, '2026-11-03T12:00:01Z'); p = plan(s, '2026-11-03T12:00:02Z'); assert.equal(p.action.provider, 'brave'); s = apply(p.state, 'brave', { statusCode: 200, body: { web: { results: [{ url, title: 'Investor financial report' }] } } }, '2026-11-03T12:00:03Z'); assert.equal(plan(s, '2026-11-03T12:00:04Z').state.manifest.stocks[0].results[0].provider, 'brave'); });
@@ -137,8 +138,7 @@ test('search period uses the most recently disclosed nested quarter instead of c
   const latest = { marketDate: cfg.marketDate, stocks: [{ code: 'AAA', name: 'Alpha', pegReview: { status: 'needs_review', currentPeriod: '2025Q3–2026Q2' } }] };
   const s = init({ latest, issuers: issuer, config: cfg }, '2026-11-03T12:00:00Z');
   const p = plan(s, '2026-11-03T12:00:00Z');
-  assert.match(decodeURIComponent(p.action.url), /2026Q2/);
-  assert.doesNotMatch(decodeURIComponent(p.action.url), /2026Q3/);
+  assert.equal(queryFromAction(p.action), 'site:alpha.example (2026 OR 115) (Q2 OR 2Q26 OR 第二季 OR 第2季) (EPS OR 每股盈餘 OR earnings)');
 });
 test('each provider config/auth status code disables the provider for all remaining stocks', () => {
   for (const statusCode of [400, 401, 403, 422]) {
@@ -169,17 +169,15 @@ test('newest expected quarter takes priority over stale disclosed period for sou
   const state = init({ latest, issuers: issuer, config: { ...cfg, candidateSha256: 'a'.repeat(64) } }, '2026-11-03T12:00:00Z');
   assert.equal(state.stocks[0].expectedLatestQuarter, '2026Q3');
   const action = plan(state, '2026-11-03T12:00:00Z').action;
-  assert.match(decodeURIComponent(action.url), /2026Q3/);
-  assert.doesNotMatch(decodeURIComponent(action.url), /2026Q2/);
+  assert.equal(queryFromAction(action), 'site:alpha.example (2026 OR 115) (Q3 OR 3Q26 OR 第三季 OR 第3季) (EPS OR 每股盈餘 OR earnings)');
 });
-test('TSMC search query includes Gregorian, ROC, quarter, and EPS aliases without mandatory issuer terms', () => {
+test('TSMC search query exactly matches the proven official-site quarterly EPS query', () => {
   const latest = { marketDate: '2026-11-03', stocks: [{ code: '2330', name: '台積電', pegReview: { status: 'needs_review', currentPeriod: '2026Q2', expectedLatestQuarter: '2026Q3' } }] };
-  const issuers = { '2330': { legalName: '台灣積體電路製造股份有限公司', officialDomains: ['pr.tsmc.com'] } };
+  const issuers = { '2330': { legalName: '台灣積體電路製造股份有限公司', officialDomains: ['tsmc.com'] } };
   const state = init({ latest, issuers, config: { ...cfg, candidateSha256: 'a'.repeat(64) } }, '2026-11-03T12:00:00Z');
-  const query = decodeURIComponent(plan(state, '2026-11-03T12:00:00Z').action.url);
-  assert.match(query, /site:pr\.tsmc\.com/);
-  for (const alias of ['2026', '115', 'Q3', '3Q26', '第三季', '第3季', 'EPS', '每股盈餘', 'earnings']) assert.ok(query.includes(alias), alias);
-  for (const forbidden of ['台灣積體電路製造股份有限公司', '2330', 'prior', 'restated']) assert.equal(query.includes(forbidden), false, forbidden);
+  const query = queryFromAction(plan(state, '2026-11-03T12:00:00Z').action);
+  assert.equal(query, 'site:tsmc.com (2026 OR 115) (Q3 OR 3Q26 OR 第三季 OR 第3季) (EPS OR 每股盈餘 OR earnings)');
+  for (const forbidden of ['台灣積體電路製造股份有限公司', '2330', 'prior', 'restated', '2026Q3']) assert.equal(query.includes(forbidden), false, forbidden);
 });
 test('Chinese EPS and investor-relations titles retain official TSMC result URLs', () => {
   const latest = { marketDate: '2026-11-03', stocks: [{ code: '2330', name: '台積電', pegReview: { status: 'needs_review', expectedLatestQuarter: '2026Q3' } }] };
@@ -209,5 +207,5 @@ test('available stock behind search target is searched without changing its revi
   const state = init({ latest, issuers: issuer, config: { ...cfg, candidateSha256: 'a'.repeat(64) } }, '2026-11-03T12:00:00Z');
   assert.equal(stock.pegReview.status, 'available');
   assert.deepEqual(state.stocks.map(x => x.code), ['AAA']);
-  assert.match(decodeURIComponent(plan(state, '2026-11-03T12:00:00Z').action.url), /2026Q3/);
+  assert.equal(queryFromAction(plan(state, '2026-11-03T12:00:00Z').action), 'site:alpha.example (2026 OR 115) (Q3 OR 3Q26 OR 第三季 OR 第3季) (EPS OR 每股盈餘 OR earnings)');
 });

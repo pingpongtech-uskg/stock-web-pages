@@ -57,7 +57,7 @@ test('generated native provider plan searches expected quarter on stale reviews'
  const state=init({latest:{stocks:[{code:'2330',name:'TSMC',pegReview:{status:'needs_review',currentPeriod:'2026Q2',expectedLatestQuarter:'2026Q3'}}]},issuers:{'2330':{legalName:'TSMC',officialDomains:['tsmc.com']}},config:{marketDate:'2026-11-03',requestId:'r',candidateSha256:'a'.repeat(64),searxBaseUrl:'http://searxng:8080',braveDailyLimit:20}});
  const run=new (Object.getPrototypeOf(async function(){}).constructor)('$input',nodes.find(n=>n.name==='Plan next provider').parameters.jsCode);
  const result=await run({first:()=>({json:{state}})});
- assert.match(decodeURIComponent(result[0].json.action.url),/2026Q3/);
+ assert.equal(decodeURIComponent(result[0].json.action.url),'http://searxng:8080/search?q=site:tsmc.com (2026 OR 115) (Q3 OR 3Q26 OR 第三季 OR 第3季) (EPS OR 每股盈餘 OR earnings)&format=json');
 });
 test('unavailable provider includes flagged available stock in explicit source-unavailable manifest',async()=>{
  const nodes=[];const add=(name,type,v,parameters)=>{const n={name,type,parameters};nodes.push(n);return n};const code=(name,jsCode)=>add(name,'code',2,{jsCode});

@@ -96,7 +96,7 @@ function queryFor(stock) {
   const quarter = Number(match[2]);
   const rocYear = year - 1911;
   const quarterName = ['', '一', '二', '三', '四'][quarter];
-  const quarterAliases = [`Q${quarter}`, `${quarter}Q${String(year).slice(-2)}`, `${year}Q${quarter}`, `${quarterName}季`, `第${quarterName}季`, `第${quarter}季`];
+  const quarterAliases = [`Q${quarter}`, `${quarter}Q${String(year).slice(-2)}`, `第${quarterName}季`, `第${quarter}季`];
   return `site:${d} (${year} OR ${rocYear}) (${quarterAliases.join(' OR ')}) (EPS OR 每股盈餘 OR earnings)`;
 }
 function searxUrl(base, query) {
