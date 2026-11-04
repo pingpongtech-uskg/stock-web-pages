@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 import time
@@ -14,15 +15,33 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pipeline.financial_discovery import discover, fetch_document, merge_eps, parse_document
 
 
-def run(manifest: dict, *, details_dir: Path | None = None, output_dir: Path | None = None) -> list[dict]:
+def run(manifest: dict, *, details_dir: Path | None = None, output_dir: Path | None = None,
+        max_runtime_seconds: float = 600) -> list[dict]:
+    if not isinstance(max_runtime_seconds, (int, float)) or not math.isfinite(max_runtime_seconds) or max_runtime_seconds < 0:
+        raise ValueError("max_runtime_seconds must be a finite non-negative number")
+    deadline = time.monotonic() + max_runtime_seconds
     results = []
     cache_root = (output_dir or Path(".peg-evidence-cache")) / "cache"
     cache_root.mkdir(parents=True, exist_ok=True)
-    for stock in manifest.get("stocks", []):
-        found = discover(stock)
+    stocks = manifest.get("stocks", [])
+    for stock_index, stock in enumerate(stocks):
         code = str(stock.get("code", ""))
+        if time.monotonic() >= deadline:
+            results.extend({"code": str(remaining.get("code", "")), "records": [], "sources": [],
+                            "candidates": [], "reason": "evidence_budget_exhausted"}
+                           for remaining in stocks[stock_index:])
+            break
+        found = discover(stock)
         records, tried = [], []
-        for cand in found["candidates"][:3]:
+        candidates = found["candidates"][:3]
+        budget_exhausted = time.monotonic() >= deadline
+        if budget_exhausted:
+            tried.extend({**cand, "status": "budget_exhausted"} for cand in candidates)
+        for candidate_index, cand in enumerate(candidates if not budget_exhausted else []):
+            if time.monotonic() >= deadline:
+                tried.extend({**remaining, "status": "budget_exhausted"} for remaining in candidates[candidate_index:])
+                budget_exhausted = True
+                break
             url = cand["url"]
             tried.append({**cand, "status": "pending"})
             cache_material = "\0".join((url, code, str(stock.get("legalName", "")), "parser-v3-identity-currency"))
@@ -35,6 +54,10 @@ def run(manifest: dict, *, details_dir: Path | None = None, output_dir: Path | N
                 continue
             error = None
             for attempt in range(2):
+                if time.monotonic() >= deadline:
+                    tried[-1]["status"] = "budget_exhausted"
+                    budget_exhausted = True
+                    break
                 try:
                     body, digest = fetch_document(url, stock.get("officialDomains", []))
                     observed_at = datetime.now(timezone.utc).isoformat()
@@ -48,6 +71,9 @@ def run(manifest: dict, *, details_dir: Path | None = None, output_dir: Path | N
                     break
                 except Exception as exc:  # report failure as evidence gap; continue other candidates
                     error = exc
+            if budget_exhausted:
+                tried.extend({**remaining, "status": "budget_exhausted"} for remaining in candidates[candidate_index + 1:])
+                break
             if error is not None:
                 exc = error
                 tried[-1]["status"] = "fetch_error"
@@ -60,6 +86,8 @@ def run(manifest: dict, *, details_dir: Path | None = None, output_dir: Path | N
         if conflicts:
             records = [r for r in records if r["period"] not in conflicts]
             reason = "source_conflict"
+        elif budget_exhausted:
+            reason = "evidence_budget_exhausted"
         elif records:
             reason = None
         elif not found["candidates"]:
@@ -76,6 +104,11 @@ def run(manifest: dict, *, details_dir: Path | None = None, output_dir: Path | N
                 if output_dir:
                     output_dir.mkdir(parents=True, exist_ok=True)
                     (output_dir / f"{code}.json").write_text(json.dumps(updated, ensure_ascii=False, indent=2) + "\n")
+        if budget_exhausted:
+            results.extend({"code": str(remaining.get("code", "")), "records": [], "sources": [],
+                            "candidates": [], "reason": "evidence_budget_exhausted"}
+                           for remaining in stocks[stock_index + 1:])
+            break
     return results
 
 
