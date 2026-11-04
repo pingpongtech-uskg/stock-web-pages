@@ -63,7 +63,7 @@ function approved(url, domains) {
 }
 function financial(item) {
   const text = `${item.title || ''} ${item.url || ''}`.toLowerCase();
-  return /(investor|financial|earnings|quarter|annual|results|report|filing|\b10[- ]?[qk]\b|eps|\.pdf(?:$|\?)|財務|財報|季報|年報|法說|投資人)/i.test(text);
+  return /(investor|financial|earnings|quarter|annual|results|report|filing|\b10[- ]?[qk]\b|eps|\.pdf(?:$|\?)|財務|財報|每股盈餘|季報|年報|法人說明會|法說|投資人)/i.test(text);
 }
 function shapeResults(items, provider, domains) {
   if (!Array.isArray(items)) return [];
@@ -90,7 +90,14 @@ function retryMs(headers, now) {
 }
 function queryFor(stock) {
   const d = stock.domains[0] || '';
-  return `site:${d} ${stock.legalName || stock.name} ${stock.code} ${stock.period} EPS financial report prior restated data`;
+  const match = String(stock.period || '').match(/^(\d{4})\s*-?\s*Q([1-4])$/i);
+  if (!match) return `site:${d} (EPS OR 每股盈餘 OR earnings)`;
+  const year = Number(match[1]);
+  const quarter = Number(match[2]);
+  const rocYear = year - 1911;
+  const quarterName = ['', '一', '二', '三', '四'][quarter];
+  const quarterAliases = [`Q${quarter}`, `${quarter}Q${String(year).slice(-2)}`, `${year}Q${quarter}`, `${quarterName}季`, `第${quarterName}季`, `第${quarter}季`];
+  return `site:${d} (${year} OR ${rocYear}) (${quarterAliases.join(' OR ')}) (EPS OR 每股盈餘 OR earnings)`;
 }
 function searxUrl(base, query) {
   if (typeof base !== 'string' || /[?#]/.test(base)) return '';

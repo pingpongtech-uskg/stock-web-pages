@@ -795,10 +795,11 @@ def test_twse_financial_receipt_excludes_quarter_published_after_as_of():
     }
 
 
-def test_refresh_peg_hides_valid_q2_when_latest_completed_quarter_is_not_verified():
+def test_refresh_peg_hides_q2_even_after_fresh_financial_source_check():
     detail = {
         "asOf": "2026-11-03", "quoteAsOf": "2026-11-03", "lastPrice": 100,
-        "healthInputs": {"valuationCurrent": {"date": "2026-11-03", "pe": 12.5},
+        "healthInputs": {"financialSourceCheck": {"status": "verified", "checkedAt": "2026-11-03", "source": "FinMind:TaiwanStockFinancialStatements", "latestPeriod": "2026Q2"},
+            "valuationCurrent": {"date": "2026-11-03", "pe": 12.5},
             "incomeQuarterly": [
                 {"year": year, "quarter": quarter, "eps": 1.0 if year < 2025 else 2.0}
                 for year in (2024, 2025, 2026)
@@ -837,7 +838,7 @@ def test_refresh_peg_restores_valuation_after_target_quarter_is_available():
     assert detail["pegReview"]["quoteAsOf"] == "2026-11-03"
 
 
-def test_refresh_peg_ignores_target_quarter_published_after_cutoff_but_keeps_verified_prior():
+def test_refresh_peg_hides_verified_prior_when_target_quarter_is_after_cutoff():
     detail = {
         "asOf": "2026-11-03", "quoteAsOf": "2026-11-03", "lastPrice": 100,
         "healthInputs": {"financialSourceCheck": {"status": "verified", "checkedAt": "2026-11-03", "source": "TWSE OpenAPI", "latestPeriod": "2026Q2"}, "incomeQuarterly": [
@@ -849,9 +850,11 @@ def test_refresh_peg_ignores_target_quarter_published_after_cutoff_but_keeps_ver
         ]},
     }
 
-    assert _valuation_from_detail(detail) is not None
-    assert detail["pegReview"]["status"] == "available"
+    assert _valuation_from_detail(detail) is None
+    assert detail["pegReview"]["status"] == "needs_review"
+    assert detail["pegReview"]["reasonCodes"] == ["latest_statement_unverified"]
     assert detail["pegReview"]["currentPeriod"] == "2025Q3–2026Q2"
+    assert detail["pegReview"]["expectedLatestQuarter"] == "2026Q3"
 
 
 def test_refresh_peg_keeps_insufficient_history_as_primary_reason():
@@ -943,13 +946,15 @@ def test_build_release_merges_dated_peg_evidence_without_mutating_baseline_archi
                                    recompute_existing=True, peg_evidence_path=evidence_path)
     latest = json.loads((data / "latest.json").read_text())
     output_detail = json.loads((data / "releases" / result["run_id"] / "stocks" / "2330.json").read_text())
-    assert latest["stocks"][0]["pegReview"]["status"] == "available"
+    assert latest["stocks"][0]["pegReview"]["status"] == "needs_review"
+    assert latest["stocks"][0]["pegReview"]["reasonCodes"] == ["latest_statement_unverified"]
+    assert latest["stocks"][0]["pegReview"]["expectedLatestQuarter"] == "2026Q3"
     assert output_detail["healthInputs"]["financialSourceCheck"] == {
         "status": "verified", "checkedAt": "2026-10-02T09:30:00+08:00",
         "source": "issuer_document", "latestPeriod": "2025Q4",
     }
     assert output_detail["healthInputs"]["incomeQuarterly"][-1]["eps"] == 2.0
-    assert output_detail["valuation"]["formula_version"] == "peg-ttm-yoy-v1"
+    assert output_detail.get("valuation") is None
     assert archive_file.read_bytes() == original_archive
 
 

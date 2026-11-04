@@ -47,13 +47,27 @@ describe('PegReviewSection', () => {
         status: 'needs_review', reasonCodes: ['latest_statement_unverified'],
         currentPeriod: '2025Q3–2026Q2', priorPeriod: '2024Q3–2025Q2',
         expectedLatestQuarter: '2026Q3', currentTtmEps: 100, priorTtmEps: 80,
-        epsGrowthPct: 25, asOf: '2026-11-03', quoteAsOf: '2026-11-03', sourceRefs: [],
+        latestSourcePeriod: '2026Q2', financialCheckSource: 'FinMind:TaiwanStockFinancialStatements',
+        financialCheckAt: '2026-11-03', epsGrowthPct: 25, asOf: '2026-11-03', quoteAsOf: '2026-11-03', sourceRefs: [],
       } },
     ] as unknown as StockSummary[]} />)
-    expect(markup).toContain('已取得至 2026Q2，尚未確認是否已有更新季報，暫不顯示 PEG')
+    expect(markup).toContain('已取得至 2026Q2，尚未確認最新季報，暫不顯示 PEG')
+    expect(markup).not.toContain('來源已確認至 2026Q2')
     expect(markup).toContain('預期查核期別：2026Q3')
     expect(markup).toContain('本期 TTM EPS：100')
     expect(markup).toContain('年增率：25.0%')
+  })
+
+  it('reports a confirmed source quarter as missing EPS only when it is newer than the used window', () => {
+    const markup = renderToStaticMarkup(<PegReviewSection stocks={[
+      { code: '2330', name: '台積電', pegReview: {
+        status: 'needs_review', reasonCodes: ['latest_statement_unverified'],
+        currentPeriod: '2025Q2–2026Q1', priorPeriod: '2024Q2–2025Q1',
+        latestSourcePeriod: '2026Q2', expectedLatestQuarter: '2026Q2',
+        currentTtmEps: 90, priorTtmEps: 70, epsGrowthPct: 28.6, sourceRefs: [],
+      } },
+    ] as unknown as StockSummary[]} />)
+    expect(markup).toContain('來源已確認至 2026Q2，該季 EPS 尚未納入計算，暫不顯示 PEG')
   })
 
   it('explains insufficient evidence count and malformed evidence dates', () => {

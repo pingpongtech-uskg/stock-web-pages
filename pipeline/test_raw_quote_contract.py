@@ -87,23 +87,30 @@ def test_zulu_valuation_requires_pe_from_actual_raw_quote_date(monkeypatch):
         {'year': year, 'quarter': quarter, 'eps': 1.0 if year == 2024 else 2.0}
         for year in (2024, 2025) for quarter in (1, 2, 3, 4)
     ]
+    eps_rows.extend([
+        {'year': 2026, 'quarter': 1, 'eps': 2.0},
+        {'year': 2026, 'quarter': 2, 'eps': 2.0},
+        {'year': 2026, 'quarter': 3, 'eps': 29.43, 'availableAt': '2026-10-15'},
+    ])
     detail = {'asOf': '2026-10-15', 'lastPrice': 100, 'quoteBasis': 'raw_close',
               'quoteAsOf': '2026-10-15', 'healthInputs': {
                   'financialSourceCheck': {'status': 'verified', 'checkedAt': '2026-10-15',
-                                           'source': 'TWSE OpenAPI', 'latestPeriod': '2025Q4'},
+                                           'source': 'TWSE OpenAPI', 'latestPeriod': '2026Q3'},
                   'incomeQuarterly': eps_rows,
                   'valuationCurrent': {'date': '2026-10-16', 'pe': 10},
               }}
     stale_pe_value = refresh._valuation_from_detail(detail)
     assert stale_pe_value['current_price'] == 100
-    assert stale_pe_value['current_pe'] == pytest.approx(12.5)
+    current_ttm_eps = 2.0 + 2.0 + 2.0 + 29.43
+    same_day_pe = 100 / current_ttm_eps
+    assert stale_pe_value['current_pe'] == pytest.approx(same_day_pe)
     assert stale_pe_value['pe_origin'] == 'derived'
     assert stale_pe_value['pe_source_date'] is None
     same_day = {**detail, 'healthInputs': {**detail['healthInputs'],
-                                          'valuationCurrent': {'date': '2026-10-15', 'pe': 12.5}}}
+                                          'valuationCurrent': {'date': '2026-10-15', 'pe': same_day_pe}}}
     same_day_value = refresh._valuation_from_detail(same_day)
     assert same_day_value['current_price'] == 100
-    assert same_day_value['current_pe'] == 12.5
+    assert same_day_value['current_pe'] == pytest.approx(same_day_pe)
     assert same_day_value['pe_origin'] == 'reported'
     assert same_day_value['pe_source_date'] == '2026-10-15'
 

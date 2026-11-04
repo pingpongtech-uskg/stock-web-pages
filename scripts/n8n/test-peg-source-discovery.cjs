@@ -172,6 +172,37 @@ test('newest expected quarter takes priority over stale disclosed period for sou
   assert.match(decodeURIComponent(action.url), /2026Q3/);
   assert.doesNotMatch(decodeURIComponent(action.url), /2026Q2/);
 });
+test('TSMC search query includes Gregorian, ROC, quarter, and EPS aliases without mandatory issuer terms', () => {
+  const latest = { marketDate: '2026-11-03', stocks: [{ code: '2330', name: '台積電', pegReview: { status: 'needs_review', currentPeriod: '2026Q2', expectedLatestQuarter: '2026Q3' } }] };
+  const issuers = { '2330': { legalName: '台灣積體電路製造股份有限公司', officialDomains: ['pr.tsmc.com'] } };
+  const state = init({ latest, issuers, config: { ...cfg, candidateSha256: 'a'.repeat(64) } }, '2026-11-03T12:00:00Z');
+  const query = decodeURIComponent(plan(state, '2026-11-03T12:00:00Z').action.url);
+  assert.match(query, /site:pr\.tsmc\.com/);
+  for (const alias of ['2026', '115', 'Q3', '3Q26', '第三季', '第3季', 'EPS', '每股盈餘', 'earnings']) assert.ok(query.includes(alias), alias);
+  for (const forbidden of ['台灣積體電路製造股份有限公司', '2330', 'prior', 'restated']) assert.equal(query.includes(forbidden), false, forbidden);
+});
+test('Chinese EPS and investor-relations titles retain official TSMC result URLs', () => {
+  const latest = { marketDate: '2026-11-03', stocks: [{ code: '2330', name: '台積電', pegReview: { status: 'needs_review', expectedLatestQuarter: '2026Q3' } }] };
+  const issuers = { '2330': { officialDomains: ['pr.tsmc.com'] } };
+  const state = init({ latest, issuers, config: cfg }, '2026-11-03T12:00:00Z');
+  const p = plan(state, '2026-11-03T12:00:00Z');
+  const n = apply(p.state, 'searx', { statusCode: 200, body: { results: [
+    { url: 'https://pr.tsmc.com/chinese/news/3346', title: '台積公司2026年第三季每股盈餘新台幣29.43元' },
+    { url: 'https://pr.tsmc.com/chinese/news/ir', title: '台積公司法人說明會' },
+  ] } }, '2026-11-03T12:00:01Z');
+  assert.deepEqual(n.stocks[0].results.map(row => row.url), [
+    'https://pr.tsmc.com/chinese/news/3346', 'https://pr.tsmc.com/chinese/news/ir',
+  ]);
+});
+test('unparseable period falls back to a concise official-site EPS query', () => {
+  const latest = { marketDate: 'unknown', stocks: [{ code: 'AAA', name: 'Alpha', pegReview: 'needs_review' }] };
+  const state = init({ latest, issuers: issuer, config: { ...cfg, marketDate: 'unknown' } }, '2026-11-03T12:00:00Z');
+  const query = decodeURIComponent(plan(state, '2026-11-03T12:00:00Z').action.url);
+  assert.match(query, /site:alpha\.example/);
+  assert.match(query, /EPS/);
+  assert.match(query, /每股盈餘/);
+  assert.doesNotMatch(query, /latest completed quarter|prior|restated|2026Q3/);
+});
 test('available stock behind search target is searched without changing its review status', () => {
   const stock = { code: 'AAA', name: 'Alpha', pegDiscoveryRequired: true, pegReview: { status: 'available', currentPeriod: '2026Q2', expectedLatestQuarter: '2026Q3' } };
   const latest = { marketDate: cfg.marketDate, stocks: [stock, {code: 'BBB', pegDiscoveryRequired: false, pegReview:{status:'available',currentPeriod:'2026Q3',expectedLatestQuarter:'2026Q3'}}] };

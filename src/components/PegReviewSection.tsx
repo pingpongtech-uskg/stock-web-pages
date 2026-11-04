@@ -52,15 +52,19 @@ function isPublicHttpsUrl(value: string): boolean {
 }
 
 function ReviewStock({ stock, review }: { stock: StockSummary; review: PegReview }) {
+  const windowEnd = review.currentPeriod?.split('–').at(-1)
+  const sourceConfirmsNewerPeriod = Boolean(
+    review.latestSourcePeriod && windowEnd && review.latestSourcePeriod > windowEnd,
+  )
   return (
     <li>
       <strong>{stock.code} {stock.name}</strong>
       <span>{review.status === 'available'
         ? `最新已驗證 EPS 期別：${review.currentPeriod ?? '未提供'}`
         : review.reasonCodes.includes('latest_statement_unverified')
-        ? review.latestSourcePeriod && review.currentPeriod
+        ? sourceConfirmsNewerPeriod
           ? `來源已確認至 ${review.latestSourcePeriod}，該季 EPS 尚未納入計算，暫不顯示 PEG`
-          : `已取得至 ${review.currentPeriod?.split('–').at(-1) ?? '期別未提供'}，尚未確認是否已有更新季報，暫不顯示 PEG`
+          : `已取得至 ${windowEnd ?? '期別未提供'}，尚未確認最新季報，暫不顯示 PEG`
         : review.reasonCodes.length ? review.reasonCodes.map(pegReviewReasonLabel).join('；') : '計算證據待確認'}</span>
       {review.expectedLatestQuarter && <small>預期查核期別：{review.expectedLatestQuarter}</small>}
       {review.reasonCodes.includes('insufficient_quarters') && review.availableQuarterCount != null && (

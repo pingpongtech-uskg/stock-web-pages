@@ -90,9 +90,11 @@ def calculate_ttm_peg(rows: list[dict[str, Any]], *, as_of: str | None, price: A
         check_date = normalized_date(check.get("checkedAt"))
         source_period = check.get("latestPeriod")
         source_key = _period_key(source_period) if isinstance(source_period, str) else None
+        target_key = _period_key(freshness_target)
         accepted_sources = {"TWSE OpenAPI", "FinMind:TaiwanStockFinancialStatements", "issuer_document"}
         return (
-            _period_key(freshness_target) is None
+            target_key is None
+            or latest_used < target_key
             or check.get("status") != "verified"
             or check_date is None
             or check_date[:10] < cutoff[:10]
@@ -187,9 +189,9 @@ def calculate_ttm_peg(rows: list[dict[str, Any]], *, as_of: str | None, price: A
         if _period_key(freshness_target) is None:
             return None, build_review("invalid_freshness_target", current, prior, as_of=cutoff,
                                  current_eps=current_eps, prior_eps=prior_eps, growth=growth)
-        # A calendar quarter is a discovery target, not proof that the issuer
-        # has filed. Retain the last verified window only after a dated source
-        # check that actually matched financial evidence for this issuer.
+        # Without an authoritative latest-disclosure index, ordinary financial
+        # feeds cannot prove an older quarter is still the issuer's latest.
+        # Fail closed until the expected completed quarter has eligible EPS.
         check = financial_check if isinstance(financial_check, dict) else {}
         check_date = normalized_date(check.get("checkedAt"))
         source_period = check.get("latestPeriod")

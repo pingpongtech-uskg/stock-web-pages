@@ -14,15 +14,16 @@ def rows_through(year, quarter, *, published_at=None):
     return rows
 
 
-def test_verified_source_check_keeps_last_filed_quarter_even_before_calendar_deadline():
+def test_fresh_ordinary_source_check_does_not_prove_calendar_target_is_latest():
     valuation, review = calculate_ttm_peg(
         rows_through(2026, 2), as_of="2026-11-03", price=100,
         freshness_target="2026Q3",
         financial_check={"status": "verified", "checkedAt": "2026-11-03", "source": "TWSE OpenAPI", "latestPeriod": "2026Q2"},
     )
 
-    assert valuation is not None
-    assert review["status"] == "available"
+    assert valuation is None
+    assert review["status"] == "needs_review"
+    assert review["reasonCodes"] == ["latest_statement_unverified"]
     assert review["expectedLatestQuarter"] == "2026Q3"
     assert review["currentPeriod"] == "2025Q3–2026Q2"
     assert review["priorPeriod"] == "2024Q3–2025Q2"
@@ -44,6 +45,18 @@ def test_missing_source_check_suppresses_cached_old_ttm_with_diagnostics():
     assert review["currentTtmEps"] is not None
     assert review["priorTtmEps"] is not None
     assert review["epsGrowthPct"] is not None
+
+
+def test_fresh_verified_target_quarter_restores_peg():
+    rows = rows_through(2026, 3, published_at="2026-10-30")
+    valuation, review = calculate_ttm_peg(
+        rows, as_of="2026-11-03", price=100, freshness_target="2026Q3",
+        financial_check={"status": "verified", "checkedAt": "2026-11-03", "source": "TWSE OpenAPI", "latestPeriod": "2026Q3"},
+    )
+
+    assert valuation is not None
+    assert review["status"] == "available"
+    assert review["currentPeriod"].endswith("2026Q3")
 
 
 def test_stale_source_check_downgrades_numeric_decline_verdict_to_review():
@@ -95,8 +108,9 @@ def test_future_target_quarter_does_not_count_as_fresh_evidence():
         financial_check={"status": "verified", "checkedAt": "2026-11-03", "source": "TWSE OpenAPI", "latestPeriod": "2026Q2"},
     )
 
-    assert valuation is not None
-    assert review["status"] == "available"
+    assert valuation is None
+    assert review["status"] == "needs_review"
+    assert review["reasonCodes"] == ["latest_statement_unverified"]
     assert review["currentPeriod"].endswith("2026Q2")
 
 
