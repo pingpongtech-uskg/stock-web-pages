@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts import prepare_peg_evidence
+from scripts.build_peg_review import build_review
 from scripts.refresh_snapshot import build_release
 
 
@@ -90,14 +91,6 @@ def run(*, data_dir: Path, market_date: str, request_id: str, manifest_path: Pat
     updated_codes = {str(row["code"]) for row in release.get("stocks", []) if isinstance(row, dict) and row.get("code")}
     if updated_codes != set(codes):
         raise ValueError("release build changed 100-stock universe")
-    reviews = []
-    counts: dict[str, int] = {}
-    for code in codes:
-        detail = json.loads((data_dir / "releases" / release["runId"] / "stocks" / f"{code}.json").read_text(encoding="utf-8"))
-        peg = detail.get("pegReview") or {"status": "needs_review", "reasonCodes": ["missing_evidence"]}
-        status = str(peg.get("status", "needs_review"))
-        counts[status] = counts.get(status, 0) + 1
-        reviews.append({"code": code, "name": detail.get("name"), "pegReview": peg})
     export = [sys.executable, str(ROOT / "scripts/build_screening_export.py"), "--data-dir", str(data_dir),
               "--request-id", request_id, "--market-date", market_date, "--source-git-commit", source_git_commit,
               "--actions-run-id", actions_run_id]
@@ -110,11 +103,13 @@ def run(*, data_dir: Path, market_date: str, request_id: str, manifest_path: Pat
         export[export.index("--actions-run-id") + 1] = actions_run_id
     subprocess.run(export, check=True)
     subprocess.run([sys.executable, str(ROOT / "scripts/build_publication_fingerprint.py"), "--data-dir", str(data_dir), "--market-date", market_date], check=True)
-    review_path = data_dir / "peg-review.json"
-    review_path.write_text(json.dumps({"marketDate": market_date, "runId": release["runId"],
-                                       "requestId": request_id, "counts": counts, "stocks": reviews,
-                                       **review_lineage(manifest)},
-                                      ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    lineage = review_lineage(manifest)
+    manifest_context = manifest if len(lineage) == 3 else None
+    review = build_review(data_dir, market_date, request_id, source_git_commit, actions_run_id,
+                          manifest=manifest_context, prepare_run=str(lineage.get('prepareRunId', '')),
+                          prepare_attempt=str(lineage.get('prepareRunAttempt', '')),
+                          candidate_sha256=str(lineage.get('candidateSha256', '')))
+    counts = review['counts']
     summary = {"marketDate": market_date, "runId": release["runId"], "requestId": request_id,
                "counts": counts, "stocks": len(codes), "evidenceStocks": len(manifest.get("stocks", [])), "dryRun": dry_run}
     if temp_context:

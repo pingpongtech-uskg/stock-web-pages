@@ -50,3 +50,21 @@ test('discovery captures the current router item, not an earlier router executio
  assert.deepEqual((await run({first:()=>({json:{state:current}})}))[0].json.state,current);
  for(const name of ['Prepare discovery lease','Initialize PEG source discovery','Finish PEG manifest','Return pinned PEG manifest to main'])assert.match(nodes.find(n=>n.name===name).parameters.jsCode,/Capture PEG discovery parent state/);
 });
+test('generated native provider plan searches expected quarter on stale reviews',async()=>{
+ const nodes=[];const add=(name,type,v,parameters)=>{const n={name,type,parameters};nodes.push(n);return n};const code=(name,jsCode)=>add(name,'code',2,{jsCode});
+ installPegInline({add,code,connect:()=>{},advanceNode:{name:'advance'}});
+ const {init}=require('./peg-source-discovery.cjs');
+ const state=init({latest:{stocks:[{code:'2330',name:'TSMC',pegReview:{status:'needs_review',currentPeriod:'2026Q2',expectedLatestQuarter:'2026Q3'}}]},issuers:{'2330':{legalName:'TSMC',officialDomains:['tsmc.com']}},config:{marketDate:'2026-11-03',requestId:'r',candidateSha256:'a'.repeat(64),searxBaseUrl:'http://searxng:8080',braveDailyLimit:20}});
+ const run=new (Object.getPrototypeOf(async function(){}).constructor)('$input',nodes.find(n=>n.name==='Plan next provider').parameters.jsCode);
+ const result=await run({first:()=>({json:{state}})});
+ assert.match(decodeURIComponent(result[0].json.action.url),/2026Q3/);
+});
+test('unavailable provider includes flagged available stock in explicit source-unavailable manifest',async()=>{
+ const nodes=[];const add=(name,type,v,parameters)=>{const n={name,type,parameters};nodes.push(n);return n};const code=(name,jsCode)=>add(name,'code',2,{jsCode});
+ installPegInline({add,code,connect:()=>{},advanceNode:{name:'advance'}});
+ const run=new (Object.getPrototypeOf(async function(){}).constructor)('$input','$',nodes.find(n=>n.name==='Initialize PEG source discovery').parameters.jsCode);
+ const state={marketDate:'2026-11-03',requestId:'r',pegCandidateSha256:'a'.repeat(64),pegPreview:{stocks:[{code:'2330',name:'TSMC',pegDiscoveryRequired:true,pegReview:{status:'available'}}]}};
+ const row={searx_url:'',state_json:JSON.stringify({braveUsage:{used:0}})};
+ const out=await run({first:()=>({json:{statusCode:503}})},name=>({first:()=>({json:name==='Verify discovery lease'?row:{state}})}));
+ assert.equal(out[0].json.state.manifest.stocks[0].code,'2330');assert.equal(out[0].json.state.manifest.stocks[0].reason,'source_unavailable');
+});

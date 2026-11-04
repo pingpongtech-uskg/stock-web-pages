@@ -340,6 +340,20 @@ describe('StrategyCard', () => {
     expect(markup).toContain('行情日期 2026-03-01')
   })
 
+  it('shows period and quote date alongside an available PEG', () => {
+    const row: RankingRow = {
+      ...knownRow,
+      pegReview: {
+        status: 'available', reasonCodes: [],
+        currentPeriod: '2025Q3–2026Q2', priorPeriod: '2024Q3–2025Q2',
+        expectedLatestQuarter: null, quoteAsOf: '2026-11-03', sourceRefs: [],
+      },
+    }
+    const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[0]} rows={[row]} />)
+    expect(markup).toContain('EPS 期別 2025Q3–2026Q2')
+    expect(markup).toContain('行情日期 2026-11-03')
+  })
+
   it('shows the observed quarter count when PEG history is insufficient', () => {
     const row: RankingRow = {
       ...knownRow,

@@ -120,3 +120,46 @@ def test_candidate_rejects_preview_over_checkpoint_limit(tmp_path):
     path.write_text(json.dumps(detail))
     with pytest.raises(ValueError, match='preview exceeds'):
         create(tmp_path, tmp_path / 'artifact', 'req-1', '2026-11-03', '123', '1', 'a' * 40)
+
+
+def test_candidate_freezes_only_current_release_and_referenced_receipts(tmp_path):
+    import tarfile
+    fixture(tmp_path)
+    data = tmp_path / 'public/data'
+    (data / 'archive/v1').mkdir(parents=True)
+    (data / 'archive/v1/old.json').write_text('old archive')
+    (data / 'releases/older').mkdir()
+    (data / 'releases/older/old.json').write_text('old release')
+    receipts = tmp_path / '.cache/market-source'
+    receipts.mkdir(parents=True)
+    (receipts / 'calendar-receipt-index.json').write_text(json.dumps({'groups': [{'bodyFile': 'receipts/current.json'}]}))
+    (receipts / 'receipts').mkdir()
+    (receipts / 'receipts/current.json').write_text('current')
+    (receipts / 'receipts/old.json').write_text('old')
+    artifact = tmp_path / 'artifact'
+    preview = create(tmp_path, artifact, 'req-1', '2026-11-03', '123', '1', 'a' * 40)
+    with tarfile.open(artifact / 'candidate.tar.gz') as tar:
+        names = tar.getnames()
+    assert 'public/data/releases/release/stocks/0000.json' in names
+    assert '.cache/market-source/receipts/current.json' in names
+    assert not any('older' in name or '/archive/' in name or name.endswith('/receipts/old.json') for name in names)
+    target = tmp_path / 'target'
+    old = target / 'public/data/archive/v1/old.json'
+    old.parent.mkdir(parents=True)
+    old.write_text('preserved')
+    restore(target, artifact, 'req-1', '2026-11-03', '123', '1', preview['candidateSha256'])
+    assert old.read_text() == 'preserved'
+    assert (target / '.cache/market-source/receipts/current.json').read_text() == 'current'
+
+
+def test_preview_marks_available_behind_target_for_discovery_without_changing_status(tmp_path):
+    data = fixture(tmp_path)
+    details = data / 'releases/release/stocks'
+    for code, current, status in [('0000', '2026Q2', 'available'), ('0001', '2026Q3', 'available'), ('0002', '2026Q3', 'needs_review')]:
+        (details / (code + '.json')).write_text(json.dumps({'code': code, 'name': code, 'pegReview': {'status': status, 'currentPeriod': current, 'expectedLatestQuarter': '2026Q3'}}))
+    preview = create(tmp_path, tmp_path / 'artifact', 'req-1', '2026-11-03', '123', '1', 'a' * 40)
+    stocks = {row['code']: row for row in preview['stocks']}
+    assert stocks['0000']['pegDiscoveryRequired'] is True
+    assert stocks['0000']['pegReview']['status'] == 'available'
+    assert stocks['0001']['pegDiscoveryRequired'] is False
+    assert stocks['0002']['pegDiscoveryRequired'] is True

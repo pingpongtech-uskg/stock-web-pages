@@ -24,3 +24,10 @@ test('prepare run and artifact must match exact trusted identity',()=>{
  assert.throws(()=>selectCandidateArtifact({total_count:1,artifacts:[{...artifact,workflow_run:{...artifact.workflow_run,id:124}}]},input),/candidate_artifact/);
  assert.throws(()=>selectCandidateArtifact({total_count:2,artifacts:[artifact,artifact]},input),/candidate_artifact/);
 });
+test('manifest includes available stocks flagged for discovery without changing PEG status',()=>{
+ const altered={...preview,stocks:preview.stocks.map((s,i)=>i===1?{...s,pegDiscoveryRequired:true}:s)};
+ const safe=validatePreview(altered,input);
+ const stocks=[0,1].map(i=>({code:String(1000+i),legalName:'Company',officialDomains:['example.com'],results:[]}));
+ assert.equal(bindManifest({marketDate:input.marketDate,requestId:input.requestId,stocks},safe).stocks.length,2);
+ assert.equal(safe.stocks[1].pegReview.status,'ok');
+});

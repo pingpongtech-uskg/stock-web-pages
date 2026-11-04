@@ -164,3 +164,19 @@ test('candidate-bound discovery never reuses another frozen candidate results', 
   assert.equal(state.braveUsed, 7);
   assert.equal(plan(state, '2026-11-03T12:00:00Z').action.provider, 'searx');
 });
+test('newest expected quarter takes priority over stale disclosed period for source search', () => {
+  const latest = { marketDate: cfg.marketDate, stocks: [{ code: 'AAA', name: 'Alpha', pegReview: { status: 'needs_review', currentPeriod: '2026Q2', expectedLatestQuarter: '2026Q3' } }] };
+  const state = init({ latest, issuers: issuer, config: { ...cfg, candidateSha256: 'a'.repeat(64) } }, '2026-11-03T12:00:00Z');
+  assert.equal(state.stocks[0].expectedLatestQuarter, '2026Q3');
+  const action = plan(state, '2026-11-03T12:00:00Z').action;
+  assert.match(decodeURIComponent(action.url), /2026Q3/);
+  assert.doesNotMatch(decodeURIComponent(action.url), /2026Q2/);
+});
+test('available stock behind search target is searched without changing its review status', () => {
+  const stock = { code: 'AAA', name: 'Alpha', pegDiscoveryRequired: true, pegReview: { status: 'available', currentPeriod: '2026Q2', expectedLatestQuarter: '2026Q3' } };
+  const latest = { marketDate: cfg.marketDate, stocks: [stock, {code: 'BBB', pegDiscoveryRequired: false, pegReview:{status:'available',currentPeriod:'2026Q3',expectedLatestQuarter:'2026Q3'}}] };
+  const state = init({ latest, issuers: issuer, config: { ...cfg, candidateSha256: 'a'.repeat(64) } }, '2026-11-03T12:00:00Z');
+  assert.equal(stock.pegReview.status, 'available');
+  assert.deepEqual(state.stocks.map(x => x.code), ['AAA']);
+  assert.match(decodeURIComponent(plan(state, '2026-11-03T12:00:00Z').action.url), /2026Q3/);
+});

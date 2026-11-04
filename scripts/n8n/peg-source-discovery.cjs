@@ -128,12 +128,14 @@ function init(input = {}, now = new Date().toISOString()) {
   const cacheTime = Date.parse(cachedManifest?.generatedAt);
   const reusable = cachedManifest?.marketDate === config.marketDate && (!config.candidateSha256 || cachedManifest?.candidateSha256 === config.candidateSha256) && Number.isFinite(cacheTime) && Date.parse(now) - cacheTime >= 0 && Date.parse(now) - cacheTime < DAY_MS;
   const latestStocks = Array.isArray(latest?.stocks) ? latest.stocks : [];
-  let candidates = latestStocks.filter(x => (typeof x?.pegReview === 'string' ? x.pegReview : x?.pegReview?.status) === 'needs_review');
+  let candidates = latestStocks.filter(x => x?.pegDiscoveryRequired === true || (typeof x?.pegReview === 'string' ? x.pegReview : x?.pegReview?.status) === 'needs_review');
   if (!candidates.length && latest?.marketDate === config.marketDate && !latestStocks.some(x => x?.pegReview && (typeof x.pegReview !== 'object' || x.pegReview.status))) candidates = config.bootstrapCandidates || [];
   state.stocks = candidates.map(x => {
     const code = String(x.code || '').trim();
     const record = issuers[code] || issuers[code.toUpperCase()] || {};
-    return { code, name: String(x.name || record.name || code), period: disclosedQuarter(x) || previousQuarter(config.marketDate), legalName: String(record.legalName || record.name || x.name || code), domains: Array.isArray(record.officialDomains) ? record.officialDomains.filter(d => typeof d === 'string' && d) : [], results: null, reason: null, nextProvider: 'searx' };
+    const expected = x?.pegReview?.expectedLatestQuarter || x?.expectedLatestQuarter;
+    const expectedLatestQuarter = /^\d{4}Q[1-4]$/.test(expected || '') ? expected : null;
+    return { code, name: String(x.name || record.name || code), expectedLatestQuarter, period: expectedLatestQuarter || disclosedQuarter(x) || previousQuarter(config.marketDate), legalName: String(record.legalName || record.name || x.name || code), domains: Array.isArray(record.officialDomains) ? record.officialDomains.filter(d => typeof d === 'string' && d) : [], results: null, reason: null, nextProvider: 'searx' };
   });
   if (reusable) {
     const cached = new Map((cachedManifest.stocks || []).map(x => [x.code, x]));

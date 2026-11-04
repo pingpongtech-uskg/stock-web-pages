@@ -757,6 +757,7 @@ def test_refresh_formal_peg_ignores_revenue_proxies_and_records_review():
         "asOf": "2026-03-01", "quoteAsOf": "2026-03-01", "lastPrice": 100,
         "revenueGrowth3m": 0.5,
         "healthInputs": {
+            "financialSourceCheck": {"status": "verified", "checkedAt": "2026-03-01", "source": "TWSE OpenAPI", "latestPeriod": "2025Q4"},
             "valuationCurrent": {"date": "2026-03-01", "pe": 12.5},
             "incomeQuarterly": [
                 {"year": year, "quarter": quarter, "eps": eps}
@@ -774,6 +775,97 @@ def test_refresh_formal_peg_ignores_revenue_proxies_and_records_review():
     detail["healthInputs"]["incomeQuarterly"][-1]["epsComparable"] = False
     assert _valuation_from_detail(detail) is None
     assert detail["pegReview"]["reasonCodes"] == ["incomparable_eps_basis"]
+
+
+def test_twse_financial_receipt_excludes_quarter_published_after_as_of():
+    from datetime import date
+    import scripts.refresh_snapshot as refresh
+
+    check = refresh._twse_financial_source_check({
+        "fetchedAt": "2026-11-04T02:00:00+00:00",
+        "incomeQuarterly": [
+            {"year": 2026, "quarter": 2, "eps": 2.0, "availableAt": "2026-08-14"},
+            {"year": 2026, "quarter": 3, "eps": 3.0, "availableAt": "2026-11-04"},
+        ],
+    }, date(2026, 11, 3))
+
+    assert check == {
+        "status": "verified", "checkedAt": "2026-11-04",
+        "source": "TWSE OpenAPI", "latestPeriod": "2026Q2",
+    }
+
+
+def test_refresh_peg_hides_valid_q2_when_latest_completed_quarter_is_not_verified():
+    detail = {
+        "asOf": "2026-11-03", "quoteAsOf": "2026-11-03", "lastPrice": 100,
+        "healthInputs": {"valuationCurrent": {"date": "2026-11-03", "pe": 12.5},
+            "incomeQuarterly": [
+                {"year": year, "quarter": quarter, "eps": 1.0 if year < 2025 else 2.0}
+                for year in (2024, 2025, 2026)
+                for quarter in range(1, 5)
+                if (year, quarter) <= (2026, 2)
+            ]},
+    }
+
+    assert _valuation_from_detail(detail) is None
+    review = detail["pegReview"]
+    assert review["reasonCodes"] == ["latest_statement_unverified"]
+    assert review["expectedLatestQuarter"] == "2026Q3"
+    assert review["currentPeriod"] == "2025Q3–2026Q2"
+    assert review["currentTtmEps"] is not None
+    assert review["priorTtmEps"] is not None
+    assert review["epsGrowthPct"] is not None
+    assert review["quoteAsOf"] == "2026-11-03"
+
+
+def test_refresh_peg_restores_valuation_after_target_quarter_is_available():
+    detail = {
+        "asOf": "2026-11-03", "quoteAsOf": "2026-11-03", "lastPrice": 100,
+        "healthInputs": {"financialSourceCheck": {"status": "verified", "checkedAt": "2026-11-03", "source": "TWSE OpenAPI", "latestPeriod": "2026Q3"}, "incomeQuarterly": [
+            {"year": year, "quarter": quarter, "eps": 1.0 if year < 2025 else 2.0,
+             "availableAt": "2026-10-30" if (year, quarter) == (2026, 3) else None}
+            for year in (2024, 2025, 2026)
+            for quarter in range(1, 5)
+            if (year, quarter) <= (2026, 3)
+        ]},
+    }
+
+    valuation = _valuation_from_detail(detail)
+    assert valuation is not None
+    assert detail["pegReview"]["status"] == "available"
+    assert detail["pegReview"]["currentPeriod"] == "2025Q4–2026Q3"
+    assert detail["pegReview"]["quoteAsOf"] == "2026-11-03"
+
+
+def test_refresh_peg_ignores_target_quarter_published_after_cutoff_but_keeps_verified_prior():
+    detail = {
+        "asOf": "2026-11-03", "quoteAsOf": "2026-11-03", "lastPrice": 100,
+        "healthInputs": {"financialSourceCheck": {"status": "verified", "checkedAt": "2026-11-03", "source": "TWSE OpenAPI", "latestPeriod": "2026Q2"}, "incomeQuarterly": [
+            {"year": year, "quarter": quarter, "eps": 1.0 if year < 2025 else 2.0,
+             "availableAt": "2026-11-04" if (year, quarter) == (2026, 3) else None}
+            for year in (2024, 2025, 2026)
+            for quarter in range(1, 5)
+            if (year, quarter) <= (2026, 3)
+        ]},
+    }
+
+    assert _valuation_from_detail(detail) is not None
+    assert detail["pegReview"]["status"] == "available"
+    assert detail["pegReview"]["currentPeriod"] == "2025Q3–2026Q2"
+
+
+def test_refresh_peg_keeps_insufficient_history_as_primary_reason():
+    detail = {
+        "asOf": "2026-11-03", "quoteAsOf": "2026-11-03", "lastPrice": 100,
+            "healthInputs": {"financialSourceCheck": {"status": "verified", "checkedAt": "2026-03-01", "source": "TWSE OpenAPI", "latestPeriod": "2025Q4"}, "incomeQuarterly": [
+            {"year": year, "quarter": quarter, "eps": 1.0}
+            for year, quarter in ((2025, 1), (2025, 2), (2025, 3), (2025, 4), (2026, 1), (2026, 2))
+        ]},
+    }
+
+    assert _valuation_from_detail(detail) is None
+    assert detail["pegReview"]["reasonCodes"] == ["insufficient_quarters"]
+    assert detail["pegReview"]["availableQuarterCount"] == 6
 
 
 def test_refresh_peg_preserves_stock_distribution_eps_comparability_guard():
@@ -843,7 +935,7 @@ def test_build_release_merges_dated_peg_evidence_without_mutating_baseline_archi
         "stocks": [{"code": "2330", "records": [{
             "period": "2025-Q4", "eps": 2.0, "currency": "TWD", "scope": "consolidated",
             "epsKind": "basic", "publishedDate": "2026-02-01", "sourceUrl": "https://issuer.example/report",
-            "quotedRow": "EPS 2.00", "sha256": "abc123",
+            "observedAt": "2026-10-02T09:30:00+08:00", "quotedRow": "EPS 2.00", "sha256": "a" * 64,
         }]}],
     }))
 
@@ -852,6 +944,10 @@ def test_build_release_merges_dated_peg_evidence_without_mutating_baseline_archi
     latest = json.loads((data / "latest.json").read_text())
     output_detail = json.loads((data / "releases" / result["run_id"] / "stocks" / "2330.json").read_text())
     assert latest["stocks"][0]["pegReview"]["status"] == "available"
+    assert output_detail["healthInputs"]["financialSourceCheck"] == {
+        "status": "verified", "checkedAt": "2026-10-02T09:30:00+08:00",
+        "source": "issuer_document", "latestPeriod": "2025Q4",
+    }
     assert output_detail["healthInputs"]["incomeQuarterly"][-1]["eps"] == 2.0
     assert output_detail["valuation"]["formula_version"] == "peg-ttm-yoy-v1"
     assert archive_file.read_bytes() == original_archive

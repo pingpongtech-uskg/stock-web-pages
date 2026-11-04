@@ -87,7 +87,7 @@ from pipeline.valuation import (  # noqa: E402
     calculate_growth_total_return_valuation,
     calculate_zulu_valuation,
 )
-from pipeline.peg_ttm import calculate_ttm_peg  # noqa: E402
+from pipeline.peg_ttm import calculate_ttm_peg, latest_completed_quarter  # noqa: E402
 from pipeline.trading_calendar import next_deadline, is_open
 from pipeline.market_indicators import build_00631l_volume_indicator  # noqa: E402
 
@@ -649,6 +649,8 @@ def _valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
         price=validated["current_price"] if quote_day is not None and raw_quote_day == quote_day and validated["price_origin"] == "reported" else None,
         reported_pe=valuation_current.get("pe"),
         pe_date=valuation_current.get("date"),
+        freshness_target=latest_completed_quarter(quote_day) if quote_day else None,
+        financial_check=health_inputs.get("financialSourceCheck") if isinstance(health_inputs, dict) else None,
     )
     review["quoteAsOf"] = raw_quote_day
     if review["reasonCodes"] == ["missing_same_day_price"]:
@@ -992,6 +994,38 @@ def _health_inputs_from_detail(detail: dict[str, Any]) -> dict[str, Any]:
     return normalize_finmind_health_inputs(financial_inputs, revenue_rows)
 
 
+def _twse_financial_source_check(public_inputs: dict[str, Any] | None, as_of: date) -> dict[str, Any] | None:
+    """Return a fresh issuer check only when a dated TWSE income row matches."""
+    if not isinstance(public_inputs, dict):
+        return None
+    checked_at = normalized_date(public_inputs.get("fetchedAt"))
+    rows = public_inputs.get("incomeQuarterly")
+    if not checked_at or not isinstance(rows, list):
+        return None
+    periods = []
+    for row in rows:
+        if not isinstance(row, dict) or not str(row.get("year", "")).isdigit() or not str(row.get("quarter", "")).isdigit():
+            continue
+        year, quarter = int(row["year"]), int(row["quarter"])
+        if year < 1900 or quarter not in range(1, 5):
+            continue
+        quarter_end = date(year, quarter * 3, monthrange(year, quarter * 3)[1])
+        if quarter_end > as_of:
+            continue
+        invalid_or_future = any(
+            row.get(field) and (normalized_date(row.get(field)) is None
+                                or normalized_date(row.get(field))[:10] > as_of.isoformat())
+            for field in ("availableAt", "publishedAt")
+        )
+        if not invalid_or_future:
+            periods.append((year, quarter))
+    if not periods:
+        return None
+    year, quarter = max(periods)
+    return {"status": "verified", "checkedAt": checked_at, "source": TWSE_SOURCE,
+            "latestPeriod": f"{year}Q{quarter}"}
+
+
 def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, public_inputs: dict[str, Any] | None = None) -> tuple[dict[str, Any], list[str]]:
     detail = copy.deepcopy(detail)
     code = str(detail.get("code") or "")
@@ -1000,6 +1034,9 @@ def enrich_detail(detail: dict[str, Any], *, end: date, offline: bool = False, p
     # rows; newer TWSE inputs overlay only matching/latest periods.
     existing_health_inputs = _health_inputs_from_detail(detail)
     source_inputs = merge_health_inputs(existing_health_inputs, public_inputs)
+    # A generic fetchedAt without an eligible matched income row is not proof.
+    if twse_check := _twse_financial_source_check(public_inputs, end):
+        source_inputs["financialSourceCheck"] = twse_check
     if source_inputs:
         detail["healthInputs"] = source_inputs
         detail["healthInputSummary"] = {
@@ -1391,8 +1428,39 @@ def _merge_peg_evidence(details: list[dict[str, Any]], evidence_path: Path | Non
             if quarter_end <= market_date:
                 eligible.append(record)
         by_code[code] = eligible
-    return [merge_issuer_eps(detail, by_code[str(detail.get("code"))])
-            if str(detail.get("code")) in by_code else detail for detail in details]
+    merged_details = []
+    for detail in details:
+        code = str(detail.get("code"))
+        if code not in by_code:
+            merged_details.append(detail)
+            continue
+        merged = merge_issuer_eps(detail, by_code[code])
+        health = merged.get("healthInputs") if isinstance(merged.get("healthInputs"), dict) else {}
+        observed_rows = []
+        for row in health.get("incomeQuarterly", []) or []:
+            evidence = row.get("epsEvidence") if isinstance(row, dict) else None
+            if (not isinstance(evidence, dict) or not row.get("sourceUrl")
+                    or not re.fullmatch(r"[a-fA-F0-9]{64}", str(evidence.get("sha256") or ""))):
+                continue
+            try:
+                observed = datetime.fromisoformat(str(evidence.get("observedAt") or "").replace("Z", "+00:00"))
+            except ValueError:
+                continue
+            if observed.tzinfo is None:
+                continue
+            period = re.fullmatch(r"(\d{4})-Q([1-4])", f"{row.get('year')}-Q{row.get('quarter')}")
+            if period:
+                observed_rows.append((int(period.group(1)), int(period.group(2)), observed))
+        if observed_rows:
+            year, quarter, observed = max(observed_rows, key=lambda item: (item[0], item[1], item[2]))
+            merged_health = dict(health)
+            merged_health["financialSourceCheck"] = {
+                "status": "verified", "checkedAt": observed.isoformat(),
+                "source": "issuer_document", "latestPeriod": f"{year}Q{quarter}",
+            }
+            merged["healthInputs"] = merged_health
+        merged_details.append(merged)
+    return merged_details
 
 
 def build_release(data_dir: Path, codes: list[str], *, as_of: str | None, offline: bool, ownership_snapshot: Path | None = None, recompute_existing: bool = False, source_cache_dir: Path | None = None, stock_cache_dir: Path | None = None, peg_evidence_path: Path | None = None) -> dict[str, Any]:

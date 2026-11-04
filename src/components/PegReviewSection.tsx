@@ -27,6 +27,7 @@ const PEG_REASON_LABELS: Record<string, string> = {
   missing_positive_pe: '缺少有效本益比',
   missing_as_of: '缺少計算基準日',
   invalid_peg: 'PEG 計算結果無效',
+  latest_statement_unverified: '最新財報來源尚未完成核對',
 }
 
 export function pegReviewReasonLabel(code: string): string {
@@ -54,7 +55,14 @@ function ReviewStock({ stock, review }: { stock: StockSummary; review: PegReview
   return (
     <li>
       <strong>{stock.code} {stock.name}</strong>
-      <span>{review.reasonCodes.length ? review.reasonCodes.map(pegReviewReasonLabel).join('；') : '計算證據待確認'}</span>
+      <span>{review.status === 'available'
+        ? `最新已驗證 EPS 期別：${review.currentPeriod ?? '未提供'}`
+        : review.reasonCodes.includes('latest_statement_unverified')
+        ? review.latestSourcePeriod && review.currentPeriod
+          ? `來源已確認至 ${review.latestSourcePeriod}，該季 EPS 尚未納入計算，暫不顯示 PEG`
+          : `已取得至 ${review.currentPeriod?.split('–').at(-1) ?? '期別未提供'}，尚未確認是否已有更新季報，暫不顯示 PEG`
+        : review.reasonCodes.length ? review.reasonCodes.map(pegReviewReasonLabel).join('；') : '計算證據待確認'}</span>
+      {review.expectedLatestQuarter && <small>預期查核期別：{review.expectedLatestQuarter}</small>}
       {review.reasonCodes.includes('insufficient_quarters') && review.availableQuarterCount != null && (
         <small>可用季度：{review.availableQuarterCount}/8</small>
       )}
@@ -71,6 +79,7 @@ function ReviewStock({ stock, review }: { stock: StockSummary; review: PegReview
       )}
       {review.quoteAsOf !== undefined && <small>實際行情日期：{review.quoteAsOf ?? '未提供或無效'}</small>}
       {review.latestEvidencePublishedAt && <small>最新財報發布：{review.latestEvidencePublishedAt}</small>}
+      {review.financialCheckAt && <small>財報來源核對日：{review.financialCheckAt}{review.financialCheckSource ? ` · ${review.financialCheckSource}` : ''}</small>}
       {review.sourceRefs.length > 0 && (
         <small className="peg-review-sources">
           來源：{review.sourceRefs.map((source, index) => (
@@ -88,17 +97,24 @@ function ReviewStock({ stock, review }: { stock: StockSummary; review: PegReview
 }
 
 export function PegReviewSection({ stocks }: { stocks: StockSummary[] }) {
+  const available = stocks.filter((stock) => stock.pegReview?.status === 'available')
   const needsReview = stocks.filter((stock) => stock.pegReview?.status === 'needs_review')
   const notApplicable = stocks.filter((stock) => stock.pegReview?.status === 'not_applicable')
-  const reported = needsReview.length + notApplicable.length
+  const reported = available.length + needsReview.length + notApplicable.length
 
   return (
     <details className="peg-review-section" id="peg-review">
       <summary>
-        PEG 查核清單：待核對 {needsReview.length} 檔 · 不適用 {notApplicable.length} 檔
+        PEG 查核清單：已核對 {available.length} 檔 · 待核對 {needsReview.length} 檔 · 不適用 {notApplicable.length} 檔
       </summary>
       <p>主要 PEG 使用同一公司連續、可比的兩組四季 TTM EPS 年增率；營收成長或多年 EPS 成長不會代替這項計算。</p>
       {reported === 0 && <p>目前發布未提供逐檔 PEG 查核診斷；舊版快照可能沒有此欄位。</p>}
+      {available.length > 0 && (
+        <section aria-label="已核對可計算 PEG 股票">
+          <h3>已核對可計算（{available.length} 檔）</h3>
+          <ul>{available.map((stock) => <ReviewStock key={stock.code} stock={stock} review={stock.pegReview!} />)}</ul>
+        </section>
+      )}
       {needsReview.length > 0 && (
         <section aria-label="PEG 待核對股票">
           <h3>待核對（{needsReview.length} 檔）</h3>

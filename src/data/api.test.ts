@@ -109,6 +109,7 @@ describe('validateRelease', () => {
       currentPeriod: '2025Q1–2025Q4', priorPeriod: null,
       asOf: '2026-03-01', currentTtmEps: 12.5, priorTtmEps: 10,
       epsGrowthPct: 25, latestEvidencePublishedAt: '2026-02-15T12:00:00Z',
+      expectedLatestQuarter: '2026Q3',
       sourceRefs: ['FinMind', 'https://example.com/filing'],
     }
     release.stocks = [{ code: '2330', name: '台積電', pegReview: review }]
@@ -126,6 +127,26 @@ describe('validateRelease', () => {
   it('rejects malformed PEG review diagnostics when present', () => {
     const release = validRelease() as unknown as Record<string, unknown>
     release.stocks = [{ code: '2330', name: '台積電', pegReview: { status: 'unknown', reasonCodes: [] } }]
+    expect(() => validateRelease(release)).toThrow('發布快照格式錯誤')
+  })
+
+  it('rejects malformed expected latest PEG quarter diagnostics', () => {
+    const release = validRelease() as unknown as Record<string, unknown>
+    release.stocks = [{ code: '2330', name: '台積電', pegReview: {
+      status: 'needs_review', reasonCodes: ['latest_statement_unverified'],
+      currentPeriod: '2025Q3–2026Q2', priorPeriod: '2024Q3–2025Q2',
+      expectedLatestQuarter: 2026, sourceRefs: [],
+    } }]
+    expect(() => validateRelease(release)).toThrow('發布快照格式錯誤')
+  })
+
+  it('rejects malformed latest source PEG period diagnostics', () => {
+    const release = validRelease() as unknown as Record<string, unknown>
+    release.stocks = [{ code: '2330', name: '台積電', pegReview: {
+      status: 'needs_review', reasonCodes: ['latest_statement_unverified'],
+      currentPeriod: '2025Q3–2026Q2', priorPeriod: '2024Q3–2025Q2',
+      latestSourcePeriod: '2026-Q3', sourceRefs: [],
+    } }]
     expect(() => validateRelease(release)).toThrow('發布快照格式錯誤')
   })
 

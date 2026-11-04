@@ -17,6 +17,7 @@ function validatePreview(preview, expected) {
     if (!stock || !/^\d{4,6}[A-Z]?$/.test(stock.code || '') || codes.has(stock.code) ||
         typeof stock.name !== 'string' || !stock.name || !stock.pegReview ||
         typeof stock.pegReview.status !== 'string' ||
+        !(stock.pegDiscoveryRequired === undefined || typeof stock.pegDiscoveryRequired === 'boolean') ||
         !(stock.currentPeriod === null || typeof stock.currentPeriod === 'string')) throw Error('candidate_stocks');
     codes.add(stock.code);
   }
@@ -25,7 +26,7 @@ function validatePreview(preview, expected) {
 
 function bindManifest(manifest, preview) {
   if (!manifest || manifest.marketDate !== preview.marketDate || manifest.requestId !== preview.requestId || !Array.isArray(manifest.stocks)) throw Error('manifest_lineage');
-  const eligible = new Set(preview.stocks.filter(stock => stock.pegReview.status === 'needs_review').map(stock => stock.code));
+  const eligible = new Set(preview.stocks.filter(stock => (stock.pegDiscoveryRequired === true || stock.pegReview.status === 'needs_review')).map(stock => stock.code));
   const seen = new Set();
   for (const stock of manifest.stocks) {
     if (!stock || !eligible.has(stock.code) || seen.has(stock.code) || typeof stock.legalName !== 'string' || !Array.isArray(stock.officialDomains) || !Array.isArray(stock.results)) throw Error('manifest_stocks');

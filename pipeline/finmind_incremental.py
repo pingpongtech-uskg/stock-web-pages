@@ -11,6 +11,7 @@ import math
 import os
 import re
 import time
+from calendar import monthrange
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -317,6 +318,17 @@ def financial_period(end: date) -> str:
     return f'{end.year - 1}-Q3'
 
 
+def previous_completed_quarter(end: date) -> tuple[int, int]:
+    """Return the latest calendar quarter fully ended by the as-of date."""
+    current_quarter = (end.month - 1) // 3 + 1
+    quarter_end_month = current_quarter * 3
+    if (end.month, end.day) >= (quarter_end_month, monthrange(end.year, quarter_end_month)[1]):
+        return end.year, current_quarter
+    if current_quarter == 1:
+        return end.year - 1, 4
+    return end.year, current_quarter - 1
+
+
 def merge_raw_rows(base: list[dict[str, Any]], overlay: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows = {}
     for row in [*base, *overlay]:
@@ -363,25 +375,52 @@ def plan_gaps(details: list[dict[str, Any]], cache: dict[str, Any], as_of: str, 
         safe_pe = same_day and number(valuation['current_pe']) is not None and valuation['current_pe'] > 0
         growth = valuation['growth'].get('growth')
         closes_valuation = safe_pe and valuation['ttm_eps'] is not None and growth is not None and 0 < growth <= GROWTH_EXTREME_RATE_MAX
+        stable_growth = derive_stable_eps_growth(valuation['rows'], as_of=as_of)
+        history_complete = stable_growth.get('valid_years', 0) >= 4
         growth_health = evaluate_growth_health(health.get('monthlyRevenueOfficial') or [],
                                                [*income, *(health.get('incomeYtd') or [])], as_of=as_of)
         due_year, due_quarter = financial_period(end).split('-Q')
         latest_period = max((normalized_period(row) for row in income if normalized_period(row) is not None), default=(0, 0))
-        financial_missing = (latest_period < (int(due_year), int(due_quarter)) or derive_ttm_eps(validated_income, as_of=as_of) is None or derive_stable_eps_growth(validated_income, as_of=as_of).get('growth') is None
+        latest_validated_period = max((period for row in validated_income
+                                       if (period := normalized_period(row)) is not None and number(row.get('eps')) is not None),
+                                      default=(0, 0))
+        financial_missing = (latest_period < (int(due_year), int(due_quarter)) or derive_ttm_eps(validated_income, as_of=as_of) is None or stable_growth.get('growth') is None
                              or any(check['status'] == 'unknown' for check in growth_health['checks'][1:]))
+        early_year, early_quarter = previous_completed_quarter(end)
+        early_financial_period = f'{early_year}-Q{early_quarter}-early-{retry_day}'
+        financial_cache = cache.get(f'{code}:{FINANCIAL}') or {}
+        regular_financial_period = financial_period(end)
+        regular_was_checked = financial_cache.get('checkedPeriod') == regular_financial_period
+        regular_retry_at = financial_cache.get('nextCheckAt')
+        early_was_checked_today = financial_cache.get('earlyCheckedPeriod') == early_financial_period
+        regular_financial_will_run = (
+            financial_missing and not early_was_checked_today
+            and not (regular_was_checked and not regular_retry_at)
+        )
+        regular_financial_deferred = (
+            financial_missing and not early_was_checked_today
+            and regular_was_checked and bool(regular_retry_at) and regular_retry_at > retry_day
+        )
+        early_financial_missing = (
+            history_complete and latest_validated_period < (early_year, early_quarter)
+            and not regular_financial_will_run and not regular_financial_deferred
+            and not early_was_checked_today
+        )
         requests = [
-            (FINANCIAL, financial_missing, financial_period(end), f'{end.year - 4}-01-01'),
+            (FINANCIAL, financial_missing and not early_was_checked_today, regular_financial_period, f'{end.year - 4}-01-01'),
+            (FINANCIAL, early_financial_missing, early_financial_period, f'{end.year - 4}-01-01'),
             (PER, not safe_pe, as_of, (end - timedelta(days=10)).isoformat()),
             (DIVIDEND, not complete_dividend(health.get('dividends') or [], end.year - 1, as_of), str(end.year), f'{end.year - 1}-01-01'),
             (REVENUE, growth_health['checks'][0]['status'] == 'unknown', expected_revenue_month(as_of, health.get('monthlyRevenueOfficial') or []), (end - timedelta(days=550)).isoformat()),
         ]
         for priority, (dataset, missing, period, start) in enumerate(requests):
             stored = cache.get(f'{code}:{dataset}') or {}
-            checked = stored.get('checkedPeriod') == period
+            is_early_financial = dataset == FINANCIAL and '-early-' in period
+            checked = (stored.get('earlyCheckedPeriod') == period if is_early_financial
+                       else stored.get('checkedPeriod') == period)
             next_check = stored.get('nextCheckAt')
             if not missing or (checked and not next_check):
                 continue
-            history_complete = derive_stable_eps_growth(validated_income, as_of=as_of).get('valid_years', 0) >= 4
             if dataset == FINANCIAL and history_complete and stored.get('rows'):
                 dates = [row['date'] for row in stored['rows'] if isinstance(row, dict) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', str(row.get('date') or ''))]
                 if dates:
@@ -442,7 +481,46 @@ def normalize_supplement(detail: dict[str, Any], cache: dict[str, Any], as_of: s
                           'stockPerShare': (number(row.get('StockEarningsDistribution')) or 0) + (number(row.get('StockStatutorySurplus')) or 0),
                           'availableAt': announced, 'exDividendDate': ex_date, 'source': f'FinMind:{DIVIDEND}', 'confirmed': True})
     health = merge_health_inputs(health, {'dividends': dividends})
+    financial_cache = cache.get(f'{code}:{FINANCIAL}') or {}
+    latest_checked = max((day for field in ('checkedAt', 'earlyCheckedAt')
+                          if (day := _valid_date(financial_cache.get(field)))), default=None)
+    fetched_at = financial_cache.get('fetchedAt')
+    try:
+        fetched = datetime.fromisoformat(str(fetched_at).replace('Z', '+00:00'))
+        has_successful_receipt = fetched.tzinfo is not None
+    except (TypeError, ValueError):
+        has_successful_receipt = False
+    cutoff = date.fromisoformat(as_of)
+    latest_period = max((period for row in health.get('incomeQuarterly') or []
+                         if isinstance(row, dict)
+                         and number(row.get('eps')) is not None
+                         and (period := normalized_period(row)) is not None
+                         and date(period[0], period[1] * 3, monthrange(period[0], period[1] * 3)[1]) <= cutoff
+                         and not any((available := normalized_date(row.get(field))) is None or available > as_of
+                                     for field in ('availableAt', 'publishedAt') if row.get(field) not in (None, ''))),
+                        default=None)
+    finmind_check = {
+        'status': 'verified' if latest_checked and latest_checked >= as_of and has_successful_receipt else 'missing',
+        'checkedAt': latest_checked,
+        'source': f'FinMind:{FINANCIAL}' if latest_checked and has_successful_receipt else None,
+        'latestPeriod': f'{latest_period[0]}Q{latest_period[1]}' if latest_period else None,
+    }
+    existing_check = health.get('financialSourceCheck')
+    if not isinstance(existing_check, dict) or (
+        finmind_check['status'] == 'verified'
+        and (existing_check.get('status') != 'verified'
+             or str(existing_check.get('checkedAt') or '') <= str(finmind_check.get('checkedAt') or ''))
+    ):
+        health = {**health, 'financialSourceCheck': finmind_check}
     return {**detail, 'financialInputs': financial, 'healthInputs': health}
+
+
+def _valid_date(value: Any) -> str | None:
+    try:
+        parsed = date.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed.isoformat() if isinstance(value, str) and parsed.isoformat() == value else None
 
 
 def supplement_snapshot(codes: list[str], output: Path, as_of: str | None = None, *, cache_dir: Path,
@@ -502,11 +580,14 @@ def supplement_snapshot(codes: list[str], output: Path, as_of: str | None = None
                     continue
                 key = f"{job['code']}:{job['dataset']}"
                 stored = {name: value for name, value in (cache.get(key) or {}).items() if name != 'nextCheckAt'}
+                is_early_financial = job['dataset'] == FINANCIAL and '-early-' in job['period']
+                receipt = ({'earlyCheckedPeriod': job['period'], 'earlyCheckedAt': budget_date}
+                           if is_early_financial else {'checkedPeriod': job['period'], 'checkedAt': budget_date})
                 cache = {**cache, key: {**stored, 'rows': merge_raw_rows(stored.get('rows') or [], rows),
-                         'checkedPeriod': job['period'], 'checkedAt': budget_date, 'fetchedAt': datetime.now(timezone.utc).isoformat()}}
+                         **receipt, 'fetchedAt': datetime.now(timezone.utc).isoformat()}}
                 updated = normalize_supplement(next(item for item in details if item['code'] == job['code']), cache, as_of)
                 unresolved = any(item['dataset'] == job['dataset'] for item in plan_gaps([updated], {}, as_of, budget_date=budget_date))
-                if unresolved:
+                if unresolved and not is_early_financial:
                     cache = {**cache, key: {**cache[key], 'nextCheckAt': (date.fromisoformat(budget_date) + timedelta(days=7)).isoformat()}}
                 atomic_json(cache_dir / 'rows.json', cache)
                 refreshed = [normalize_supplement(item, cache, as_of) for item in details]

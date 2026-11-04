@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
 import tarfile
 from pathlib import Path
 
@@ -40,6 +41,39 @@ def validate_universe(root, market_date):
     return latest
 
 
+def candidate_paths(root, latest):
+    run_id = latest.get('runId')
+    if not isinstance(run_id, str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,160}', run_id) or run_id in {'.', '..'}:
+        raise ValueError('invalid candidate run ID')
+    names = ['config/tracked_symbols.json', 'public/data/latest.json',
+             'public/data/institutional_universe.json', 'public/data/trading-calendar.json',
+             'public/data/research_universe.json', f'public/data/releases/{run_id}',
+             '.cache/chip-state', '.cache/ownership_snapshot.json', '.artifacts/ownership/generation.txt']
+    cache = root / '.cache/market-source'
+    for index_name in ('institutional-TWSE', 'institutional-TPEx', 'calendar', 'volume'):
+        index = cache / f'{index_name}-receipt-index.json'
+        if not index.is_file():
+            continue
+        names.append(str(index.relative_to(root)))
+        payload = json.loads(index.read_text())
+        for group in payload.get('groups', []):
+            body = group.get('bodyFile')
+            if body is None:
+                continue
+            if not isinstance(body, str) or not body or Path(body).is_absolute() or '..' in Path(body).parts:
+                raise ValueError('invalid candidate receipt path')
+            names.append(str((index.parent / body).relative_to(root)))
+    return sorted(set(names))
+
+
+def discovery_required(review, current_period, expected_quarter):
+    if review.get('status') == 'needs_review':
+        return True
+    current = re.findall(r'(\d{4})\s*[- ]?Q\s*([1-4])', current_period or '', re.IGNORECASE) if isinstance(current_period, str) else []
+    expected = re.fullmatch(r'(\d{4})Q([1-4])', expected_quarter or '') if isinstance(expected_quarter, str) else None
+    return bool(current and expected and tuple(map(int, current[-1])) < tuple(map(int, expected.groups())))
+
+
 def create(root, artifact, request, market_date, run, attempt, source_commit):
     data = root / 'public/data'
     latest = validate_universe(root, market_date)
@@ -50,18 +84,21 @@ def create(root, artifact, request, market_date, run, attempt, source_commit):
         if not re.fullmatch(r'[A-Za-z0-9]{1,12}', code):
             raise ValueError('invalid candidate code')
         detail = json.loads((data / 'releases' / latest['runId'] / 'stocks' / f'{code}.json').read_text())
+        review = detail.get('pegReview') or {'status': 'needs_review', 'reasonCodes': ['missing_evidence']}
+        current = review.get('currentPeriod') or detail.get('currentPeriod')
+        expected = review.get('expectedLatestQuarter') or detail.get('expectedLatestQuarter')
         stocks.append({'code': code, 'name': detail.get('name') or row.get('name'),
-                       'pegReview': detail.get('pegReview') or {'status': 'needs_review', 'reasonCodes': ['missing_evidence']},
-                       'currentPeriod': (detail.get('pegReview') or {}).get('currentPeriod') or detail.get('currentPeriod')})
+                       'pegReview': review, 'currentPeriod': current,
+                       'expectedLatestQuarter': expected,
+                       'pegDiscoveryRequired': discovery_required(review, current, expected)})
     artifact.mkdir(parents=True, exist_ok=True)
     archive = artifact / 'candidate.tar.gz'
     with tarfile.open(archive, 'w:gz') as tar:
-        for name in PATHS:
+        for name in candidate_paths(root, latest):
             path = root / name
             if path.exists():
-                for file in sorted(path.rglob('*')):
-                    if file.is_symlink():
-                        raise ValueError('candidate contains symlink')
+                if path.is_symlink() or any(file.is_symlink() for file in path.rglob('*')):
+                    raise ValueError('candidate contains symlink')
                 tar.add(path, arcname=name, recursive=True)
     if archive.stat().st_size > MAX_ARCHIVE_BYTES:
         raise ValueError('candidate exceeds size limit')
@@ -101,6 +138,17 @@ def restore(root, artifact, request, market_date, run, attempt, expected_digest)
             raise ValueError('candidate archive unsafe')
         if not any(m.name == 'config/tracked_symbols.json' and m.isfile() for m in members):
             raise ValueError('candidate universe config missing')
+        latest_file = tar.extractfile('public/data/latest.json')
+        if latest_file is None:
+            raise ValueError('candidate latest missing')
+        run_id = json.load(latest_file).get('runId')
+        if not isinstance(run_id, str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,160}', run_id) or run_id in {'.', '..'}:
+            raise ValueError('invalid candidate run ID')
+        release_dir = root / 'public/data/releases' / run_id
+        if release_dir.is_symlink():
+            raise ValueError('candidate release symlink')
+        if release_dir.exists():
+            shutil.rmtree(release_dir)
         tar.extractall(root, members=members, filter='data')
     validate_universe(root, market_date)
     return preview

@@ -235,6 +235,13 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
           )}
         </span>
       )}
+      {row.pegReview?.status === 'available' && (
+        <small className="peg-review-inline">
+          EPS 期別 {row.pegReview.currentPeriod ?? '未提供'}
+          {row.pegReview.quoteAsOf ? ` · 行情日期 ${row.pegReview.quoteAsOf}` : ''}
+          {row.pegReview.financialCheckAt ? ` · 財報核對日 ${row.pegReview.financialCheckAt}` : ''}
+        </small>
+      )}
       <span className="stock-prices">
         <span><small>現在價格</small><strong>{formatMaybePrice(row.currentPrice)}</strong></span>
         {!lowPosition && growth && <>

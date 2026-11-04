@@ -168,8 +168,135 @@ def test_latest_period_due_refreshes_incrementally():
     cache = {'2330:TaiwanStockFinancialStatements': {'rows': [{'date': '2026-06-30', 'type': 'EPS', 'value': 2}], 'checkedPeriod': '2026-Q2', 'checkedAt': '2026-10-01'}}
     stock = {**detail(), 'healthInputs': {'incomeQuarterly': [{'year': year, 'quarter': quarter, 'eps': 2} for year in range(2022, 2026) for quarter in range(1, 5)]}}
     jobs = plan_gaps([stock], cache, '2026-11-15')
-    job = next(job for job in jobs if job['dataset'] == 'TaiwanStockFinancialStatements')
+    financial = [job for job in jobs if job['dataset'] == 'TaiwanStockFinancialStatements']
+    assert len(financial) == 1
+    job = financial[0]
+    assert job['period'] == '2026-Q3'
     assert job['start_date'] == '2026-06-30'
+
+
+@pytest.mark.parametrize('health_status', ['pass', 'unknown'])
+def test_plan_early_refreshes_previous_completed_quarter_once_per_budget_date(monkeypatch, health_status):
+    stock = {**detail(), 'asOf': '2026-11-04', 'lastPrice': 100,
+             'healthInputs': {'incomeQuarterly': [
+                 {'year': year, 'quarter': quarter, 'eps': annual / 4}
+                 for year, annual in ((2022, 4), (2023, 5), (2024, 6), (2025, 8))
+                 for quarter in range(1, 5)
+             ] + [{'year': 2026, 'quarter': quarter, 'eps': 2.5} for quarter in (1, 2)]}}
+    def healthy(*args, **kwargs):
+        return {'checks': [{'status': 'pass' if index == 0 else health_status} for index in range(5)]}
+    monkeypatch.setattr('pipeline.finmind_incremental.evaluate_growth_health', healthy)
+    cache = {'2330:TaiwanStockFinancialStatements': {
+        'rows': [{'date': '2026-06-30', 'type': 'EPS', 'value': 2.5}],
+        'checkedPeriod': '2026-Q2', 'checkedAt': '2026-11-03',
+    }}
+    jobs = plan_gaps([stock], cache, '2026-11-04', budget_date='2026-11-04')
+    financial = [job for job in jobs if job['dataset'] == 'TaiwanStockFinancialStatements']
+    assert len(financial) == 1
+    assert financial[0]['period'] == '2026-Q3-early-2026-11-04'
+    assert financial[0]['start_date'] == '2026-06-30'
+
+    checked_today = {**cache, '2330:TaiwanStockFinancialStatements': {
+        **cache['2330:TaiwanStockFinancialStatements'],
+        'earlyCheckedPeriod': financial[0]['period'],
+    }}
+    again_today = plan_gaps([stock], checked_today, '2026-11-04', budget_date='2026-11-04')
+    assert not any(job['dataset'] == 'TaiwanStockFinancialStatements' for job in again_today)
+    tomorrow = plan_gaps([stock], checked_today, '2026-11-04', budget_date='2026-11-05')
+    assert any(job['period'] == '2026-Q3-early-2026-11-05' for job in tomorrow if job['dataset'] == 'TaiwanStockFinancialStatements')
+
+
+@pytest.mark.parametrize('as_of,expected', [
+    ('2026-06-29', (2026, 1)),
+    ('2026-06-30', (2026, 2)),
+    ('2026-11-04', (2026, 3)),
+    ('2026-12-31', (2026, 4)),
+])
+def test_early_refresh_target_is_latest_fully_completed_quarter(as_of, expected):
+    from pipeline.finmind_incremental import previous_completed_quarter
+    assert previous_completed_quarter(datetime.fromisoformat(as_of).date()) == expected
+
+
+def test_normalize_supplement_reports_financial_dataset_receipt_not_generic_fetch_time():
+    from pipeline.finmind_incremental import normalize_supplement
+    stock = {**detail(), 'healthInputs': {'incomeQuarterly': [
+        {'year': 2026, 'quarter': 2, 'eps': 2.5},
+    ]}}
+    cache = {
+        '2330:TaiwanStockFinancialStatements': {
+            'rows': [], 'checkedAt': '2026-11-04', 'fetchedAt': '2026-11-04T01:02:03+00:00',
+        },
+        '2330:TaiwanStockMonthRevenue': {'rows': [], 'fetchedAt': '2026-11-05T01:02:03+00:00'},
+    }
+    checked = normalize_supplement(stock, cache, '2026-11-04')['healthInputs']['financialSourceCheck']
+    assert checked == {
+        'status': 'verified', 'checkedAt': '2026-11-04',
+        'source': 'FinMind:TaiwanStockFinancialStatements', 'latestPeriod': '2026Q2',
+    }
+
+    generic_only = normalize_supplement(stock, {
+        '2330:TaiwanStockMonthRevenue': {'rows': [], 'fetchedAt': '2026-11-05T01:02:03+00:00'},
+    }, '2026-11-04')['healthInputs']['financialSourceCheck']
+    assert generic_only['status'] == 'missing'
+    assert generic_only['latestPeriod'] == '2026Q2'
+
+
+@pytest.mark.parametrize('response_rows,expected_q3_eps', [
+    ([{'date': '2026-09-30', 'type': 'EPS', 'value': 3, 'publishedAt': '2026-11-03'}], 3),
+    ([], None),
+])
+def test_early_filing_refresh_fetches_and_merges_new_published_quarter(tmp_path, monkeypatch, response_rows, expected_q3_eps):
+    import urllib.parse
+    stock = {**detail(), 'asOf': '2026-11-04', 'lastPrice': 100,
+             'healthInputs': {
+                 'valuationCurrent': {'date': '2026-11-04', 'pe': 12.5},
+                 'incomeQuarterly': [
+                     {'year': year, 'quarter': quarter, 'eps': annual / 4}
+                     for year, annual in ((2022, 4), (2023, 5), (2024, 6), (2025, 8))
+                     for quarter in range(1, 5)
+                 ] + [{'year': 2026, 'quarter': quarter, 'eps': 2.5} for quarter in (1, 2)],
+                 'dividends': [{'year': 2025, 'period': 'annual', 'cashPerShare': 2, 'confirmed': True,
+                               'approvedAt': '2026-06-01', 'publishedAt': '2026-06-02',
+                               'availableAt': '2026-06-03', 'exDate': '2026-07-01'}],
+             }}
+    output, stocks_dir = fixture_release(tmp_path, [stock])
+    cache_dir = tmp_path / 'cache'
+    cache_dir.mkdir()
+    atomic_rows = {'2330:TaiwanStockFinancialStatements': {
+        'rows': [{'date': '2026-06-30', 'type': 'EPS', 'value': 2.5}],
+        'checkedPeriod': '2026-Q2', 'checkedAt': '2026-11-03',
+    }}
+    (cache_dir / 'rows.json').write_text(json.dumps(atomic_rows))
+    monkeypatch.setattr('pipeline.finmind_incremental.evaluate_growth_health',
+                        lambda *args, **kwargs: {'checks': [{'status': 'pass'} for _ in range(5)]})
+    monkeypatch.setattr('time.sleep', lambda _: None)
+    calls = []
+    def respond(request, **kwargs):
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(request.full_url).query)
+        calls.append(params)
+        if not params:
+            return Response({'api_request_limit': 100, 'user_count': 0})
+        assert params['dataset'] == ['TaiwanStockFinancialStatements']
+        return Response({'status': 200, 'data': response_rows})
+    monkeypatch.setattr('urllib.request.urlopen', respond)
+
+    result = supplement_snapshot(['2330'], output, '2026-11-04', cache_dir=cache_dir,
+                                 budget_date='2026-11-04', token='secret')
+
+    assert result['completed'] == 1
+    assert len(calls) == 2
+    refreshed = json.loads((stocks_dir / '2330.json').read_text())
+    receipt = refreshed['healthInputs']['financialSourceCheck']
+    assert receipt['status'] == 'verified'
+    assert receipt['checkedAt'] == '2026-11-04'
+    assert receipt['latestPeriod'] == ('2026Q3' if expected_q3_eps is not None else '2026Q2')
+    q3_rows = [row for row in refreshed['healthInputs']['incomeQuarterly']
+               if row['year'] == 2026 and row['quarter'] == 3]
+    if expected_q3_eps is None:
+        assert q3_rows == []
+    else:
+        assert q3_rows[0]['eps'] == expected_q3_eps
+        assert q3_rows[0]['availableAt'] == '2026-11-03'
 
 
 def test_no_token_keeps_public_release_and_checkpoints_queue(tmp_path):

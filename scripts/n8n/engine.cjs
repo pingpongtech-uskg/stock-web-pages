@@ -380,7 +380,7 @@ function advanceSuccess(state,body,status,response,now) {
     case 'pegArtifactZip': {
       const preview=body?.preview;
       if(!preview||preview.requestId!==state.requestId||preview.marketDate!==state.marketDate||preview.prepareRunId!==state.pegPrepareRunId||preview.prepareRunAttempt!==state.pegPrepareRunAttempt||preview.sourceGitCommit!==state.pegPrepareHeadSha||!/^[a-f0-9]{64}$/.test(preview.candidateSha256||'')||body.candidateSha256!==preview.candidateSha256)throw Error('peg_candidate_lineage');
-      if(!Array.isArray(preview.stocks)||preview.stocks.length!==100||new Set(preview.stocks.map(stock=>stock?.code)).size!==100||preview.stocks.some(stock=>!stock||!/^\d{4,6}[A-Z]?$/.test(stock.code||'')||typeof stock.name!=='string'||!stock.name||typeof stock.pegReview?.status!=='string'||!(stock.currentPeriod===null||typeof stock.currentPeriod==='string')))throw Error('peg_candidate_stocks');
+      if(!Array.isArray(preview.stocks)||preview.stocks.length!==100||new Set(preview.stocks.map(stock=>stock?.code)).size!==100||preview.stocks.some(stock=>!stock||!/^\d{4,6}[A-Z]?$/.test(stock.code||'')||typeof stock.name!=='string'||!stock.name||typeof stock.pegReview?.status!=='string'||!(stock.pegDiscoveryRequired===undefined||typeof stock.pegDiscoveryRequired==='boolean')||!(stock.currentPeriod===null||typeof stock.currentPeriod==='string')))throw Error('peg_candidate_stocks');
       return checkpoint({...state,pegPreview:preview,pegCandidateSha256:preview.candidateSha256},'pegDiscovery');
     }
     case 'pegDiscovery': {

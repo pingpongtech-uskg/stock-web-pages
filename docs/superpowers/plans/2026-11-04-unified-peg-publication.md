@@ -34,3 +34,11 @@
 - [ ] Update/publish main n8n graph after source compatibility is proven; disable old standalone PEG publisher.
 - [ ] Run one end-to-end update for latest completed session, inspect public same-generation dates/numbers/reasons, archive temporary tooling.
 - [ ] Record evidence and remaining next-schedule verification without claiming an unobserved schedule passed.
+
+## Integration findings and required corrections
+
+The first source release (`46c90f0e7c4a430c45559b3a96b94ecb022ec2d9`) passed CI and Cloudflare deployment. Manual execution 1500 reached authenticated prepare Actions run 41766156514, but candidate creation exceeded 64 MiB because it included historical releases and archives. No public data was published. Candidate packing now selects the current generation and referenced current receipts; final restore preserves existing history. The main workflow was unpublished at that checkpoint; restoring its schedule requires a successful corrected end-to-end test.
+
+A further freshness audit found that the legacy FinMind gap planner could wait for the ordinary filing deadline and skip early reports for an otherwise complete EPS history. Bounded daily early-filing probes now cover that gap. Actual income-statement source-check receipts distinguish fresh financial lookups from newer quote/revenue requests. Calendar quarters guide discovery; they do not prove a report has been filed. Known newer eligible statements without EPS and unverified cached-only financials cannot produce a displayed PEG.
+
+The top-level PEG review proof is rebuilt from the exact final export for every publishing mode, including ownership-only revisions. This keeps review, export and latest-generation identities consistent after subsequent updates.

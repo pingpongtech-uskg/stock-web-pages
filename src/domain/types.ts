@@ -13,6 +13,10 @@ export interface PegReview {
   priorTtmEps?: number | null
   epsGrowthPct?: number | null
   latestEvidencePublishedAt?: string | null
+  expectedLatestQuarter?: string | null
+  financialCheckAt?: string | null
+  financialCheckSource?: string | null
+  latestSourcePeriod?: string | null
   availableQuarterCount?: number | null
   sourceRefs: string[]
 }

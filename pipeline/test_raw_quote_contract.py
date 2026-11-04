@@ -89,6 +89,8 @@ def test_zulu_valuation_requires_pe_from_actual_raw_quote_date(monkeypatch):
     ]
     detail = {'asOf': '2026-10-15', 'lastPrice': 100, 'quoteBasis': 'raw_close',
               'quoteAsOf': '2026-10-15', 'healthInputs': {
+                  'financialSourceCheck': {'status': 'verified', 'checkedAt': '2026-10-15',
+                                           'source': 'TWSE OpenAPI', 'latestPeriod': '2025Q4'},
                   'incomeQuarterly': eps_rows,
                   'valuationCurrent': {'date': '2026-10-16', 'pe': 10},
               }}

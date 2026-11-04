@@ -314,7 +314,7 @@ def test_known_early_revenue_month_closes_supplement_gap_before_deadline():
     assert not any(job['dataset'] == retrieval.REVENUE for job in retrieval.plan_gaps([detail], {}, '2026-10-02'))
 
 
-def test_newly_due_revenue_supplement_restores_fresh_check_and_skips_next_day_http(tmp_path, monkeypatch):
+def test_newly_due_revenue_supplement_restores_fresh_check_and_next_day_only_probes_early_financial(tmp_path, monkeypatch):
     detail = stock('2330', full_eps=True, reported_pe=True, revenue=True)
     detail['asOf'] = '2026-10-10'
     detail['priceSeries'][0]['date'] = '2026-10-10'
@@ -332,20 +332,27 @@ def test_newly_due_revenue_supplement_restores_fresh_check_and_skips_next_day_ht
         calls.append(params)
         if not params:
             return Response({'api_request_limit': 1000, 'user_count': 0})
-        assert params['dataset'] == [retrieval.REVENUE]
+        dataset = params['dataset'][0]
+        if dataset == retrieval.FINANCIAL:
+            return Response({'status': 200, 'data': []})
+        assert dataset == retrieval.REVENUE
         rows = [{'date': f'{year}-10-10', 'revenue_year': year, 'revenue_month': 9,
                  'revenue': value} for year, value in [(2025, 100), (2026, 120)]]
         return Response({'status': 200, 'data': rows})
     monkeypatch.setattr('urllib.request.urlopen', respond)
     kwargs = {'cache_dir': tmp_path / 'cache', 'budget_date': day[0], 'token': str(uuid.uuid4())}
     result = retrieval.supplement_snapshot(['2330'], output, '2026-10-10', **kwargs)
-    assert result['actual_attempts'] == 2 and result['completed'] == 1 and result['queued'] == 0
+    assert result['actual_attempts'] == 3 and result['completed'] == 2 and result['queued'] == 0
     cache = json.loads((tmp_path / 'cache' / 'rows.json').read_text())
     assert cache[f'2330:{retrieval.REVENUE}']['checkedPeriod'] == '2026-09'
+    assert cache[f'2330:{retrieval.FINANCIAL}']['rows'] == []
+    assert cache[f'2330:{retrieval.FINANCIAL}']['earlyCheckedPeriod'] == '2026-Q3-early-2026-10-10'
     from pipeline.growth_health import evaluate_growth_health
     updated = json.loads((output / 'releases' / 'official' / 'stocks' / '2330.json').read_text())
     check = evaluate_growth_health(updated['healthInputs']['monthlyRevenueOfficial'], [], as_of='2026-10-10')['checks'][0]
     assert check['status'] == 'pass' and check['period'].startswith('2026-07–2026-09')
     day[0] = '2026-10-11'
-    retrieval.supplement_snapshot(['2330'], output, '2026-10-10', **{**kwargs, 'budget_date': day[0]})
-    assert len(calls) == 2
+    next_day = retrieval.supplement_snapshot(['2330'], output, '2026-10-10', **{**kwargs, 'budget_date': day[0]})
+    assert next_day['actual_attempts'] == 2 and next_day['completed'] == 1
+    datasets = [params['dataset'][0] for params in calls if params]
+    assert datasets == [retrieval.FINANCIAL, retrieval.REVENUE, retrieval.FINANCIAL]

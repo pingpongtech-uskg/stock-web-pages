@@ -312,7 +312,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf public/data .cache/market-source .cache/chip-state .cache/ownership_snapshot.json .artifacts/ownership
+          rm -rf .cache/market-source .cache/chip-state .cache/ownership_snapshot.json .artifacts/ownership
           python scripts/peg_candidate.py restore --artifact .artifacts/peg-candidate --request-id "$REQUEST_ID" --market-date "$MARKET_DATE" --prepare-run-id "$PREPARE_RUN_ID" --prepare-run-attempt "$PREPARE_RUN_ATTEMPT" --candidate-sha256 "$CANDIDATE_SHA256"
           if [ -s .artifacts/ownership/generation.txt ]; then
             echo "OWNERSHIP_GENERATION=$(cat .artifacts/ownership/generation.txt)" >> "$GITHUB_ENV"
@@ -337,12 +337,6 @@ jobs:
       - name: Apply fresh PEG evidence to frozen candidate
         if: inputs.source_mode == 'finalize_peg'
         run: python scripts/run_peg_repair.py --market-date "$MARKET_DATE" --request-id "$REQUEST_ID" --manifest "$RUNNER_TEMP/peg_search_results.json" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID"
-      - uses: actions/upload-artifact@v7
-        if: inputs.source_mode == 'finalize_peg'
-        with:
-          name: peg-review-${{ inputs.market_date }}-${{ github.run_id }}
-          path: public/data/peg-review.json
-          if-no-files-found: error
       - run: python scripts/verify_snapshot.py --require-growth-coverage
         if: inputs.source_mode != 'prepare_peg'
       - name: Publish latest data with per-stock freshness warnings
@@ -357,6 +351,22 @@ jobs:
       - name: Build canonical screening export
         if: inputs.source_mode != 'prepare_peg'
         run: python scripts/build_screening_export.py --data-dir public/data --request-id "$REQUEST_ID" --market-date "$MARKET_DATE" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID"
+      - name: Build PEG review for final release
+        if: inputs.source_mode != 'prepare_peg'
+        shell: bash
+        run: |
+          set -euo pipefail
+          peg_lineage=()
+          if [ "$SOURCE_MODE" = finalize_peg ]; then
+            peg_lineage=(--manifest "$RUNNER_TEMP/peg_search_results.json" --prepare-run-id "$PREPARE_RUN_ID" --prepare-run-attempt "$PREPARE_RUN_ATTEMPT" --candidate-sha256 "$CANDIDATE_SHA256")
+          fi
+          python scripts/build_peg_review.py --market-date "$MARKET_DATE" --request-id "$REQUEST_ID" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID" "${peg_lineage[@]}"
+      - uses: actions/upload-artifact@v7
+        if: inputs.source_mode == 'finalize_peg'
+        with:
+          name: peg-review-${{ inputs.market_date }}-${{ github.run_id }}
+          path: public/data/peg-review.json
+          if-no-files-found: error
       - name: Build and validate complete market cache before publication
         if: inputs.source_mode != 'prepare_peg'
         id: market-cache-index
