@@ -295,7 +295,7 @@ function advanceSuccess(state,body,status,response,now) {
       const existing=status===404?null:JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));
       if(existing?.owner!==state.owner&&!existing?.released&&existing?.owner&&now<Number(existing.deadline))
         return request({...state,waitingForOwner:existing.owner,waitingUntil:Number(existing.deadline)},'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`,null,30);
-      if(state.mode==='screen'&&state.automaticRequestId===true&&existing?.marketDate===state.marketDate&&existing.screeningStatus==='failed'&&existing.publicationStatus!=='verified') {
+      if(state.mode==='screen'&&state.automaticRequestId===true&&existing?.marketDate===state.marketDate&&existing.screeningStatus==='failed'&&existing.publicationStatus!=='verified'&&!hasPinnedPegFinal(existing)) {
         const retryCount=Number.isSafeInteger(existing.automaticRetryCount)&&existing.automaticRetryCount>=0?existing.automaticRetryCount+1:1;
         state={...state,requestId:`stockscreener:${state.marketDate.replaceAll('-','')}:v1:retry${retryCount}`,mode:'revision',automaticRetry:true,automaticRetryCount:retryCount,automaticRetryFrom:existing.requestId,freshnessRefreshCount:existing.freshnessRefreshCount,actionsRunId:undefined,runHeadSha:undefined,dispatchIntent:false,dispatchStartedAt:undefined};
       }
