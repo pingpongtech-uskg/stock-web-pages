@@ -73,6 +73,19 @@ test('operator-corrected finalized PEG state dispatches only after exact-run loo
  assert.equal(out.state.stage,'checkpoint');assert.equal(out.state.nextStage,'dispatch');
  const saved=JSON.parse(Buffer.from(out.op.body.content,'base64').toString());assert.equal(saved.dispatchIntent,true);assert.equal(saved.pegFinalReady,true);
 });
+test('manual resume recovers only terminal checkpoint advance failure with pinned PEG and no Actions run',()=>{
+ const terminal={...base,stage:'done',released:true,transitionTerminal:true,errorCategory:'checkpoint_advance_failed',errorMessage:'prior transition failed',screeningStatus:'failed',dispatchIntent:false,pegFinalReady:true,pegPrepareRunId:'123',pegPrepareRunAttempt:1,pegPrepareHeadSha:run.head_sha,pegCandidateSha256:preview.candidateSha256,pegManifestCommit:'c'.repeat(40)};
+ const incoming={...engine.start({...base,mode:'resume',runKind:'manual',owner:'701'},now).state,stage:'state',isOpen:true,mode:'resume'};
+ const resumed=engine.advance(incoming,response({sha:'stored',content:Buffer.from(JSON.stringify(terminal)).toString('base64')}),now);
+ assert.equal(resumed.state.stage,'checkpoint');assert.equal(resumed.state.nextStage,'findRun');
+ const saved=JSON.parse(Buffer.from(resumed.op.body.content,'base64').toString());
+ assert.equal(saved.transitionTerminal,undefined);assert.equal(saved.errorCategory,'');assert.equal(saved.errorMessage,'');assert.equal(saved.pegFinalReady,true);
+ const continued=engine.advance(resumed.state,response({content:{sha:'resumed'}}),now);
+ assert.equal(continued.op.method,'GET');assert.match(continued.op.url,/actions\/workflows\/daily.yml\/runs/);
+ const invalid={...terminal,pegCandidateSha256:'bad'};
+ const rejected=engine.advance(incoming,response({sha:'stored',content:Buffer.from(JSON.stringify(invalid)).toString('base64')}),now);
+ assert.equal(rejected.route,'done');assert.equal(rejected.op,null);
+});
 test('rejects mismatched prepare artifact, preview or manifest',()=>{
  const state={...base,stage:'pegArtifactList',pegPrepareRunId:'123',pegPrepareRunAttempt:1,pegPrepareHeadSha:run.head_sha};
  const bad=engine.advance(state,response({total_count:1,artifacts:[{...artifact,workflow_run:{...artifact.workflow_run,id:124}}]}),now);
