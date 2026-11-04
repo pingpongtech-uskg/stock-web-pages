@@ -154,6 +154,16 @@ test('successful checkpoint with missing CAS sha stops without issuing a follow-
   {statusCode:200,body:{content:{}}},now);
  assert.equal(out.route,'done');assert.equal(out.state.errorCategory,'checkpoint_write_ambiguous');assert.equal(out.op,null);
 });
+test('committed optional restore checkpoint with missing transient restore parts falls back to fresh PEG preparation',()=>{
+ const now=Date.parse('2026-10-02T10:30:00Z');
+ const checkpoint={...engine.start({...base,runKind:'scheduled',sourceMode:'publish'},now).state,stage:'checkpoint',nextStage:'restoreBlobGet',lockSha:'old-sha',deadline:now+60000,restoreBlobCursor:0,dispatchIntent:true};
+ const recovered=engine.advance(checkpoint,{statusCode:200,body:{content:{sha:'fresh-sha-1'}}},now);
+ assert.equal(recovered.state.stage,'checkpoint');assert.equal(recovered.state.nextStage,'pegFindPrepare');
+ const saved=JSON.parse(Buffer.from(recovered.op.body.content,'base64').toString());
+ assert.equal(saved.restoreStatus,'missing');assert.ok(saved.restoreWarning);assert.equal(saved.errorCategory,'');
+ for(const key of Object.keys(saved).filter(key=>key.startsWith('restore')&&!['restoreStatus','restoreWarning'].includes(key)))assert.fail(`unexpected stale restore state: ${key}`);
+ assert.equal(saved.dispatchIntent,false);
+});
 test('explicit manual resume of a terminal checkpoint continues the saved run without redispatch or losing upload intent',()=>{
  const now=Date.parse('2026-10-02T10:30:00Z');
  const interrupted={...engine.start({...base,runKind:'scheduled'},now).state,stage:'checkpoint',nextStage:'cache_unrecognized',lockSha:'old-sha',deadline:now+60000,actionsRunId:'123',runHeadSha:'a'.repeat(40),cacheUploadIntent:'cache-payload-1.gz',cacheUploadId:'upload-123',cacheSendAttempted:true};

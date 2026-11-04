@@ -211,6 +211,7 @@ function advance(original,response,now=Date.now()) {
     const committed={...state,lockSha:body.content.sha,stage:state.nextStage,retry:0};
     try {return {...next(committed,now),ledgerRequired:true};}
     catch {
+      if(/^restore[A-Z]/.test(committed.stage)&&(committed.sourceMode||'publish')==='publish')return fail(committed,'restore_checkpoint_unavailable','Optional prior cache checkpoint could not be resumed; collecting fresh official data.');
       const terminal={...committed,released:true,nextStage:undefined,transitionTerminal:true,screeningStatus:committed.screeningStatus==='pending'?'failed':committed.screeningStatus||'failed',recordFailure:false,errorCategory:'checkpoint_advance_failed',errorMessage:'The state checkpoint was saved, but the next request could not be prepared. Resume from saved state.'};
       return checkpoint(terminal,'done',now);
     }
