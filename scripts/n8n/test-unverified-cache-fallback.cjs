@@ -6,7 +6,7 @@ const state = {marketDate:'2026-10-14',previousSessionDate:'2026-10-13',requestI
 const response = day => ({statusCode:200,body:{content:Buffer.from(JSON.stringify(day)).toString('base64')}});
 test('unfinished prior cache does not block current official-data acquisition',()=>{
   const output=engine.advance(state,response({marketDate:'2026-10-13',cacheStatus:'uploading',cacheManifestHash:'b'.repeat(64),cachePartsExpected:15,cachePartsVerified:0}),now);
-  assert.equal(output.state.nextStage,'dispatch');
+  assert.equal(output.state.nextStage,'pegFindPrepare');
   assert.equal(output.state.restoreStatus,'missing');
   assert.equal(output.state.errorCategory,'');
   assert.ok(output.state.restoreWarning);
@@ -15,7 +15,7 @@ test('unfinished prior cache does not block current official-data acquisition',(
 test('a cache claiming verification still requires valid custody before use',()=>{
   const output=engine.advance(state,response({marketDate:'2026-10-13',cacheStatus:'verified',cacheManifestHash:'b'.repeat(64)}),now);
   assert.equal(output.state.errorCategory,'');
-  assert.equal(output.state.nextStage,'dispatch');
+  assert.equal(output.state.nextStage,'pegFindPrepare');
   assert.equal(output.state.restoreStatus,'missing');
   assert.match(output.state.restoreWarning,/restore_prior_custody/);
 });
@@ -24,15 +24,16 @@ test('Notion restore outages discard all backup references and dispatch only fre
  for(const statusCode of [403,503]) {
   const input={...state,sourceMode:'publish',stage:'restorePage',retry:3,op:{target:'notion',method:'GET',url:'https://api.notion.com/v1/pages/example'},restoreManifestHash:'b'.repeat(64),restoreTransient:{files:{}},restorePartRefs:[{}],restoreRefsExecutionId:'fixture'};
   const fallback=engine.advance(input,{statusCode,body:{message:'private provider failure'}},now);
-  assert.equal(fallback.state.nextStage,'dispatch');assert.equal(fallback.state.restoreStatus,'missing');assert.equal(fallback.state.restorePartRefs,undefined);assert.equal(fallback.state.restoreTransient,undefined);assert.doesNotMatch(fallback.state.restoreWarning,/private provider/);
-  const dispatched=engine.advance(fallback.state,{statusCode:200,body:{content:{sha:'new'}}},now);
-  assert.equal(dispatched.state.stage,'dispatch');assert.deepEqual(Object.keys(dispatched.op.body.inputs).sort(),['market_date','request_id','source_mode']);
+  assert.equal(fallback.state.nextStage,'pegFindPrepare');assert.equal(fallback.state.restoreStatus,'missing');assert.equal(fallback.state.restorePartRefs,undefined);assert.equal(fallback.state.restoreTransient,undefined);assert.doesNotMatch(fallback.state.restoreWarning,/private provider/);
+  let dispatched=engine.advance(fallback.state,{statusCode:200,body:{content:{sha:'new'}}},now);
+  assert.equal(dispatched.state.stage,'pegFindPrepare');dispatched=engine.advance(dispatched.state,{statusCode:200,body:{workflow_runs:[]}},now);dispatched=engine.advance(dispatched.state,{statusCode:200,body:{content:{sha:'new2'}}},now);
+  assert.equal(dispatched.state.stage,'pegDispatchPrepare');assert.deepEqual(Object.keys(dispatched.op.body.inputs).sort(),['market_date','request_id','source_mode']);assert.equal(dispatched.op.body.inputs.source_mode,'prepare_peg');
   const conflict=engine.advance(fallback.state,{statusCode:409,body:{}},now);assert.equal(conflict.state.errorCategory,'writer_conflict');assert.equal(conflict.op,null);
  }
 });
 test('hash-invalid restore bytes fall back, while writer deadline still stops all work',()=>{
  const input={...state,stage:'restoreDownload',restoreFileMeta:[{name:'manifest.json',sha256:'b'.repeat(64),bytes:2}],restoreCursor:0};
  const output=engine.advance(input,{statusCode:200,body:{bytes:Buffer.from('{}').toString('base64')}},now);
- assert.equal(output.state.nextStage,'dispatch');assert.equal(output.state.restoreStatus,'missing');assert.match(output.state.restoreWarning,/restore_/);
+ assert.equal(output.state.nextStage,'pegFindPrepare');assert.equal(output.state.restoreStatus,'missing');assert.match(output.state.restoreWarning,/restore_/);
  const expired=engine.advance({...input,deadline:now-1},{statusCode:503},now);assert.equal(expired.state.errorCategory,'writer_deadline');assert.equal(expired.op,null);
 });

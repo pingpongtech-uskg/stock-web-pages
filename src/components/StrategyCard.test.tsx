@@ -319,6 +319,35 @@ describe('StrategyCard', () => {
     expect(markup).toContain('資料提醒：股價資料截至 2026-10-06（目標 2026-10-07）')
     expect(markup).toContain('投信十日資料不完整')
   })
+
+  it('shows a concrete PEG reason and EPS evidence on the individual stock row', () => {
+    const row: RankingRow = {
+      ...knownRow,
+      currentPeg: undefined,
+      pegReview: {
+        status: 'not_applicable', reasonCodes: ['declining_growth'],
+        currentPeriod: '2025Q1–2025Q4', priorPeriod: '2024Q1–2024Q4',
+        currentTtmEps: 2, priorTtmEps: 4, epsGrowthPct: -50, asOf: '2026-03-01',
+        quoteAsOf: '2026-03-01',
+        latestEvidencePublishedAt: '2026-02-15T12:00:00Z', sourceRefs: [],
+      },
+    }
+    const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[0]} rows={[row]} />)
+    expect(markup).toContain('TTM EPS 年增率為負')
+    expect(markup).toContain('本期 EPS 2')
+    expect(markup).toContain('前期 EPS 4')
+    expect(markup).toContain('計算截止日 2026-03-01（非行情日期）')
+    expect(markup).toContain('行情日期 2026-03-01')
+  })
+
+  it('shows the observed quarter count when PEG history is insufficient', () => {
+    const row: RankingRow = {
+      ...knownRow,
+      pegReview: { status: 'needs_review', reasonCodes: ['insufficient_quarters'], currentPeriod: null, priorPeriod: null, availableQuarterCount: 3, sourceRefs: [] },
+    }
+    const markup = renderToStaticMarkup(<StrategyCard presentation={strategyPresentations[0]} rows={[row]} />)
+    expect(markup).toContain('可用季度 3/8')
+  })
 })
 
 

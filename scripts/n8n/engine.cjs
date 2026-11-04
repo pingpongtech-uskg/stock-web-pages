@@ -99,9 +99,12 @@ function contents(state) {return `${REPO}/contents/operations/days/${state.marke
 function archiveContents(state,stage,path){return request(state,stage,'github','GET',`${REPO}/contents/public${path}?ref=${state.archiveCommit}`);}
 function contentBytes(body){if(body.encoding!=='base64'||typeof body.content!=='string'||body.size>3000000)throw Error('archive_contents_schema');return Buffer.from(body.content,'base64').toString('utf8');}
 function checkpoint(state,nextStage,now=Date.now()) {
+  if(nextStage==='dispatch'&&(state.sourceMode||'publish')==='publish'&&!state.pegFinalReady) {state={...state,dispatchIntent:false,pegPhase:'prepare'};nextStage='pegFindPrepare';}
   const prepared=nextStage==='dispatch'?{...state,dispatchStartedAt:now}:state.stage==='cacheVerifyPage'&&nextStage==='summaryRead'?{...state,lastVerifiedCache:restoreOperation.captureVerifiedCache(state,state.marketDate)}:state;
   const saved={...durable(prepared),stage:nextStage};
-  const body={message:`[CF-Pages-Skip] chore: checkpoint Stockscreener ${prepared.marketDate}`,branch:'n8n-state',content:Buffer.from(JSON.stringify(saved)).toString('base64'),...(prepared.lockSha?{sha:prepared.lockSha}:{})};
+  const bytes=Buffer.from(JSON.stringify(saved));
+  if(bytes.length>900*1024)return done({...prepared,errorCategory:'checkpoint_too_large',errorMessage:'Checkpoint exceeds 900 KiB; no checkpoint was written. The existing writer lease must expire before another owner retries.'});
+  const body={message:`[CF-Pages-Skip] chore: checkpoint Stockscreener ${prepared.marketDate}`,branch:'n8n-state',content:bytes.toString('base64'),...(prepared.lockSha?{sha:prepared.lockSha}:{})};
   return request({...prepared,nextStage},'checkpoint','github','PUT',contents(prepared),body);
 }
 function fail(state,category,message) {
@@ -151,7 +154,15 @@ function next(state,now) {
     case 'findRun':return findRuns(state);
     case 'failedRunJobs':return request(state,'failedRunJobs','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/jobs?per_page=100`);
     case 'failedRunArtifacts':return request(state,'failedRunArtifacts','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);
-    case 'dispatch':return request({...state,dispatchIntent:true,dispatchStartedAt:state.dispatchStartedAt||now},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate,source_mode:state.sourceMode||'publish',...(state.ownershipGeneration?{ownership_generation:state.ownershipGeneration}:{}),...(state.restoreStatus==='verified'?restoreOperation.restoreDispatchInputs(state):{})}});
+    case 'dispatch':if((state.sourceMode||'publish')==='publish'&&!state.pegFinalReady)return checkpoint({...state,dispatchIntent:false,pegPhase:'prepare'},'pegFindPrepare',now);return request({...state,dispatchIntent:true,dispatchStartedAt:state.dispatchStartedAt||now},'dispatch','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate,source_mode:state.pegFinalReady?'finalize_peg':state.sourceMode||'publish',...(state.pegFinalReady?{prepare_run_id:state.pegPrepareRunId,prepare_run_attempt:String(state.pegPrepareRunAttempt),candidate_sha256:state.pegCandidateSha256,search_manifest_commit:state.pegManifestCommit}:{}),...(state.ownershipGeneration?{ownership_generation:state.ownershipGeneration}:{}),...(!state.pegFinalReady&&state.restoreStatus==='verified'?restoreOperation.restoreDispatchInputs(state):{})}});
+    case 'pegFindPrepare':return request(state,'pegFindPrepare','github','GET',`${REPO}/actions/workflows/daily.yml/runs?event=workflow_dispatch&per_page=100&page=${state.pegRunPage||1}`,null,0.5);
+    case 'pegDispatchPrepare':return request(state,'pegDispatchPrepare','github','POST',`${REPO}/actions/workflows/daily.yml/dispatches`,{ref:'main',inputs:{request_id:state.requestId,market_date:state.marketDate,source_mode:'prepare_peg',...(state.restoreStatus==='verified'?restoreOperation.restoreDispatchInputs(state):{})}});
+    case 'pegPollPrepare':return request(state,'pegPollPrepare','github','GET',`${REPO}/actions/runs/${state.pegPrepareRunId}`,null,15);
+    case 'pegFailedJobs':return request(state,'pegFailedJobs','github','GET',`${REPO}/actions/runs/${state.pegPrepareRunId}/jobs?per_page=100`);
+    case 'pegFailedArtifacts':return request(state,'pegFailedArtifacts','github','GET',`${REPO}/actions/runs/${state.pegPrepareRunId}/artifacts?per_page=100`);
+    case 'pegArtifactList':return request(state,'pegArtifactList','github','GET',`${REPO}/actions/runs/${state.pegPrepareRunId}/artifacts?per_page=100`);
+    case 'pegArtifactRedirect':return request(state,'pegArtifactRedirect','github','GET',`${REPO}/actions/artifacts/${state.pegArtifactId}/zip`);
+    case 'pegDiscovery':return result({...state,stage:'pegDiscovery'},null,0.5);
     case 'pollRun':return request(state,'pollRun','github','GET',`${REPO}/actions/runs/${state.actionsRunId}`,null,15);
     case 'artifactList':return request(state,'artifactList','github','GET',`${REPO}/actions/runs/${state.actionsRunId}/artifacts?per_page=100`);
     case 'publicationExport':return request(state,'publicationExport','github','GET',`${REPO}/contents/public/data/screening-export.json?ref=${state.publication.publishedGitCommit}`);
@@ -207,6 +218,7 @@ function advance(original,response,now=Date.now()) {
     const readStage={createDaily:'findDaily',createDatabase:'findDatabase',createStock:'queryRows',appendSummary:'summaryRead'}[state.stage];
     if(readStage) return next({...state,stage:readStage,retry:(state.retry||0)+1},now);
     if(state.stage==='dispatch') return findRuns({...state,dispatchIntent:true,runPage:1},15);
+    if(state.stage==='pegDispatchPrepare') return next({...state,stage:'pegFindPrepare',pegPrepareIntent:true,pegRunPage:1,pegRunMatches:[]},now);
     if(['liveProbe','liveVerify'].includes(state.stage)) return deploymentResult(state,'failed',['live_binary_missing','live_file_too_large','live_binary_read_failed'].includes(response.liveReadError)?response.liveReadError:'live_http_'+status,now);
     if((state.retry||0)<3&&state.op?.method==='GET') return result({...state,retry:(state.retry||0)+1},state.op,2**((state.retry||0)+1));
     return fail(state,'external_http_'+status);
@@ -305,8 +317,76 @@ function advanceSuccess(state,body,status,response,now) {
       const audit=manualOverride?{manualDeadlineOverride:true,manualResumedAt:now}:{};
       const correction=correctPreflight?{dispatchIntent:false,preflightRetryOwner:undefined,confirmedPreflightCorrectionFrom:state.preflightRetryOwner,errorCategory:'',errorMessage:''}:resumeTerminal?{transitionTerminal:undefined,errorCategory:'',errorMessage:'',recordFailure:false}:{};
       const saved={...state,...resume,...audit,...correction,...(lastVerifiedCache?{lastVerifiedCache,cacheActiveManifestHash:lastVerifiedCache.cacheManifestHash}:{}),cacheSegmentNewUploads:existing?.owner===state.owner?(resume.cacheSegmentNewUploads||0):0,deployAttempts:existing?.deployStatus==='verified'?existing.deployAttempts:0,deployRequestAttempt:Number.isSafeInteger(existing?.deployRequestAttempt)?existing.deployRequestAttempt:0,cacheExpiredUploadEvidence:existing?.owner===state.owner?resume.cacheExpiredUploadEvidence:undefined,owner:state.owner,operationDeadline,deadline:Math.min(now+59*60000,operationDeadline),released:false,lockSha:status===404?undefined:body.sha,mode:state.mode,runKind:state.runKind,siteUrl:state.siteUrl,sourceMode:state.sourceMode||resume.sourceMode||'publish',ownershipGeneration:state.ownershipGeneration||resume.ownershipGeneration};
-      const stage=!state.isOpen?'holiday':state.mode==='legacy_archive'?'legacyRef':saved.actionsRunId?'pollRun':'findRun';
+      const stage=!state.isOpen?'holiday':state.mode==='legacy_archive'?'legacyRef':saved.actionsRunId?'pollRun':/^peg(?:FindPrepare|DispatchPrepare|PollPrepare|FailedJobs|FailedArtifacts|ArtifactList|ArtifactRedirect|ArtifactZip|Discovery)$/.test(saved.stage||'')?(saved.stage==='pegDispatchPrepare'?'pegFindPrepare':saved.stage==='pegArtifactZip'?'pegArtifactList':saved.stage):'findRun';
       return checkpoint(saved,stage);
+    }
+    case 'pegFindPrepare': {
+      if(!Array.isArray(body?.workflow_runs))throw Error('peg_actions_schema');
+      const title=`Daily PEG prepare | ${state.requestId} | ${state.marketDate}`;
+      const matches=[...(state.pegRunMatches||[]),...body.workflow_runs.filter(run=>run.display_title===title)];
+      if(matches.length>1)throw Error('peg_ambiguous_prepare_runs');
+      if(body.workflow_runs.length===100) {
+        if((state.pegRunPage||1)>=10)throw Error('peg_actions_scan_limit');
+        return next({...state,stage:'pegFindPrepare',pegRunPage:(state.pegRunPage||1)+1,pegRunMatches:matches},now);
+      }
+      if(matches.length) {
+        const run=matches[0];
+        if(!/^[1-9]\d{0,23}$/.test(String(run.id||''))||run.event!=='workflow_dispatch'||run.head_branch!=='main'||String(run.repository?.id)!==REPOSITORY_ID||String(run.head_repository?.id)!==REPOSITORY_ID||!['.github/workflows/daily.yml','.github/workflows/daily.yml@main','.github/workflows/daily.yml@refs/heads/main'].includes(run.path)||!/^[a-f0-9]{40}$/.test(run.head_sha||''))throw Error('peg_prepare_run_lineage');
+        return checkpoint({...state,pegPrepareRunId:String(run.id),pegPrepareHeadSha:run.head_sha,pegRunPage:1,pegRunMatches:[]},'pegPollPrepare');
+      }
+      if(state.pegPrepareIntent) {
+        if(now-(state.pegPrepareStartedAt||state.startedAt)>5*60000)return fail(state,'peg_prepare_run_not_found','Prepare dispatch was attempted; do not redispatch this request.');
+        const out=next({...state,stage:'pegFindPrepare',pegRunPage:1,pegRunMatches:[]},now);return {...out,delaySeconds:15};
+      }
+      if(state.mode==='resume')return fail(state,'peg_resume_run_not_found');
+      return checkpoint({...state,pegPrepareIntent:true,pegPrepareStartedAt:now,pegRunPage:1,pegRunMatches:[]},'pegDispatchPrepare',now);
+    }
+    case 'pegDispatchPrepare':return next({...state,stage:'pegFindPrepare',pegPrepareIntent:true,pegRunPage:1,pegRunMatches:[]},now);
+    case 'pegPollPrepare': {
+      if(String(body?.id)!==state.pegPrepareRunId||body.display_title!==`Daily PEG prepare | ${state.requestId} | ${state.marketDate}`||body.head_sha!==state.pegPrepareHeadSha||body.event!=='workflow_dispatch'||body.head_branch!=='main'||String(body.repository?.id)!==REPOSITORY_ID||String(body.head_repository?.id)!==REPOSITORY_ID||!['.github/workflows/daily.yml','.github/workflows/daily.yml@main','.github/workflows/daily.yml@refs/heads/main'].includes(body.path)||!Number.isSafeInteger(body.run_attempt)||body.run_attempt<1||body.run_attempt>999999)throw Error('peg_prepare_run_lineage');
+      if(body.status!=='completed')return next(state,now);
+      if(body.conclusion!=='success') {
+        const normalized={...body,display_title:`Daily screening | ${state.requestId} | ${state.marketDate}`};
+        if(retryableFailedRun({...state,actionsRunId:state.pegPrepareRunId},normalized))return checkpoint({...state,failedRunAttempt:body.run_attempt,failedRunHeadSha:body.head_sha},'pegFailedJobs');
+        return fail({...state,screeningStatus:'failed'},'peg_prepare_failed',String(body.conclusion));
+      }
+      return checkpoint({...state,pegPrepareRunAttempt:body.run_attempt},'pegArtifactList');
+    }
+    case 'pegFailedJobs': {
+      const failedStep=retryableSourceFailure(body,{...state,actionsRunId:state.pegPrepareRunId});
+      if(!failedStep)return fail({...state,screeningStatus:'failed'},'peg_prepare_failed','Prepare failure is not an eligible source failure.');
+      return checkpoint({...state,automaticRetryCandidateStep:failedStep},'pegFailedArtifacts');
+    }
+    case 'pegFailedArtifacts': {
+      if(!retryArtifactsAbsent(body,{...state,actionsRunId:state.pegPrepareRunId})||state.requestId.length>153)return fail({...state,screeningStatus:'failed'},'peg_prepare_failed','Prepare retry evidence is incomplete.');
+      const originalRequestId=state.requestId,originalRunId=state.pegPrepareRunId;
+      const clean=Object.fromEntries(Object.entries(state).filter(([key])=>!key.startsWith('peg')));
+      return checkpoint({...clean,requestId:`${originalRequestId}:retry1`,originalRequestId,automaticRetryCount:1,
+        automaticRetry:{count:1,originalRequestId,originalActionsRunId:originalRunId,failedStep:state.automaticRetryCandidateStep,failedHeadSha:state.failedRunHeadSha,failedAttempt:state.failedRunAttempt},
+        actionsRunId:undefined,runHeadSha:undefined,dispatchIntent:false,dispatchStartedAt:undefined,runPage:1,runMatches:[],screeningStatus:'pending',recordFailure:false,errorCategory:'',errorMessage:''},'findRun');
+    }
+    case 'pegArtifactList': {
+      if(!Array.isArray(body?.artifacts)||body.total_count!==body.artifacts.length||body.artifacts.length>100)throw Error('peg_candidate_artifact');
+      const matches=body.artifacts.filter(item=>item.name===`peg-candidate-${state.pegPrepareRunId}-${state.pegPrepareRunAttempt}`&&item.expired===false);
+      const artifact=matches[0],run=artifact?.workflow_run;
+      if(matches.length!==1||!/^sha256:[a-f0-9]{64}$/.test(artifact?.digest||'')||!Number.isSafeInteger(artifact?.size_in_bytes)||artifact.size_in_bytes<1||artifact.size_in_bytes>68*1024*1024||!/^[1-9]\d{0,23}$/.test(String(artifact?.id||''))||String(run?.id)!==state.pegPrepareRunId||run.head_sha!==state.pegPrepareHeadSha||String(run.repository_id)!==REPOSITORY_ID||String(run.head_repository_id)!==REPOSITORY_ID)throw Error('peg_candidate_artifact');
+      return next({...state,stage:'pegArtifactRedirect',pegArtifactId:String(artifact.id),pegArtifactSha256:artifact.digest.slice(7),pegArtifactBytes:artifact.size_in_bytes},now);
+    }
+    case 'pegArtifactRedirect': {
+      const location=response.headers?.location;
+      if(status!==302||typeof location!=='string'||!/^https:\/\/[a-zA-Z0-9.-]+\.(blob\.core\.windows\.net|actions\.githubusercontent\.com|githubusercontent\.com)\//.test(location))throw Error('peg_artifact_redirect');
+      return request(state,'pegArtifactZip','zip','GET',location);
+    }
+    case 'pegArtifactZip': {
+      const preview=body?.preview;
+      if(!preview||preview.requestId!==state.requestId||preview.marketDate!==state.marketDate||preview.prepareRunId!==state.pegPrepareRunId||preview.prepareRunAttempt!==state.pegPrepareRunAttempt||preview.sourceGitCommit!==state.pegPrepareHeadSha||!/^[a-f0-9]{64}$/.test(preview.candidateSha256||'')||body.candidateSha256!==preview.candidateSha256)throw Error('peg_candidate_lineage');
+      if(!Array.isArray(preview.stocks)||preview.stocks.length!==100||new Set(preview.stocks.map(stock=>stock?.code)).size!==100||preview.stocks.some(stock=>!stock||!/^\d{4,6}[A-Z]?$/.test(stock.code||'')||typeof stock.name!=='string'||!stock.name||typeof stock.pegReview?.status!=='string'||!(stock.currentPeriod===null||typeof stock.currentPeriod==='string')))throw Error('peg_candidate_stocks');
+      return checkpoint({...state,pegPreview:preview,pegCandidateSha256:preview.candidateSha256},'pegDiscovery');
+    }
+    case 'pegDiscovery': {
+      if(!/^[a-f0-9]{40}$/.test(body?.manifestCommit||''))throw Error('peg_manifest_commit');
+      const {pegPreview,...pinned}=state;
+      return checkpoint({...pinned,pegManifestCommit:body.manifestCommit,pegFinalReady:true,dispatchIntent:true,dispatchStartedAt:now},'dispatch',now);
     }
     case 'findRun': {
       const runs=body.workflow_runs;if(!Array.isArray(runs)) throw Error('actions_schema');
@@ -344,7 +424,8 @@ function advanceSuccess(state,body,status,response,now) {
       if(state.requestId.length>153) return failedRun(state,'failure');
       const originalRequestId=state.requestId;
       const retryRequestId=`${originalRequestId}:retry1`;
-      return checkpoint({...state,requestId:retryRequestId,originalRequestId,automaticRetryCount:1,
+      const retryState=Object.fromEntries(Object.entries(state).filter(([key])=>!key.startsWith('peg')));
+      return checkpoint({...retryState,requestId:retryRequestId,originalRequestId,automaticRetryCount:1,
         automaticRetry:{count:1,originalRequestId,originalActionsRunId:String(state.actionsRunId),failedStep:state.automaticRetryCandidateStep,failedHeadSha:state.failedRunHeadSha,failedAttempt:state.failedRunAttempt},
         actionsRunId:undefined,runHeadSha:undefined,dispatchIntent:false,dispatchStartedAt:undefined,runPage:1,runMatches:[],screeningStatus:'pending',recordFailure:false,errorCategory:'',errorMessage:''},'findRun');
     }

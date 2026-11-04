@@ -3,6 +3,7 @@ import { statementDogHealthCheckUrl } from '../domain/statementDog'
 import type { StrategyKey, StrategyPresentation } from '../domain/strategyPresentation'
 import { trackEvent } from '../domain/events'
 import { EmptyState } from './EmptyState'
+import { pegReviewReasonLabel } from './PegReviewSection'
 
 interface StrategyCardProps {
   presentation: StrategyPresentation
@@ -222,6 +223,16 @@ function StockRow({ row, metricLabel, strategy }: { row: RankingRow; metricLabel
           <small>目前 PEG</small>
           <strong>{pegAvailable ? formatMaybePeg(reviewedPeg) : pegUnavailableLabel}</strong>
           <em className={row.pegBand === 'strict' ? 'peg-badge strict' : 'peg-badge'}>{pegBadge}</em>
+          {row.pegReview && row.pegReview.status !== 'available' && (
+            <small className="peg-review-inline">
+              {row.pegReview.reasonCodes.length ? row.pegReview.reasonCodes.map(pegReviewReasonLabel).join('；') : 'PEG 證據待確認'}
+              {row.pegReview.availableQuarterCount != null && row.pegReview.reasonCodes.includes('insufficient_quarters') && ` · 可用季度 ${row.pegReview.availableQuarterCount}/8`}
+              {row.pegReview.currentTtmEps != null && ` · 本期 EPS ${row.pegReview.currentTtmEps}`}
+              {row.pegReview.priorTtmEps != null && ` · 前期 EPS ${row.pegReview.priorTtmEps}`}
+              {row.pegReview.asOf ? ` · 計算截止日 ${row.pegReview.asOf}（非行情日期）` : ''}
+              {row.pegReview.quoteAsOf !== undefined ? ` · 行情日期 ${row.pegReview.quoteAsOf ?? '未提供或無效'}` : ''}
+            </small>
+          )}
         </span>
       )}
       <span className="stock-prices">

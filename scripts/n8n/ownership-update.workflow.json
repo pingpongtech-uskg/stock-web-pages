@@ -157,6 +157,10 @@
             {
               "name": "X-GitHub-Api-Version",
               "value": "2022-11-28"
+            },
+            {
+              "name": "Cache-Control",
+              "value": "no-cache"
             }
           ]
         },
@@ -184,8 +188,8 @@
       ],
       "credentials": {
         "githubApi": {
-          "id": "VGYqVCElPfvn333j",
-          "name": "GitHub account"
+          "id": "F0VoGrfOT4OTl2o8",
+          "name": "GitHub_StockScreener"
         }
       },
       "onError": "continueRegularOutput"
@@ -238,8 +242,8 @@
       ],
       "credentials": {
         "githubApi": {
-          "id": "VGYqVCElPfvn333j",
-          "name": "GitHub account"
+          "id": "F0VoGrfOT4OTl2o8",
+          "name": "GitHub_StockScreener"
         }
       },
       "onError": "continueRegularOutput"
@@ -313,8 +317,8 @@
       ],
       "credentials": {
         "githubApi": {
-          "id": "VGYqVCElPfvn333j",
-          "name": "GitHub account"
+          "id": "F0VoGrfOT4OTl2o8",
+          "name": "GitHub_StockScreener"
         }
       },
       "onError": "continueRegularOutput",

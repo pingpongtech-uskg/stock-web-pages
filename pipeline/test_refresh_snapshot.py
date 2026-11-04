@@ -754,7 +754,7 @@ def test_dividend_all_known_dates_before_cutoff_retains_confirmed_cash(cash):
     assert result['audit']['origin'] == 'derived'
 def test_refresh_formal_peg_ignores_revenue_proxies_and_records_review():
     detail = {
-        "asOf": "2026-03-01", "lastPrice": 100,
+        "asOf": "2026-03-01", "quoteAsOf": "2026-03-01", "lastPrice": 100,
         "revenueGrowth3m": 0.5,
         "healthInputs": {
             "valuationCurrent": {"date": "2026-03-01", "pe": 12.5},
@@ -769,6 +769,7 @@ def test_refresh_formal_peg_ignores_revenue_proxies_and_records_review():
     assert valuation is not None
     assert valuation["growth_method"] == "ttm_reported_eps_yoy"
     assert detail["pegReview"]["status"] == "available"
+    assert detail["pegReview"]["quoteAsOf"] == "2026-03-01"
 
     detail["healthInputs"]["incomeQuarterly"][-1]["epsComparable"] = False
     assert _valuation_from_detail(detail) is None
@@ -791,6 +792,21 @@ def test_refresh_peg_preserves_stock_distribution_eps_comparability_guard():
     assert _valuation_from_detail(detail) is None
     assert detail["pegReview"]["status"] == "needs_review"
     assert detail["pegReview"]["reasonCodes"] == ["incomparable_eps_basis"]
+
+
+@pytest.mark.parametrize("quote_as_of,reason", [(None, "missing_quote_date"), ("2026-02-28", "stale_quote"), ("bad-date", "invalid_quote_date")])
+def test_refresh_formal_peg_requires_explicit_same_day_quote_date(quote_as_of, reason):
+    detail = {
+        "asOf": "2026-03-01", "lastPrice": 100,
+        "healthInputs": {"incomeQuarterly": [
+            {"year": year, "quarter": quarter, "eps": 1 if year == 2024 else 2}
+            for year in (2024, 2025) for quarter in range(1, 5)
+        ]},
+    }
+    if quote_as_of is not None:
+        detail["quoteAsOf"] = quote_as_of
+    assert _valuation_from_detail(detail) is None
+    assert detail["pegReview"]["reasonCodes"] == [reason]
 
 
 def test_build_release_merges_dated_peg_evidence_without_mutating_baseline_archive(tmp_path):

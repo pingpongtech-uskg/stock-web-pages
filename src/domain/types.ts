@@ -7,6 +7,13 @@ export interface PegReview {
   reasonCodes: string[]
   currentPeriod: string | null
   priorPeriod: string | null
+  asOf?: string | null
+  quoteAsOf?: string | null
+  currentTtmEps?: number | null
+  priorTtmEps?: number | null
+  epsGrowthPct?: number | null
+  latestEvidencePublishedAt?: string | null
+  availableQuarterCount?: number | null
   sourceRefs: string[]
 }
 

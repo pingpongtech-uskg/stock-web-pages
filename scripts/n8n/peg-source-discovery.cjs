@@ -126,7 +126,7 @@ function init(input = {}, now = new Date().toISOString()) {
   state.braveUsed = oldUsage.date === config.marketDate ? Number(oldUsage.brave) || 0 : 0;
   if (!safeConfig(config)) { state.outcome = 'configuration_required'; state.manifest = { marketDate: config.marketDate || null, requestId: config.requestId || null, generatedAt: now, searchUsage: { date: config.marketDate || null, brave: state.braveUsed }, stocks: [] }; return state; }
   const cacheTime = Date.parse(cachedManifest?.generatedAt);
-  const reusable = cachedManifest?.marketDate === config.marketDate && Number.isFinite(cacheTime) && Date.parse(now) - cacheTime >= 0 && Date.parse(now) - cacheTime < DAY_MS;
+  const reusable = cachedManifest?.marketDate === config.marketDate && (!config.candidateSha256 || cachedManifest?.candidateSha256 === config.candidateSha256) && Number.isFinite(cacheTime) && Date.parse(now) - cacheTime >= 0 && Date.parse(now) - cacheTime < DAY_MS;
   const latestStocks = Array.isArray(latest?.stocks) ? latest.stocks : [];
   let candidates = latestStocks.filter(x => (typeof x?.pegReview === 'string' ? x.pegReview : x?.pegReview?.status) === 'needs_review');
   if (!candidates.length && latest?.marketDate === config.marketDate && !latestStocks.some(x => x?.pegReview && (typeof x.pegReview !== 'object' || x.pegReview.status))) candidates = config.bootstrapCandidates || [];

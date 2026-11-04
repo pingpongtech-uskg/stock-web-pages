@@ -107,6 +107,8 @@ describe('validateRelease', () => {
     const review = {
       status: 'needs_review', reasonCodes: ['nonconsecutive_quarters'],
       currentPeriod: '2025Q1–2025Q4', priorPeriod: null,
+      asOf: '2026-03-01', currentTtmEps: 12.5, priorTtmEps: 10,
+      epsGrowthPct: 25, latestEvidencePublishedAt: '2026-02-15T12:00:00Z',
       sourceRefs: ['FinMind', 'https://example.com/filing'],
     }
     release.stocks = [{ code: '2330', name: '台積電', pegReview: review }]

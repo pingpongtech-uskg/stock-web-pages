@@ -139,6 +139,13 @@ function validatePegReview(value: unknown): void {
   requireStringArray(review.reasonCodes)
   requireNullableString(review.currentPeriod)
   requireNullableString(review.priorPeriod)
+  if (review.asOf !== undefined) requireNullableString(review.asOf)
+  if (review.quoteAsOf !== undefined) requireNullableString(review.quoteAsOf)
+  if (review.currentTtmEps !== undefined) requireNullableNumber(review.currentTtmEps)
+  if (review.priorTtmEps !== undefined) requireNullableNumber(review.priorTtmEps)
+  if (review.epsGrowthPct !== undefined) requireNullableNumber(review.epsGrowthPct)
+  if (review.latestEvidencePublishedAt !== undefined) requireNullableString(review.latestEvidencePublishedAt)
+  if (review.availableQuarterCount !== undefined) requireNullableNumber(review.availableQuarterCount)
   requireStringArray(review.sourceRefs)
 }
 

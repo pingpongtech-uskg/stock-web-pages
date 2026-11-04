@@ -26,7 +26,7 @@ function world(options={}) {
   let childSchema=Object.fromEntries(Object.entries(stockSchema()).filter(([name])=>!options.existingChild||(!name.startsWith('籌碼')&&!['大股東持股比重最新','董監持股比重最新','董監持股比重去年同月','股東人數最新'].includes(name))).map(([name,value])=>[name,{...value,type:Object.keys(value)[0]}]));
   const requests=[];
   function respond(output){
-    requests.push(output.op);const {state,op}=output;const stage=state.stage;
+    if(output.op)requests.push(output.op);const {state,op}=output;const stage=state.stage;
     const ok=(body,statusCode=200,headers={})=>({body,statusCode,headers});
     switch(stage){
       case 'restoreState':return {statusCode:404,body:{}};
@@ -37,7 +37,14 @@ function world(options={}) {
       case 'state':return persisted?ok({sha:'state-sha',content:Buffer.from(JSON.stringify(persisted)).toString('base64')}):ok({},404);
       case 'checkpoint':persisted=JSON.parse(Buffer.from(op.body.content,'base64').toString('utf8'));writes++;return ok({content:{sha:'state-'+writes}},201);
       case 'findRun':return ok({workflow_runs:options.dispatch&&!state.dispatchIntent?[]:[{id:123,head_sha:'a'.repeat(40),display_title:'Daily screening | local-test | 2026-10-02'}]});
-      case 'dispatch':return ok({},204);
+      case 'pegFindPrepare':return ok({workflow_runs:state.pegPrepareIntent?[{id:124,display_title:'Daily PEG prepare | local-test | 2026-10-02',event:'workflow_dispatch',head_branch:'main',path:'.github/workflows/daily.yml',head_sha:'a'.repeat(40),repository:{id:1273106108},head_repository:{id:1273106108}}]:[]});
+      case 'pegDispatchPrepare':return ok({},204);
+      case 'pegPollPrepare':return ok({id:124,run_attempt:1,display_title:'Daily PEG prepare | local-test | 2026-10-02',event:'workflow_dispatch',head_branch:'main',path:'.github/workflows/daily.yml',head_sha:'a'.repeat(40),repository:{id:1273106108},head_repository:{id:1273106108},status:'completed',conclusion:'success'});
+      case 'pegArtifactList':return ok({total_count:1,artifacts:[{id:457,name:'peg-candidate-124-1',expired:false,digest:'sha256:'+'d'.repeat(64),size_in_bytes:1000,workflow_run:{id:124,head_sha:'a'.repeat(40),repository_id:1273106108,head_repository_id:1273106108}}]});
+      case 'pegArtifactRedirect':return ok('',302,{location:'https://production.blob.core.windows.net/artifacts/candidate.zip?signature=local-only'});
+      case 'pegArtifactZip':return ok({candidateSha256:'b'.repeat(64),preview:{requestId:'local-test',marketDate:'2026-10-02',prepareRunId:'124',prepareRunAttempt:1,sourceGitCommit:'a'.repeat(40),candidateSha256:'b'.repeat(64),stocks:Array.from({length:100},(_,i)=>({code:String(1000+i),name:'Company',pegReview:{status:'needs_review'},currentPeriod:null}))}});
+      case 'pegDiscovery':return ok({manifestCommit:'e'.repeat(40)});
+      case 'dispatch':assert.deepEqual(op.body.inputs,{request_id:'local-test',market_date:'2026-10-02',source_mode:'finalize_peg',prepare_run_id:'124',prepare_run_attempt:'1',candidate_sha256:'b'.repeat(64),search_manifest_commit:'e'.repeat(40)});return ok({},204);
       case 'pollRun':runPolls++;return ok({id:123,head_sha:'a'.repeat(40),display_title:'Daily screening | local-test | 2026-10-02',status:options.pendingOnce&&runPolls===1?'in_progress':'completed',conclusion:options.failure?'failure':'success'});
       case 'artifactList':return ok({artifacts:[{id:456,name:'screening-export',expired:false,workflow_run:{id:123,head_sha:'a'.repeat(40)}}]});
       case 'artifactRedirect':return ok('',302,{location:'https://production.blob.core.windows.net/artifacts/file.zip?signature=local-only'});
@@ -88,7 +95,7 @@ function world(options={}) {
 function run(environment,initial){
  let out=initial||start({marketDate:'2026-10-02',requestId:'local-test',mode:'screen',siteUrl:'https://stockscreener.andyshih.uk',owner:'local'},now);let steps=0,segments=0;
  while(steps<1000){
-  if(out.route==='done'){
+  if(out.state.stage==='done'){
    if(out.state.cacheStatus!=='pending_recovery')break;
    assert.equal(out.state.released,true);assert.equal(out.state.cacheSegmentNewUploads,4);assert.ok(++segments<=4);
    out=start({marketDate:'2026-10-02',requestId:'local-test',mode:'resume',runKind:'manual',siteUrl:'https://stockscreener.andyshih.uk',owner:'local-segment-'+segments},now+steps*1000);
@@ -102,7 +109,7 @@ test('full exact-run artifact flow creates daily record and inline database, ver
   assert.equal(result.state.errorCategory,undefined);assert.equal(result.state.notionStatus,'complete');assert.equal(result.state.deployStatus,'verified');
   assert.equal(result.state.cacheStatus,'verified');assert.equal(result.state.cacheMetricsComplete,false);assert.equal(env.snapshot.dailyPage.properties['Cache Parts Verified'].number,12);
   assert.equal(env.snapshot.rows.length,1);assert.equal(env.snapshot.dailyPage.properties['Active Revision'].rich_text[0].text.content,'b'.repeat(12));
-  assert.equal(env.requests.filter(op=>op.url.endsWith('/dispatches')).length,1);
+  assert.deepEqual(env.requests.filter(op=>op.url.endsWith('/dispatches')).map(op=>op.body.inputs.source_mode),['prepare_peg','finalize_peg']);
   assert.equal(env.requests.filter(op=>op.method==='PUT'&&op.url.endsWith('/contents/public/data/deployment-request.json')).length,1);
   const db=env.requests.find(op=>op.url==='https://api.notion.com/v1/databases'&&op.method==='POST');
   assert.equal(db.body.is_inline,true);assert.deepEqual(db.body.initial_data_source.properties,stockSchema());
@@ -152,4 +159,4 @@ test('legacy archive reads authenticated pinned index/month/revision and archive
 test('same-date existing child archive migrates chip schema once then completes normal verified archive',()=>{const env=world({existingChild:true});const result=run(env);assert.equal(result.state.notionStatus,'complete');assert.equal(result.state.deployStatus,'verified');assert.equal(env.requests.filter(op=>op.url==='https://api.notion.com/v1/data_sources/child-source'&&op.method==='PATCH').length,1);assert.equal(env.requests.filter(op=>op.url==='https://api.notion.com/v1/databases'&&op.method==='POST').length,0);assert.equal(env.snapshot.rows.length,1);});
 test('actual MOPS 2547 monthly producer evidence archives exact month sourceDate without inventing day',()=>{const path=require('node:path'),script=['import json,sys','from pathlib import Path',"sys.path.insert(0,'scripts')",'from update_ownership_checkpoint import validated_mops_rows','from pipeline.ownership_checks import evaluate_chip_reference',"payload=json.loads(Path('pipeline/fixtures/ownership/mops-2547-202608.json').read_text())","rows=validated_mops_rows(payload,code='2547',period='2026-08',retrieved_at='2026-10-04T00:00:00+00:00')","print(json.dumps(evaluate_chip_reference(rows,evaluation_date='2026-10-02'),ensure_ascii=False))"].join('\n');const chip=JSON.parse(require('node:child_process').execFileSync('python3',['-c',script],{cwd:path.resolve(__dirname,'../..'),encoding:'utf8'}));assert.deepEqual(chip.directorSupervisor12m.sourceDates,['2026-08']);const env=world({chipReference:chip,existingChild:true});const result=run(env);assert.equal(result.state.notionStatus,'complete');assert.equal(result.state.deployStatus,'verified');const props=env.snapshot.rows[0].properties;assert.equal(props['股票代號'].rich_text[0].text.content,'2547');assert.deepEqual(JSON.parse(props['籌碼觀察日期'].rich_text[0].text.content).directorSupervisor12m,['2026-08']);assert.equal(props['董監持股比重最新'].number,null);assert.equal(props['投信排名'].number,1);});
 
-test('missing optional cache publishes warning without another producer or deployment marker',()=>{const env=world({dispatch:true,missingCache:true});const result=run(env);assert.equal(result.state.deployStatus,'verified');assert.equal(result.state.publicationStatus,'verified');assert.equal(result.state.cacheStatus,'not_generated');assert.match(result.state.cacheWarning,/daily website publication/);assert.equal(env.requests.filter(op=>op.url.endsWith('/dispatches')).length,1);assert.equal(env.requests.filter(op=>op.method==='PUT'&&op.url.endsWith('/contents/public/data/deployment-request.json')).length,1);});
+test('missing optional cache publishes warning without another producer or deployment marker',()=>{const env=world({dispatch:true,missingCache:true});const result=run(env);assert.equal(result.state.deployStatus,'verified');assert.equal(result.state.publicationStatus,'verified');assert.equal(result.state.cacheStatus,'not_generated');assert.match(result.state.cacheWarning,/daily website publication/);assert.deepEqual(env.requests.filter(op=>op.url.endsWith('/dispatches')).map(op=>op.body.inputs.source_mode),['prepare_peg','finalize_peg']);assert.equal(env.requests.filter(op=>op.method==='PUT'&&op.url.endsWith('/contents/public/data/deployment-request.json')).length,1);});

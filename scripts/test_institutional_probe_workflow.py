@@ -23,7 +23,7 @@ def test_manual_choice_and_exact_job_guards():
     assert re.search(r'source_mode:\n.*?type: choice\n.*?default: publish\n.*?options:\n.*?- publish\n.*?- institutional_probe', text, re.S)
     snapshot_guard = next(line.strip() for line in snapshot.splitlines() if line.strip().startswith('if:'))
     assert "github.ref == 'refs/heads/main'" in snapshot_guard
-    assert set(re.findall(r"inputs.source_mode == '([^']*)'", snapshot_guard)) == {'publish', 'ownership_recompute', ''}
+    assert set(re.findall(r"inputs.source_mode == '([^']*)'", snapshot_guard)) == {'publish', 'prepare_peg', 'finalize_peg', 'ownership_recompute', ''}
     assert "github.ref == 'refs/heads/main' && inputs.source_mode == 'institutional_probe'" in probe
     assert 'group: daily-snapshot' in text
     assert 'cancel-in-progress: false' in text
@@ -37,7 +37,7 @@ def test_probe_validates_inputs_and_identifies_exact_source():
         allowed = re.search(r"in (\{[^\n]+\}), 'invalid source_mode'", job)
         assert allowed is not None
         import ast
-        assert ast.literal_eval(allowed.group(1)) == {'publish', 'institutional_probe', 'ownership_recompute'}
+        assert {'publish', 'institutional_probe', 'ownership_recompute'} <= ast.literal_eval(allowed.group(1))
         assert "date.fromisoformat(os.environ['MARKET_DATE'])" in job
         assert "re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}'" in job
     assert 'ref: ${{ github.sha }}' in probe

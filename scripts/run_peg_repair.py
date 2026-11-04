@@ -57,6 +57,10 @@ def dated_evidence(manifest: dict, raw_results: list[dict], as_of: str) -> dict:
     return {"marketDate": as_of, "stocks": stocks}
 
 
+def review_lineage(manifest: dict) -> dict:
+    return {key: manifest[key] for key in ('prepareRunId', 'prepareRunAttempt', 'candidateSha256') if key in manifest}
+
+
 def run(*, data_dir: Path, market_date: str, request_id: str, manifest_path: Path,
         source_git_commit: str, actions_run_id: str, dry_run: bool = False) -> dict:
     original_data_dir = data_dir
@@ -79,7 +83,7 @@ def run(*, data_dir: Path, market_date: str, request_id: str, manifest_path: Pat
     evidence_path = work / "evidence.json"
     evidence_path.write_text(json.dumps(dated_evidence(manifest, parsed, market_date), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     result = build_release(data_dir, [], as_of=market_date, offline=False,
-                           recompute_existing=True, peg_evidence_path=evidence_path)
+                           recompute_existing=True, ownership_snapshot=ROOT / '.cache/ownership_snapshot.json', peg_evidence_path=evidence_path)
     release = json.loads(latest_path.read_text(encoding="utf-8"))
     if release.get("marketDate") != market_date:
         raise ValueError("release build changed target date")
@@ -108,7 +112,8 @@ def run(*, data_dir: Path, market_date: str, request_id: str, manifest_path: Pat
     subprocess.run([sys.executable, str(ROOT / "scripts/build_publication_fingerprint.py"), "--data-dir", str(data_dir), "--market-date", market_date], check=True)
     review_path = data_dir / "peg-review.json"
     review_path.write_text(json.dumps({"marketDate": market_date, "runId": release["runId"],
-                                       "requestId": request_id, "counts": counts, "stocks": reviews},
+                                       "requestId": request_id, "counts": counts, "stocks": reviews,
+                                       **review_lineage(manifest)},
                                       ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     summary = {"marketDate": market_date, "runId": release["runId"], "requestId": request_id,
                "counts": counts, "stocks": len(codes), "evidenceStocks": len(manifest.get("stocks", [])), "dryRun": dry_run}

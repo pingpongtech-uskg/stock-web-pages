@@ -156,3 +156,11 @@ test('each provider config/auth status code disables the provider for all remain
     assert.equal(p.state.manifest.providerErrors.length, 2);
   }
 });
+test('candidate-bound discovery never reuses another frozen candidate results', () => {
+  const config = { ...cfg, candidateSha256: 'a'.repeat(64) };
+  const latest = { marketDate: cfg.marketDate, stocks: [{ code: 'AAA', name: 'Alpha', pegReview: 'needs_review' }] };
+  const cachedManifest = { marketDate: cfg.marketDate, generatedAt: '2026-11-03T11:00:00Z', candidateSha256: 'b'.repeat(64), searchUsage: { date: cfg.marketDate, brave: 7 }, stocks: [{ code: 'AAA', results: [] }] };
+  const state = init({ latest, issuers: issuer, cachedManifest, config }, '2026-11-03T12:00:00Z');
+  assert.equal(state.braveUsed, 7);
+  assert.equal(plan(state, '2026-11-03T12:00:00Z').action.provider, 'searx');
+});

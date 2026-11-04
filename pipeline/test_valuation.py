@@ -268,6 +268,52 @@ def test_formal_peg_flags_conflicting_duplicate_eps_instead_of_deduplicating():
     assert review["reasonCodes"] == ["conflicting_duplicate_quarter"]
 
 
+def test_formal_peg_does_not_reuse_older_window_when_latest_disclosed_quarter_has_no_eps():
+    from pipeline.peg_ttm import calculate_ttm_peg
+    rows = ([{"year": 2023, "quarter": 4, "eps": 1}]
+            + [{"year": 2024, "quarter": q, "eps": 1} for q in range(1, 5)]
+            + [{"year": 2025, "quarter": q, "eps": 2} for q in range(1, 4)]
+            + [{"year": 2025, "quarter": 4, "eps": None, "publishedAt": "2026-02-20"}])
+    value, review = calculate_ttm_peg(rows, as_of="2026-03-01", price=100)
+    assert value is None
+    assert review["reasonCodes"] == ["missing_latest_quarter_eps"]
+    assert review["currentPeriod"] == "2025Q4–2025Q4"
+    assert review["asOf"] == "2026-03-01"
+    assert review["latestEvidencePublishedAt"] == "2026-02-20"
+
+
+def test_formal_peg_rejects_malformed_present_evidence_dates():
+    from pipeline.peg_ttm import calculate_ttm_peg
+    rows = ([{"year": 2023, "quarter": 4, "eps": 1}]
+            + [{"year": 2024, "quarter": quarter, "eps": 1} for quarter in range(1, 5)]
+            + [{"year": 2025, "quarter": quarter, "eps": 2} for quarter in range(1, 4)])
+    rows[-1]["publishedAt"] = "not-a-date"
+    value, review = calculate_ttm_peg(rows, as_of="2026-03-01", price=100)
+    assert value is None
+    assert review["reasonCodes"] == ["invalid_evidence_date"]
+    assert review["latestEvidencePublishedAt"] is None
+
+
+def test_formal_peg_ignores_a_future_disclosure_and_uses_latest_as_of_window():
+    from pipeline.peg_ttm import calculate_ttm_peg
+    rows = ([{"year": 2023, "quarter": 4, "eps": 1}]
+            + [{"year": 2024, "quarter": quarter, "eps": 1} for quarter in range(1, 5)]
+            + [{"year": 2025, "quarter": quarter, "eps": 2} for quarter in range(1, 4)])
+    rows.append({"year": 2025, "quarter": 4, "eps": 99, "publishedAt": "2026-04-01"})
+    value, review = calculate_ttm_peg(rows, as_of="2026-03-01", price=100)
+    assert value is not None
+    assert value["current_eps"] == 7
+    assert review["asOf"] == "2026-03-01"
+
+
+def test_formal_peg_review_reports_quarter_count_when_history_is_short():
+    from pipeline.peg_ttm import calculate_ttm_peg
+    rows = [{"year": 2025, "quarter": quarter, "eps": 1} for quarter in range(1, 4)]
+    _, review = calculate_ttm_peg(rows, as_of="2026-03-01", price=100)
+    assert review["reasonCodes"] == ["insufficient_quarters"]
+    assert review["availableQuarterCount"] == 3
+
+
 def test_formal_peg_rejects_eps_basis_flags_negative_growth_and_pe_conflict():
     from pipeline.peg_ttm import calculate_ttm_peg
     rows = [{"year": y, "quarter": q, "eps": v}
@@ -278,9 +324,35 @@ def test_formal_peg_rejects_eps_basis_flags_negative_growth_and_pe_conflict():
     lower = [{**row, "eps": 0.5 if row["year"] == 2025 else row["eps"]} for row in rows]
     _, review = calculate_ttm_peg(lower, as_of="2026-03-01", price=100)
     assert review["status"] == "not_applicable"
-    assert review["reasonCodes"] == ["nonpositive_growth"]
+    assert review["reasonCodes"] == ["declining_growth"]
+    assert review["currentTtmEps"] == 2
+    assert review["priorTtmEps"] == 4
+    assert review["epsGrowthPct"] == pytest.approx(-50)
+    assert review["asOf"] == "2026-03-01"
     _, conflict = calculate_ttm_peg(rows, as_of="2026-03-01", price=100, reported_pe=20, pe_date="2026-03-01")
     assert conflict["reasonCodes"] == ["basis_conflict"]
+
+
+@pytest.mark.parametrize("prior,current,reason", [
+    (0, 4, "nonpositive_prior_eps"),
+    (4, 0, "nonpositive_current_eps"),
+    (4, 4, "flat_growth"),
+    (4, 2, "declining_growth"),
+])
+def test_formal_peg_review_explains_nonpositive_and_nonpositive_growth(prior, current, reason):
+    from pipeline.peg_ttm import calculate_ttm_peg
+    rows = ([{"year": 2024, "quarter": q, "eps": prior / 4} for q in range(1, 5)]
+            + [{"year": 2025, "quarter": q, "eps": current / 4,
+                "publishedAt": "2026-02-15T12:00:00Z"} for q in range(1, 5)])
+    _, review = calculate_ttm_peg(rows, as_of="2026-03-01", price=100)
+    assert review["reasonCodes"] == [reason]
+    assert review["currentPeriod"] == "2025Q1–2025Q4"
+    assert review["priorPeriod"] == "2024Q1–2024Q4"
+    assert review["currentTtmEps"] == current
+    assert review["priorTtmEps"] == prior
+    assert review["asOf"] == "2026-03-01"
+    assert review["latestEvidencePublishedAt"] == "2026-02-15"
+    assert review["epsGrowthPct"] is None if prior <= 0 else review["epsGrowthPct"] == pytest.approx((current / prior - 1) * 100)
 
 
 def test_formal_peg_requires_consistent_known_eps_kind_when_any_period_declares_it():

@@ -38,3 +38,10 @@ def test_dated_evidence_stamps_unpublished_rows_and_keeps_published_date():
 
 def test_empty_manifest_yields_empty_evidence_and_no_parse_failure():
     assert dated_evidence({"stocks": []}, [], "2026-11-03") == {"marketDate": "2026-11-03", "stocks": []}
+
+
+def test_review_proof_keeps_candidate_lineage():
+    from scripts.run_peg_repair import review_lineage
+    manifest = {'prepareRunId': '123', 'prepareRunAttempt': 2, 'candidateSha256': 'a' * 64}
+    assert review_lineage(manifest) == manifest
+    assert review_lineage({'marketDate': '2026-11-03'}) == {}

@@ -115,19 +115,19 @@ test('retry run lookup gets its own bounded dispatch window after a slow origina
  const expired=engine.advance(state,{statusCode:200,body:{workflow_runs:[]}},now+5*60000+1);
  assert.equal(expired.state.errorCategory,'dispatch_run_not_found');
 });
-test('dispatch intent timestamp survives its CAS commit and state rehydration before first empty search',()=>{
+test('prepare dispatch intent timestamp survives CAS and recovery without redispatch',()=>{
  const oldStart=Date.parse('2026-10-02T10:00:00Z');const dispatchAt=oldStart+10*60000;const resumeAt=oldStart+11*60000;
- const initial={...engine.start({...base,runKind:'scheduled'},oldStart).state,stage:'findRun',startedAt:oldStart,lockSha:'before',isOpen:true};
+ const initial={...engine.start({...base,runKind:'scheduled'},oldStart).state,stage:'pegFindPrepare',startedAt:oldStart,lockSha:'before',isOpen:true};
  const preparing=engine.advance(initial,{statusCode:200,body:{workflow_runs:[]}},dispatchAt);
- assert.equal(preparing.state.stage,'checkpoint');assert.equal(preparing.state.nextStage,'dispatch');
+ assert.equal(preparing.state.stage,'checkpoint');assert.equal(preparing.state.nextStage,'pegDispatchPrepare');
  const casState=JSON.parse(Buffer.from(preparing.op.body.content,'base64').toString('utf8'));
- assert.equal(casState.dispatchStartedAt,dispatchAt);assert.equal(casState.stage,'dispatch');
+ assert.equal(casState.pegPrepareStartedAt,dispatchAt);assert.equal(casState.pegPrepareIntent,true);assert.equal(casState.stage,'pegDispatchPrepare');
  const recovering={...engine.start({...base,runKind:'scheduled',owner:'recovery'},resumeAt).state,stage:'state',isOpen:true};
  const resumed=engine.advance(recovering,{statusCode:200,body:{sha:'state-sha',content:Buffer.from(JSON.stringify({...casState,owner:'old',deadline:resumeAt-120000})).toString('base64')}},resumeAt);
  const search=finishCheckpoint(resumed,resumeAt);
- assert.equal(search.state.dispatchStartedAt,dispatchAt);assert.equal(search.state.stage,'findRun');
+ assert.equal(search.state.pegPrepareStartedAt,dispatchAt);assert.equal(search.state.stage,'pegFindPrepare');
  const firstEmpty=engine.advance(search.state,{statusCode:200,body:{workflow_runs:[]}},resumeAt+1000);
- assert.equal(firstEmpty.state.stage,'findRun');assert.notEqual(firstEmpty.state.errorCategory,'dispatch_run_not_found');
+ assert.equal(firstEmpty.state.stage,'pegFindPrepare');assert.equal(firstEmpty.op.method,'GET');assert.notEqual(firstEmpty.state.errorCategory,'peg_prepare_run_not_found');
 });
 test('checkpoint transition exceptions persist a sanitized terminal result with the successful CAS sha',()=>{
  const now=Date.parse('2026-10-02T10:30:00Z');

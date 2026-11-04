@@ -1,5 +1,5 @@
 name: Daily snapshot and deploy
-run-name: Daily screening | ${{ inputs.request_id }} | ${{ inputs.market_date }}
+run-name: ${{ inputs.source_mode == 'prepare_peg' && 'Daily PEG prepare' || 'Daily screening' }} | ${{ inputs.request_id }} | ${{ inputs.market_date }}
 on:
   # n8n owns the weekday 18:00 Asia/Taipei schedule and holiday verification.
   workflow_dispatch:
@@ -21,6 +21,24 @@ on:
           - publish
           - institutional_probe
           - ownership_recompute
+          - prepare_peg
+          - finalize_peg
+      prepare_run_id:
+        description: Exact prepare Actions run ID
+        required: false
+        type: string
+      prepare_run_attempt:
+        description: Exact prepare run attempt
+        required: false
+        type: string
+      candidate_sha256:
+        description: Frozen candidate archive SHA256
+        required: false
+        type: string
+      search_manifest_commit:
+        description: Exact commit containing correlated PEG search manifest
+        required: false
+        type: string
       ownership_generation:
         description: Optional exact chip-state generation commit (40 hex)
         required: false
@@ -57,13 +75,17 @@ concurrency:
   cancel-in-progress: false
 jobs:
   snapshot:
-    if: github.ref == 'refs/heads/main' && (inputs.source_mode == 'publish' || inputs.source_mode == 'ownership_recompute' || inputs.source_mode == '')
+    if: github.ref == 'refs/heads/main' && (inputs.source_mode == 'publish' || inputs.source_mode == 'prepare_peg' || inputs.source_mode == 'finalize_peg' || inputs.source_mode == 'ownership_recompute' || inputs.source_mode == '')
     runs-on: ubuntu-latest
     timeout-minutes: 80
     env:
       REQUEST_ID: ${{ inputs.request_id }}
       MARKET_DATE: ${{ inputs.market_date }}
       SOURCE_MODE: ${{ inputs.source_mode }}
+      PREPARE_RUN_ID: ${{ inputs.prepare_run_id }}
+      PREPARE_RUN_ATTEMPT: ${{ inputs.prepare_run_attempt }}
+      CANDIDATE_SHA256: ${{ inputs.candidate_sha256 }}
+      SEARCH_MANIFEST_COMMIT: ${{ inputs.search_manifest_commit }}
       OWNERSHIP_REQUESTED_GENERATION: ${{ inputs.ownership_generation }}
       CACHE_RESTORE_COMMIT: ${{ inputs.restore_commit }}
       CACHE_DESCRIPTOR_SHA256: ${{ inputs.restore_descriptor_sha256 }}
@@ -82,9 +104,14 @@ jobs:
           python - <<'PY'
           import os, re
           from datetime import date
-          assert (os.environ.get('SOURCE_MODE') or 'publish') in {'publish', 'institutional_probe', 'ownership_recompute'}, 'invalid source_mode'
+          assert (os.environ.get('SOURCE_MODE') or 'publish') in {'publish', 'prepare_peg', 'finalize_peg', 'institutional_probe', 'ownership_recompute'}, 'invalid source_mode'
           assert re.fullmatch(r'[A-Za-z0-9_.:-]{1,160}', os.environ['REQUEST_ID']), 'invalid request_id'
           assert date.fromisoformat(os.environ['MARKET_DATE']).isoformat() == os.environ['MARKET_DATE'], 'invalid market_date'
+          if os.environ.get('SOURCE_MODE') == 'finalize_peg':
+              assert re.fullmatch(r'[1-9][0-9]{0,23}', os.environ['PREPARE_RUN_ID']), 'invalid prepare run'
+              assert re.fullmatch(r'[1-9][0-9]{0,5}', os.environ['PREPARE_RUN_ATTEMPT']), 'invalid prepare attempt'
+              assert re.fullmatch(r'[a-f0-9]{64}', os.environ['CANDIDATE_SHA256']), 'invalid candidate digest'
+              assert re.fullmatch(r'[a-f0-9]{40}', os.environ['SEARCH_MANIFEST_COMMIT']), 'invalid manifest commit'
           ownership_generation = os.environ.get('OWNERSHIP_REQUESTED_GENERATION', '')
           assert not ownership_generation or re.fullmatch(r'[a-f0-9]{40}', ownership_generation), 'invalid ownership generation'
           names = ['CACHE_RESTORE_COMMIT', 'CACHE_DESCRIPTOR_SHA256', 'CACHE_MARKET_DATE', 'CACHE_SOURCE_GIT_COMMIT', 'CACHE_ACTIONS_RUN_ID', 'CACHE_REQUEST_ID']
@@ -103,6 +130,7 @@ jobs:
           echo "BUDGET_DATE=$(TZ=Asia/Taipei date +%F)" >> "$GITHUB_ENV"
           echo "SOURCE_GIT_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - uses: actions/cache/restore@v6
+        if: inputs.source_mode != 'finalize_peg'
         id: finmind-cache
         with:
           path: .cache/finmind
@@ -120,12 +148,13 @@ jobs:
       - run: npm ci
       - run: python -m pip install -r requirements.txt
       - name: Recover same-day budget from failure artifacts
-        if: inputs.source_mode != 'ownership_recompute'
+        if: inputs.source_mode != 'finalize_peg' && inputs.source_mode != 'ownership_recompute'
         timeout-minutes: 3
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python scripts/restore_finmind_checkpoint.py --cache-dir .cache/finmind --budget-date "$BUDGET_DATE"
       - name: Restore complete daily source receipts
+        if: inputs.source_mode != 'finalize_peg'
         uses: actions/cache/restore@v6
         with:
           path: .cache/market-source
@@ -133,7 +162,7 @@ jobs:
           restore-keys: |
             market-source-v1-
       - name: Restore verified Notion operational cache
-        if: inputs.restore_commit != ''
+        if: inputs.restore_commit != '' && inputs.source_mode != 'finalize_peg'
         timeout-minutes: 5
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -141,7 +170,7 @@ jobs:
           set -euo pipefail
           python scripts/restore_market_cache.py --restore-commit="$CACHE_RESTORE_COMMIT" --descriptor-sha256="$CACHE_DESCRIPTOR_SHA256" --cache-market-date="$CACHE_MARKET_DATE" --market-date="$MARKET_DATE" --source-git-commit="$CACHE_SOURCE_GIT_COMMIT" --actions-run-id="$CACHE_ACTIONS_RUN_ID" --request-id="$CACHE_REQUEST_ID" --source-cache-dir .cache/market-source --stock-cache-dir .cache/restored-stock-details
       - name: Fetch authoritative exchange calendar
-        if: inputs.source_mode != 'ownership_recompute'
+        if: inputs.source_mode != 'finalize_peg' && inputs.source_mode != 'ownership_recompute'
         shell: bash
         run: |
           set -euo pipefail
@@ -151,7 +180,7 @@ jobs:
           fi
           python scripts/build_trading_calendar.py --market-date "$MARKET_DATE" --source-cache-dir .cache/market-source "${calendar_restore_args[@]}"
       - name: Fetch official institutional universe
-        if: inputs.source_mode != 'ownership_recompute'
+        if: inputs.source_mode != 'finalize_peg' && inputs.source_mode != 'ownership_recompute'
         timeout-minutes: 10
         shell: bash
         run: |
@@ -164,10 +193,12 @@ jobs:
           done
           exit 1
       - name: Verify independent requested date against fetched official date
-        if: inputs.source_mode != 'ownership_recompute'
+        if: inputs.source_mode != 'finalize_peg' && inputs.source_mode != 'ownership_recompute'
         run: python scripts/verify_daily_freshness.py --universe-only --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json
       - run: python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json
+        if: inputs.source_mode != 'finalize_peg'
       - name: Pin and verify existing ownership generation without provider network
+        if: inputs.source_mode != 'finalize_peg'
         timeout-minutes: 2
         shell: bash
         run: |
@@ -210,7 +241,7 @@ jobs:
           fi
           if [ "$SOURCE_MODE" = ownership_recompute ]; then test -s .cache/ownership_snapshot.json; fi
       - name: Correct ownership only from frozen release inputs
-        if: inputs.source_mode == 'ownership_recompute'
+        if: inputs.source_mode != 'finalize_peg' && inputs.source_mode == 'ownership_recompute'
         timeout-minutes: 5
         run: |
           set -euo pipefail
@@ -221,11 +252,11 @@ jobs:
           assert json.loads(Path('.artifacts/ownership/recompute.json').read_text())['ownership_updated'] is True
           PY
       - name: Refresh official public-source snapshot first
-        if: inputs.source_mode != 'ownership_recompute'
+        if: inputs.source_mode != 'finalize_peg' && inputs.source_mode != 'ownership_recompute'
         timeout-minutes: 25
         run: python scripts/refresh_snapshot.py --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json --source-cache-dir .cache/market-source --stock-cache-dir .cache/restored-stock-details
       - name: Supplement remaining financial gaps within durable free budget
-        if: inputs.source_mode != 'ownership_recompute'
+        if: inputs.source_mode != 'finalize_peg' && inputs.source_mode != 'ownership_recompute'
         timeout-minutes: 26
         shell: bash
         env:
@@ -242,25 +273,92 @@ jobs:
           echo "BUDGET_DATE=$BUDGET_DATE" >> "$GITHUB_ENV"
           python scripts/run_optional_supplement.py --data-dir public/data --timeout-seconds 1440 -- python scripts/fetch_finmind.py --supplement --cache-dir .cache/finmind --budget-date "$BUDGET_DATE" --as-of "$MARKET_DATE" --max-requests 300 --max-runtime-seconds 1380
       - name: Persist completed supplementary checkpoint immediately
-        if: always()
+        if: inputs.source_mode != 'finalize_peg' && always()
         uses: actions/cache/save@v6
         with:
           path: .cache/finmind
           key: finmind-v1-${{ env.BUDGET_DATE }}-${{ github.run_id }}-${{ github.run_attempt }}-checkpoint
       - name: Recompute from existing enriched inputs without network
-        if: inputs.source_mode != 'ownership_recompute'
+        if: inputs.source_mode != 'finalize_peg' && inputs.source_mode != 'ownership_recompute'
         timeout-minutes: 5
         run: python scripts/refresh_snapshot.py --recompute-existing --as-of "$MARKET_DATE" --output public/data --ownership-snapshot .cache/ownership_snapshot.json
+      - name: Verify prepared candidate before discovery
+        if: inputs.source_mode == 'prepare_peg'
+        run: |
+          python scripts/verify_snapshot.py --require-growth-coverage
+          python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json --publish-advisory
+          python scripts/verify_snapshot.py --require-growth-coverage
+      - name: Freeze new candidate and preview for PEG discovery
+        if: inputs.source_mode == 'prepare_peg'
+        run: python scripts/peg_candidate.py create --artifact .artifacts/peg-candidate --request-id "$REQUEST_ID" --market-date "$MARKET_DATE" --prepare-run-id "$GITHUB_RUN_ID" --prepare-run-attempt "$GITHUB_RUN_ATTEMPT" --source-git-commit "$SOURCE_GIT_COMMIT"
+      - uses: actions/upload-artifact@v7
+        if: inputs.source_mode == 'prepare_peg'
+        with:
+          name: peg-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .artifacts/peg-candidate
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/download-artifact@v8
+        if: inputs.source_mode == 'finalize_peg'
+        with:
+          name: peg-candidate-${{ inputs.prepare_run_id }}-${{ inputs.prepare_run_attempt }}
+          run-id: ${{ inputs.prepare_run_id }}
+          github-token: ${{ github.token }}
+          path: .artifacts/peg-candidate
+      - name: Restore exact candidate and correlated search manifest
+        if: inputs.source_mode == 'finalize_peg'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf public/data .cache/market-source .cache/chip-state .cache/ownership_snapshot.json .artifacts/ownership
+          python scripts/peg_candidate.py restore --artifact .artifacts/peg-candidate --request-id "$REQUEST_ID" --market-date "$MARKET_DATE" --prepare-run-id "$PREPARE_RUN_ID" --prepare-run-attempt "$PREPARE_RUN_ATTEMPT" --candidate-sha256 "$CANDIDATE_SHA256"
+          if [ -s .artifacts/ownership/generation.txt ]; then
+            echo "OWNERSHIP_GENERATION=$(cat .artifacts/ownership/generation.txt)" >> "$GITHUB_ENV"
+          fi
+          git fetch --no-tags origin "$SEARCH_MANIFEST_COMMIT"
+          git show "$SEARCH_MANIFEST_COMMIT:config/peg_search_results.json" > "$RUNNER_TEMP/peg_search_results.json"
+          python - <<'PY2'
+          import json, os
+          from pathlib import Path
+          preview = json.loads(Path('.artifacts/peg-candidate/preview.json').read_text())
+          manifest = json.loads(Path(os.environ['RUNNER_TEMP'], 'peg_search_results.json').read_text())
+          for key in ('requestId', 'marketDate', 'prepareRunId', 'prepareRunAttempt', 'candidateSha256'):
+              assert manifest.get(key) == preview.get(key), f'manifest {key} mismatch'
+          import urllib.request
+          from scripts.peg_candidate import validate_prepare_run
+          url = f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['PREPARE_RUN_ID']}/attempts/{os.environ['PREPARE_RUN_ATTEMPT']}"
+          request = urllib.request.Request(url, headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'User-Agent': 'stockscreener-daily'})
+          with urllib.request.urlopen(request, timeout=30) as response:
+              run = json.loads(response.read(1024 * 1024))
+          validate_prepare_run(preview, run, os.environ['GITHUB_REPOSITORY'])
+          PY2
+      - name: Apply fresh PEG evidence to frozen candidate
+        if: inputs.source_mode == 'finalize_peg'
+        run: python scripts/run_peg_repair.py --market-date "$MARKET_DATE" --request-id "$REQUEST_ID" --manifest "$RUNNER_TEMP/peg_search_results.json" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID"
+      - uses: actions/upload-artifact@v7
+        if: inputs.source_mode == 'finalize_peg'
+        with:
+          name: peg-review-${{ inputs.market_date }}-${{ github.run_id }}
+          path: public/data/peg-review.json
+          if-no-files-found: error
       - run: python scripts/verify_snapshot.py --require-growth-coverage
+        if: inputs.source_mode != 'prepare_peg'
       - name: Publish latest data with per-stock freshness warnings
+        if: inputs.source_mode != 'prepare_peg'
         run: python scripts/verify_daily_freshness.py --market-date "$MARKET_DATE" --data-dir public/data --config config/tracked_symbols.json --publish-advisory
       - name: Verify final annotated snapshot numbers and manifest
+        if: inputs.source_mode != 'prepare_peg'
         run: python scripts/verify_snapshot.py --require-growth-coverage
       - name: Build lightweight publication fingerprint
+        if: inputs.source_mode != 'prepare_peg'
         run: python scripts/build_publication_fingerprint.py --market-date "$MARKET_DATE"
       - name: Build canonical screening export
+        if: inputs.source_mode != 'prepare_peg'
         run: python scripts/build_screening_export.py --data-dir public/data --request-id "$REQUEST_ID" --market-date "$MARKET_DATE" --source-git-commit "$SOURCE_GIT_COMMIT" --actions-run-id "$GITHUB_RUN_ID"
       - name: Build and validate complete market cache before publication
+        if: inputs.source_mode != 'prepare_peg'
         id: market-cache-index
         timeout-minutes: 5
         continue-on-error: true
@@ -273,13 +371,13 @@ jobs:
           python scripts/export_market_cache.py --input .artifacts/market-cache-index/input.json --expected .artifacts/market-cache-index/expected.json --output .artifacts/market-cache
           cp .artifacts/market-cache-index/expected.json .artifacts/market-cache/expected.json
       - name: Report non-blocking market cache QA warning
-        if: steps.market-cache-index.outcome == 'failure'
+        if: steps.market-cache-index.outcome == 'failure' && inputs.source_mode != 'prepare_peg'
         run: |
           echo "The daily snapshot will still publish. Complete market cache QA failed; inspect the failed step before using this cache." >> "$GITHUB_STEP_SUMMARY"
           echo "::warning::Complete market cache QA failed; daily snapshot publication continues."
       - name: Preserve validated complete market cache
         id: market-cache-upload
-        if: steps.market-cache-index.outcome == 'success'
+        if: steps.market-cache-index.outcome == 'success' && inputs.source_mode != 'prepare_peg'
         timeout-minutes: 3
         continue-on-error: true
         uses: actions/upload-artifact@v7
@@ -289,24 +387,36 @@ jobs:
           compression-level: 0
           if-no-files-found: error
       - name: Report non-blocking market cache upload warning
-        if: steps.market-cache-upload.outcome == 'failure'
+        if: steps.market-cache-upload.outcome == 'failure' && inputs.source_mode != 'prepare_peg'
         run: |
           echo "The daily snapshot will still publish. Complete market cache upload failed; a verified backup is unavailable for this run." >> "$GITHUB_STEP_SUMMARY"
           echo "::warning::Complete market cache upload failed; daily snapshot publication continues."
       - run: python scripts/build_history_archive.py --require-export --as-of "$MARKET_DATE"
+        if: inputs.source_mode != 'prepare_peg'
       - run: python scripts/verify_history_archive.py
+        if: inputs.source_mode != 'prepare_peg'
       - run: python scripts/prune_releases.py --data-dir public/data --keep 3 --max-bytes 250000000
+        if: inputs.source_mode != 'prepare_peg'
       - run: python scripts/verify_history_archive.py --archive public/data/archive/v1
+        if: inputs.source_mode != 'prepare_peg'
       - run: python scripts/verify_neutral_copy.py --paths src public/data
+        if: inputs.source_mode != 'prepare_peg'
       - run: python -m pytest pipeline scripts -q
+        if: inputs.source_mode != 'prepare_peg'
       - run: npm run test:unit
+        if: inputs.source_mode != 'prepare_peg'
       - run: npm run typecheck
+        if: inputs.source_mode != 'prepare_peg'
       - run: npm run build
+        if: inputs.source_mode != 'prepare_peg'
       - name: Recheck tracked universe before publish
+        if: inputs.source_mode != 'prepare_peg'
         run: python scripts/verify_tracked_universe.py --config config/tracked_symbols.json --snapshot public/data/institutional_universe.json --latest public/data/latest.json
       - name: Verify publication fingerprint still matches exact snapshot bytes
+        if: inputs.source_mode != 'prepare_peg'
         run: python scripts/build_publication_fingerprint.py --check --market-date "$MARKET_DATE"
       - name: Publish validated release to main
+        if: inputs.source_mode != 'prepare_peg'
         shell: bash
         run: |
           set -euo pipefail
@@ -325,11 +435,13 @@ jobs:
           Path('.artifacts/screening-export/publication.json').write_text(json.dumps(publication, sort_keys=True))
           PY
       - uses: actions/upload-artifact@v7
+        if: inputs.source_mode != 'prepare_peg'
         with:
           name: screening-export
           path: .artifacts/screening-export
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
+        if: inputs.source_mode != 'prepare_peg'
         with:
           name: validated-static-release
           path: dist

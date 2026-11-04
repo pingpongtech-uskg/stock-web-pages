@@ -1,31 +1,41 @@
-# PEG calculation and source recovery
+# PEG calculation and coherent publication
 
 The primary PEG uses reported quarterly EPS, never revenue or net-income growth as a substitute:
 
 `PEG = PE / (100 * (latest-four-quarter EPS / preceding-four-quarter EPS - 1))`
 
-Eight consecutive comparable quarters, a positive EPS base and positive growth are required. Same-day raw close is required. A same-day reported PE is used when consistent with EPS; otherwise the calculation records its derived PE origin. Corporate-action and EPS-basis guards remain in force. Basic and diluted EPS must not be mixed.
+Eight consecutive comparable quarters, a positive EPS base and positive growth are required. An explicit quote date matching the market session is required; the calculation cutoff never substitutes for a missing quote date. A same-day reported PE is used when consistent with EPS; otherwise the calculation records its derived PE origin. Corporate-action and EPS-basis guards remain in force. Basic and diluted EPS must not be mixed.
 
-Every stock has `pegReview`: `available`, `needs_review`, or `not_applicable`, with reasons and periods. Unavailable PEGs are omitted from PEG ranking while retaining the stock and other metrics. The main page exposes the review list; `data/peg-review.json` contains the repair-run audit.
+Financial statements are quarterly disclosures, not daily measurements. The cutoff identifies the information available for that session. A newer disclosed quarter with missing EPS cannot be replaced by an older eight-quarter window. Future disclosures are excluded and malformed evidence dates require review.
 
-## Source recovery
+Every stock has `pegReview`: `available`, `needs_review`, or `not_applicable`. Review details explain current versus prior nonpositive EPS, flat versus declining growth, missing quarters and quote-date failures. They include actual EPS totals and growth when meaningful, comparison periods, the calculation cutoff, actual quote date and known publication date. Incomplete or incomparable evidence never receives invented totals. Unavailable PEGs are omitted from PEG ranking while retaining the stock and other metrics.
 
-No AI or model is used. The n8n discovery workflow searches SearXNG first and uses Brave only after an unusable result or provider failure. Brave is capped at 20 calls per market date. Approved issuer domains come from TWSE/TPEx company directories. Search snippets are discovery hints, never EPS evidence.
+## One Stockscreener workflow
 
-The private SearXNG address is read from the singleton `searx_url` column in n8n's `Stockscreener PEG source progress` table. It is not embedded in the checked-in graph. Only explicit private HTTP(S) service addresses are accepted for SearXNG; discovered financial documents still require public HTTPS. A missing address returns `configuration_required` before provider calls. Switching n8n to a private address does not disable an existing public reverse-proxy route; remove that route in the deployment platform separately. Credentials remain in n8n; no keys belong in source files.
+The main n8n Stockscreener workflow owns the schedule and the whole operation:
 
-Generate the auditable child graph with `node scripts/n8n/build-peg-source-workflow.cjs`. `peg-parent-hook.cjs` exports `applyHook` to attach the child after the parent's verified publication outcome. It preserves the original result, schedules, credentials and ledger. The child runs asynchronously and an auxiliary failure does not fail the parent.
+1. Dispatch `daily.yml` in `prepare_peg` mode. It fetches the requested session's market data and latest eligible financial evidence, then freezes an unpublished candidate and its 100-stock preview.
+2. Authenticate the exact prepare Actions run and candidate artifact. Verify repository, workflow, request, session, attempt, source commit, artifact SHA-256, ZIP structure and candidate digest.
+3. Search missing evidence from that candidate inside the main n8n graph, using private SearXNG first and Brave as fallback. Persist the candidate-bound manifest on the `n8n-state` branch.
+4. Dispatch `daily.yml` in `finalize_peg` mode, pinned to the prepare run, attempt, candidate digest and manifest commit. Restore the frozen roster, market receipts, financial inputs and ownership state. Recompute every PEG and review record.
+5. Build the final screening export, publication fingerprint, history and cache from that generation, then publish once through the existing compare-and-swap script. Continue the existing website readback and Notion archival using the final Actions run.
 
-The dedicated progress table uses singleton row 1, a revision compare-and-swap and a 30-minute lease. Brave quota is reserved before search; an expired unrefunded reservation is counted as spent. Source results and dispatch intent survive retries. A deterministic request ID `peg-<marketDate>-ttm-v1` prevents repeating an accepted or ambiguous dispatch. Existing Actions requests are reconciled rather than dispatched again. The public latest artifact's market date drives the run; the calendar date never substitutes for an unavailable session.
+Preparation never commits public data. Finalization does not silently reacquire a different roster or use the old published PEG values. Source failures produce explicit unavailable diagnostics; they do not authorize substituting stale PEG. Dispatch intent, exact run correlation and checkpoints prevent blind duplicate dispatch after an uncertain response.
 
-Brave requests explicitly send `Accept: application/json`. Configuration/authentication errors stop that provider for the rest of the batch; rate limits and temporary failures use a cooldown. Search targets the last disclosed EPS quarter when provided, not an assumed newly completed quarter.
+The old asynchronous post-publication child hook is retired. `peg-parent-hook.cjs` and `peg.yml` remain legacy/manual repair tools; do not attach them to the normal daily path. The main graph is generated by `node scripts/n8n/build-workflow.cjs`. Its SDK exceeds the MCP create/validate input ceiling, so deploy it through atomic updates to the existing workflow, with independent node-schema validation, Code compilation, graph tests and server-side validation. Preserve the live credential IDs, table references and schedule when applying updates.
 
-Candidate documents are bounded, cached and fetched through DNS-pinned HTTPS. The parser accepts explicit historical quarterly EPS only when issuer identity, reporting currency, scope and period can be established. It does not infer forecasts, subtract ambiguous cumulative values, or silently resolve conflicting bases. Source URL, row, document hash and observation/publication date are retained. Unresolved records stay in review.
+## Source recovery and cost
 
-## Repair dispatch
+No AI or model is used. Brave is capped at 20 calls per market date. The dedicated progress table uses singleton row 1, revision compare-and-swap and a 30-minute quota lease. Quota is reserved before search; unrefunded reservations count as spent. Candidate identity scopes cached search results, while daily usage survives a change of candidate.
 
-The manual `peg.yml` workflow accepts an exact current `market_date`, unique `request_id`, and optional `search_manifest_commit`. The manifest at `config/peg_search_results.json` has `{marketDate, stocks: [{code, name, legalName, officialDomains, results: [{url, title, provider}]}]}`. An empty manifest recomputes existing evidence without source calls.
+The private SearXNG address is read from the singleton `searx_url` column in n8n's PEG source progress table. It is not embedded in the checked-in graph. Only explicit private HTTP(S) service addresses are accepted; discovered documents still require public HTTPS. Removing an old public reverse-proxy route remains a separate deployment-platform operation. Credentials stay in n8n.
 
-The repair retains the exact 100-stock universe, uses the shared daily publication concurrency group, validates the canonical export and fingerprint, and publishes data with the existing compare-and-swap script. Read the exact Actions run and public release after dispatch; a 204 dispatch receipt alone does not prove publication. Do not blindly repeat an ambiguous dispatch.
+Brave requests explicitly send `Accept: application/json`. Authentication/configuration errors stop that provider for the batch; rate limits and temporary failures use cooldowns. Search targets the latest disclosed quarter in the candidate. Search snippets are discovery hints, never EPS evidence.
 
-The original Stockscreener workflow was backed up inactive before this migration. Its original schedules and durable ledger are preserved.
+Candidate documents are bounded, cached and fetched through DNS-pinned HTTPS. Historical quarterly EPS is accepted only when issuer identity, currency, scope and period are established. Forecasts and ambiguous cumulative values are not substituted. Source URL, document hash and real observation/publication dates are retained. Unresolved records remain in the review list.
+
+## Operational verification
+
+A dispatch receipt is not proof of publication. Verify the exact final Actions run, public latest generation, review generation and export lineage. The latest completed trading session may differ from today's calendar date. A future schedule is not considered verified until its execution has been observed.
+
+Backups and deployment evidence belong in `scripts/n8n/output`. Keep prior backups inactive and do not delete historical Notion records or published releases during recovery.

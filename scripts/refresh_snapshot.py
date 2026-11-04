@@ -642,13 +642,22 @@ def _valuation_from_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
         valuation_current = {}
     validated = derive_growth_inputs(detail)
     quote_day = normalized_date(detail.get("asOf"))
-    raw_quote_day = normalized_date(detail.get("quoteAsOf") or detail.get("asOf"))
+    raw_quote_value = detail.get("quoteAsOf")
+    raw_quote_day = normalized_date(raw_quote_value)
     valuation, review = calculate_ttm_peg(
         validated["rows"], as_of=quote_day,
-        price=validated["current_price"] if raw_quote_day == quote_day and validated["price_origin"] == "reported" else None,
+        price=validated["current_price"] if quote_day is not None and raw_quote_day == quote_day and validated["price_origin"] == "reported" else None,
         reported_pe=valuation_current.get("pe"),
         pe_date=valuation_current.get("date"),
     )
+    review["quoteAsOf"] = raw_quote_day
+    if review["reasonCodes"] == ["missing_same_day_price"]:
+        if raw_quote_value in (None, ""):
+            review["reasonCodes"] = ["missing_quote_date"]
+        elif raw_quote_day is None:
+            review["reasonCodes"] = ["invalid_quote_date"]
+        elif raw_quote_day != quote_day:
+            review["reasonCodes"] = ["stale_quote"]
     detail["pegReview"] = review
     return valuation
 
