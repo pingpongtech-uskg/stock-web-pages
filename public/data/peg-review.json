@@ -1,43 +1,18 @@
 {
-  "marketDate": "2026-11-06",
-  "runId": "enriched-20261106-192016-78ec5b500b",
-  "requestId": "stockscreener:20261106:v1",
-  "sourceGitCommit": "0b3bc4268ed8aeab4947e7288a0c1e5c95b61ee2",
-  "actionsRunId": "42208733265",
-  "prepareRunId": "42207451381",
+  "marketDate": "2026-11-09",
+  "runId": "enriched-20261109-182233-6d54a2dce4",
+  "requestId": "stockscreener:20261109:v1:retry1",
+  "sourceGitCommit": "841c6b012c56413b8125ce707d54e71fb0425aef",
+  "actionsRunId": "42599521691",
+  "prepareRunId": "42598490180",
   "prepareRunAttempt": 1,
-  "candidateSha256": "b3b5960fb86a0666327fddf7ec043f0809c388c7df7c6e0a9bb8efed8b75bd0f",
+  "candidateSha256": "bc8207b5d1564e20f906839d712b95c9781a0ecf5173aedd4b86625c5274233d",
   "counts": {
-    "needs_review": 85,
-    "available": 15
+    "needs_review": 79,
+    "available": 18,
+    "not_applicable": 3
   },
   "stocks": [
-    {
-      "code": "1101",
-      "name": "台泥",
-      "pegReview": {
-        "status": "needs_review",
-        "reasonCodes": [
-          "latest_statement_unverified"
-        ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
-        "sourceRefs": [
-          "FinMind:TaiwanStockFinancialStatements"
-        ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": -1.29,
-        "priorTtmEps": 1.01,
-        "epsGrowthPct": -227.72277227722776,
-        "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
-        "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-03",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
-      }
-    },
     {
       "code": "1301",
       "name": "台塑",
@@ -51,7 +26,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 1.64,
         "priorTtmEps": -1.47,
         "epsGrowthPct": null,
@@ -61,7 +36,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -77,7 +52,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 6.2,
         "priorTtmEps": -0.41000000000000003,
         "epsGrowthPct": null,
@@ -87,7 +62,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -96,24 +71,24 @@
       "pegReview": {
         "status": "needs_review",
         "reasonCodes": [
-          "latest_statement_unverified"
+          "missing_latest_quarter_eps"
         ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
+        "currentPeriod": "2026Q3–2026Q3",
+        "priorPeriod": null,
         "sourceRefs": [
-          "FinMind:TaiwanStockFinancialStatements"
+          "TWSE OpenAPI"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 2.36,
-        "priorTtmEps": -1.76,
+        "asOf": "2026-11-09",
+        "currentTtmEps": null,
+        "priorTtmEps": null,
         "epsGrowthPct": null,
         "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
+        "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-03",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "TWSE OpenAPI",
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -129,17 +104,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 11.93,
         "priorTtmEps": 7.36,
         "epsGrowthPct": 62.09239130434781,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -153,17 +128,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 4.86,
         "priorTtmEps": 0.37,
         "epsGrowthPct": 1213.5135135135138,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -172,24 +147,24 @@
       "pegReview": {
         "status": "needs_review",
         "reasonCodes": [
-          "latest_statement_unverified"
+          "missing_latest_quarter_eps"
         ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
+        "currentPeriod": "2026Q3–2026Q3",
+        "priorPeriod": null,
         "sourceRefs": [
-          "FinMind:TaiwanStockFinancialStatements"
+          "TWSE OpenAPI"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 0.87,
-        "priorTtmEps": -0.83,
+        "asOf": "2026-11-09",
+        "currentTtmEps": null,
+        "priorTtmEps": null,
         "epsGrowthPct": null,
         "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
+        "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-04",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "TWSE OpenAPI",
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -205,7 +180,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -215,7 +190,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -224,24 +199,24 @@
       "pegReview": {
         "status": "needs_review",
         "reasonCodes": [
-          "latest_statement_unverified"
+          "missing_latest_quarter_eps"
         ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
+        "currentPeriod": "2026Q3–2026Q3",
+        "priorPeriod": null,
         "sourceRefs": [
-          "FinMind:TaiwanStockFinancialStatements"
+          "TWSE OpenAPI"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": -0.19999999999999998,
-        "priorTtmEps": -0.09999999999999999,
+        "asOf": "2026-11-09",
+        "currentTtmEps": null,
+        "priorTtmEps": null,
         "epsGrowthPct": null,
         "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
+        "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-03",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "TWSE OpenAPI",
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -255,17 +230,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 8.39,
         "priorTtmEps": 6.11,
         "epsGrowthPct": 37.31587561374796,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
-        "financialCheckSource": "TWSE OpenAPI",
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -281,17 +256,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 4.9,
         "priorTtmEps": 1.76,
         "epsGrowthPct": 178.4090909090909,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -305,43 +280,41 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 9.77,
         "priorTtmEps": 6.279999999999999,
         "epsGrowthPct": 55.57324840764333,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
       "code": "2313",
       "name": "華通",
       "pegReview": {
-        "status": "needs_review",
-        "reasonCodes": [
-          "missing_latest_quarter_eps"
-        ],
-        "currentPeriod": "2026Q3–2026Q3",
-        "priorPeriod": null,
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": null,
-        "priorTtmEps": null,
-        "epsGrowthPct": null,
+        "asOf": "2026-11-09",
+        "currentTtmEps": 6.2,
+        "priorTtmEps": 5.0,
+        "epsGrowthPct": 24.0,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -357,17 +330,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 15.21,
         "priorTtmEps": 13.11,
         "epsGrowthPct": 16.01830663615562,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -383,17 +356,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 86.28,
         "priorTtmEps": 56.31,
         "epsGrowthPct": 53.22322855620671,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -409,43 +382,41 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 7.31,
         "priorTtmEps": 5.0,
         "epsGrowthPct": 46.199999999999996,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
       "code": "2352",
       "name": "佳世達",
       "pegReview": {
-        "status": "needs_review",
-        "reasonCodes": [
-          "latest_statement_unverified"
-        ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 0.78,
-        "priorTtmEps": 1.08,
-        "epsGrowthPct": -27.77777777777778,
+        "asOf": "2026-11-09",
+        "currentTtmEps": 0.98,
+        "priorTtmEps": 0.69,
+        "epsGrowthPct": 42.02898550724639,
         "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
+        "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -461,17 +432,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 1.9,
         "priorTtmEps": 1.9500000000000002,
         "epsGrowthPct": -2.564102564102577,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -487,17 +458,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 3.1,
         "priorTtmEps": 2.3,
         "epsGrowthPct": 34.78260869565219,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -513,17 +484,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 68.4,
         "priorTtmEps": 49.459999999999994,
         "epsGrowthPct": 38.293570562070386,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -539,17 +510,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 28.5,
         "priorTtmEps": 13.0,
         "epsGrowthPct": 119.23076923076925,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -565,17 +536,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 26.71,
         "priorTtmEps": 16.42,
         "epsGrowthPct": 62.66747868453104,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -591,17 +562,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 11.53,
         "priorTtmEps": 5.46,
         "epsGrowthPct": 111.17216117216118,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -617,17 +588,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 27.73,
         "priorTtmEps": 32.06,
         "epsGrowthPct": -13.50592638802246,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -643,17 +614,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 22.939999999999998,
         "priorTtmEps": 17.87,
         "epsGrowthPct": 28.371572467823157,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -667,17 +638,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 93.36,
         "priorTtmEps": 38.89,
         "epsGrowthPct": 140.06171252249936,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -693,7 +664,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 0.24,
         "priorTtmEps": 0.78,
         "epsGrowthPct": -69.23076923076923,
@@ -703,33 +674,31 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
       "code": "2412",
       "name": "中華電",
       "pegReview": {
-        "status": "needs_review",
-        "reasonCodes": [
-          "latest_statement_unverified"
-        ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 5.1,
-        "priorTtmEps": 4.89,
-        "epsGrowthPct": 4.294478527607359,
+        "asOf": "2026-11-09",
+        "currentTtmEps": 5.45,
+        "priorTtmEps": 4.95,
+        "epsGrowthPct": 10.1010101010101,
         "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
+        "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -745,7 +714,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -755,7 +724,7 @@
         "financialCheckAt": "2026-11-04",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -771,17 +740,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 60.69,
         "priorTtmEps": 66.81,
         "epsGrowthPct": -9.160305343511455,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -795,17 +764,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 5.0600000000000005,
         "priorTtmEps": 2.63,
         "epsGrowthPct": 92.39543726235743,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -821,43 +790,43 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 10.91,
         "priorTtmEps": 7.75,
         "epsGrowthPct": 40.774193548387096,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
       "code": "2474",
       "name": "可成",
       "pegReview": {
-        "status": "needs_review",
+        "status": "not_applicable",
         "reasonCodes": [
-          "latest_statement_unverified"
+          "declining_growth"
         ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 13.64,
-        "priorTtmEps": 24.36,
-        "epsGrowthPct": -44.006568144499184,
+        "asOf": "2026-11-09",
+        "currentTtmEps": 11.469999999999999,
+        "priorTtmEps": 26.88,
+        "epsGrowthPct": -57.328869047619044,
         "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
+        "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-02",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -873,7 +842,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 8.9,
         "priorTtmEps": 3.59,
         "epsGrowthPct": 147.91086350974933,
@@ -883,7 +852,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -899,17 +868,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 2.88,
         "priorTtmEps": 1.97,
         "epsGrowthPct": 46.192893401015226,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -925,17 +894,43 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 25.23,
         "priorTtmEps": 60.64,
         "epsGrowthPct": -58.39379947229551,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
+      }
+    },
+    {
+      "code": "2609",
+      "name": "陽明",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "latest_statement_unverified"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ],
+        "asOf": "2026-11-09",
+        "currentTtmEps": 4.4399999999999995,
+        "priorTtmEps": 14.219999999999999,
+        "epsGrowthPct": -68.77637130801688,
+        "latestEvidencePublishedAt": null,
+        "availableQuarterCount": 18,
+        "expectedLatestQuarter": "2026Q3",
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
+        "latestSourcePeriod": "2026Q2",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -951,7 +946,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 14.56,
         "priorTtmEps": 14.61,
         "epsGrowthPct": -0.3422313483915085,
@@ -961,7 +956,59 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
+      }
+    },
+    {
+      "code": "2618",
+      "name": "長榮航",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "latest_statement_unverified"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ],
+        "asOf": "2026-11-09",
+        "currentTtmEps": 4.74,
+        "priorTtmEps": 5.39,
+        "epsGrowthPct": -12.059369202226334,
+        "latestEvidencePublishedAt": null,
+        "availableQuarterCount": 18,
+        "expectedLatestQuarter": "2026Q3",
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
+        "latestSourcePeriod": "2026Q2",
+        "quoteAsOf": "2026-11-09"
+      }
+    },
+    {
+      "code": "2634",
+      "name": "漢翔",
+      "pegReview": {
+        "status": "needs_review",
+        "reasonCodes": [
+          "latest_statement_unverified"
+        ],
+        "currentPeriod": "2025Q3–2026Q2",
+        "priorPeriod": "2024Q3–2025Q2",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ],
+        "asOf": "2026-11-09",
+        "currentTtmEps": 2.0700000000000003,
+        "priorTtmEps": 0.85,
+        "epsGrowthPct": 143.5294117647059,
+        "latestEvidencePublishedAt": null,
+        "availableQuarterCount": 18,
+        "expectedLatestQuarter": "2026Q3",
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
+        "latestSourcePeriod": "2026Q2",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -977,7 +1024,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -987,33 +1034,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
-      }
-    },
-    {
-      "code": "2845",
-      "name": "遠東銀",
-      "pegReview": {
-        "status": "needs_review",
-        "reasonCodes": [
-          "incomparable_eps_basis"
-        ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
-        "sourceRefs": [
-          "FinMind:TaiwanStockFinancialStatements"
-        ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": null,
-        "priorTtmEps": null,
-        "epsGrowthPct": null,
-        "latestEvidencePublishedAt": null,
-        "availableQuarterCount": null,
-        "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-03",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1029,7 +1050,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1039,7 +1060,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1055,17 +1076,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-02",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1081,7 +1102,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1091,7 +1112,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1107,7 +1128,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1117,7 +1138,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1133,7 +1154,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1143,7 +1164,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1159,7 +1180,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1169,7 +1190,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1185,7 +1206,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 2.56,
         "priorTtmEps": 2.2,
         "epsGrowthPct": 16.36363636363636,
@@ -1195,7 +1216,7 @@
         "financialCheckAt": "2026-11-06",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1211,7 +1232,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1221,7 +1242,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1237,7 +1258,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1247,7 +1268,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1263,7 +1284,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1273,7 +1294,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1289,7 +1310,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1299,7 +1320,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1315,17 +1336,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 75.13000000000001,
         "priorTtmEps": 30.63,
         "epsGrowthPct": 145.2824028730004,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1339,17 +1360,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 14.11,
         "priorTtmEps": 13.11,
         "epsGrowthPct": 7.627765064836001,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1363,17 +1384,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 32.65,
         "priorTtmEps": 28.689999999999998,
         "epsGrowthPct": 13.802718717323103,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1387,17 +1408,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 20.41,
         "priorTtmEps": 2.1,
         "epsGrowthPct": 871.9047619047618,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1413,17 +1434,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 23.34,
         "priorTtmEps": 17.79,
         "epsGrowthPct": 31.19730185497471,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1439,17 +1460,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 5.33,
         "priorTtmEps": 4.82,
         "epsGrowthPct": 10.580912863070523,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1465,41 +1486,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 3.61,
         "priorTtmEps": 6.07,
         "epsGrowthPct": -40.52718286655684,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
-      }
-    },
-    {
-      "code": "3090",
-      "name": "日電貿",
-      "pegReview": {
-        "status": "available",
-        "reasonCodes": [],
-        "currentPeriod": "2025Q4–2026Q3",
-        "priorPeriod": "2024Q4–2025Q3",
-        "sourceRefs": [
-          "FinMind:TaiwanStockFinancialStatements"
-        ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 8.67,
-        "priorTtmEps": 5.18,
-        "epsGrowthPct": 67.37451737451738,
-        "latestEvidencePublishedAt": null,
-        "availableQuarterCount": null,
-        "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1515,7 +1512,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 8.51,
         "priorTtmEps": -1.24,
         "epsGrowthPct": null,
@@ -1525,7 +1522,7 @@
         "financialCheckAt": "2026-11-05",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1541,17 +1538,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 14.41,
         "priorTtmEps": 4.37,
         "epsGrowthPct": 229.74828375286043,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1565,17 +1562,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 9.75,
         "priorTtmEps": 1.5499999999999998,
         "epsGrowthPct": 529.0322580645162,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1591,17 +1588,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 12.75,
         "priorTtmEps": 7.37,
         "epsGrowthPct": 72.99864314789689,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1617,43 +1614,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 81.11,
         "priorTtmEps": 7.52,
         "epsGrowthPct": 978.5904255319149,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
-      }
-    },
-    {
-      "code": "3264",
-      "name": "欣銓",
-      "pegReview": {
-        "status": "needs_review",
-        "reasonCodes": [
-          "latest_statement_unverified"
-        ],
-        "currentPeriod": "2025Q4–2026Q3",
-        "priorPeriod": "2024Q4–2025Q3",
-        "sourceRefs": [
-          "FinMind:TaiwanStockFinancialStatements"
-        ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 9.28,
-        "priorTtmEps": 5.15,
-        "epsGrowthPct": 80.19417475728152,
-        "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 19,
-        "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-04",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1669,17 +1640,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 36.96,
         "priorTtmEps": 29.71,
         "epsGrowthPct": 24.402558061258837,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1693,17 +1664,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 49.489999999999995,
         "priorTtmEps": 25.8,
         "epsGrowthPct": 91.82170542635657,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1719,17 +1690,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 82.29,
         "priorTtmEps": 71.11,
         "epsGrowthPct": 15.722120658135296,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1745,17 +1716,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 44.65,
         "priorTtmEps": 30.509999999999998,
         "epsGrowthPct": 46.345460504752545,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1771,17 +1742,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 12.01,
         "priorTtmEps": 4.359999999999999,
         "epsGrowthPct": 175.4587155963303,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1797,7 +1768,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1807,7 +1778,7 @@
         "financialCheckAt": "2026-11-06",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1823,17 +1794,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 13.92,
         "priorTtmEps": 7.9,
         "epsGrowthPct": 76.20253164556961,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1849,7 +1820,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1859,7 +1830,7 @@
         "financialCheckAt": "2026-11-05",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1875,17 +1846,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 4.17,
         "priorTtmEps": 67.57000000000001,
         "epsGrowthPct": -93.8286221696019,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1901,17 +1872,43 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 4.12,
         "priorTtmEps": 3.73,
         "epsGrowthPct": 10.45576407506703,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
+      }
+    },
+    {
+      "code": "4915",
+      "name": "致伸",
+      "pegReview": {
+        "status": "not_applicable",
+        "reasonCodes": [
+          "declining_growth"
+        ],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ],
+        "asOf": "2026-11-09",
+        "currentTtmEps": 4.34,
+        "priorTtmEps": 5.79,
+        "epsGrowthPct": -25.043177892918834,
+        "latestEvidencePublishedAt": null,
+        "availableQuarterCount": null,
+        "expectedLatestQuarter": "2026Q3",
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1927,17 +1924,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 5.92,
         "priorTtmEps": 4.75,
         "epsGrowthPct": 24.631578947368425,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1953,17 +1950,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 9.1,
         "priorTtmEps": 9.4,
         "epsGrowthPct": -3.191489361702138,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -1979,7 +1976,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -1989,33 +1986,31 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
       "code": "5876",
       "name": "上海商銀",
       "pegReview": {
-        "status": "needs_review",
-        "reasonCodes": [
-          "latest_statement_unverified"
-        ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 3.54,
-        "priorTtmEps": 3.19,
-        "epsGrowthPct": 10.971786833855802,
+        "asOf": "2026-11-09",
+        "currentTtmEps": 3.62,
+        "priorTtmEps": 3.16,
+        "epsGrowthPct": 14.556962025316444,
         "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
+        "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-02",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2031,7 +2026,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -2041,33 +2036,33 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
-      "code": "6121",
-      "name": "新普",
+      "code": "5904",
+      "name": "寶雅*",
       "pegReview": {
         "status": "needs_review",
         "reasonCodes": [
-          "latest_statement_unverified"
+          "incomparable_eps_basis"
         ],
         "currentPeriod": "2025Q3–2026Q2",
         "priorPeriod": "2024Q3–2025Q2",
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 33.1,
-        "priorTtmEps": 29.44,
-        "epsGrowthPct": 12.432065217391308,
+        "asOf": "2026-11-09",
+        "currentTtmEps": null,
+        "priorTtmEps": null,
+        "epsGrowthPct": null,
         "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
+        "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-10-04",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2083,7 +2078,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 5.45,
         "priorTtmEps": 3.86,
         "epsGrowthPct": 41.1917098445596,
@@ -2093,7 +2088,7 @@
         "financialCheckAt": "2026-11-04",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2107,17 +2102,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 13.98,
         "priorTtmEps": 3.58,
         "epsGrowthPct": 290.5027932960894,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2133,17 +2128,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 47.22,
         "priorTtmEps": 28.83,
         "epsGrowthPct": 63.78772112382936,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2157,17 +2152,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 11.57,
         "priorTtmEps": 7.0,
         "epsGrowthPct": 65.28571428571428,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2181,17 +2176,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 10.8,
         "priorTtmEps": 9.31,
         "epsGrowthPct": 16.00429645542427,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2207,17 +2202,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 9.879999999999999,
         "priorTtmEps": 6.84,
         "epsGrowthPct": 44.44444444444444,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2233,7 +2228,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
@@ -2243,7 +2238,7 @@
         "financialCheckAt": "2026-11-06",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2259,7 +2254,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 50.879999999999995,
         "priorTtmEps": 31.560000000000002,
         "epsGrowthPct": 61.216730038022796,
@@ -2269,7 +2264,31 @@
         "financialCheckAt": "2026-11-04",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
+      }
+    },
+    {
+      "code": "6531",
+      "name": "愛普*",
+      "pegReview": {
+        "status": "available",
+        "reasonCodes": [],
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
+        "sourceRefs": [
+          "FinMind:TaiwanStockFinancialStatements"
+        ],
+        "asOf": "2026-11-09",
+        "currentTtmEps": 20.25,
+        "priorTtmEps": 6.12,
+        "epsGrowthPct": 230.88235294117646,
+        "latestEvidencePublishedAt": null,
+        "availableQuarterCount": null,
+        "expectedLatestQuarter": "2026Q3",
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2278,24 +2297,24 @@
       "pegReview": {
         "status": "needs_review",
         "reasonCodes": [
-          "latest_statement_unverified"
+          "missing_latest_quarter_eps"
         ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
+        "currentPeriod": "2026Q3–2026Q3",
+        "priorPeriod": null,
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 7.25,
-        "priorTtmEps": 4.16,
-        "epsGrowthPct": 74.27884615384615,
+        "asOf": "2026-11-09",
+        "currentTtmEps": null,
+        "priorTtmEps": null,
+        "epsGrowthPct": null,
         "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
+        "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2311,17 +2330,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 1.56,
         "priorTtmEps": 3.25,
         "epsGrowthPct": -52.0,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2337,7 +2356,7 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 3.32,
         "priorTtmEps": -2.12,
         "epsGrowthPct": null,
@@ -2347,7 +2366,7 @@
         "financialCheckAt": "2026-11-03",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2356,48 +2375,24 @@
       "pegReview": {
         "status": "needs_review",
         "reasonCodes": [
-          "latest_statement_unverified"
+          "missing_latest_quarter_eps"
         ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
+        "currentPeriod": "2026Q3–2026Q3",
+        "priorPeriod": null,
         "sourceRefs": [
-          "FinMind:TaiwanStockFinancialStatements"
+          "TWSE OpenAPI"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 46.75,
-        "priorTtmEps": 20.91,
-        "epsGrowthPct": 123.57723577235772,
-        "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 16,
-        "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-03",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
-      }
-    },
-    {
-      "code": "7769",
-      "name": "鴻勁",
-      "pegReview": {
-        "status": "available",
-        "reasonCodes": [],
-        "currentPeriod": "2025Q4–2026Q3",
-        "priorPeriod": "2024Q4–2025Q3",
-        "sourceRefs": [
-          "FinMind:TaiwanStockFinancialStatements"
-        ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 115.64,
-        "priorTtmEps": 73.11,
-        "epsGrowthPct": 58.17261660511559,
+        "asOf": "2026-11-09",
+        "currentTtmEps": null,
+        "priorTtmEps": null,
+        "epsGrowthPct": null,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
-        "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
+        "financialCheckAt": "2026-11-09",
+        "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2413,17 +2408,17 @@
         "sourceRefs": [
           "TWSE OpenAPI"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "TWSE OpenAPI",
         "latestSourcePeriod": "2026Q3",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2439,43 +2434,43 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 10.28,
         "priorTtmEps": 9.32,
         "epsGrowthPct": 10.300429184549342,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
       "code": "8070",
       "name": "長華*",
       "pegReview": {
-        "status": "needs_review",
+        "status": "not_applicable",
         "reasonCodes": [
-          "latest_statement_unverified"
+          "declining_growth"
         ],
-        "currentPeriod": "2025Q3–2026Q2",
-        "priorPeriod": "2024Q3–2025Q2",
+        "currentPeriod": "2025Q4–2026Q3",
+        "priorPeriod": "2024Q4–2025Q3",
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
-        "currentTtmEps": 1.6800000000000002,
-        "priorTtmEps": 1.74,
-        "epsGrowthPct": -3.4482758620689613,
+        "asOf": "2026-11-09",
+        "currentTtmEps": 1.77,
+        "priorTtmEps": 1.97,
+        "epsGrowthPct": -10.152284263959388,
         "latestEvidencePublishedAt": null,
-        "availableQuarterCount": 18,
+        "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
-        "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "latestSourcePeriod": "2026Q3",
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2491,17 +2486,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 4.069999999999999,
         "priorTtmEps": 2.55,
         "epsGrowthPct": 59.60784313725489,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2517,17 +2512,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 14.98,
         "priorTtmEps": 6.07,
         "epsGrowthPct": 146.78747940691926,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2543,17 +2538,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": null,
         "priorTtmEps": null,
         "epsGrowthPct": null,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": null,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-02",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     },
     {
@@ -2569,17 +2564,17 @@
         "sourceRefs": [
           "FinMind:TaiwanStockFinancialStatements"
         ],
-        "asOf": "2026-11-06",
+        "asOf": "2026-11-09",
         "currentTtmEps": 5.92,
         "priorTtmEps": 3.7800000000000002,
         "epsGrowthPct": 56.61375661375661,
         "latestEvidencePublishedAt": null,
         "availableQuarterCount": 18,
         "expectedLatestQuarter": "2026Q3",
-        "financialCheckAt": "2026-11-06",
+        "financialCheckAt": "2026-11-09",
         "financialCheckSource": "FinMind:TaiwanStockFinancialStatements",
         "latestSourcePeriod": "2026Q2",
-        "quoteAsOf": "2026-11-06"
+        "quoteAsOf": "2026-11-09"
       }
     }
   ]
