@@ -17,6 +17,8 @@ from pipeline.official_market_closures import (
     verify_closure_evidence,
 )
 
+CALENDAR_2026_URL = 'https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule?date=20260101&response=json'
+CALENDAR_2027_URL = 'https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule?date=20270101&response=json'
 DAY = date(2026, 10, 23)
 TITLE = '臺灣證券交易所集中交易市場115年10月23日休市一天'
 DETAIL_PATH = '/rwd/zh/news/newsDetail/8a8216d6a0fa351b01a1638507a10203'
@@ -181,7 +183,7 @@ class OfficialClosureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / 'calendar.json'
             def respond(request, **kwargs):
-                if request.full_url.endswith('/holidaySchedule'):
+                if request.full_url == CALENDAR_2026_URL:
                     return io.BytesIO(json.dumps(rows, ensure_ascii=False).encode())
                 return Redirected(b'<rss><channel/></rss>')
             with patch('scripts.build_trading_calendar.urlopen', respond):
@@ -196,7 +198,7 @@ class OfficialClosureTests(unittest.TestCase):
         ]
         rss, detail = fixture()
         def response(request, **kwargs):
-            if request.full_url.endswith('/holidaySchedule'):
+            if request.full_url == CALENDAR_2026_URL:
                 return io.BytesIO(json.dumps(rows, ensure_ascii=False).encode())
             if request.full_url.endswith('/feed?type=rss'):
                 return io.BytesIO(rss)
@@ -226,7 +228,7 @@ class OfficialClosureTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'hash'):
                 _verified_restored_calendar(cache)
             def no_closure_sources(request, **kwargs):
-                if request.full_url.endswith('/holidaySchedule'):
+                if request.full_url == CALENDAR_2026_URL:
                     return io.BytesIO(json.dumps(rows, ensure_ascii=False).encode())
                 return io.BytesIO(b'<rss><channel/></rss>')
             with patch('scripts.build_trading_calendar.urlopen', no_closure_sources):
@@ -260,7 +262,7 @@ class OfficialClosureTests(unittest.TestCase):
             root, cache = Path(temp), Path(temp) / 'cache'
             output = root / 'first.json'
             def first(request, **kwargs):
-                if request.full_url.endswith('/holidaySchedule'):
+                if request.full_url == CALENDAR_2026_URL:
                     return io.BytesIO(json.dumps(rows, ensure_ascii=False).encode())
                 if request.full_url.endswith('/feed?type=rss'):
                     return io.BytesIO(rss)
@@ -269,7 +271,7 @@ class OfficialClosureTests(unittest.TestCase):
                 self.assertEqual(main(['--market-date', '2026-10-27', '--output', str(output),
                                        '--source-cache-dir', str(cache)]), 0)
             def feed_outage(request, **kwargs):
-                if request.full_url.endswith('/holidaySchedule'):
+                if request.full_url == CALENDAR_2026_URL:
                     return io.BytesIO(json.dumps(rows, ensure_ascii=False).encode())
                 raise OSError('RSS unavailable')
             output2 = root / 'second.json'
@@ -297,7 +299,7 @@ class OfficialClosureTests(unittest.TestCase):
             root = Path(temp)
             prior_cache, current_cache = root / 'prior', root / 'current'
             def prior_source(request, **kwargs):
-                if request.full_url.endswith('/holidaySchedule'):
+                if request.full_url == CALENDAR_2026_URL:
                     return io.BytesIO(json.dumps(prior_rows, ensure_ascii=False).encode())
                 if request.full_url.endswith('/feed?type=rss'):
                     return io.BytesIO(no_notices)
@@ -306,7 +308,7 @@ class OfficialClosureTests(unittest.TestCase):
                 self.assertEqual(main(['--market-date', '2026-12-31', '--output', str(root / 'prior.json'),
                     '--source-cache-dir', str(prior_cache)]), 0)
             def current_source(request, **kwargs):
-                if request.full_url.endswith('/holidaySchedule'):
+                if request.full_url == CALENDAR_2027_URL:
                     return io.BytesIO(json.dumps(current_rows, ensure_ascii=False).encode())
                 if request.full_url.endswith('/feed?type=rss'):
                     return io.BytesIO(closure_rss)
