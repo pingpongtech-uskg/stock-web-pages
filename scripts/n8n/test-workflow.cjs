@@ -30,6 +30,19 @@ test('expired writer records terminal outcome and cannot enter a credential requ
  const branch=graph.nodes.find(node=>node.name==='Persist expired-owner outcome before showing result');assert.ok(branch);
  assert.equal(graph.connections[branch.name].main[0][0].node,'Prepare sanitized durable progress');
 });
+
+test('generated origin gate permits exact year-pinned calendar request and rejects wrong year or method',()=>{
+ const gate=graph.nodes.find(node=>node.name==='Gate writer deadline and allowed origins');
+ const run=new Function('$input','Date',gate.parameters.jsCode);
+ const engine=require('./engine.cjs');
+ const started=engine.start({marketDate:'2026-11-13',requestId:'origin-test',mode:'screen',siteUrl:'https://stockscreener.andyshih.uk',owner:'700'},Date.parse('2026-11-13T03:00:00Z'));
+ const item={state:started.state,op:started.op,route:'public'};
+ const evaluate=value=>run({first:()=>({json:value})},{now:()=>0});
+ assert.doesNotThrow(()=>evaluate(item));
+ assert.throws(()=>evaluate({...item,state:{...item.state,marketDate:'2027-11-13'}}),/request_origin_rejected/);
+ assert.throws(()=>evaluate({...item,op:{...item.op,method:'POST'}}),/request_origin_rejected/);
+ assert.throws(()=>evaluate({...item,state:{...item.state,marketDate:undefined}}),/request_origin_rejected/);
+});
 test('live publication verification preserves exact JSON bytes rather than parsed text numbers',async()=>{
  for(const name of ['Probe live publication before archive','Verify live exact payload'])assert.equal(graph.nodes.find(node=>node.name===name).parameters.options.response.response.responseFormat,'file');
  const node=graph.nodes.find(node=>node.name==='Restore exact live bytes and current stage');assert.ok(node);
