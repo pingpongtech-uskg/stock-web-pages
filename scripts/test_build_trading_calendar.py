@@ -39,6 +39,7 @@ def test_calendar_cli_rejects_non_json_response(tmp_path,monkeypatch):
     monkeypatch.setattr('scripts.build_trading_calendar.urlopen',lambda *args,**kwargs: io.BytesIO(b'<html>upstream error</html>'))
     output=tmp_path/'calendar.json'
     assert main(['--market-date','2026-10-02','--output',str(output)])==1
+    assert not output.exists()
 
 
 def test_calendar_cli_parses_year_pinned_twse_report_response(tmp_path,monkeypatch):
