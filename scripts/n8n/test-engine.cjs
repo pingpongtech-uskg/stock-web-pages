@@ -6,8 +6,15 @@ const input={marketDate:'2026-10-02',requestId:'test-1',mode:'screen',siteUrl:'h
 const response=(body,statusCode=200,headers={})=>({body,statusCode,headers});
 test('independent calendar begins before any dispatch or mutation',()=>{
   assert.equal(typeof engine.start,'function');const out=engine.start(input,now);
-  assert.equal(out.op.url,'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule');
+  assert.equal(out.op.url,'https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule?date=20260101&response=json');
   assert.equal(out.op.method,'GET');
+});
+test('year-specific TWSE report envelope normalizes ISO dates and rejects a wrong requested year',()=>{
+  const body={stat:'ok',queryYear:2026,data:[['2026-10-09','國慶日','補假'],['2026-10-12','國曆新年開始交易日',''] ]};
+  assert.equal(engine.calendarOpen(body,'2026-10-09'),false);
+  assert.equal(engine.calendarOpen(body,'2026-10-12'),true);
+  assert.throws(()=>engine.calendarOpen({...body,queryYear:2027},'2026-10-09'),/calendar_year/);
+  assert.throws(()=>engine.calendarOpen({...body,data:[['2027-10-09','國慶日','']]},'2026-10-09'),/calendar_year/);
 });
 test('HTTP Request text response data field normalizes to calendar body',()=>{
   const output=engine.start({...input,mode:'diagnose'},now);

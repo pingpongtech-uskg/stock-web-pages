@@ -16,9 +16,15 @@ def _rows_for_year(year):
 
 
 def test_calendar_cli_writes_open_day_and_never_overwrites_on_closed_or_wrong_year(tmp_path,monkeypatch):
-    monkeypatch.setattr('scripts.build_trading_calendar.urlopen',lambda *args,**kwargs: io.BytesIO(json.dumps(ROWS).encode()))
+    seen=[]
+    def open_request(request,*args,**kwargs):
+        seen.append(request.full_url)
+        return io.BytesIO(json.dumps(ROWS).encode())
+    monkeypatch.setattr('scripts.build_trading_calendar.urlopen',open_request)
     output=tmp_path/'calendar.json'
-    assert main(['--market-date','2026-10-02','--output',str(output)])==0
+    cache=tmp_path/'receipts'
+    assert main(['--market-date','2026-10-02','--output',str(output),'--source-cache-dir',str(cache)])==0
+    assert seen[0]=='https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule?date=20260101&response=json'
     original=output.read_bytes()
     value=json.loads(original)
     assert value['sourceUrl']=='https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'
@@ -33,7 +39,32 @@ def test_calendar_cli_rejects_non_json_response(tmp_path,monkeypatch):
     monkeypatch.setattr('scripts.build_trading_calendar.urlopen',lambda *args,**kwargs: io.BytesIO(b'<html>upstream error</html>'))
     output=tmp_path/'calendar.json'
     assert main(['--market-date','2026-10-02','--output',str(output)])==1
-    assert not output.exists()
+
+
+def test_calendar_cli_parses_year_pinned_twse_report_response(tmp_path,monkeypatch):
+    calls=[]
+    report={'stat':'ok','date':'20260101','title':'115 年市場開休市日期','queryYear':2026,
+            'fields':['日期','名稱','說明'],'data':[
+                ['2026-01-02','國曆新年開始交易日','交易'],
+                ['2026-10-09','國慶日','休市'],
+                ['2026-10-12','農曆春節前最後交易日','交易'],
+            ]}
+    def open_request(request,*args,**kwargs):
+        calls.append(request.full_url)
+        return io.BytesIO(json.dumps(report,ensure_ascii=False).encode())
+    monkeypatch.setattr('scripts.build_trading_calendar.urlopen',open_request)
+    output=tmp_path/'calendar.json'
+    cache=tmp_path/'receipts'
+    assert main(['--market-date','2026-10-02','--output',str(output),'--source-cache-dir',str(cache)])==0
+    value=json.loads(output.read_bytes())
+    assert calls[0].endswith('?date=20260101&response=json')
+    assert value['sourceUrl']=='https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'
+    assert value['closedDates']==['2026-10-09']
+    assert value['openExceptions']==['2026-01-02','2026-10-12']
+    from scripts.build_trading_calendar import _verified_restored_calendar
+    restored, receipts=_verified_restored_calendar(cache)
+    assert restored==value
+    assert receipts[2026][0]['reportedDates']==['2026-01-02','2026-10-09','2026-10-12']
 
 
 def test_calendar_capture_keeps_exact_bytes_and_binds_normalized_calendar(tmp_path, monkeypatch):
@@ -47,7 +78,7 @@ def test_calendar_capture_keeps_exact_bytes_and_binds_normalized_calendar(tmp_pa
     output = tmp_path / 'calendar.json'
     assert main(['--market-date', '2026-10-02', '--output', str(output), '--source-cache-dir', str(cache)]) == 0
     assert [call[0] for call in calls] == [
-        'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule',
+        'https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule?date=20260101&response=json',
         'https://www.twse.com.tw/rwd/zh/news/feed?type=rss',
     ]
     assert all(call[1]['timeout'] <= 30 for call in calls)
@@ -142,7 +173,7 @@ def test_january_calendar_set_reuses_verified_prior_year_cache_without_prior_fet
     calls = []
     def respond(request, **kwargs):
         calls.append(request.full_url)
-        if request.full_url == 'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule':
+        if 'holidaySchedule/holidaySchedule?date=' in request.full_url:
             return io.BytesIO(replies.pop(0))
         return io.BytesIO(b'<rss><channel/></rss>')
     monkeypatch.setattr('scripts.build_trading_calendar.urlopen', respond)
@@ -158,7 +189,7 @@ def test_january_calendar_set_reuses_verified_prior_year_cache_without_prior_fet
     output = tmp_path / 'current.json'
     assert main(['--market-date', '2027-01-04', '--output', str(output),
                  '--source-cache-dir', str(current_cache), '--prior-calendar-cache-dir', str(restored)]) == 0
-    assert calls.count('https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule') == 2
+    assert sum('holidaySchedule/holidaySchedule?date=' in call for call in calls) == 2
     assert calls.count('https://www.twse.com.tw/rwd/zh/news/feed?type=rss') == 2
     calendar_set = json.loads(output.read_text())
     assert calendar_set['schemaVersion'] == 'trading-calendar-set-v1'
@@ -167,8 +198,10 @@ def test_january_calendar_set_reuses_verified_prior_year_cache_without_prior_fet
     raw_group = next(group for group in index['groups'] if group['kind'] == 'calendar_raw')
     bundle = json.loads((current_cache / raw_group['bodyFile']).read_bytes())
     assert sorted(receipt['requestYear'] for receipt in bundle['receipts']) == [2026, 2027]
-    assert all(receipt['sourceUrl'] == 'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'
-               for receipt in bundle['receipts'])
+    assert sorted(receipt['sourceUrl'] for receipt in bundle['receipts']) == [
+        'https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule?date=20260101&response=json',
+        'https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule?date=20270101&response=json',
+    ]
 
     # A later January run restores the already-composite cache and reuses its
     # verified 2026 member rather than requiring a separate one-year fragment.
@@ -177,7 +210,7 @@ def test_january_calendar_set_reuses_verified_prior_year_cache_without_prior_fet
     later_output = tmp_path / 'later.json'
     assert main(['--market-date', '2027-01-05', '--output', str(later_output),
                  '--source-cache-dir', str(later_cache), '--prior-calendar-cache-dir', str(current_cache)]) == 0
-    assert calls.count('https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule') == 3
+    assert sum('holidaySchedule/holidaySchedule?date=' in call for call in calls) == 3
     assert calls.count('https://www.twse.com.tw/rwd/zh/news/feed?type=rss') == 3
     assert [item['year'] for item in json.loads(later_output.read_text())['calendars']] == [2026, 2027]
 
@@ -202,7 +235,7 @@ def test_january_calendar_set_requires_verified_prior_year_cache_and_never_fetch
     assert main(['--market-date', '2027-01-04', '--output', str(output),
                  '--source-cache-dir', str(cache)]) == 1
     assert calls == [
-        'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule',
+        'https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule?date=20270101&response=json',
         'https://www.twse.com.tw/rwd/zh/news/feed?type=rss',
     ]
     assert not output.exists()

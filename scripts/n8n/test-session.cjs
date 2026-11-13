@@ -16,6 +16,13 @@ test('completed-session resolution handles preclose, holiday weekend and rejects
  assert.throws(()=>engine.latestCompletedSession([{Name:'開國紀念日',Date:'1160101'}],Date.parse('2027-01-01T06:00:00Z')),/calendar_year_boundary/);
  assert.throws(()=>engine.latestCompletedSession([],Date.parse('2026-10-03T01:00:00Z')),/calendar_empty/);
 });
+test('November publication keeps using the requested official year rather than current-year OpenAPI rollover',()=>{
+ const now=Date.parse('2026-11-13T03:00:00Z');const started=engine.start({...base,resolveLatest:false,marketDate:'2026-11-13'},now);
+ assert.match(started.op.url,/date=20260101&response=json$/);
+ const twse={stat:'ok',queryYear:2026,data:[['2026-11-13','市場無交易，僅辦理結算交割作業',''],['2026-11-16','國曆新年開始交易日','']]};
+ const result=engine.advance(started.state,{statusCode:200,body:twse},now);
+ assert.equal(result.state.isOpen,false);
+});
 test('normal manual recovery resumes prior exact run after original cutoff with audited new window',()=>{
  const now=Date.parse('2026-10-03T01:00:00Z');const initial=engine.start(base,now).state;
  const prior={marketDate:'2026-10-02',requestId:'stockscreener:20261002:v1',owner:'previous',released:false,deadline:now-120000,operationDeadline:now-3600000,overdueAt:Date.parse('2026-10-02T11:30:00Z'),actionsRunId:'123',dispatchIntent:true};

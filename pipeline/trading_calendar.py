@@ -1,10 +1,13 @@
 """Taiwan exchange trading calendar from TWSE's published holiday schedule."""
 from __future__ import annotations
 from datetime import date, datetime, time, timedelta
+import re
 from typing import Any
+from urllib.parse import urlparse, parse_qs
 from zoneinfo import ZoneInfo
 
 SOURCE_URL = 'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'
+REPORT_URL = 'https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule'
 TIMEZONE = 'Asia/Taipei'
 CLOSED_NAMES = {'中華民國開國紀念日', '市場無交易，僅辦理結算交割作業', '農曆除夕及春節',
                 '和平紀念日', '兒童節及民族掃墓節', '勞動節', '端午節', '中秋節',
@@ -12,9 +15,77 @@ CLOSED_NAMES = {'中華民國開國紀念日', '市場無交易，僅辦理結�
 OPEN_NAMES = {'國曆新年開始交易日', '農曆春節前最後交易日', '農曆春節後開始交易日'}
 
 
-def build_calendar(rows: Any, *, year: int, fetched_at: str) -> dict[str, Any]:
+def calendar_request_url(year: int) -> str:
+    if type(year) is not int or not 1911 < year < 9999:
+        raise ValueError('invalid calendar year')
+    return f'{REPORT_URL}?date={year}0101&response=json'
+
+
+def is_calendar_source(url: Any, *, year: int | None = None) -> bool:
+    """Accept the legacy OpenAPI source contract and pinned official TWSE reports."""
+    if url == SOURCE_URL:
+        return True
+    if not isinstance(url, str):
+        return False
+    try:
+        parsed = urlparse(url)
+        query = parse_qs(parsed.query, strict_parsing=True)
+        if (parsed.scheme != 'https' or parsed.netloc != 'www.twse.com.tw' or
+            parsed.path != '/rwd/zh/holidaySchedule/holidaySchedule' or
+            set(query) != {'date', 'response'} or query['response'] != ['json']):
+            return False
+        match = query['date'][0]
+        return bool(re.fullmatch(r'(19\d{2}|[2-9]\d{3})0101', match) and
+                    (year is None or int(match[:4]) == year))
+    except (ValueError, IndexError):
+        return False
+
+
+def normalize_calendar_rows(rows: Any, *, year: int) -> list[dict[str, Any]]:
+    if isinstance(rows, dict):
+        if rows.get('stat') != 'ok' or type(rows.get('queryYear')) is not int or rows['queryYear'] != year:
+            raise ValueError('official calendar year mismatch')
+        data = rows.get('data')
+        if not isinstance(data, list) or not data:
+            raise ValueError('official calendar must be a nonempty array')
+        normalized = []
+        for item in data:
+            if (not isinstance(item, list) or len(item) < 2 or not isinstance(item[0], str) or
+                not isinstance(item[1], str) or (len(item) > 2 and not isinstance(item[2], str))):
+                raise ValueError('unknown official calendar row')
+            try:
+                day = date.fromisoformat(item[0])
+            except ValueError as exc:
+                raise ValueError('invalid official calendar date') from exc
+            if day.isoformat() != item[0] or day.year != year:
+                raise ValueError('official calendar year mismatch')
+            normalized.append({'Name': item[1], 'Date': f'{day.year - 1911:03d}{day.month:02d}{day.day:02d}',
+                               'Weekday': '一二三四五六日'[day.weekday()],
+                               'Description': item[2] if len(item) > 2 else ''})
+        rows = normalized
     if not isinstance(rows, list) or not rows:
         raise ValueError('official calendar must be a nonempty array')
+    return rows
+
+
+def reported_calendar_dates(rows: Any, *, year: int) -> list[str]:
+    result = []
+    for row in normalize_calendar_rows(rows, year=year):
+        if not isinstance(row, dict) or not isinstance(row.get('Date'), str) or not re.fullmatch(r'\d{7}', row['Date']):
+            raise ValueError('invalid ROC calendar date')
+        raw = row['Date']
+        try:
+            day = date(int(raw[:3]) + 1911, int(raw[3:5]), int(raw[5:7]))
+        except ValueError as exc:
+            raise ValueError('invalid ROC calendar date') from exc
+        if day.year != year:
+            raise ValueError('official calendar year mismatch')
+        result.append(day.isoformat())
+    return sorted(result)
+
+
+def build_calendar(rows: Any, *, year: int, fetched_at: str) -> dict[str, Any]:
+    rows = normalize_calendar_rows(rows, year=year)
     closed: set[str] = set(); opened: set[str] = set()
     for row in rows:
         if not isinstance(row, dict) or not all(row.get(key) for key in ('Name', 'Date', 'Weekday')) or not isinstance(row.get('Description'), str):

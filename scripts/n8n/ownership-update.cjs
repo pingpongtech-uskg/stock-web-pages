@@ -2,6 +2,7 @@
 const {calendarOpen,latestCompletedSession}=require('./engine.cjs');
 const {sha256}=require('./runtime.cjs');
 const OWNERSHIP_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';
+const OWNERSHIP_CALENDAR='https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule';
 function ownershipResult(state,op=null,delaySeconds=0){return {state,op,route:op?(op.method==='POST'?'dispatch':op.method==='PUT'?'write':'read'):'done',delaySeconds};}
 function ownershipRequest(state,stage,url,body=null,delaySeconds=0){return ownershipResult({...state,stage},{method:body?'POST':'GET',url,body},delaySeconds);}
 function ownershipDone(state,errorCategory='',status='failed'){return ownershipResult({...state,stage:'done',status,errorCategory});}
@@ -15,7 +16,8 @@ function ownershipStart(input,now=Date.now()) {
   if(!manual&&([0,6].includes(local.getUTCDay())||minutes<1020||minutes>=1065))throw Error('ownership_schedule_slot');
   if(manual&&!/^[a-zA-Z0-9_.-]{1,64}$/.test(input.manual_batch_id||''))throw Error('ownership_manual_batch_id');
   const slot=manual?'manual:'+input.manual_batch_id:minutes<1035?'1700':minutes<1050?'1715':'1730';
-  return ownershipRequest({runKind:input.run_kind,explicit,slot,startedAt:now,deadline:now+15*60000,status:'pending',owner:String(input.owner)},'calendar','https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule');
+  const calendarYear=(manual?explicit:today).slice(0,4);
+  return ownershipRequest({runKind:input.run_kind,explicit,slot,startedAt:now,deadline:now+15*60000,status:'pending',owner:String(input.owner)},'calendar',`${OWNERSHIP_CALENDAR}?date=${calendarYear}0101&response=json`);
 }
 function ownershipFind(state,delay=0){return ownershipRequest(state,'findRun',`${OWNERSHIP_REPO}/actions/workflows/ownership.yml/runs?event=workflow_dispatch&per_page=100&page=${state.page||1}`,null,delay);}
 function ownershipIntentUrl(state){return `${OWNERSHIP_REPO}/contents/operations/ownership-dispatch/${state.marketDate.slice(0,4)}/${sha256(state.requestId)}.json`;}

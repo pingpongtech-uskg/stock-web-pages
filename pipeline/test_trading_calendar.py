@@ -1,6 +1,6 @@
 import pytest
 from datetime import date
-from pipeline.trading_calendar import build_calendar, is_open, next_deadline
+from pipeline.trading_calendar import build_calendar, is_open, next_deadline, reported_calendar_dates
 ROWS = [
  {'Name': '國曆新年開始交易日', 'Date': '1150102', 'Weekday':'五','Description':'交易'},
  {'Name': '農曆春節前最後交易日', 'Date': '1150211', 'Weekday':'三','Description':'交易'},
@@ -23,6 +23,23 @@ def test_official_open_exceptions_and_closures():
  assert not is_open(value, '2026-10-09')
  assert is_open(value, '2026-10-02')
  assert not is_open(value, '2026-10-03')
+
+
+def test_year_pinned_twse_report_envelope_normalizes_without_changing_calendar_source_contract():
+ report = {'stat':'ok','queryYear':2026,'data':[
+  ['2026-01-02','國曆新年開始交易日','交易'],
+  ['2026-10-09','國慶日','休市'],
+  ['2026-10-12','農曆春節前最後交易日','交易'],
+ ]}
+ value = build_calendar(report, year=2026, fetched_at='now')
+ assert reported_calendar_dates(report,year=2026) == ['2026-01-02','2026-10-09','2026-10-12']
+ assert value['sourceUrl'] == 'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule'
+ assert value['openExceptions'] == ['2026-01-02','2026-10-12']
+ assert value['closedDates'] == ['2026-10-09']
+ with pytest.raises(ValueError, match='year'):
+  build_calendar({**report,'queryYear':2027},year=2026,fetched_at='now')
+ with pytest.raises(ValueError, match='year'):
+  build_calendar({**report,'data':[['2027-01-01','國慶日','']]},year=2026,fetched_at='now')
 
 
 @pytest.mark.parametrize('rows,year', [([],2026), (ROWS,2027), ({'error':'bad'},2026), ([{'Name':'new','Date':'1150101'}],2026)])

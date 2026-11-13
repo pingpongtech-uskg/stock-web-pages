@@ -13,7 +13,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from pipeline.trading_calendar import (SOURCE_URL, build_calendar, compose_calendar_set, is_open,
+from pipeline.trading_calendar import (SOURCE_URL, calendar_request_url, is_calendar_source, build_calendar, reported_calendar_dates, compose_calendar_set, is_open,
                                        recent_sessions)
 from pipeline.source_receipts import read_raw, capture_raw, write_bundle, safe_directory
 from pipeline.official_market_closures import (FEED_URL, apply_verified_closures,
@@ -63,7 +63,7 @@ def _verified_restored_calendar(directory: Path) -> tuple[dict, dict[int, tuple[
     validate_closure_evidence_size(receipts)
     parsed_by_year, receipt_by_year = {}, {}
     for receipt in receipts:
-        if (not isinstance(receipt, dict) or receipt.get('sourceUrl') != SOURCE_URL or
+        if (not isinstance(receipt, dict) or not is_calendar_source(receipt.get('sourceUrl'), year=receipt.get('requestYear')) or
             receipt.get('unit') != 'calendar' or type(receipt.get('requestYear')) is not int or
             receipt.get('requestYear') in parsed_by_year or not isinstance(receipt.get('retrievedAt'), str) or
             type(receipt.get('rawBytes')) is not int or not 0 < receipt['rawBytes'] <= 2 * 1024 * 1024 or
@@ -78,8 +78,7 @@ def _verified_restored_calendar(directory: Path) -> tuple[dict, dict[int, tuple[
         parsed = build_calendar(rows, year=year, fetched_at=receipt['retrievedAt'])
         for evidence in receipt.get('closureEvidence', []):
             parsed = apply_verified_closures(parsed, evidence)
-        reported_dates = sorted(date(int(row['Date'][:3]) + 1911, int(row['Date'][3:5]), int(row['Date'][5:])).isoformat()
-                                for row in rows)
+        reported_dates = reported_calendar_dates(rows, year=year)
         if receipt.get('reportedDates') != reported_dates:
             raise ValueError('restored calendar receipt date mismatch')
         parsed_by_year[year] = parsed
@@ -148,12 +147,13 @@ def main(argv=None):
                 prior_calendar, prior_receipts = _verified_restored_calendar(cache_directory)
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 print(f'trading_calendar_cached_closure_evidence_unavailable={exc}', file=sys.stderr)
-        req = Request(SOURCE_URL, headers={'Accept':'application/json','User-Agent':'stock-calendar/1.0'})
+        request_url = calendar_request_url(target.year)
+        req = Request(request_url, headers={'Accept':'application/json','User-Agent':'stock-calendar/1.0'})
         with urlopen(req, timeout=30) as response:
             raw = read_raw(response)
         retrieved_at = datetime.now(timezone.utc).isoformat()
         receipt = capture_raw(cache_directory, prefix=f'calendar-{target.year}', raw=raw,
-                              source_url=SOURCE_URL, unit='calendar', request_period={'requestYear': target.year},
+                              source_url=request_url, unit='calendar', request_period={'requestYear': target.year},
                               retrieved_at=retrieved_at) if args.source_cache_dir is not None else None
         rows = json.loads(raw)
         calendar = build_calendar(rows, year=target.year, fetched_at=retrieved_at)
@@ -194,9 +194,8 @@ def main(argv=None):
             raise ValueError('requested date is a market closure')
         needs_prior = _needs_prior_year(calendar, target)
         output_calendar = calendar
-        receipts = [{**receipt, 'closureEvidence': closure_evidence, 'reportedDates': sorted(
-            date(int(row['Date'][:3]) + 1911, int(row['Date'][3:5]), int(row['Date'][5:])).isoformat()
-            for row in rows)}] if receipt is not None else []
+        receipts = [{**receipt, 'closureEvidence': closure_evidence,
+                     'reportedDates': reported_calendar_dates(rows, year=target.year)}] if receipt is not None else []
         if needs_prior:
             prior_year = target.year - 1
             prior_members = ([] if prior_calendar is None else

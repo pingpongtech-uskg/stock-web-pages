@@ -18,7 +18,7 @@ from pipeline.market_cache import (MarketCacheError, canonical, sha, MAX_GZIP, M
     MAX_TOTAL_GZIP, MAX_TOTAL_RAW, MAX_PARTS, _date, _hash, _header, _expectations,
     _group, _rows, _calendar, _utc)
 from pipeline.source_receipts import safe_directory
-from pipeline.trading_calendar import SOURCE_URL, build_calendar, calendar_years, recent_sessions
+from pipeline.trading_calendar import SOURCE_URL, is_calendar_source, build_calendar, calendar_years, recent_sessions
 from pipeline.official_market_closures import apply_verified_closures, validate_closure_evidence_size
 from pipeline.market_indicators import TWSE_STOCK_DAY, SYMBOL, _date as volume_date, _volume
 from pipeline.official_institutional import TWSE_ENDPOINT, TPEX_ENDPOINT, _cached_raw
@@ -198,7 +198,7 @@ def _official_semantics(groups, expected):
         parsed_by_year = {}
         for receipt, raw in receipts:
             year = receipt.get('requestYear')
-            _require(receipt.get('sourceUrl') == SOURCE_URL and receipt.get('unit') == 'calendar'
+            _require(is_calendar_source(receipt.get('sourceUrl'), year=year) and receipt.get('unit') == 'calendar'
                      and type(year) is int and year in years and year not in parsed_by_year, 'calendar')
             parsed = build_calendar(_json(raw), year=year, fetched_at=receipt['retrievedAt'])
             for evidence in receipt.get('closureEvidence', []):

@@ -8,13 +8,24 @@ const REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';
 const REPOSITORY_ID='1273106108';
 const ROOT_SOURCE='3ed6fb57-ff38-803d-815a-000b148c6b6e';
 const ROOT_DATABASE='3ed6fb57-ff38-8032-97cc-f017b6104300';
-const CALENDAR='https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule';
+const CALENDAR='https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule';
 const RETRYABLE_SOURCE_STEPS=new Set(['Fetch authoritative exchange calendar','Fetch official institutional universe','Verify independent requested date against fetched official date']);
 const PUBLICATION_STEPS=new Set(['Build lightweight publication fingerprint','Build canonical screening export','Build and validate complete market cache before publication','Publish validated release to main']);
 const ROOT_FIELDS={ 'Market Date':{date:{}},'Request ID':{rich_text:{}},'Run ID':{rich_text:{}},'Actions Run ID':{rich_text:{}},'Source Commit':{rich_text:{}},'Payload Hash':{rich_text:{}},'Active Revision':{rich_text:{}},'Screening Status':{rich_text:{}},'Notion Status':{rich_text:{}},'Deploy Status':{rich_text:{}},'Summary':{rich_text:{}},'Selected Count':{number:{}},'Trust Count':{number:{}},'Growth Count':{number:{}},'Low Position Count':{number:{}} };
 const OPERATION_FIELDS={'Generated At':{date:{}},'Quality':{rich_text:{}},'Archive Method':{rich_text:{}},'Archive Source Commit':{rich_text:{}},'Expected Count':{number:{}},'Archived Count':{number:{}},'Child Database ID':{rich_text:{}},'Child Data Source ID':{rich_text:{}},'Actions URL':{url:{}},'Archive URL':{url:{}},'Error Summary':{rich_text:{}},'Financial Cutoff':{rich_text:{}},'Coverage':{rich_text:{}},'Formula Versions':{rich_text:{}}};
 const ALL_ROOT_FIELDS={...ROOT_FIELDS,...OPERATION_FIELDS,...cacheOperation.CACHE_FIELDS};
 function calendarOpen(rows,day) {
+  if(rows&&typeof rows==='object'&&!Array.isArray(rows)) {
+    const year=Number(day.slice(0,4));
+    if(rows.stat!=='ok'||!Array.isArray(rows.data)||!rows.data.length) throw Error('calendar_schema');
+    if(rows.queryYear!==year) throw Error('calendar_year');
+    rows=rows.data.map(row=>{
+      if(!Array.isArray(row)||row.length<2||typeof row[0]!=='string'||typeof row[1]!=='string') throw Error('calendar_schema');
+      const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(row[0]);
+      if(!match||Number(match[1])!==year) throw Error('calendar_year');
+      return {Date:String(Number(match[1])-1911).padStart(3,'0')+match[2]+match[3],Name:row[1]};
+    });
+  }
   if(!Array.isArray(rows)||!rows.length) throw Error('calendar_empty');
   const dates=rows.map(row=>{
     if(!/^\d{7}$/.test(row.Date)||typeof row.Name!=='string') throw Error('calendar_schema');
@@ -146,7 +157,7 @@ function start(input,now=Date.now()) {
   if(input.siteUrl!=='https://stockscreener.andyshih.uk') throw Error('invalid_site_url');
   const overdueAt=Date.parse(input.marketDate+'T11:30:00Z');
   const operationDeadline=input.runKind==='scheduled'?now+6*60*60000:now+90*60000;
-  return request({...input,startedAt:now,operationDeadline,deadline:Math.min(now+59*60000,operationDeadline),targetAt:Date.parse(input.marketDate+'T10:45:00Z'),overdueAt,screeningStatus:'pending',notionStatus:'pending',deployStatus:'pending',released:false},'calendar','public','GET',CALENDAR);
+  return request({...input,startedAt:now,operationDeadline,deadline:Math.min(now+59*60000,operationDeadline),targetAt:Date.parse(input.marketDate+'T10:45:00Z'),overdueAt,screeningStatus:'pending',notionStatus:'pending',deployStatus:'pending',released:false},'calendar','public','GET',`${CALENDAR}?date=${input.marketDate.slice(0,4)}0101&response=json`);
 }
 function next(state,now) {
   if(state.stage.startsWith('cache'))return cacheOperation.nextCache(state,cacheApi(now));
