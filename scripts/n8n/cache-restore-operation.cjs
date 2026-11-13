@@ -6,6 +6,7 @@ const {createHash}=require('crypto');
 const marketCache=require('./market-cache.cjs');
 const RESTORE_REPO='https://api.github.com/repos/pingpongtech-uskg/stock-web-pages';
 const RESTORE_NOTION='https://api.notion.com/v1';
+const MAX_RESTORE_PRIOR_BYTES=8*1024*1024;
 const restoreHash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const restoreCheck=(ok,why)=>{if(!ok)throw Error('restore_'+why);};
 const restoreSha=value=>/^[a-f0-9]{40}$/.test(value||'');
@@ -178,6 +179,10 @@ function advanceRestore(state,response,now,api){
       const absentCache=!Object.prototype.hasOwnProperty.call(p,'cacheActiveManifestHash')&&!Object.prototype.hasOwnProperty.call(p,'cacheManifestHash')&&p.cacheStatus!=='verified';
       if(incompleteUpload||absentCache)return restoreMissingCandidate({...state,restoreWarning:'Previous session cache was not verified; collecting fresh official data.',errorCategory:'',errorMessage:''},api);
       validatePrior(p,state);
+      if(p.cacheFileMeta.reduce((total,file)=>total+file.bytes,0)>MAX_RESTORE_PRIOR_BYTES) {
+        const clean=Object.fromEntries(Object.entries(state).filter(([key])=>!key.startsWith('restore')));
+        return api.checkpoint({...clean,restoreStatus:'missing',restoreWarning:'Optional prior cache exceeds 8 MiB; collecting fresh official data.',errorCategory:'',errorMessage:'',dispatchIntent:true},'dispatch');
+      }
       return api.request({...state,restorePrior:p,restoreFileMeta:p.cacheFileMeta,restorePageId:p.pageId,restoreManifestHash:p.cacheManifestHash},'restorePage','notion','GET',`${RESTORE_NOTION}/pages/${p.pageId}`);
     }
     case 'restorePage':{
