@@ -298,6 +298,15 @@ jobs:
           path: .artifacts/peg-candidate
           compression-level: 0
           if-no-files-found: error
+      - name: Preserve lightweight preview for PEG discovery
+        uses: actions/upload-artifact@v7
+        if: inputs.source_mode == 'prepare_peg'
+        with:
+          name: peg-preview-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .artifacts/peg-candidate/preview.json
+          include-hidden-files: true
+          compression-level: 0
+          if-no-files-found: error
       - uses: actions/download-artifact@v8
         if: inputs.source_mode == 'finalize_peg'
         with:

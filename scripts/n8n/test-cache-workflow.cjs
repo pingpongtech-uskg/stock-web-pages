@@ -4,29 +4,105 @@ test('primary canvas explicitly exposes same-run cache custody, Notion upload an
 test('generated primary Code parses; runtime cache verification never eagerly imports zlib or network',()=>{for(const n of graph().nodes.filter(n=>n.type==='n8n-nodes-base.code'))assert.doesNotThrow(()=>new AsyncFunction('$input','$','$now','$execution','require',n.parameters.jsCode),n.name);const sdk=preparedSdk,compact=require('esbuild').transformSync(sdk,{loader:'ts',minifyWhitespace:true,minifyIdentifiers:false,minifySyntax:false}).code;// This existing workflow is deployed via update_workflow; create/validate_workflow has a 300 KB SDK limit.
 assert.ok(compact.length<=500000);const capture=code=>{const configs=[],vm=require('node:vm'),make=value=>{configs.push(value);return {output:()=>({to:()=>({})})};},chain={add:()=>chain,group:()=>chain};vm.runInNewContext(code.replace('export default','globalThis.exported ='),{node:make,trigger:make,expr:value=>'='+value,newCredential:value=>({name:value}),workflow:()=>chain});return JSON.parse(JSON.stringify(configs));};assert.deepEqual(capture(compact),capture(sdk));for(const n of graph().nodes.filter(n=>n.type==='n8n-nodes-base.code'))assert.ok(sdk.includes(JSON.stringify(n.parameters.jsCode)));assert.equal(graph().active,false);assert.equal(graph().settings.saveDataErrorExecution,'all');});
 test('published workflow embeds roster-rollover-safe ownership validation and matches its source generator',()=>{const generated=graph(),files=['stockscreener.workflow.json','stockscreener.workflow.sdk.ts'];assert.deepEqual(generated,JSON.parse(fs.readFileSync(path.join(__dirname,files[0]),'utf8')));assert.equal(preparedSdk,fs.readFileSync(path.join(__dirname,files[1]),'utf8'));const code=generated.nodes.find(n=>n.name==='Validate stage result and persist recovery checkpoint').parameters.jsCode;assert.ok(code.includes('ownership_snapshot_roster'));assert.match(code,/typeof [A-Za-z_$][\w$]*\.code=="string"&&\/\^\\d\{4,6\}\[A-Z\]\?\$\//);assert.equal(code.includes('selected.every(code=>queue.roster.includes(code))'),false);assert.equal(code.includes('queue.roster.includes(row.code)'),false);});
-test('binary preparation uses same-execution verified artifact bytes without bulk state; failures stay durable',async()=>{
- const node=graph().nodes.find(n=>n.name==='Prepare exact current cache part binary'),execute=new AsyncFunction('$input','$','require',node.parameters.jsCode);
- const bytes=Buffer.from('public tiny bytes'),hash=require('crypto').createHash('sha256').update(bytes).digest('hex');
+test('multipart carries only the selected same-execution handle and fails closed on custody mismatch',async()=>{
+ const node=graph().nodes.find(n=>n.name==='Prepare exact current cache part binary');
+ const execute=new AsyncFunction('$input','$','require',node.parameters.jsCode);
+ const bytes=Buffer.from('public tiny bytes');
+ const entry={name:'part.json.gz',filename:'part.json.gz',bytes:bytes.length,sha256:require('crypto').createHash('sha256').update(bytes).digest('hex')};
+ const handle={id:'filesystem-v2:fixture/parts/0',data:'filesystem-v2',bytes:entry.bytes,fileName:entry.filename,mimeType:'application/gzip'};
  const custody={marketDate:'2026-10-02',requestId:'stockscreener:20261002:v4',actionsRunId:'37154771933',runHeadSha:'a'.repeat(40),cacheArtifactId:'777',cacheRunWorkflowId:'123',cacheArtifactSha256:'b'.repeat(64),cacheZipVerifiedHash:'b'.repeat(64)};
- const input={state:{...custody,stage:'cacheSendUpload',cacheSendAttempted:true,cacheUploadId:'3ee6fb57-ff38-818d-b827-00b2c9f8b17a',cacheUploadIntent:'part.json.gz',cacheCursor:0,cacheEntries:[{name:'part.json.gz',filename:'part.json.gz',bytes:bytes.length,sha256:hash}]},op:{target:'cacheUpload',method:'POST',url:'https://api.notion.com/v1/file_uploads/known/send'},route:'cacheUpload'};
- const artifact={state:{...custody,stage:'cacheArtifactBytes'},response:{statusCode:200,body:{files:{'part.json.gz':bytes.toString('base64')}}}};
- const lookup=material=>name=>{assert.equal(name,'Read complete cache artifact members');return {get item(){throw new TypeError('deep paired item private');},first:()=>({json:material})};};
- let prepared=0;const helpers={prepareBinaryData:async buffer=>{prepared++;return {data:buffer.toString('base64')};}};
- const run=material=>execute.call({helpers},{first:()=>({json:input})},lookup(material),require);
- const output=await run(artifact);assert.equal(output[0].binary.cache.data,bytes.toString('base64'));assert.equal(Object.hasOwn(output[0].json.state,'cacheTransient'),false);assert.equal(prepared,1);
- for(const bad of [{...artifact,response:{statusCode:503,body:artifact.response.body}},{...artifact,state:{...artifact.state,cacheZipVerifiedHash:'c'.repeat(64)}},{...artifact,state:{...artifact.state,requestId:'wrong'}},{...artifact,state:{...artifact.state,cacheArtifactId:'778'}},{...artifact,response:{statusCode:200,body:{files:{}}}},{...artifact,response:{statusCode:200,body:{files:{'part.json.gz':Buffer.from('wrong').toString('base64')}}}}]){const failure=await run(bad);assert.equal(failure[0].json.response.cacheError,'cache_binary_prepare_failed');assert.equal(failure[0].binary,undefined);assert.equal(failure[0].json.state.cacheSendAttempted,false);assert.equal(failure[0].json.state.cacheUploadId,input.state.cacheUploadId);assert.equal(failure[0].json.state.cacheUploadIntent,'part.json.gz');assert.ok(['custody','bytes','hash'].includes(failure[0].json.state.cacheBinaryFailurePhase));assert.equal(failure[0].json.state.cacheBinaryErrorClass,'Error');}
- assert.equal(prepared,1);
- const failure=await execute.call({helpers:{prepareBinaryData:async()=>{throw new TypeError('private URL hidden');}}},{first:()=>({json:input})},lookup(artifact),require);assert.equal(failure[0].json.response.error,true);assert.equal(failure[0].json.state.cacheBinaryFailurePhase,'helper');assert.equal(failure[0].json.state.cacheBinaryErrorClass,'TypeError');assert.equal(failure[0].json.state.cacheSendAttempted,false);assert.equal(JSON.stringify(failure).includes('private URL'),false);const lookupFailure=await execute.call({helpers},{first:()=>({json:input})},()=>({first(){throw new RangeError('private paired lookup');}}),require);assert.equal(lookupFailure[0].json.state.cacheBinaryFailurePhase,'lookup');assert.equal(lookupFailure[0].json.state.cacheBinaryErrorClass,'RangeError');assert.equal(lookupFailure[0].json.state.cacheSendAttempted,false);assert.equal(JSON.stringify(lookupFailure).includes('private paired lookup'),false);for(const priorAttempt of [{retry:1},{cacheSendAmbiguous:true},{cacheUploadSent:true}]){const preserved=await execute.call({helpers:{prepareBinaryData:async()=>{throw Error('helper');}}},{first:()=>({json:{...input,state:{...input.state,...priorAttempt}}})},lookup(artifact),require);assert.equal(preserved[0].json.state.cacheSendAttempted,true);assert.equal(preserved[0].json.state.cacheUploadId,input.state.cacheUploadId);}
+ const manifestHash='c'.repeat(64);
+ const input={state:{...custody,cacheManifestHash:manifestHash,stage:'cacheSendUpload',cacheSendAttempted:true,cacheUploadId:'3ee6fb57-ff38-818d-b827-00b2c9f8b17a',cacheUploadIntent:entry.name,cacheCursor:0,cacheEntries:[entry]},op:{target:'cacheUpload',method:'POST',url:'https://api.notion.com/v1/file_uploads/known/send'},route:'cacheUpload'};
+ const artifact=(changes={},part=entry,binary=handle,statusCode=200)=>({json:{state:{...custody,stage:'cacheArtifactBytes',...changes},response:{statusCode,body:{verifiedArtifact:{manifestHash,entries:[part]}}}},binary:{[entry.name]:binary}});
+ const lookup=material=>name=>{assert.equal(name,'Read complete cache artifact members');return {get item(){throw new TypeError('unexpected paired lookup');},first:()=>material};};
+ const run=(material=artifact(),state=input.state,get=lookup(material))=>execute({first:()=>({json:{...input,state}})},get,require);
+ const [output]=await run();
+ assert.deepEqual(output.binary,{cache:handle});
+ assert.equal(output.json.op,input.op);
+ for(const bad of [artifact({},entry,handle,503),artifact({cacheZipVerifiedHash:'d'.repeat(64)}),artifact({requestId:'wrong'}),artifact({cacheArtifactId:'778'}),artifact({},entry,null),artifact({},entry,{...handle,id:undefined,data:bytes.toString('base64')}),artifact({},entry,{...handle,bytes:entry.bytes+1}),artifact({}, {...entry,sha256:'d'.repeat(64)})]){
+  const [failure]=await run(bad);
+  assert.equal(failure.json.response.cacheError,'cache_binary_prepare_failed');
+  assert.equal(failure.binary,undefined);
+  assert.equal(failure.json.state.cacheSendAttempted,false);
+  assert.equal(failure.json.state.cacheUploadId,input.state.cacheUploadId);
+  assert.equal(failure.json.state.cacheUploadIntent,entry.name);
+  assert.ok(['custody','bytes','hash'].includes(failure.json.state.cacheBinaryFailurePhase));
+  assert.equal(failure.json.state.cacheBinaryErrorClass,'Error');
+ }
+ const [lookupFailure]=await run(undefined,input.state,()=>({first(){throw new RangeError('private paired lookup');}}));
+ assert.equal(lookupFailure.json.state.cacheBinaryFailurePhase,'lookup');
+ assert.equal(lookupFailure.json.state.cacheBinaryErrorClass,'RangeError');
+ assert.equal(JSON.stringify(lookupFailure).includes('private paired lookup'),false);
+ for(const priorAttempt of [{retry:1},{cacheSendAmbiguous:true},{cacheUploadSent:true}]){
+  const [preserved]=await run(artifact({},entry,null),{...input.state,...priorAttempt});
+  assert.equal(preserved.json.state.cacheSendAttempted,true);
+  assert.equal(preserved.json.state.cacheUploadId,input.state.cacheUploadId);
+ }
 });
 test('origin gate permits only fixed Notion upload/cache S3 and authenticated cache ZIP routes',()=>{const n=graph().nodes.find(n=>n.name==='Gate writer deadline and allowed origins');const evaluate=new Function('$input',n.parameters.jsCode);for(const [route,url]of [['cacheUpload','https://api.notion.com/v1/file_uploads/known/send'],['cacheDownload','https://prod-files-secure.s3.us-west-2.amazonaws.com/known/cache.gz?X-Amz-Date=20261004T030000Z'],['cacheZip','https://productionresultssa1.blob.core.windows.net/actions-results/public.zip?sig=dummy']])assert.doesNotThrow(()=>evaluate({first:()=>({json:{state:{stage:'cacheDownload'},route,op:{url}}})}));assert.throws(()=>evaluate({first:()=>({json:{state:{stage:'cacheDownload'},route:'cacheDownload',op:{url:'https://evil.test/cache.gz'}}})}),/request_origin_rejected/);});
-test('actual generated ZIP wrapper extracts stored stream descriptors and rejects deflate before any native inflate',async()=>{const {zipFixture,hash}=require('./cache-fixture.cjs'),bytes=zipFixture([['manifest.json',Buffer.from('manifest'),0,true],['proof.json',Buffer.from('proof'),0,'bare'],['expected.json',Buffer.from('expected')]]),s={stage:'cacheZip',cacheArtifactSha256:hash(bytes),cacheArtifactBytes:bytes.length};const n=graph().nodes.find(n=>n.name==='Check cache ZIP digest and expansion bounds'),evaluate=new AsyncFunction('$input','$','require',n.parameters.jsCode);const input={json:{statusCode:200},binary:{data:{}}},lookup=()=>({item:{json:{state:s}}});const allowedRequire=name=>{assert.equal(name,'crypto');return require(name);};const output=await evaluate.call({helpers:{getBinaryDataBuffer:async()=>bytes}},{first:()=>input},lookup,allowedRequire);assert.equal(output[0].json.state.cacheZipVerifiedHash,hash(bytes));assert.equal(Buffer.from(output[0].json.response.body.files['proof.json'],'base64').toString(),'proof');const bad=Buffer.from(bytes);bad.writeUInt16LE(8,8);const refused=await evaluate.call({helpers:{getBinaryDataBuffer:async()=>bad}},{first:()=>input},()=>({item:{json:{state:{...s,cacheArtifactSha256:hash(bad)}}}}),allowedRequire);assert.equal(refused[0].json.response.cacheError,'cache_zip_local');assert.equal(graph().connections[n.name].main[0][0].node,'Read complete cache artifact members');});
+test('actual generated ZIP wrapper rejects deflate before verification or filesystem writes',async()=>{
+ const {zipFixture,hash}=require('./cache-fixture.cjs');
+ const bytes=zipFixture([['manifest.json',Buffer.from('manifest'),0,true],['proof.json',Buffer.from('proof'),0,'bare'],['expected.json',Buffer.from('expected')]]);
+ bytes.writeUInt16LE(8,8);
+ const state={stage:'cacheZip',cacheArtifactSha256:hash(bytes),cacheArtifactBytes:bytes.length};
+ const node=graph().nodes.find(n=>n.name==='Check cache ZIP digest and expansion bounds');
+ const run=new AsyncFunction('$input','$','require',node.parameters.jsCode);
+ const helpers={getBinaryDataBuffer:async()=>bytes,prepareBinaryData:async()=>assert.fail('unexpected filesystem write')};
+ const [refused]=await run.call({helpers},{first:()=>({json:{statusCode:200},binary:{data:{bytes:bytes.length}}})},()=>({item:{json:{state}}}),require);
+ assert.equal(refused.json.response.cacheError,'cache_zip_local');
+ assert.equal(graph().connections[node.name].main[0][0].node,'Read complete cache artifact members');
+});
+test('generated PEG preview validator enforces the recorded size before fetching a binary buffer',async()=>{
+ const {zipFixture,hash}=require('./cache-fixture.cjs');
+ const preview={candidateSha256:'a'.repeat(64),candidateBytes:15,stocks:[{code:'2330'}]};
+ const bytes=zipFixture([['preview.json',Buffer.from(JSON.stringify(preview))]]);
+ const state={stage:'pegArtifactZip',pegArtifactSha256:hash(bytes),pegArtifactBytes:bytes.length};
+ const node=graph().nodes.find(n=>n.name==='Verify exact PEG candidate artifact');
+ const run=new AsyncFunction('$input','$','require',node.parameters.jsCode);
+ let reads=0;
+ const helpers={getBinaryDataBuffer:async()=>{reads++;return bytes;}};
+ const evaluate=size=>run.call({helpers},{first:()=>({json:{statusCode:200},binary:{data:{bytes:size}}})},()=>({item:{json:{state}}}),require);
+ const [refused]=await evaluate(4*1024*1024);
+ assert.equal(refused.json.response.statusCode,400);
+ assert.equal(reads,0);
+ const [verified]=await evaluate(bytes.length);
+ assert.deepEqual(verified.json.response.body,{preview,candidateSha256:preview.candidateSha256});
+ assert.equal(reads,1);
+});
 test('large immutable published roster uses anonymous pinned raw bytes and exact bounded binary restore',async()=>{const g=graph(),http=g.nodes.find(n=>n.name==='Read full published roster for cache');assert.equal(http.parameters.options.response.response.responseFormat,'file');assert.equal(http.credentials,undefined);assert.equal(http.parameters.authentication,'none');assert.equal(http.parameters.sendHeaders,false);const node=g.nodes.find(n=>n.name==='Restore exact immutable published roster bytes');assert.ok(node);const run=new AsyncFunction('$input','$',node.parameters.jsCode),bytes=Buffer.from('{"value":123.0}');const result=await run.call({helpers:{getBinaryDataBuffer:async()=>bytes}},{first:()=>({json:{statusCode:200},binary:{data:{}}})},()=>({item:{json:{state:{stage:'cacheLatest'}}}}));assert.equal(Buffer.from(result[0].json.response.body.content,'base64').toString(),bytes.toString());});
 test('restore bridge has explicit credential stages and anonymous bounded binary readback before native dispatch',()=>{const g=graph();for(const name of ['Read prior verified cache checkpoint','Read prior Notion cache metadata','Read prior cache attachment markers','Read fresh restore attachment','Download prior cache bytes without credentials','Read immutable restore blob','Create verified restore blob','Read data-only restore tree','Create empty-base restore tree','Read immutable restore commit','Create data-only restore root commit','Read immutable restore reference','Create unique restore reference'])assert.ok(g.nodes.find(n=>n.name===name),name);const download=g.nodes.find(n=>n.name==='Download prior cache bytes without credentials');assert.equal(download.parameters.authentication,'none');assert.equal(download.parameters.options.redirect.redirect.followRedirects,false);assert.equal(download.credentials,undefined);assert.equal(download.parameters.options.response.response.responseFormat,'file');});
 test('parser-minified generated Code preserves wrapper this/helpers and mutable operation semantics',async()=>{const g=graph();assert.ok(require('esbuild').transformSync(require('fs').readFileSync(require('path').join(__dirname,'stockscreener.workflow.sdk.ts'),'utf8'),{loader:'ts',minifyWhitespace:true,minifyIdentifiers:false,minifySyntax:false}).code.length<500000);const n=g.nodes.find(n=>n.name==='Restore exact compressed cache readback bytes');assert.ok(n.parameters.jsCode.includes('__n8n_code__'));const execute=new AsyncFunction('$input','$','require','$execution','$runIndex',n.parameters.jsCode),bytes=Buffer.from('public fixture'),e={name:'expected.json',bytes:bytes.length,sha256:require('crypto').createHash('sha256').update(bytes).digest('hex')},state={stage:'restoreDownload',restorePrior:{cacheManifestHash:'a'.repeat(64)},restoreManifestHash:'a'.repeat(64),restoreFileMeta:[e],restoreCursor:0};const output=await execute.call({helpers:{getBinaryDataBuffer:async()=>bytes}},{first:()=>({json:{statusCode:200}})},()=>({item:{json:{state}}}),require,{id:'exec'},0);assert.equal(output[0].json.state.stage,'restoreDownload');assert.equal(output[0].json.response.body.bytes,bytes.toString('base64'));});
 
+test('generated cache verifier saves only named file handles and bounded metadata for multipart',async()=>{
+ const {artifact,date,source,zipFixture,hash}=require('./cache-fixture.cjs'),a=artifact(),g=graph();
+ const zip=zipFixture(Object.entries(a.members));
+ const state={...source,marketDate:date,runHeadSha:source.sourceGitCommit,stage:'cacheZip',cacheRunWorkflowId:'123',cacheArtifactId:'777',cacheArtifactSha256:hash(zip),cacheArtifactBytes:zip.length,cacheLatestHash:a.fingerprint.contentHash,cacheRoster:['1240','2330']};
+ const node=g.nodes.find(n=>n.name==='Check cache ZIP digest and expansion bounds');
+ const run=new AsyncFunction('$input','$','require',node.parameters.jsCode);
+ const stored=new Map();
+ const prepareBinaryData=async(bytes,fileName,mimeType)=>{
+  const id='filesystem-v2:fixture/'+stored.size;
+  stored.set(id,Buffer.from(bytes));
+  return {id,data:'filesystem-v2',bytes:bytes.length,fileName,mimeType};
+ };
+ const [result]=await run.call({helpers:{getBinaryDataBuffer:async()=>zip,prepareBinaryData}},{first:()=>({json:{statusCode:200},binary:{data:{bytes:zip.length}}})},()=>({item:{json:{state}}}),require);
+ assert.equal(result.json.response.statusCode,200);
+ assert.equal(result.json.response.body.files,undefined);
+ assert.equal(result.json.response.body.verifiedArtifact.manifestHash,a.bundle.manifest.manifestHash);
+ assert.equal(Object.keys(result.binary).length,Object.keys(a.members).length);
+ for(const [fileName,bytes] of Object.entries(a.members)) {
+  assert.deepEqual(stored.get(result.binary[fileName].id),bytes);
+  assert.equal(JSON.stringify(result).includes(bytes.toString('base64')),false);
+ }
+ const [inline]=await run.call({helpers:{getBinaryDataBuffer:async()=>zip,prepareBinaryData:async bytes=>({data:bytes.toString('base64'),bytes:bytes.length})}},{first:()=>({json:{statusCode:200},binary:{data:{bytes:zip.length}}})},()=>({item:{json:{state}}}),require);
+ assert.equal(inline.json.response.cacheError,'cache_binary_storage');
+ assert.equal(inline.binary,undefined);
+});
+ 
 test('actual verified artifact advance sheds every base64 part but retains metadata and pre-send intent through two CAS steps',async()=>{
  const {artifact,date,source}=require('./cache-fixture.cjs'),a=artifact(),g=graph(),node=g.nodes.find(n=>n.name==='Validate stage result and persist recovery checkpoint'),run=new AsyncFunction('$input','require','$','$execution',node.parameters.jsCode),now=Date.now();
- const input={state:{...source,marketDate:date,runHeadSha:source.sourceGitCommit,owner:'927',lockSha:'a'.repeat(40),deadline:now+600000,pageId:'3ee6fb57-ff38-810f-bcb4-f4c15930ebbf',stage:'cacheArtifactBytes',cacheRunWorkflowId:'123',cacheArtifactId:'777',cacheArtifactSha256:'c'.repeat(64),cacheZipVerifiedHash:'c'.repeat(64),cacheLatestHash:a.fingerprint.contentHash,cacheRoster:['1240','2330']},response:{statusCode:200,body:{files:Object.fromEntries(Object.entries(a.members).map(([name,b])=>[name,b.toString('base64')]))}}};
+ const input={state:{...source,marketDate:date,runHeadSha:source.sourceGitCommit,owner:'927',lockSha:'a'.repeat(40),deadline:now+600000,pageId:'3ee6fb57-ff38-810f-bcb4-f4c15930ebbf',stage:'cacheArtifactBytes',cacheRunWorkflowId:'123',cacheArtifactId:'777',cacheArtifactSha256:'c'.repeat(64),cacheZipVerifiedHash:'c'.repeat(64),cacheLatestHash:a.fingerprint.contentHash,cacheRoster:['1240','2330']},};
+ input.response={statusCode:200,body:{verifiedArtifact:require('./cache-operation.cjs').verifyCacheArtifact(input.state,a.members)}};
  const advance=async(state,response)=>(await run({first:()=>({json:{state,response}})},require,()=>({all:()=>{throw Error('unexpected lookup');}}),{id:'exec'}))[0].json;
  let o=await advance(input.state,input.response);assert.equal(o.state.stage,'cacheChildren');assert.equal(Object.hasOwn(o.state,'cacheTransient'),false);assert.equal(o.state.cacheEntries.length,Object.keys(a.members).length);assert.equal(o.state.cacheFileMeta.length,Object.keys(a.members).length);assert.equal(o.state.cacheManifestHash,a.bundle.manifest.manifestHash);
  o=await advance({...o.state,stage:'cacheCreateUpload'},{statusCode:200,body:{id:'3ee6fb57-ff38-818c-bb95-00b28ddf73b7',status:'pending'}});assert.equal(Object.hasOwn(o.state,'cacheTransient'),false);assert.equal(o.state.nextStage,'cacheSendUpload');

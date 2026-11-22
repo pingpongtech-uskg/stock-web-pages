@@ -12,7 +12,7 @@ test('degraded 6173 release is claimed with exact CAS before fresh acquisition',
  const claimed=engine.advance(out.state,response({content:{sha:'new-sha'}}),now);assert.equal(claimed.state.stage,'findRun');assert.equal(claimed.op.method,'GET');assert.ok(claimed.op.url.includes('/actions/workflows/daily.yml/runs'));
 });
 test('active writer and already dispatched revision never create a duplicate producer',()=>{
- const active=read({...old,released:false,deadline:now+60000});assert.equal(active.state.waitingForOwner,'old');assert.equal(active.op.method,'GET');
+ const active=read({...old,released:false,deadline:now+60000});assert.equal(active.state.waitingForOwner,'old');assert.equal(active.state.deferredActiveWriter,true);assert.equal(active.op,null);
  const revision={...old,requestId:'stockscreener:20261016:refresh1',screeningStatus:'pending',publicationStatus:'pending',deployStatus:'pending',freshnessRefreshCount:1};
  const resumed=read(revision);assert.equal(resumed.state.requestId,revision.requestId);assert.equal(resumed.state.nextStage,'pollRun');assert.equal(resumed.state.actionsRunId,'123');assert.equal(resumed.state.freshnessRefreshCount,1);
 });

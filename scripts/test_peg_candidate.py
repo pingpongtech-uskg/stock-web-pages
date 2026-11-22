@@ -1,4 +1,7 @@
+import hashlib
 import json
+import random
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -24,12 +27,16 @@ def fixture(root):
     return data
 
 
-def test_candidate_round_trip_and_identity(tmp_path):
+@pytest.mark.parametrize('legacy_preview', [False, True])
+def test_candidate_round_trip_and_identity(tmp_path, legacy_preview):
     fixture(tmp_path)
     artifact = tmp_path / 'artifact'
     preview = create(tmp_path, artifact, 'req-1', '2026-11-03', '123', '1', 'a' * 40)
     assert len(preview['stocks']) == 100
     assert preview['stocks'][0]['currentPeriod'] == '2026-Q3'
+    if legacy_preview:
+        (artifact / 'preview.json').write_text(json.dumps({key: value for key, value in preview.items()
+                                                          if key != 'candidateBytes'}))
     target = tmp_path / 'target'
     restore(target, artifact, 'req-1', '2026-11-03', '123', '1', preview['candidateSha256'])
     assert json.loads((target / 'public/data/latest.json').read_text())['runId'] == 'release'
@@ -50,6 +57,66 @@ def test_workflow_separates_preparation_from_publication():
     publication = workflow.split('- name: Publish validated release to main', 1)[1].split('- uses: actions/upload-artifact', 1)[0]
     assert "if: inputs.source_mode != 'prepare_peg'" in publication
     assert 'scripts/publish_validated_release.sh' in publication
+
+
+def test_workflow_uploads_exact_attempt_preview_as_a_single_stored_file():
+    workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/daily.yml').read_text()
+    preview = next(step for step in workflow.split('\n      - ')
+                   if 'name: peg-preview-${{ github.run_id }}-${{ github.run_attempt }}' in step)
+    assert "if: inputs.source_mode == 'prepare_peg'" in preview
+    assert 'uses: actions/upload-artifact@v7' in preview
+    assert 'path: .artifacts/peg-candidate/preview.json\n' in preview
+    assert 'compression-level: 0' in preview
+    assert 'if-no-files-found: error' in preview
+    assert workflow.index('name: peg-candidate-${{ github.run_id }}') < workflow.index(preview)
+    assert 'name: peg-candidate-${{ inputs.prepare_run_id }}-${{ inputs.prepare_run_attempt }}' in workflow
+
+
+def test_preview_zip_is_small_and_binds_to_frozen_archive(tmp_path):
+    data = fixture(tmp_path)
+    payload = data / 'releases/release/fixture.bin'
+    payload.write_bytes(random.Random(0).randbytes(128 * 1024))
+    artifact = tmp_path / 'artifact'
+    preview = create(tmp_path, artifact, 'req-1', '2026-11-03', '123', '2', 'a' * 40)
+    archive = artifact / 'candidate.tar.gz'
+    assert preview['prepareRunAttempt'] == 2
+    assert preview['candidateBytes'] == archive.stat().st_size
+    assert preview['candidateSha256'] == hashlib.sha256(archive.read_bytes()).hexdigest()
+    assert {stock['code'] for stock in preview['stocks']} == {f'{index:04d}' for index in range(100)}
+
+    preview_path = artifact / 'preview.json'
+    preview_zip = tmp_path / 'preview.zip'
+    candidate_zip = tmp_path / 'candidate.zip'
+    with zipfile.ZipFile(preview_zip, 'w', zipfile.ZIP_STORED) as bundle:
+        bundle.write(preview_path, 'preview.json')
+    with zipfile.ZipFile(candidate_zip, 'w', zipfile.ZIP_STORED) as bundle:
+        bundle.write(preview_path, 'preview.json')
+        bundle.write(archive, 'candidate.tar.gz')
+    with zipfile.ZipFile(preview_zip) as preview_bundle, zipfile.ZipFile(candidate_zip) as candidate_bundle:
+        assert preview_bundle.namelist() == ['preview.json']
+        assert preview_bundle.read('preview.json') == candidate_bundle.read('preview.json')
+    assert preview_zip.stat().st_size < candidate_zip.stat().st_size / 5
+
+
+def test_restore_rejects_mismatched_archive_size(tmp_path):
+    fixture(tmp_path)
+    artifact = tmp_path / 'artifact'
+    preview = create(tmp_path, artifact, 'req-1', '2026-11-03', '123', '1', 'a' * 40)
+    size = (artifact / 'candidate.tar.gz').stat().st_size
+    (artifact / 'preview.json').write_text(json.dumps({**preview, 'candidateBytes': size + 1}))
+    with pytest.raises(ValueError, match='archive size'):
+        restore(tmp_path / 'target', artifact, 'req-1', '2026-11-03', '123', '1', preview['candidateSha256'])
+
+
+def test_restore_rejects_changed_archive_bound_by_preview(tmp_path):
+    fixture(tmp_path)
+    artifact = tmp_path / 'artifact'
+    preview = create(tmp_path, artifact, 'req-1', '2026-11-03', '123', '1', 'a' * 40)
+    archive = artifact / 'candidate.tar.gz'
+    original = archive.read_bytes()
+    archive.write_bytes(original[:-1] + bytes([original[-1] ^ 1]))
+    with pytest.raises(ValueError, match='digest'):
+        restore(tmp_path / 'target', artifact, 'req-1', '2026-11-03', '123', '1', preview['candidateSha256'])
 
 
 def test_prepare_run_provenance_rejects_foreign_or_wrong_run():

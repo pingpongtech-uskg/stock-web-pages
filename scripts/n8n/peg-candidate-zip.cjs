@@ -23,8 +23,8 @@ function checkExtra(bytes,start,length) {
     at+=4+size;
   }
 }
-function extractCandidateZip(bytes, metadata) {
-  check(Buffer.isBuffer(bytes) && bytes.length>=22 && bytes.length<=68*1024*1024 &&
+function extractPreviewZip(bytes, metadata) {
+  check(Buffer.isBuffer(bytes) && bytes.length>=22 && bytes.length<=257*1024 &&
     Number.isSafeInteger(metadata?.artifactBytes) && bytes.length===metadata.artifactBytes,'zip_size');
   check(/^[a-f0-9]{64}$/.test(metadata?.artifactSha256||'') && hash(bytes)===metadata.artifactSha256,'zip_hash');
   let end=-1;
@@ -33,7 +33,7 @@ function extractCandidateZip(bytes, metadata) {
   }
   check(end>=0 && bytes.readUInt16LE(end+4)===0 && bytes.readUInt16LE(end+6)===0,'zip_directory');
   const count=bytes.readUInt16LE(end+10), centralSize=bytes.readUInt32LE(end+12), centralOffset=bytes.readUInt32LE(end+16);
-  check(count===2 && bytes.readUInt16LE(end+8)===count && centralOffset+centralSize===end,'zip_directory');
+  check(count===1 && bytes.readUInt16LE(end+8)===count && centralOffset+centralSize===end,'zip_directory');
   let cursor=centralOffset; const members=[];
   for (let index=0; index<count; index++) {
     check(cursor+46<=end && bytes.readUInt32LE(cursor)===0x02014b50,'zip_directory');
@@ -43,9 +43,9 @@ function extractCandidateZip(bytes, metadata) {
       attributes=bytes.readUInt32LE(cursor+38), local=bytes.readUInt32LE(cursor+42);
     check(cursor+46+nameSize+extra+comment<=end && nameSize>0 && nameSize<=64,'zip_directory');
     const name=bytes.subarray(cursor+46,cursor+46+nameSize).toString('utf8');
-    check(['preview.json','candidate.tar.gz'].includes(name) && !members.some(member=>member.name===name),'zip_member');
+    check(name==='preview.json','zip_member');
     check((flags&~0x808)===0 && method===0 && [0,0x8000].includes((attributes>>>16)&0xf000) && bytes.readUInt16LE(cursor+34)===0,'zip_member');
-    const limit=name==='preview.json'?256*1024:64*1024*1024;
+    const limit=256*1024;
     check(compressed===expanded && expanded>0 && expanded<=limit,'zip_expansion');
     check(local+30<=centralOffset && bytes.readUInt32LE(local)===0x04034b50 && bytes.readUInt16LE(local+6)===flags && bytes.readUInt16LE(local+8)===method,'zip_local');
     const localName=bytes.readUInt16LE(local+26), localExtra=bytes.readUInt16LE(local+28);
@@ -67,10 +67,9 @@ function extractCandidateZip(bytes, metadata) {
   check(cursor===end,'zip_directory');
   const ordered=[...members].sort((a,b)=>a.local-b.local);
   check(ordered[0].local===0 && ordered.every((entry,index)=>entry.endOffset===(ordered[index+1]?.local??centralOffset)),'zip_overlap');
-  const files=Object.fromEntries(members.map(member=>[member.name,member.data]));
   let preview;
-  try { preview=JSON.parse(files['preview.json'].toString('utf8')); } catch { throw Error('candidate_preview'); }
-  check(preview && typeof preview==='object' && !Array.isArray(preview) && /^[a-f0-9]{64}$/.test(preview.candidateSha256||'') && hash(files['candidate.tar.gz'])===preview.candidateSha256,'digest');
+  try { preview=JSON.parse(ordered[0].data.toString('utf8')); } catch { throw Error('candidate_preview'); }
+  check(preview && typeof preview==='object' && !Array.isArray(preview) && /^[a-f0-9]{64}$/.test(preview.candidateSha256||'') && Number.isSafeInteger(preview.candidateBytes) && preview.candidateBytes>0 && preview.candidateBytes<=64*1024*1024,'digest');
   return preview;
 }
-module.exports = { extractCandidateZip };
+module.exports = { extractPreviewZip };

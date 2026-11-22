@@ -40,9 +40,9 @@ function world(options={}) {
       case 'pegFindPrepare':return ok({workflow_runs:state.pegPrepareIntent?[{id:124,display_title:'Daily PEG prepare | local-test | 2026-10-02',event:'workflow_dispatch',head_branch:'main',path:'.github/workflows/daily.yml',head_sha:'a'.repeat(40),repository:{id:1273106108},head_repository:{id:1273106108}}]:[]});
       case 'pegDispatchPrepare':return ok({},204);
       case 'pegPollPrepare':return ok({id:124,run_attempt:1,display_title:'Daily PEG prepare | local-test | 2026-10-02',event:'workflow_dispatch',head_branch:'main',path:'.github/workflows/daily.yml',head_sha:'a'.repeat(40),repository:{id:1273106108},head_repository:{id:1273106108},status:'completed',conclusion:'success'});
-      case 'pegArtifactList':return ok({total_count:1,artifacts:[{id:457,name:'peg-candidate-124-1',expired:false,digest:'sha256:'+'d'.repeat(64),size_in_bytes:1000,workflow_run:{id:124,head_sha:'a'.repeat(40),repository_id:1273106108,head_repository_id:1273106108}}]});
+      case 'pegArtifactList':return ok({total_count:1,artifacts:[{id:457,name:'peg-preview-124-1',expired:false,digest:'sha256:'+'d'.repeat(64),size_in_bytes:1000,workflow_run:{id:124,head_sha:'a'.repeat(40),repository_id:1273106108,head_repository_id:1273106108}}]});
       case 'pegArtifactRedirect':return ok('',302,{location:'https://production.blob.core.windows.net/artifacts/candidate.zip?signature=local-only'});
-      case 'pegArtifactZip':return ok({candidateSha256:'b'.repeat(64),preview:{requestId:'local-test',marketDate:'2026-10-02',prepareRunId:'124',prepareRunAttempt:1,sourceGitCommit:'a'.repeat(40),candidateSha256:'b'.repeat(64),stocks:Array.from({length:100},(_,i)=>({code:String(1000+i),name:'Company',pegReview:{status:'needs_review'},currentPeriod:null}))}});
+      case 'pegArtifactZip':return ok({candidateSha256:'b'.repeat(64),preview:{requestId:'local-test',marketDate:'2026-10-02',prepareRunId:'124',prepareRunAttempt:1,sourceGitCommit:'a'.repeat(40),candidateSha256:'b'.repeat(64),candidateBytes:12345,stocks:Array.from({length:100},(_,i)=>({code:String(1000+i),name:'Company',pegReview:{status:'needs_review'},currentPeriod:null}))}});
       case 'pegDiscovery':return ok({manifestCommit:'e'.repeat(40)});
       case 'dispatch':assert.deepEqual(op.body.inputs,{request_id:'local-test',market_date:'2026-10-02',source_mode:'finalize_peg',prepare_run_id:'124',prepare_run_attempt:'1',candidate_sha256:'b'.repeat(64),search_manifest_commit:'e'.repeat(40)});return ok({},204);
       case 'pollRun':runPolls++;return ok({id:123,head_sha:'a'.repeat(40),display_title:'Daily screening | local-test | 2026-10-02',status:options.pendingOnce&&runPolls===1?'in_progress':'completed',conclusion:options.failure?'failure':'success'});
@@ -74,7 +74,7 @@ function world(options={}) {
       case 'cacheLatest':return ok({encoding:'base64',size:latest.length,content:latest.toString('base64')});
       case 'cacheArtifacts':if(options.missingCache)return ok({artifacts:[]});return ok({artifacts:[{id:777,name:'market-cache',expired:false,size_in_bytes:1000,digest:'sha256:'+'d'.repeat(64),workflow_run:{id:123,head_sha:f.payload.sourceGitCommit}}]});
       case 'cacheRedirect':return ok('',302,{location:'https://production.blob.core.windows.net/artifacts/cache.zip?signature=local-only'});
-      case 'cacheZip':return ok({files:Object.fromEntries(Object.entries(cacheFiles).map(([name,bytes])=>[name,bytes.toString('base64')]))});
+      case 'cacheZip':return ok({verifiedArtifact:require('./cache-operation.cjs').verifyCacheArtifact({...state,cacheZipVerifiedHash:state.cacheArtifactSha256},cacheFiles)});
       case 'cacheChildren':return ok({results:cacheBlocks,has_more:false});
       case 'cacheCreateUpload':uploadCounter++;return ok({id:'22222222-2222-4222-8222-'+String(uploadCounter).padStart(12,'0'),status:'pending'});
       case 'cacheSendUpload':return ok({id:state.cacheUploadId,status:'uploaded'});

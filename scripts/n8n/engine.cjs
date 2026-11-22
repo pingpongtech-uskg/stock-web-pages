@@ -9,6 +9,7 @@ const REPOSITORY_ID='1273106108';
 const ROOT_SOURCE='3ed6fb57-ff38-803d-815a-000b148c6b6e';
 const ROOT_DATABASE='3ed6fb57-ff38-8032-97cc-f017b6104300';
 const CALENDAR='https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule';
+const PEG_PREVIEW_ZIP_MAX_BYTES=257*1024;
 const RETRYABLE_SOURCE_STEPS=new Set(['Fetch authoritative exchange calendar','Fetch official institutional universe','Verify independent requested date against fetched official date']);
 const PUBLICATION_STEPS=new Set(['Build lightweight publication fingerprint','Build canonical screening export','Build and validate complete market cache before publication','Publish validated release to main']);
 const ROOT_FIELDS={ 'Market Date':{date:{}},'Request ID':{rich_text:{}},'Run ID':{rich_text:{}},'Actions Run ID':{rich_text:{}},'Source Commit':{rich_text:{}},'Payload Hash':{rich_text:{}},'Active Revision':{rich_text:{}},'Screening Status':{rich_text:{}},'Notion Status':{rich_text:{}},'Deploy Status':{rich_text:{}},'Summary':{rich_text:{}},'Selected Count':{number:{}},'Trust Count':{number:{}},'Growth Count':{number:{}},'Low Position Count':{number:{}} };
@@ -305,8 +306,11 @@ function advanceSuccess(state,body,status,response,now) {
         return fail({...state,lockSha:undefined,checkpointRecovery:undefined},'writer_conflict','Checkpoint changed while resolving an ambiguous GitHub write.');
       }
       const existing=status===404?null:JSON.parse(Buffer.from(body.content,'base64').toString('utf8'));
-      if(existing?.owner!==state.owner&&!existing?.released&&existing?.owner&&now<Number(existing.deadline))
-        return request({...state,waitingForOwner:existing.owner,waitingUntil:Number(existing.deadline)},'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`,null,30);
+      if(existing?.owner!==state.owner&&!existing?.released&&existing?.owner&&now<Number(existing.deadline)) {
+        const waiting={...state,waitingForOwner:existing.owner,waitingUntil:Number(existing.deadline)};
+        if(state.runKind==='scheduled')return done({...waiting,deferredActiveWriter:true});
+        return request(waiting,'branch','github','GET',`${REPO}/git/ref/heads/n8n-state`,null,30);
+      }
       if(state.mode==='screen'&&state.automaticRequestId===true&&existing?.marketDate===state.marketDate&&existing.screeningStatus==='failed'&&existing.publicationStatus!=='verified'&&!hasPinnedPegFinal(existing)) {
         const retryCount=Number.isSafeInteger(existing.automaticRetryCount)&&existing.automaticRetryCount>=0?existing.automaticRetryCount+1:1;
         state={...state,requestId:`stockscreener:${state.marketDate.replaceAll('-','')}:v1:retry${retryCount}`,mode:'revision',automaticRetry:true,automaticRetryCount:retryCount,automaticRetryFrom:existing.requestId,freshnessRefreshCount:existing.freshnessRefreshCount,actionsRunId:undefined,runHeadSha:undefined,dispatchIntent:false,dispatchStartedAt:undefined};
@@ -386,9 +390,9 @@ function advanceSuccess(state,body,status,response,now) {
     }
     case 'pegArtifactList': {
       if(!Array.isArray(body?.artifacts)||body.total_count!==body.artifacts.length||body.artifacts.length>100)throw Error('peg_candidate_artifact');
-      const matches=body.artifacts.filter(item=>item.name===`peg-candidate-${state.pegPrepareRunId}-${state.pegPrepareRunAttempt}`&&item.expired===false);
+      const matches=body.artifacts.filter(item=>item.name===`peg-preview-${state.pegPrepareRunId}-${state.pegPrepareRunAttempt}`&&item.expired===false);
       const artifact=matches[0],run=artifact?.workflow_run;
-      if(matches.length!==1||!/^sha256:[a-f0-9]{64}$/.test(artifact?.digest||'')||!Number.isSafeInteger(artifact?.size_in_bytes)||artifact.size_in_bytes<1||artifact.size_in_bytes>68*1024*1024||!/^[1-9]\d{0,23}$/.test(String(artifact?.id||''))||String(run?.id)!==state.pegPrepareRunId||run.head_sha!==state.pegPrepareHeadSha||String(run.repository_id)!==REPOSITORY_ID||String(run.head_repository_id)!==REPOSITORY_ID)throw Error('peg_candidate_artifact');
+      if(matches.length!==1||!/^sha256:[a-f0-9]{64}$/.test(artifact?.digest||'')||!Number.isSafeInteger(artifact?.size_in_bytes)||artifact.size_in_bytes<1||artifact.size_in_bytes>PEG_PREVIEW_ZIP_MAX_BYTES||!/^[1-9]\d{0,23}$/.test(String(artifact?.id||''))||String(run?.id)!==state.pegPrepareRunId||run.head_sha!==state.pegPrepareHeadSha||String(run.repository_id)!==REPOSITORY_ID||String(run.head_repository_id)!==REPOSITORY_ID)throw Error('peg_candidate_artifact');
       return next({...state,stage:'pegArtifactRedirect',pegArtifactId:String(artifact.id),pegArtifactSha256:artifact.digest.slice(7),pegArtifactBytes:artifact.size_in_bytes},now);
     }
     case 'pegArtifactRedirect': {
@@ -398,7 +402,7 @@ function advanceSuccess(state,body,status,response,now) {
     }
     case 'pegArtifactZip': {
       const preview=body?.preview;
-      if(!preview||preview.requestId!==state.requestId||preview.marketDate!==state.marketDate||preview.prepareRunId!==state.pegPrepareRunId||preview.prepareRunAttempt!==state.pegPrepareRunAttempt||preview.sourceGitCommit!==state.pegPrepareHeadSha||!/^[a-f0-9]{64}$/.test(preview.candidateSha256||'')||body.candidateSha256!==preview.candidateSha256)throw Error('peg_candidate_lineage');
+      if(!preview||preview.requestId!==state.requestId||preview.marketDate!==state.marketDate||preview.prepareRunId!==state.pegPrepareRunId||preview.prepareRunAttempt!==state.pegPrepareRunAttempt||preview.sourceGitCommit!==state.pegPrepareHeadSha||!/^[a-f0-9]{64}$/.test(preview.candidateSha256||'')||body.candidateSha256!==preview.candidateSha256||!Number.isSafeInteger(preview.candidateBytes)||preview.candidateBytes<1||preview.candidateBytes>64*1024*1024)throw Error('peg_candidate_lineage');
       if(!Array.isArray(preview.stocks)||preview.stocks.length!==100||new Set(preview.stocks.map(stock=>stock?.code)).size!==100||preview.stocks.some(stock=>!stock||!/^\d{4,6}[A-Z]?$/.test(stock.code||'')||typeof stock.name!=='string'||!stock.name||typeof stock.pegReview?.status!=='string'||!(stock.pegDiscoveryRequired===undefined||typeof stock.pegDiscoveryRequired==='boolean')||!(stock.currentPeriod===null||typeof stock.currentPeriod==='string')))throw Error('peg_candidate_stocks');
       return checkpoint({...state,pegPreview:preview,pegCandidateSha256:preview.candidateSha256},'pegDiscovery');
     }

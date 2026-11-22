@@ -7,8 +7,8 @@ const base={marketDate:'2026-11-03',requestId:'test-1',mode:'screen',runKind:'sc
 const response=body=>({statusCode:200,body});
 function committed(out) { assert.equal(out.state.stage,'checkpoint'); return engine.advance(out.state,response({content:{sha:'new-sha'}}),now); }
 const run={id:123,run_attempt:1,display_title:'Daily PEG prepare | test-1 | 2026-11-03',event:'workflow_dispatch',head_branch:'main',path:'.github/workflows/daily.yml',head_sha:'a'.repeat(40),repository:{id:1273106108},head_repository:{id:1273106108},status:'completed',conclusion:'success'};
-const artifact={id:456,digest:'sha256:'+'d'.repeat(64),size_in_bytes:1024,name:'peg-candidate-123-1',expired:false,workflow_run:{id:123,head_sha:run.head_sha,repository_id:1273106108,head_repository_id:1273106108}};
-const preview={marketDate:base.marketDate,requestId:base.requestId,prepareRunId:'123',prepareRunAttempt:1,sourceGitCommit:run.head_sha,candidateSha256:'b'.repeat(64),stocks:Array.from({length:100},(_,i)=>({code:String(1000+i),name:'Company',pegReview:{status:'needs_review'},currentPeriod:null}))};
+const artifact={id:456,digest:'sha256:'+'d'.repeat(64),size_in_bytes:1024,name:'peg-preview-123-1',expired:false,workflow_run:{id:123,head_sha:run.head_sha,repository_id:1273106108,head_repository_id:1273106108}};
+const preview={marketDate:base.marketDate,requestId:base.requestId,prepareRunId:'123',prepareRunAttempt:1,sourceGitCommit:run.head_sha,candidateSha256:'b'.repeat(64),candidateBytes:12345,stocks:Array.from({length:100},(_,i)=>({code:String(1000+i),name:'Company',pegReview:{status:'needs_review'},currentPeriod:null}))};
 test('preparation dispatch is intent-checkpointed and uncertain receipt never redispatches',()=>{
  let out=engine.advance({...base,stage:'pegFindPrepare',pegPhase:'prepare'},response({workflow_runs:[]}),now);
  assert.equal(out.state.nextStage,'pegDispatchPrepare');assert.equal(out.state.pegPrepareIntent,true);
@@ -105,7 +105,8 @@ test('rejects mismatched prepare artifact, preview or manifest',()=>{
  const bad=engine.advance(state,response({total_count:1,artifacts:[{...artifact,workflow_run:{...artifact.workflow_run,id:124}}]}),now);
  assert.equal(bad.state.errorCategory,'peg_candidate_artifact');
  const badDigest=engine.advance(state,response({total_count:1,artifacts:[{...artifact,digest:'sha256:bad'}]}),now);assert.equal(badDigest.state.errorCategory,'peg_candidate_artifact');
- const oversized=engine.advance(state,response({total_count:1,artifacts:[{...artifact,size_in_bytes:68*1024*1024+1}]}),now);assert.equal(oversized.state.errorCategory,'peg_candidate_artifact');
+ const oversized=engine.advance(state,response({total_count:1,artifacts:[{...artifact,size_in_bytes:257*1024+1}]}),now);assert.equal(oversized.state.errorCategory,'peg_candidate_artifact');
+ const oldArtifact=engine.advance(state,response({total_count:1,artifacts:[{...artifact,name:'peg-candidate-123-1'}]}),now);assert.equal(oldArtifact.state.errorCategory,'peg_candidate_artifact');
  const zip=engine.advance({...state,stage:'pegArtifactZip'},response({preview:{...preview,requestId:'other'},candidateSha256:preview.candidateSha256}),now);
  assert.equal(zip.state.errorCategory,'peg_candidate_lineage');
  const discover=engine.advance({...state,stage:'pegDiscovery',pegPreview:preview,pegCandidateSha256:preview.candidateSha256},response({manifestCommit:'bad'}),now);

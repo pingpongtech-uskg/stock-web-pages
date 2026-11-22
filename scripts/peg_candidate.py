@@ -14,7 +14,8 @@ PATHS = ('config/tracked_symbols.json', 'public/data', '.cache/market-source', '
 
 
 def digest(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    with path.open('rb') as source:
+        return hashlib.file_digest(source, 'sha256').hexdigest()
 
 
 def validate_universe(root, market_date):
@@ -100,11 +101,12 @@ def create(root, artifact, request, market_date, run, attempt, source_commit):
                 if path.is_symlink() or any(file.is_symlink() for file in path.rglob('*')):
                     raise ValueError('candidate contains symlink')
                 tar.add(path, arcname=name, recursive=True)
-    if archive.stat().st_size > MAX_ARCHIVE_BYTES:
+    archive_size = archive.stat().st_size
+    if archive_size > MAX_ARCHIVE_BYTES:
         raise ValueError('candidate exceeds size limit')
     preview = {'requestId': request, 'marketDate': market_date, 'prepareRunId': str(run),
                'prepareRunAttempt': int(attempt), 'sourceGitCommit': source_commit,
-               'candidateSha256': digest(archive), 'stocks': stocks}
+               'candidateSha256': digest(archive), 'candidateBytes': archive_size, 'stocks': stocks}
     preview_bytes = json.dumps(preview, ensure_ascii=False, sort_keys=True).encode()
     if len(preview_bytes) > 256 * 1024:
         raise ValueError('candidate preview exceeds size limit')
@@ -130,7 +132,11 @@ def restore(root, artifact, request, market_date, run, attempt, expected_digest)
     if any(preview.get(k) != v for k, v in identity.items()):
         raise ValueError('candidate identity mismatch')
     archive = artifact / 'candidate.tar.gz'
-    if not re.fullmatch(r'[a-f0-9]{64}', expected_digest) or archive.stat().st_size > MAX_ARCHIVE_BYTES or digest(archive) != expected_digest or preview.get('candidateSha256') != expected_digest:
+    archive_size = archive.stat().st_size
+    if 'candidateBytes' in preview and (type(preview['candidateBytes']) is not int or preview['candidateBytes'] != archive_size):
+        raise ValueError('candidate archive size mismatch')
+    if (not re.fullmatch(r'[a-f0-9]{64}', expected_digest) or not 0 < archive_size <= MAX_ARCHIVE_BYTES or
+            preview.get('candidateSha256') != expected_digest or digest(archive) != expected_digest):
         raise ValueError('candidate digest mismatch')
     with tarfile.open(archive, 'r:gz') as tar:
         members = tar.getmembers()

@@ -38,10 +38,9 @@ function cacheChildrenRequest(state,api){
   cacheCheck(cacheUuid(state.pageId),'page');
   return api.request(state,'cacheChildren','notion','GET',`${CACHE_NOTION}/blocks/${state.pageId}/children?page_size=100${state.cacheChildrenCursor?'&start_cursor='+encodeURIComponent(state.cacheChildrenCursor):''}`);
 }
-function readCacheArtifact(state,body,api){
+function verifyCacheArtifact(state,files){
   cacheCheck(state.cacheZipVerifiedHash===state.cacheArtifactSha256&&/^[a-f0-9]{64}$/.test(state.cacheZipVerifiedHash||''),'zip_custody');
-  cacheCheck(body?.files&&typeof body.files==='object','artifact_files');
-  const files=Object.fromEntries(Object.entries(body.files).map(([name,data])=>{cacheCheck(typeof data==='string','artifact_files');return [name,Buffer.from(data,'base64')];}));
+  cacheCheck(files&&typeof files==='object'&&Object.values(files).every(Buffer.isBuffer),'artifact_files');
   for(const name of ['manifest.json','proof.json','expected.json'])cacheCheck(files[name]?.length>0&&files[name].length<=1048576,'envelope_size');
   const manifest=JSON.parse(files['manifest.json'].toString('utf8')),expected=JSON.parse(files['expected.json'].toString('utf8'));
   cacheCheck(manifest.marketDate===state.marketDate&&expected.marketDate===state.marketDate&&['requestId','actionsRunId','sourceGitCommit'].every(key=>expected.source?.[key]===cacheSource(state)[key]),'expected_lineage');
@@ -51,8 +50,18 @@ function readCacheArtifact(state,body,api){
   cacheCheck(JSON.stringify(Object.keys(files).sort())===JSON.stringify(['manifest.json','proof.json','expected.json',...names].sort()),'artifact_members');
   const proofHash=cacheHash(files['proof.json']);
   const proof=marketCache.verifyCompressedMarketCache(manifest,Object.fromEntries(names.map(name=>[name,files[name]])),{...expected,manifestHash:manifest.manifestHash,producerProofSha256:proofHash,artifactLineage:{repository:'pingpongtech-uskg/stock-web-pages',workflowId:state.cacheRunWorkflowId,artifactId:state.cacheArtifactId,artifactSha256:state.cacheArtifactSha256,...cacheSource(state)}},files['proof.json']);
-  const entries=Object.keys(files).sort().map(name=>({name,filename:name.endsWith('.gz')?name:`${state.marketDate}.${manifest.manifestHash.slice(0,12)}.${name}`,sha256:cacheHash(files[name]),bytes:files[name].length,marker:`Market cache ${manifest.manifestHash} ${name} ${cacheHash(files[name])}`}));
-  return cacheChildrenRequest({...state,cacheStatus:'uploading',cacheManifestHash:manifest.manifestHash,cacheProofHash:proofHash,cachePreviousTradingDate:manifest.previousTradingDate,cacheMetricsComplete:proof.metricsComplete,cacheIndependentRawSemanticsVerified:false,cacheRawSemanticsVerifiedByProducer:true,cachePartsExpected:entries.length,cacheFileMeta:entries.map(({name,sha256,bytes})=>({name,sha256,bytes})),cacheEntries:entries,cacheTransient:{files:body.files},cacheCursor:0,cacheVerifiedFiles:[],cacheChildren:[],cacheChildrenCursor:undefined,cacheChildrenPages:0},api);
+  const entries=Object.keys(files).sort().map(name=>{
+    const sha256=cacheHash(files[name]);
+    return {name,filename:name.endsWith('.gz')?name:`${state.marketDate}.${manifest.manifestHash.slice(0,12)}.${name}`,sha256,bytes:files[name].length,marker:`Market cache ${manifest.manifestHash} ${name} ${sha256}`};
+  });
+  return {manifestHash:manifest.manifestHash,proofHash,previousTradingDate:manifest.previousTradingDate,metricsComplete:proof.metricsComplete,entries};
+}
+function readCacheArtifact(state,body,api){
+  cacheCheck(state.cacheZipVerifiedHash===state.cacheArtifactSha256&&/^[a-f0-9]{64}$/.test(state.cacheZipVerifiedHash||''),'zip_custody');
+  const receipt=body?.verifiedArtifact;
+  cacheCheck(receipt&&/^[a-f0-9]{64}$/.test(receipt.manifestHash)&&/^[a-f0-9]{64}$/.test(receipt.proofHash)&&Array.isArray(receipt.entries)&&receipt.entries.length>=3&&receipt.entries.length<=259,'artifact_receipt');
+  const {entries,manifestHash,proofHash,previousTradingDate,metricsComplete}=receipt;
+  return cacheChildrenRequest({...state,cacheStatus:'uploading',cacheManifestHash:manifestHash,cacheProofHash:proofHash,cachePreviousTradingDate:previousTradingDate,cacheMetricsComplete:metricsComplete,cacheIndependentRawSemanticsVerified:false,cacheRawSemanticsVerifiedByProducer:true,cachePartsExpected:entries.length,cacheFileMeta:entries.map(({name,sha256,bytes})=>({name,sha256,bytes})),cacheEntries:entries,cacheCursor:0,cacheVerifiedFiles:[],cacheChildren:[],cacheChildrenCursor:undefined,cacheChildrenPages:0},api);
 }
 function selectCachePart(state,api){
   if((state.cacheCursor||0)>=state.cacheEntries.length)return promoteCache(state,api);
@@ -230,4 +239,4 @@ function advanceCache(state,response,now,api){
     default:throw Error('cache_unknown_stage');
   }
 }
-module.exports={beginCache,advanceCache,ambiguousCacheWrite,cacheDurable,promoteCache,nextCache,validateCacheZip,extractStoredCacheZip,CACHE_FIELDS};
+module.exports={beginCache,advanceCache,ambiguousCacheWrite,cacheDurable,promoteCache,nextCache,validateCacheZip,extractStoredCacheZip,verifyCacheArtifact,CACHE_FIELDS};
