@@ -9,7 +9,7 @@ test('normal manual entry dispatches real work; diagnostics have an explicit sep
 test('canvas exposes native dispatch and named business archive, publication and verification stages',()=>{
  const node=graph.nodes.find(node=>node.name==='GitHub Dispatch Actions');assert.ok(node);assert.equal(node.type,'n8n-nodes-base.github');assert.equal(node.parameters.operation,'dispatch');assert.equal(node.alwaysOutputData,true);assert.equal(node.retryOnFail,undefined);
  for(const name of ['Confirm GitHub main publication','Create Notion daily record','Create Notion inline daily database','Create missing stock row','Read back Notion rows and values','Verify live exact payload','Show durable operation outcome'])assert.ok(graph.nodes.some(node=>node.name===name),name);
- assert.equal(graph.active,false);assert.equal(graph.settings.saveDataSuccessExecution,'all');assert.equal(graph.settings.timezone,'Asia/Taipei');
+ assert.equal(graph.active,false);assert.equal(graph.settings.timezone,'Asia/Taipei');
 });
 test('native GitHub dispatch inputs satisfy its actual JSON.parse preflight contract',()=>{
  const node=graph.nodes.find(node=>node.name==='GitHub Dispatch Actions');
@@ -63,4 +63,4 @@ test('full cache roster fetch is anonymous and origin gate permits only exact im
 
 test('automatic source recovery exposes exact failed-run job and artifact metadata stages',()=>{for(const name of ['Inspect failed source job steps','Check failed run export artifacts']){const n=graph.nodes.find(n=>n.name===name);assert.ok(n);assert.equal(n.credentials.githubApi.id,'F0VoGrfOT4OTl2o8');assert.equal(n.parameters.method,'={{ $json.op.method }}');assert.equal(graph.connections[n.name].main[0][0].node,'Restore current stage after credential response');}});
 
-test('primary retains successful, failed and manual runs without incremental execution snapshots',()=>{assert.equal(graph.settings.saveDataSuccessExecution,'all');assert.equal(graph.settings.saveDataErrorExecution,'all');assert.equal(graph.settings.saveManualExecutions,true);assert.equal(graph.settings.saveExecutionProgress,false);});
+test('primary saves only failed production runs and skips incremental execution snapshots',()=>{assert.equal(graph.settings.saveDataSuccessExecution,'none');assert.equal(graph.settings.saveDataErrorExecution,'all');assert.equal(graph.settings.saveManualExecutions,false);assert.equal(graph.settings.saveExecutionProgress,false);});
